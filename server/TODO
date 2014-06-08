@@ -1,0 +1,29 @@
+$Id$
+
+In no particular order:
+
+1)  Get the basic protocol elements implemented:  action requests, motion
+    updates.
+2)  Implement the new concept for logging in - login happens, then the
+    user uses the "control character" skill (which everybody has) to gain
+    access to the desired character.
+3)  Collision detection?  No idea where to start on that.
+4)  Work on getting server neighbors and server notification protocol
+    activity worked out.
+5)  Start using sectors in the zone again.  They were removed because
+    they were awfully complicated, and were just confusing some of the
+    simple stuff we were trying to do.  This is possibly required before
+    collision detection will work the way we want.
+6)  Figure out who can see what, and only send position updates on visible
+    objects.  Again, sectors might be required before this will happen.
+7)  Define and implement more actions/skills.
+8)  Read the geometry files, and add positional and bounding data to them.
+    Maybe use straight XML for them?  Writing SAX parsers isn't all that
+    demanding.
+9)  See about making the octrees (part of the sector) dynamic, since they
+    will only have bounding volumes in them, and things will move around
+    (of course).
+10) Figure out how we want to do landscape.  That might be a way off,
+    since we'll be starting with space, but it's going to come up.
+11) Rework the basic server skeleton so that each listening port is handled
+    in a thread, and does all its own user management in that thread.

@@ -1,0 +1,35 @@
+This is a description of the login and logout procedure, so that I can
+get it straight in my head.  Items with * are not implemented yet, and
+might need some rethought before implementing.
+
+On login:
+
+1) Get the login packet
+2) Check the login credentials
+3) Make sure the user is not currently logged in
+4) Add the user to the active users list
+5) Create a control object
+6) Add the user to the socket's users list
+7) Add the user to the socket's sockets list
+8) Send an ack
+9) Get the control-object packet
+10*) Control-object finds the game object in question
+11*) Control-object sets the game object's control to the user's
+12*) Control-object removes 'invisible' from the game object's nature list
+13*) Control-object removes 'non-interactive' from the game object's nature list
+14*) Control-object commences 'standing' motion sequence
+
+On logout:
+
+1) Get the logout packet
+2) Make sure the user is already logged in
+3) Set the control object to pending logout
+4) Send an ack
+5*) Commence 'standing' motion sequence
+6) Reaper thread notices the pending logout after at least 75 seconds
+7) Reaper thread sets 'invisible' in the game object's nature list
+8) Reaper thread sets 'non-interactive' in the game object's nature list
+9) Reaper thread removes user from active users list
+10) Reaper thread deletes the control object
+11) Reaper thread removes user from the socket's sockets list
+12) Reaper thread removes user from the socket's users list

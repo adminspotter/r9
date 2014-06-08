@@ -1,0 +1,19 @@
+$Id$
+
+README for the base-level server parts
+
+server.[ch]:  These are the files which contain main and some of the
+setup and cleanup functions, notably for daemonhood, logging, and
+listening sockets.
+
+config.[ch]:  Configuration file parsing routines and data structures.
+
+connect.[ch]:  These are the files which contain some abstraction
+routines, so that TCP and UDP servers act about the same as far as the
+connection loop calls are concerned.
+
+signals.[ch]:  Signal-handling routines.
+
+subserver.[ch]:  The client-connection portion of the TCP-based server
+program.  Maintains an open connection to the main server and to each
+client.

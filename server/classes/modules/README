@@ -1,0 +1,13 @@
+This directory contains the database routines, the server console port
+code, and routines for embedding other languages into the server (probably
+for use with the console).
+
+The database structure is reasonably normal-formed.  One thing we might
+consider is having a separate database routine server, so that we can
+both enforce proper use of the database, and perform adequate checking
+for who's actually supposed to be using this thing.
+
+TODO:  Since we supply the database type in our config structure, we
+will be making each of the database types a separate library with
+built-in registration functions for the common operations, so that we
+can dynamically change our database type.

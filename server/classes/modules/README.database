@@ -1,0 +1,98 @@
+Database structure
+
+We're using a mostly Oracle-ish syntax here, if there are deviations
+from the SQL standards.  I've done the tables in SQL here, so we can
+just cut 'n' paste when we get ready to actually create the database
+tables.  The MySQL syntax is found in mysql.sql.
+
+We will use the entries with ID value 0 to mean all of whatever table
+they reside in, e.g. the 0-ID server corresponds to all servers.
+
+29 Jul 2000 TAQ - Created the file.
+31 Jul 2000 TAQ - Added skill tables.  Added the default 0-ID entries.
+31 May 2014 TAQ - The IP address is now a string, to allow IPv6 and
+                  IPv4 to coexist.
+
+CREATE TABLE players (
+	playerid BIGINT NOT NULL,
+	username VARCHAR2(64) NOT NULL,
+	password VARCHAR2(64) NOT NULL,
+	email VARCHAR2(64) NOT NULL,
+	suspended TINYINT NOT NULL,
+	CONSTRAINT players_PK PRIMARY KEY (playerid)
+);
+
+CREATE TABLE characters (
+	characterid BIGINT NOT NULL,
+	owner BIGINT NOT NULL,
+	CONSTRAINT owner_FK REFERENCES players(playerid),
+	charactername VARCHAR2(64),
+	CONSTRAINT characters_PK PRIMARY KEY (characterid)
+);
+
+CREATE TABLE servers (
+	serverid BIGINT NOT NULL,
+	ip VARCHAR2(45) NOT NULL,
+	port SMALLINT NOT NULL,
+	owner BIGINT NOT NULL,
+	CONSTRAINT owner_FK REFERENCES players(playerid),
+	CONSTRAINT servers_PK PRIMARY KEY (serverid)
+);
+
+CREATE TABLE server_access (
+	serverid BIGINT NOT NULL,
+	CONSTRAINT serverid_FK REFERENCES servers(serverid),
+	characterid BIGINT NOT NULL,
+	CONSTRAINT characterid_FK REFERENCES characters(characterid),
+	access_type TINYINT NOT NULL,
+	CONSTRAINT server_access_PK PRIMARY KEY (serverid, characterid)
+);
+
+CREATE TABLE player_logins (
+	playerid BIGINT NOT NULL,
+	CONSTRAINT playerid_FK REFERENCES players(playerid),
+	characterid BIGINT NOT NULL,
+	CONSTRAINT characterid_FK REFERENCES characters(characterid),
+	serverid BIGINT NOT NULL,
+	CONSTRAINT serverid_FK REFERENCES servers(serverid),
+	src_ip INTEGER NOT NULL,
+	src_port SMALLINT NOT NULL,
+	login_time DATETIME NOT NULL,
+	enter_time DATETIME,
+	exit_time DATETIME,
+	logout_time DATETIME,
+	CONSTRAINT player_logins_PK PRIMARY KEY (playerid, characterid, login_time)
+);
+
+CREATE TABLE skills (
+	skillid BIGINT NOT NULL,
+	skillname VARCHAR2(64) NOT NULL,
+	CONSTRAINT skills_PK PRIMARY KEY (skillid)
+);
+
+CREATE TABLE server_skills (
+	serverid BIGINT NOT NULL,
+	CONSTRAINT serverid_FK REFERENCES servers(serverid),
+	skillid BIGINT NOT NULL,
+	CONSTRAINT skillid_FK REFERENCES skills(skillid),
+	defaultid BIGINT NOT NULL,
+	CONSTRAINT defaultid_FK REFERENCES skills(skillid),
+	lower SMALLINT NOT NULL,
+	upper SMALLINT NOT NULL,
+	CONSTRAINT server_skills_PK PRIMARY KEY (serverid, skillid)
+);
+
+CREATE TABLE character_skills (
+	characterid BIGINT NOT NULL,
+	CONSTRAINT characterid_FK REFERENCES characters(characterid),
+	skillid BIGINT NOT NULL,
+	CONSTRAINT skillid_FK REFERENCES skills(skillid),
+	level SMALLINT NOT NULL,
+	improvement SMALLINT NOT NULL,
+	CONSTRAINT character_skills_PK PRIMARY KEY (characterid, skillid)
+);
+
+INSERT INTO players (playerid, username, password, email, suspended) VALUES (0, 'No player', 'abc123', 'trinity@ymb.net', 0);
+INSERT INTO characters (characterid, owner, charactername) VALUES (0, 0, 'No character');
+INSERT INTO servers (serverid, ip, port, owner) VALUES (0, '0', 0, 0);
+INSERT INTO skills (skillid, skillname) VALUES (0, 'No skill');

@@ -1,0 +1,11 @@
+SHELL = /bin/sh
+CC = gcc
+CXX = g++
+CINCLUDE = -I/usr/local/include -I/Users/tquirk/src/eigen -I/Users/tquirk/src/revision9 -I/Users/tquirk/src/revision9/proto
+LD = g++
+LEX = /usr/bin/flex
+YACC = /usr/bin/bison
+MAKEDEPEND = /opt/X11/bin/makedepend
+MAKETAGS = /usr/bin/etags
+RM = /bin/rm -f
+AR = /usr/bin/ar
