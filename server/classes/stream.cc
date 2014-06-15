@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 May 2014, 21:24:37 tquirk
+ *   last updated 15 Jun 2014, 09:47:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -38,11 +38,13 @@
  *   11 May 2014 TAQ - We've moved the motion- and position-related parameters
  *                     out of the GameObject and into the Motion object, so
  *                     some pointers point at different things.
+ *   14 Jun 2014 TAQ - Restructured the base classes and the relationship of
+ *                     the derived types to the actual socket.
+ *   15 Jun 2014 TAQ - Moved the send worker into the class as well.
  *
  * Things to do
  *   - Move the contents of ../old/subserver.c in here.
  *
- * $Id$
  */
 
 #include <unistd.h>
@@ -59,37 +61,30 @@
 #include <algorithm>
 
 #include "stream.h"
+
+#include "zone.h"
 #include "zone_interface.h"
 #include "../config.h"
 #include "../subserver.h"
 
 extern volatile int main_loop_exit_flag;
 
-extern void *stream_send_pool_worker(void *);
-extern void *stream_reaper_worker(void *);
-
-bool stream_user::operator<(const stream_user& su) const
+stream_user::stream_user(u_int64_t u, Control *c)
+    : base_user(u, c)
 {
-    return (this->userid < su.userid);
-}
-
-bool stream_user::operator==(const stream_user& su) const
-{
-    return (this->userid == su.userid);
+    this->subsrv = 0;
+    this->fd = 0;
 }
 
 const stream_user& stream_user::operator=(const stream_user& su)
 {
-    this->userid = su.userid;
-    this->control = su.control;
-    this->timestamp = su.timestamp;
     this->subsrv = su.subsrv;
     this->fd = su.fd;
-    this->pending_logout = su.pending_logout;
+    this->base_user::operator=(su);
     return *this;
 }
 
-const subserver& subserver::operator=(const subserver& ss)
+const stream_socket::subserver& stream_socket::subserver::operator=(const stream_socket::subserver& ss)
 {
     this->sock = ss.sock;
     this->pid = ss.pid;
@@ -97,224 +92,12 @@ const subserver& subserver::operator=(const subserver& ss)
     return *this;
 }
 
-stream_socket::stream_socket(int p)
-    : users(), subservers()
+stream_socket::stream_socket(struct addrinfo *ai, u_int16_t port)
+    : listen_socket(ai, port), subservers()
 {
-    try
-    {
-	this->send = new ThreadPool<packet_list>("send", config.send_threads);
-    }
-    catch (int error_val)
-    {
-	errno = error_val;
-	return;
-    }
-
-    this->port = p;
-    if ((this->sock = basesock::create_socket(SOCK_STREAM, this->port)) == -1)
-    {
-	return;
-    }
     FD_ZERO(&(this->master_readfs));
-    FD_SET(this->sock, &(this->master_readfs));
-    this->max_fd = this->sock + 1;
-}
-
-stream_socket::~stream_socket()
-{
-    std::vector<subserver>::iterator i;
-    int retval;
-
-    /* Terminate the reaping thread */
-    pthread_cancel(this->reaper);
-    sleep(0);
-    if ((retval = pthread_join(this->reaper, NULL)) != 0)
-	syslog(LOG_ERR,
-	       "error terminating reaper thread in stream port %d: %s",
-	       this->port, strerror(retval));
-
-    /* Close out the main socket */
-    if (this->sock >= 0)
-    {
-	FD_CLR(this->sock, &this->master_readfs);
-	close(this->sock);
-    }
-
-    /* Kill each of the subservers, and empty the vector */
-    for (i = this->subservers.begin(); i != this->subservers.end(); ++i)
-    {
-	if (kill((*i).pid, SIGTERM) == -1)
-	    syslog(LOG_ERR,
-		   "couldn't kill subserver %d for stream port %d: %s",
-		   (*i).pid, this->port, strerror(errno));
-	waitpid((*i).pid, NULL, 0);
-	FD_CLR((*i).sock, &this->master_readfs);
-	close((*i).sock);
-    }
-    this->subservers.erase(this->subservers.begin(), this->subservers.end());
-
-    /* Clear out the users map */
-    this->users.erase(this->users.begin(), this->users.end());
-
-    /* Stop the sending thread pool */
-    if (send != NULL)
-	delete send;
-}
-
-void stream_socket::listen(void)
-{
-    int i, fd, retval, len;
-    unsigned char buf[1024];
-    struct sockaddr_in sin;
-    socklen_t slen;
-    struct linger ls;
-
-    syslog(LOG_DEBUG,
-	   "starting connection loop for stream port %d",
-	   this->port);
-
-    /* Before we go into the select loop, we should spawn off the
-     * number of subservers in min_subservers.
-     */
-    for (i = 0; i < config.min_subservers; ++i)
-	if ((this->create_subserver()) == -1)
-	{
-	    syslog(LOG_ERR,
-		   "couldn't create subserver for stream port %d: %s",
-		   this->port, strerror(errno));
-	    return;
-	}
-
-    /* Start up the sending thread pool */
-    sleep(0);
-    this->send->startup_arg = (void *)this;
-    try
-    {
-	this->send->start(stream_send_pool_worker);
-    }
-    catch (int error_val)
-    {
-	syslog(LOG_ERR,
-	       "couldn't start send pool for stream port %d: %s",
-	       this->port, strerror(error_val));
-	errno = error_val;
-	return;
-    }
-
-    /* Start up the reaping thread */
-    if ((retval = pthread_create(&this->reaper, NULL,
-				 stream_reaper_worker, (void *)this)) != 0)
-    {
-	syslog(LOG_ERR,
-	       "couldn't create reaper thread for stream port %d: %s",
-	       this->port, strerror(retval));
-	errno = retval;
-	return;
-    }
-
-    /* Do the receiving part */
-    for (;;)
-    {
-	if (main_loop_exit_flag == 1)
-	    break;
-
-	/* The readfs state is undefined after select; define it. */
-	memcpy(&(this->readfs), &(this->master_readfs), sizeof(fd_set));
-
-	if ((retval = select(this->max_fd, &(this->readfs),
-			     NULL, NULL, NULL)) == 0)
-	    continue;
-	else if (retval == -1)
-	{
-	    if (errno == EINTR)
-	    {
-		/* we got a signal; it could have been a HUP */
-		syslog(LOG_NOTICE,
-		       "select interrupted by signal in stream port %d",
-		       this->port);
-		continue;
-	    }
-	    else
-	    {
-		syslog(LOG_ERR,
-		       "select error in stream port %d: %s",
-		       this->port, strerror(errno));
-		/* Should we blow up or something here? */
-	    }
-	}
-
-	/* We got some data from somebody. */
-	/* Figure out if it's a listening socket. */
-	if (FD_ISSET(this->sock, &(this->readfs))
-	    && (fd = accept(this->sock,
-			    (struct sockaddr *)&sin, &slen)) > 0)
-	{
-	    /* Pass the new fd to a subserver immediately.
-	     * First, set some good socket options, based on
-	     * our config options.
-	     */
-	    ls.l_onoff = (config.use_linger > 0);
-	    ls.l_linger = config.use_linger;
-	    setsockopt(fd, SOL_SOCKET, SO_LINGER,
-		       &ls, sizeof(struct linger));
-	    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
-		       &config.use_keepalive, sizeof(int));
-	    ioctl(fd, FIONBIO, &config.use_nonblock);
-	    if ((retval = this->choose_subserver()) != -1)
-	    {
-		/* We have connections available */
-		this->pass_fd(this->subservers[retval].sock, fd);
-		++(this->subservers[retval].connections);
-	    }
-	    else
-		/* We should send some kind of "maximum number of
-		 * connections exceeded" message here.
-		 */
-		close(fd);
-	}
-
-	for (std::vector<subserver>::iterator j = this->subservers.begin();
-	     j != this->subservers.end();
-	     ++j)
-	    if (FD_ISSET((*j).sock, &(this->readfs)))
-	    {
-		/* It's a subserver socket. */
-		if ((len = read((*j).sock,
-				buf,
-				sizeof(buf))) > 0)
-		{
-		    /* We have recieved something. */
-		    syslog(LOG_DEBUG, "got something");
-
-		    /* The first sizeof(int) bytes will be the socket
-		     * descriptor, and the rest of it will be the actual
-		     * client data that we got.
-		     */
-		}
-		else
-		{
-		    /* This subserver has died. */
-		    syslog(LOG_DEBUG,
-			   "stream port %d subserver %d died",
-			   this->port, (*j).pid);
-		    waitpid((*j).pid, NULL, 0);
-		    close((*j).sock);
-		    FD_CLR((*j).sock, &(this->master_readfs));
-		    this->subservers.erase(j--);
-
-		    /* Make sure max_fd is valid. */
-		    this->max_fd = this->sock + 1;
-		    for (std::vector<subserver>::iterator k
-			     = this->subservers.begin();
-			 k != this->subservers.end();
-			 ++k)
-			this->max_fd = std::max((*k).sock + 1, this->max_fd);
-		}
-	    }
-    }
-    syslog(LOG_DEBUG,
-	   "exiting connection loop for stream port %d",
-	   this->port);
+    FD_SET(this->sock.sock, &(this->master_readfs));
+    this->max_fd = this->sock.sock + 1;
 }
 
 int stream_socket::create_subserver(void)
@@ -325,18 +108,18 @@ int stream_socket::create_subserver(void)
     {
 	syslog(LOG_ERR,
 	       "couldn't create subserver sockets for stream port %d: %s",
-	       this->port, strerror(errno));
+	       this->sock.port_num, strerror(errno));
 	return retval;
     }
 
     /* We want the port number available to the child, for error reporting */
-    i = this->port;
+    i = this->sock.port_num;
 
     if ((pid = fork()) < 0)
     {
 	syslog(LOG_ERR,
 	       "couldn't fork new subserver for stream port %d: %s",
-	       this->port, strerror(errno));
+	       this->sock.port_num, strerror(errno));
 	close(fd[0]);
 	close(fd[1]);
     }
@@ -351,8 +134,8 @@ int stream_socket::create_subserver(void)
 	if (getrlimit(RLIMIT_NOFILE, &rlim) != 0)
 	{
 	    syslog(LOG_ERR,
-		   "can't get rlimit in child %d for stream port %d: %s",
-		   getpid(), i, strerror(errno));
+		   "can't get rlimit in child %d for stream port %d: %s (%d)",
+		   getpid(), i, strerror(errno), errno);
 	    syslog(LOG_ERR,
 		   "terminating child %d for stream port %d",
 		   getpid(), i);
@@ -382,7 +165,7 @@ int stream_socket::create_subserver(void)
     else
     {
 	/* We are the parent */
-	subserver new_sub;
+        stream_socket::subserver new_sub;
 
 	close(fd[1]);
 	new_sub.sock = fd[0];
@@ -393,7 +176,7 @@ int stream_socket::create_subserver(void)
 	retval = this->subservers.size() - 1;
 	syslog(LOG_DEBUG,
 	       "created subserver %d for stream port %d, sock %d, pid %d",
-	       retval, this->port, new_sub.sock, new_sub.pid);
+	       retval, this->sock.port_num, new_sub.sock, new_sub.pid);
     }
     return retval;
 }
@@ -472,67 +255,282 @@ int stream_socket::pass_fd(int fd, int new_fd)
     return 0;
 }
 
-/* We need to have another thread active to reap logged-out and link-dead
- * users from the user list.
- */
-void *stream_reaper_worker(void *arg)
+stream_socket::~stream_socket()
 {
-    stream_socket *sock = (stream_socket *)arg;
-    std::map<u_int64_t, stream_user>::iterator i;
+    std::vector<subserver>::iterator i;
+
+    if (this->sock.sock != 0)
+	FD_CLR(this->sock.sock, &this->master_readfs);
+
+    /* Kill each of the subservers, and empty the vector */
+    for (i = this->subservers.begin(); i != this->subservers.end(); ++i)
+    {
+	if (kill((*i).pid, SIGTERM) == -1)
+	    syslog(LOG_ERR,
+		   "couldn't kill subserver %d for stream port %d: %s (%d)",
+		   (*i).pid, this->sock.port_num, strerror(errno), errno);
+	waitpid((*i).pid, NULL, 0);
+	FD_CLR((*i).sock, &this->master_readfs);
+	close((*i).sock);
+    }
+    this->subservers.erase(this->subservers.begin(), this->subservers.end());
+
+    /* Stop the sending thread pool */
+    if (send != NULL)
+	delete send;
+}
+
+void stream_socket::start(void)
+{
+    int i, retval;
+
+    syslog(LOG_DEBUG,
+	   "starting connection loop for stream port %d",
+	   this->sock.port_num);
+
+    /* Before we go into the select loop, we should spawn off the
+     * number of subservers in min_subservers.
+     */
+    for (i = 0; i < config.min_subservers; ++i)
+	if ((this->create_subserver()) == -1)
+	{
+	    syslog(LOG_ERR,
+		   "couldn't create subserver for stream port %d: %s (%d)",
+		   this->sock.port_num, strerror(errno), errno);
+	    throw errno;
+	}
+
+    /* Start up the sending thread pool */
+    sleep(0);
+    this->send->startup_arg = (void *)this;
+    try
+    {
+	this->send->start(stream_socket::stream_send_worker);
+    }
+    catch (int e)
+    {
+	syslog(LOG_ERR,
+	       "couldn't start send pool for stream port %d: %s (%d)",
+	       this->sock.port_num, strerror(e), e);
+        throw;
+    }
+
+    /* Start up the reaping thread */
+    if ((retval = pthread_create(&this->reaper, NULL,
+				 stream_reaper_worker, (void *)this)) != 0)
+    {
+	syslog(LOG_ERR,
+	       "couldn't create reaper thread for stream port %d: %s (%d)",
+	       this->sock.port_num, strerror(retval), retval);
+        throw retval;
+    }
+
+    this->sock.listen_arg = (void *)this;
+    this->sock.start(stream_socket::stream_listen_worker);
+}
+
+base_user *stream_socket::login_user(u_int64_t userid,
+                                     Control *con,
+                                     access_list& al)
+{
+    stream_user *stu = new stream_user(userid, con);
+    stu->subsrv = al.what.login.who.stream.sub;
+    stu->fd = al.what.login.who.stream.sock;
+    users[userid] = stu;
+    return users[userid];
+}
+
+void *stream_socket::stream_listen_worker(void *arg)
+{
+    stream_socket *sts = (stream_socket *)arg;
+    int fd, retval, len;
+    unsigned char buf[1024];
+    struct sockaddr_in sin;
+    socklen_t slen;
+    struct linger ls;
+    std::vector<subserver>::iterator i, j;
+
+    for (;;)
+    {
+	/* The readfs state is undefined after select; define it. */
+	memcpy(&(sts->readfs), &(sts->master_readfs), sizeof(fd_set));
+
+        pthread_testcancel();
+	if ((retval = select(sts->max_fd, &(sts->readfs),
+			     NULL, NULL, NULL)) == 0)
+	    continue;
+	else if (retval == -1)
+	{
+            pthread_testcancel();
+	    if (errno == EINTR)
+	    {
+		/* we got a signal; it could have been a HUP */
+		syslog(LOG_NOTICE,
+		       "select interrupted by signal in stream port %d",
+		       sts->sock.port_num);
+		continue;
+	    }
+	    else
+	    {
+		syslog(LOG_ERR,
+		       "select error in stream port %d: %s (%d)",
+		       sts->sock.port_num, strerror(errno), errno);
+		/* Should we blow up or something here? */
+	    }
+	}
+
+        pthread_testcancel();
+	/* We got some data from somebody. */
+	/* Figure out if it's a listening socket. */
+	if (FD_ISSET(sts->sock.sock, &(sts->readfs))
+	    && (fd = accept(sts->sock.sock,
+			    (struct sockaddr *)&sin, &slen)) > 0)
+	{
+	    /* Pass the new fd to a subserver immediately.
+	     * First, set some good socket options, based on
+	     * our config options.
+	     */
+	    ls.l_onoff = (config.use_linger > 0);
+	    ls.l_linger = config.use_linger;
+	    setsockopt(fd, SOL_SOCKET, SO_LINGER,
+		       &ls, sizeof(struct linger));
+	    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
+		       &config.use_keepalive, sizeof(int));
+	    ioctl(fd, FIONBIO, &config.use_nonblock);
+	    if ((retval = sts->choose_subserver()) != -1)
+	    {
+		/* We have connections available */
+		sts->pass_fd(sts->subservers[retval].sock, fd);
+		++(sts->subservers[retval].connections);
+	    }
+	    else
+		/* We should send some kind of "maximum number of
+		 * connections exceeded" message here.
+		 */
+		close(fd);
+	}
+
+	for (i = sts->subservers.begin(); i != sts->subservers.end(); ++i)
+	    if (FD_ISSET((*i).sock, &(sts->readfs)))
+	    {
+		/* It's a subserver socket. */
+		if ((len = read((*i).sock,
+				buf,
+				sizeof(buf))) > 0)
+		{
+		    /* We have recieved something. */
+		    syslog(LOG_DEBUG, "got something");
+
+		    /* The first sizeof(int) bytes will be the socket
+		     * descriptor, and the rest of it will be the actual
+		     * client data that we got.
+		     */
+		}
+		else
+		{
+		    /* This subserver has died. */
+		    syslog(LOG_DEBUG,
+			   "stream port %d subserver %d died",
+			   sts->sock.port_num, (*i).pid);
+		    waitpid((*i).pid, NULL, 0);
+		    close((*i).sock);
+		    FD_CLR((*i).sock, &(sts->master_readfs));
+		    sts->subservers.erase(i--);
+
+		    /* Make sure max_fd is valid. */
+		    sts->max_fd = sts->sock.sock + 1;
+		    for (j = sts->subservers.begin();
+                         j != sts->subservers.end();
+                         ++j)
+			sts->max_fd = std::max((*j).sock + 1, sts->max_fd);
+		}
+	    }
+    }
+    syslog(LOG_DEBUG,
+	   "exiting connection loop for stream port %d",
+	   sts->sock.port_num);
+    return NULL;
+}
+
+void *stream_socket::stream_reaper_worker(void *arg)
+{
+    stream_socket *sts = (stream_socket *)arg;
+    std::map<u_int64_t, base_user *>::iterator i;
+    stream_user *stu;
     time_t now;
 
     syslog(LOG_DEBUG,
 	   "started reaper thread for stream port %d",
-	   sock->port);
+	   sts->sock.port_num);
     for (;;)
     {
-	sleep(15);
+	sleep(listen_socket::REAP_TIMEOUT);
 	now = time(NULL);
-	for (i = sock->users.begin(); i != sock->users.end(); ++i)
+	for (i = sts->users.begin(); i != sts->users.end(); ++i)
 	{
 	    pthread_testcancel();
-	    if ((*i).second.timestamp < now - 75)
+            stu = dynamic_cast<stream_user *>((*i).second);
+	    if (stu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
 	    {
-		/* After 75 seconds, we'll consider the user link-dead */
+		/* We'll consider the user link-dead */
 		syslog(LOG_DEBUG,
 		       "removing user %s (%llu) from stream port %d",
-		       (*i).second.control->username.c_str(),
-                       (*i).second.userid,
-		       sock->port);
-		if ((*i).second.control->slave != NULL)
+		       stu->control->username.c_str(),
+                       stu->userid,
+		       sts->sock.port_num);
+		if (stu->control->slave != NULL)
 		{
 		    /* Clean up a user who has logged out */
-		    (*i).second.control->slave->object->natures["invisible"] = 1;
-		    (*i).second.control->slave->object->natures["non-interactive"] = 1;
+		    stu->control->slave->object->natures["invisible"] = 1;
+		    stu->control->slave->object->natures["non-interactive"] = 1;
 		}
 		pthread_mutex_lock(&active_users_mutex);
-		active_users->erase((*i).second.userid);
+		active_users->erase(stu->userid);
 		pthread_mutex_unlock(&active_users_mutex);
-		delete (*i).second.control;
-		/* Tell subserver (*i).second.subserv to close and erase user
-		 * (*i).second.fd
+		delete stu->control;
+		/* Tell subserver stu->subserv to close and erase user
+		 * stu->fd
 		 * To do this, we'll simply pass the descriptor again.
 		 */
-		sock->pass_fd((*i).second.subsrv, (*i).second.fd);
-		sock->users.erase((*(i--)).second.userid);
+		sts->pass_fd(stu->subsrv, stu->fd);
+		sts->users.erase((*(i--)).second->userid);
 	    }
-	    else if ((*i).second.timestamp < now - 30
-		     && (*i).second.pending_logout == false)
+	    else if (stu->timestamp < now - listen_socket::PING_TIMEOUT
+		     && stu->pending_logout == false)
 		/* After 30 seconds, see if the user is still there */
-		(*i).second.control->send_ping();
+		stu->control->send_ping();
 	}
 	pthread_testcancel();
     }
     return NULL;
 }
 
-void *start_stream_socket(void *arg)
+void *stream_socket::stream_send_worker(void *arg)
 {
-    stream_socket *ss = new stream_socket(*(int *)arg);
-    if (ss != NULL)
+    stream_socket *sts = (stream_socket *)arg;
+    stream_user *stu;
+    packet_list req;
+    size_t realsize;
+
+    syslog(LOG_DEBUG,
+	   "started send pool worker for stream port %d",
+	   sts->sock.port_num);
+    for (;;)
     {
-	ss->listen();
-	delete ss;
+	sts->send->pop(&req);
+
+	realsize = packet_size(&req.buf);
+	if (hton_packet(&req.buf, realsize))
+	{
+	    stu = dynamic_cast<stream_user *>(sts->users[req.who]);
+            if (stu == NULL)
+                continue;
+	    /* TODO: Encryption */
+            stu->control->send(&(req.buf));
+	}
     }
+    syslog(LOG_DEBUG,
+	   "exiting send pool worker for stream port %d",
+	   sts->sock.port_num);
     return NULL;
 }

@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 May 2014, 21:25:51 tquirk
+ *   last updated 15 Jun 2014, 09:38:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -45,6 +45,8 @@
  *   11 May 2014 TAQ - We've moved the motion- and position-related parameters
  *                     out of the GameObject and into the Motion object, so
  *                     some pointers point at different things.
+ *   14 Jun 2014 TAQ - Lots of restructuring of base classes.
+ *   15 Jun 2014 TAQ - Moved the send worker in here.
  *
  * Things to do
  *   - We might need to have a mutex on the socket, since we'll probably
@@ -57,117 +59,63 @@
 
 #include <string.h>
 #include <time.h>
+#include <arpa/inet.h>
+#include <errno.h>
 
 #include "dgram.h"
+
+#include "zone.h"
 #include "zone_interface.h"
-#include "../config.h"
 
 extern volatile int main_loop_exit_flag;
 
-extern void *dgram_send_pool_worker(void *);
-static void *dgram_reaper_worker(void *);
-
-bool dgram_user::operator<(const dgram_user& du) const
+dgram_user::dgram_user(u_int64_t u, Control *c)
+    : base_user(u, c), sin()
 {
-    return (this->userid < du.userid);
-}
-
-bool dgram_user::operator==(const dgram_user& du) const
-{
-    return (this->userid == du.userid);
 }
 
 const dgram_user& dgram_user::operator=(const dgram_user& du)
 {
-    this->userid = du.userid;
-    this->control = du.control;
-    this->timestamp = du.timestamp;
     this->sin = du.sin;
-    this->pending_logout = du.pending_logout;
+    this->base_user::operator=(du);
     return *this;
 }
 
-dgram_socket::dgram_socket(int p)
-    : users()
+dgram_socket::dgram_socket(struct addrinfo *ai, u_int16_t port)
+    : listen_socket(ai, port)
 {
-    try
-    {
-	this->send = new ThreadPool<packet_list>("send", config.send_threads);
-    }
-    catch (int error_val)
-    {
-	errno = error_val;
-	throw;
-    }
-
-    this->port = p;
-    if ((this->sock = basesock::create_socket(SOCK_DGRAM, this->port)) == -1)
-    {
-	/* Maybe do something here?  Report the error somehow? */
-	return;
-    }
-    FD_ZERO(&this->master_readfs);
-    FD_SET(this->sock, &this->master_readfs);
 }
 
 dgram_socket::~dgram_socket()
 {
-    int retval;
-
     /* Should we send logout messages to everybody? */
-
-    /* Terminate the reaping thread */
-    pthread_cancel(this->reaper);
-    sleep(0);
-    if ((retval = pthread_join(this->reaper, NULL)) != 0)
-	syslog(LOG_ERR,
-	       "error terminating reaper thread in datagram port %d: %s",
-	       this->port, strerror(retval));
-
-    /* Close out the main socket */
-    if (this->sock >= 0)
-    {
-	FD_CLR(this->sock, &this->master_readfs);
-	close(this->sock);
-    }
-
-    /* Clear out the users map */
-    this->users.erase(this->users.begin(), this->users.end());
 
     /* Stop the sending thread pool */
     if (this->send != NULL)
 	delete this->send;
 }
 
-void dgram_socket::listen(void)
+void dgram_socket::start(void)
 {
-    int max_fd = this->sock + 1, retval, len;
-    packet buf;
-    Sockaddr from;
-    socklen_t fromlen;
-    u_int64_t userid;
-    std::map<u_int64_t, dgram_user>::iterator i;
-    access_list a;
-    packet_list p;
+    int retval;
 
     syslog(LOG_DEBUG,
 	   "starting connection loop for datagram port %d",
-	   this->port);
+	   this->sock.port_num);
 
     /* Start up the sending thread pool */
     sleep(0);
     this->send->startup_arg = (void *)this;
     try
     {
-	this->send->start(dgram_send_pool_worker);
+	this->send->start(dgram_send_worker);
     }
-    catch (int error_val)
+    catch (int e)
     {
 	syslog(LOG_ERR,
-	       "couldn't start send pool for datagram port %d: %s",
-	       this->port, strerror(error_val));
-	errno = error_val;
-	return;
+	       "couldn't start send pool for datagram port %d: %s (%d)",
+	       this->sock.port_num, strerror(e), e);
+        throw;
     }
 
     /* Start up the reaping thread */
@@ -175,11 +123,37 @@ void dgram_socket::listen(void)
 				 dgram_reaper_worker, (void *)this)) != 0)
     {
 	syslog(LOG_ERR,
-	       "couldn't create reaper thread for datagram port %d: %s",
-	       this->port, strerror(retval));
-	errno = retval;
-	return;
+	       "couldn't create reaper thread for datagram port %d: %s (%d)",
+	       this->sock.port_num, strerror(retval), retval);
+        throw retval;
     }
+
+    this->sock.listen_arg = (void *)this;
+    this->sock.start(dgram_socket::dgram_listen_worker);
+}
+
+base_user *dgram_socket::login_user(u_int64_t userid,
+                                    Control *con,
+                                    access_list& al)
+{
+    dgram_user *dgu = new dgram_user(userid, con);
+    dgu->sin = al.what.login.who.dgram;
+    users[userid] = dgu;
+    socks[al.what.login.who.dgram] = dgu;
+    return users[userid];
+}
+
+void *dgram_socket::dgram_listen_worker(void *arg)
+{
+    dgram_socket *dgs = (dgram_socket *)arg;
+    int len;
+    packet buf;
+    Sockaddr from;
+    socklen_t fromlen;
+    u_int64_t userid;
+    std::map<u_int64_t, dgram_user *>::iterator i;
+    access_list a;
+    packet_list p;
 
     /* Do the receiving part */
     for (;;)
@@ -187,148 +161,156 @@ void dgram_socket::listen(void)
 	if (main_loop_exit_flag == 1)
 	    break;
 
-	memcpy(&(this->readfs), &(this->master_readfs), sizeof(fd_set));
+        pthread_testcancel();
+        /* We HAVE to pass in a proper size value in fromlen */
+        fromlen = sizeof(struct sockaddr_in6);
+        /* Will this be interrupted by a pthread_cancel? */
+        len = recvfrom(dgs->sock.sock,
+                       (void *)&buf,
+                       sizeof(packet),
+                       0,
+                       (struct sockaddr *)&from.sin, &fromlen);
+        pthread_testcancel();
 
-	if ((retval = select(max_fd, &(this->readfs), NULL, NULL, NULL)) == 0)
-	    continue;
-	else if (retval == -1)
-	{
-	    if (errno == EINTR)
-	    {
-		syslog(LOG_NOTICE,
-		       "select interrupted by signal in datagram port %d",
-		       this->port);
-		continue;
-	    }
-	    else
-	    {
-		syslog(LOG_ERR,
-		       "select error in datagram port %d: %s",
-		       this->port, strerror(errno));
-		/* Should we blow up or something here? */
-	    }
-	}
+        /* Figure out who sent this packet */
+        if (dgs->socks.find(from) != dgs->socks.end())
+            userid = dgs->socks[from]->userid;
 
-	/* We must have gotten something, so grab it */
-	if (FD_ISSET(this->sock, &this->readfs))
-	{
-	    /* We HAVE to pass in a proper size value in fromlen */
-	    fromlen = sizeof(struct sockaddr_in);
-	    len = recvfrom(this->sock,
-			   (void *)&buf,
-			   sizeof(packet),
-			   0,
-			   (struct sockaddr *)&from.sin, &fromlen);
+        /* Do something with whatever we got */
+        switch (buf.basic.type)
+        {
+          case TYPE_ACKPKT:
+            /* Acknowledgement packet */
+            syslog(LOG_DEBUG, "got an ack packet");
+            dgs->users[userid]->timestamp = time(NULL);
+            break;
 
-	    /* Figure out who sent this packet */
-	    if (this->socks.find(from) != this->socks.end())
-		userid = this->socks[from]->userid;
+          case TYPE_LOGREQ:
+            /* Login request */
+            syslog(LOG_DEBUG, "got a login packet");
+            memcpy((unsigned char *)&a.buf, (unsigned char *)&buf, len);
+            a.parent = dgs;
+            memcpy((unsigned char *)&a.what.login.who.dgram,
+                   (unsigned char *)&from,
+                   sizeof(struct sockaddr_in));
+            access_pool->push(a);
+            break;
 
-	    /* Do something with whatever we got */
-	    switch (buf.basic.type)
-	    {
-	      case TYPE_ACKPKT:
-		/* Acknowledgement packet */
-		syslog(LOG_DEBUG, "got an ack packet");
-		users[userid].timestamp = time(NULL);
-		break;
+          case TYPE_LGTREQ:
+            /* Logout request */
+            syslog(LOG_DEBUG, "got a logout packet");
+            dgs->users[userid]->timestamp = time(NULL);
+            memcpy((unsigned char *)&a.buf, (unsigned char *)&buf, len);
+            a.parent = dgs;
+            a.what.logout.who = userid;
+            access_pool->push(a);
+            break;
 
-	      case TYPE_LOGREQ:
-		/* Login request */
-		syslog(LOG_DEBUG, "got a login packet");
-		memcpy((unsigned char *)&a.buf, (unsigned char *)&buf, len);
-		a.parent = this;
-		memcpy((unsigned char *)&a.what.login.who.dgram,
-		       (unsigned char *)&from,
-		       sizeof(struct sockaddr_in));
-		access_pool->push(a);
-		break;
+          case TYPE_ACTREQ:
+            /* Action request */
+            syslog(LOG_DEBUG, "got an action request packet");
+            dgs->users[userid]->timestamp = time(NULL);
+            memcpy((unsigned char *)&p.buf, (unsigned char *)&buf, len);
+            p.who = userid;
+            zone->action_pool->push(p);
+            break;
 
-	      case TYPE_LGTREQ:
-		/* Logout request */
-		syslog(LOG_DEBUG, "got a logout packet");
-		users[userid].timestamp = time(NULL);
-		memcpy((unsigned char *)&a.buf, (unsigned char *)&buf, len);
-		a.parent = this;
-		a.what.logout.who = userid;
-		access_pool->push(a);
-		break;
-
-	      case TYPE_ACTREQ:
-		/* Action request */
-		syslog(LOG_DEBUG, "got an action request packet");
-		users[userid].timestamp = time(NULL);
-		memcpy((unsigned char *)&p.buf, (unsigned char *)&buf, len);
-		p.who = userid;
-		zone->action_pool->push(p);
-		break;
-
-	      default:
-		break;
-	    }
-	}
+          default:
+            break;
+        }
+        pthread_testcancel();
     }
     syslog(LOG_DEBUG,
 	   "exiting connection loop for datagram port %d",
-	   this->port);
+	   dgs->sock.port_num);
+    return NULL;
 }
 
-/* The reaper thread worker routine */
-void *dgram_reaper_worker(void *arg)
+void *dgram_socket::dgram_reaper_worker(void *arg)
 {
-    dgram_socket *sock = (dgram_socket *)arg;
-    std::map<u_int64_t, dgram_user>::iterator i;
+    dgram_socket *dgs = (dgram_socket *)arg;
+    std::map<u_int64_t, base_user *>::iterator i;
+    dgram_user *dgu;
     time_t now;
 
     syslog(LOG_DEBUG,
 	   "started reaper thread for datagram port %d",
-	   sock->port);
+	   dgs->sock.port_num);
     for (;;)
     {
-	sleep(15);
+	sleep(listen_socket::REAP_TIMEOUT);
 	now = time(NULL);
-	for (i = sock->users.begin(); i != sock->users.end(); ++i)
+	for (i = dgs->users.begin(); i != dgs->users.end(); ++i)
 	{
 	    pthread_testcancel();
-	    if ((*i).second.timestamp < now - 75)
+            dgu = dynamic_cast<dgram_user *>((*i).second);
+	    if (dgu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
 	    {
-		/* After 75 seconds, we'll consider the user link-dead */
+		/* We'll consider the user link-dead */
 		syslog(LOG_DEBUG,
 		       "removing user %s (%llu) from datagram port %d",
-		       (*i).second.control->username.c_str(),
-                       (*i).second.userid,
-		       sock->port);
-		if ((*i).second.control->slave != NULL)
+		       dgu->control->username.c_str(),
+                       dgu->userid,
+		       dgs->sock.port_num);
+		if (dgu->control->slave != NULL)
 		{
 		    /* Clean up a user who has logged out */
-		    (*i).second.control->slave->object->natures["invisible"] = 1;
-		    (*i).second.control->slave->object->natures["non-interactive"] = 1;
+		    dgu->control->slave->object->natures["invisible"] = 1;
+		    dgu->control->slave->object->natures["non-interactive"] = 1;
 		}
 		pthread_mutex_lock(&active_users_mutex);
-		active_users->erase((*i).second.userid);
+		active_users->erase(dgu->userid);
 		pthread_mutex_unlock(&active_users_mutex);
-		delete (*i).second.control;
-		sock->socks.erase((*i).second.sin);
-		sock->users.erase((*(i--)).second.userid);
+		delete dgu->control;
+		dgs->socks.erase(dgu->sin);
+		dgs->users.erase((*(i--)).second->userid);
 	    }
-	    else if ((*i).second.timestamp < now - 30
-		     && (*i).second.pending_logout == false)
-		/* After 30 seconds, see if the user is still there */
-		(*i).second.control->send_ping();
+	    else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
+		     && dgu->pending_logout == false)
+		dgu->control->send_ping();
 	}
 	pthread_testcancel();
     }
     return NULL;
 }
 
-/* The C-linked thread startup routine.  arg points at the port number. */
-void *start_dgram_socket(void *arg)
+void *dgram_socket::dgram_send_worker(void *arg)
 {
-    dgram_socket *dgs = new dgram_socket(*(int *)arg);
-    if (dgs != NULL)
+    dgram_socket *dgs = (dgram_socket *)arg;
+    dgram_user *dgu;
+    packet_list req;
+    size_t realsize;
+
+    syslog(LOG_DEBUG,
+	   "started send pool worker for datagram port %d",
+	   dgs->sock.port_num);
+    for (;;)
     {
-	dgs->listen();
-	delete dgs;
+	dgs->send->pop(&req);
+
+	realsize = packet_size(&req.buf);
+	if (hton_packet(&req.buf, realsize))
+	{
+	    dgu = dynamic_cast<dgram_user *>(dgs->users[req.who]);
+            if (dgu == NULL)
+                continue;
+	    /* TODO: Encryption */
+	    if (sendto(dgs->sock.sock,
+		       (void *)&req.buf, realsize, 0,
+		       (struct sockaddr *)&(dgu->sin.sin),
+		       sizeof(struct sockaddr_in)) == -1)
+		syslog(LOG_ERR,
+		       "error sending packet out datagram port %d: %s",
+		       dgs->sock.port_num, strerror(errno));
+	    else
+		syslog(LOG_DEBUG, "sent a packet of type %d to %s:%d",
+		       req.buf.basic.type,
+		       inet_ntoa(dgu->sin.sin.sin_addr),
+		       ntohs(dgu->sin.sin.sin_port));
+	}
     }
+    syslog(LOG_DEBUG,
+	   "exiting send pool worker for datagram port %d",
+	   dgs->sock.port_num);
     return NULL;
 }

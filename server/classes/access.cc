@@ -1,6 +1,6 @@
 /* access.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 17:28:06 tquirk
+ *   last updated 15 Jun 2014, 08:09:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -117,8 +117,6 @@ void *access_pool_worker(void *notused)
 static void do_login(access_list& p)
 {
     u_int64_t userid = 0LL;
-    dgram_socket *dgs = dynamic_cast<dgram_socket *>(p.parent);
-    stream_socket *sts = dynamic_cast<stream_socket *>(p.parent);
 
     /* Need to check out the contents of username and password before
      * we start using them for stuff.
@@ -144,49 +142,18 @@ static void do_login(access_list& p)
 	    newcontrol->username = p.buf.log.username;
 
 	    /* Add this user to the socket's userlist */
-	    if (dgs != NULL)
-	    {
-		dgram_user dgu;
+            p.parent->login_user(userid, newcontrol, p);
+            newcontrol->parent = (void *)(p.parent->send);
 
-		newcontrol->parent = (void *)(dgs->send);
-		dgu.userid = userid;
-		dgu.control = newcontrol;
-		dgu.timestamp = time(NULL);
-		dgu.sin = p.what.login.who.dgram;
-		dgu.pending_logout = false;
-		pthread_mutex_lock(&active_users_mutex);
-		dgs->users[userid] = dgu;
-		dgs->socks[dgu.sin] = &(dgs->users[userid]);
-		pthread_mutex_unlock(&active_users_mutex);
-		syslog(LOG_DEBUG,
-		       "added new user %s (%lld) to dgram userlist %d",
-		       newcontrol->username.c_str(), dgu.userid, dgs->port);
-	    }
-	    else if (sts != NULL)
-	    {
-		stream_user stu;
+            syslog(LOG_DEBUG,
+                   "logged in user %s (%lld)",
+                   newcontrol->username.c_str(), userid);
 
-		newcontrol->parent = (void *)(sts->send);
-		stu.userid = userid;
-		stu.control = newcontrol;
-		stu.subsrv = p.what.login.who.stream.sub;
-		stu.fd = p.what.login.who.stream.sock;
-		stu.pending_logout = false;
-		pthread_mutex_lock(&active_users_mutex);
-		sts->users[userid] = stu;
-		pthread_mutex_unlock(&active_users_mutex);
-		syslog(LOG_DEBUG,
-		       "added new user %s (%lld) to stream userlist %d",
-		       newcontrol->username.c_str(), stu.userid, sts->port);
-	    }
-	    /* Send an ack packet, to let the user know they're in */
-	    newcontrol->send_ack(TYPE_LOGREQ);
+            /* Send an ack packet, to let the user know they're in */
+            newcontrol->send_ack(TYPE_LOGREQ);
 	}
 	else
-	    /* User is already logged in, ignore */
-	    /* Should we maybe send some sort of "you're already logged
-	     * in, dickhead" message here?  Or just re-ack their login?
-	     */
+            /* They're already logged in; this is a noop */
 	    pthread_mutex_unlock(&active_users_mutex);
     }
     /* Otherwise, do nothing, and send nothing */
@@ -194,26 +161,13 @@ static void do_login(access_list& p)
 
 static void do_logout(access_list& p)
 {
-    dgram_socket *dgs = dynamic_cast<dgram_socket *>(p.parent);
-    stream_socket *sts = dynamic_cast<stream_socket *>(p.parent);
-    Control *control = NULL;
-
     /* Most of this function is now handled by the reaper threads */
     if (active_users->find(p.what.logout.who) != active_users->end())
     {
-	if (dgs != NULL)
-	{
-	    control = dgs->users[p.what.logout.who].control;
-	    dgs->users[p.what.logout.who].pending_logout = true;
-	}
-	else if (sts != NULL)
-	{
-	    control = sts->users[p.what.logout.who].control;
-	    sts->users[p.what.logout.who].pending_logout = true;
-	}
+        base_user *bu = p.parent->logout_user(p.what.logout.who);
 	syslog(LOG_DEBUG,
 	       "logout request from %s (%lld)",
-	       control->username.c_str(), control->userid);
-	control->send_ack(TYPE_LGTREQ);
+	       bu->control->username.c_str(), bu->control->userid);
+	bu->control->send_ack(TYPE_LGTREQ);
     }
 }

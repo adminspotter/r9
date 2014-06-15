@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 17:59:03 tquirk
+ *   last updated 15 Jun 2014, 08:06:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -81,7 +81,6 @@
  * Things to do
  *   - Flesh out the attribute and nature as needed.
  *
- * $Id: defs.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_DEFS_H__
@@ -94,12 +93,12 @@
 #include <stdlib.h>
 
 #include "proto.h"
-#include "basesock.h"
 
 /* Eliminate the multiple-include problems */
 class GameObject;
 class Motion;
 class polygon;
+class listen_socket;
 
 typedef struct octree_tag
 {
@@ -135,7 +134,7 @@ packet_list;
 typedef struct access_list_tag
 {
     packet buf;
-    basesock *parent;
+    listen_socket *parent;
     union
     {
 	struct

@@ -1,9 +1,9 @@
 /* dgram.h                                                 -*- C++ -*-
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 02 Dec 2007, 10:12:55 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 15 Jun 2014, 08:57:57 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,62 +30,50 @@
  *   16 Sep 2007 TAQ - Added timestamp member to user class.
  *   22 Oct 2007 TAQ - Added a private reaper thread member.
  *   02 Dec 2007 TAQ - Added pending_logout member to user class.
+ *   14 Jun 2014 TAQ - Quite a bit of restructuring.  The basesock is now
+ *                     a has-a, rather than an is-a relationship, and the
+ *                     base classes have changed.
+ *   15 Jun 2014 TAQ - Moved send worker into the class.
  *
  * Things to do
  *
- * $Id: dgram.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_DGRAM_H__
 #define __INC_DGRAM_H__
 
-#include <sys/types.h>
-#include <sys/select.h>
-#include <pthread.h>
 #include <map>
 
 #include "control.h"
-#include "thread_pool.h"
 #include "basesock.h"
 #include "sockaddr.h"
 
-class dgram_user
+class dgram_user : public base_user
 {
   public:
-    u_int64_t userid;
-    Control *control;
-    time_t timestamp;
     Sockaddr sin;
-    bool pending_logout;
 
-    bool operator<(const dgram_user&) const;
-    bool operator==(const dgram_user&) const;
+    dgram_user(u_int64_t, Control *);
 
     const dgram_user& operator=(const dgram_user&);
 };
 
-class dgram_socket : public basesock
+class dgram_socket : public listen_socket
 {
   public:
-    std::map<u_int64_t, dgram_user> users;
     std::map<Sockaddr, dgram_user *> socks;
-    ThreadPool<packet_list> *send;
-    int sock, port;
-
-  private:
-    pthread_t reaper;
-    fd_set readfs, master_readfs;
 
   public:
-    dgram_socket(int);
+    dgram_socket(struct addrinfo *, u_int16_t);
     ~dgram_socket();
 
-    void listen(void);
-};
+    void start(void);
 
-extern "C"
-{
-    void *start_dgram_socket(void *);
-}
+    base_user *login_user(u_int64_t, Control *, access_list&);
+
+    static void *dgram_listen_worker(void *);
+    static void *dgram_reaper_worker(void *);
+    static void *dgram_send_worker(void *);
+};
 
 #endif /* __INC_DGRAM_H__ */
