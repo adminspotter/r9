@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 31 May 2014, 11:01:22 tquirk
+#   last updated 15 Jun 2014, 12:39:51 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -40,6 +40,7 @@
 #   19 Sep 2013 TAQ - makedepend is no longer in /usr/X11R6/bin.
 #   10 May 2014 TAQ - motion.cc changed names, and we added a motion class.
 #                     Moved a bunch of defs into a top level Makefile.defs.
+#   15 Jun 2014 TAQ - send.cc has gone away.
 #
 # Things to do
 #
@@ -64,7 +65,7 @@ ARFLAGS = rcs
 HDRS = control.h defs.h game_obj.h geometry.h motion.h \
 	thread_pool.h zone.h zone_interface.h basesock.h dgram.h stream.h
 SRCS = control.cc game_obj.cc geometry.cc zone.cc access.cc action.cc \
-	motion.cc motion_worker.cc update.cc send.cc zone_interface.cc \
+	motion.cc motion_worker.cc update.cc zone_interface.cc \
 	basesock.cc dgram.cc stream.cc
 OBJS = ${SRCS:.cc=.o}
 TARGET = libr9_classes.so

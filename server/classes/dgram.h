@@ -1,6 +1,6 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jun 2014, 08:57:57 tquirk
+ *   last updated 17 Jun 2014, 17:53:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -33,9 +33,14 @@
  *   14 Jun 2014 TAQ - Quite a bit of restructuring.  The basesock is now
  *                     a has-a, rather than an is-a relationship, and the
  *                     base classes have changed.
- *   15 Jun 2014 TAQ - Moved send worker into the class.
+ *   15 Jun 2014 TAQ - Moved send worker into the class.  Sockaddr is now
+ *                     a class hierarchy.
+ *   17 Jun 2014 TAQ - The socks member now uses a pointer as a key, and
+ *                     takes the comparator argument.
  *
  * Things to do
+ *   - Consider whether the socks and users maps should become unordered
+ *     maps instead.
  *
  */
 
@@ -51,7 +56,7 @@
 class dgram_user : public base_user
 {
   public:
-    Sockaddr sin;
+    Sockaddr *sa;
 
     dgram_user(u_int64_t, Control *);
 
@@ -61,7 +66,7 @@ class dgram_user : public base_user
 class dgram_socket : public listen_socket
 {
   public:
-    std::map<Sockaddr, dgram_user *> socks;
+    std::map<Sockaddr *, dgram_user *, less_sockaddr> socks;
 
   public:
     dgram_socket(struct addrinfo *, u_int16_t);

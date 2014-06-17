@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jun 2014, 09:38:00 tquirk
+ *   last updated 17 Jun 2014, 17:51:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -46,7 +46,8 @@
  *                     out of the GameObject and into the Motion object, so
  *                     some pointers point at different things.
  *   14 Jun 2014 TAQ - Lots of restructuring of base classes.
- *   15 Jun 2014 TAQ - Moved the send worker in here.
+ *   15 Jun 2014 TAQ - Moved the send worker in here.  Sockaddr is now a class
+ *                     hierarchy, and the behaviour has changed slightly.
  *
  * Things to do
  *   - We might need to have a mutex on the socket, since we'll probably
@@ -54,7 +55,6 @@
  *   - We should probably have a mutex around the users and socks members
  *     since we use those in a few different places.
  *
- * $Id$
  */
 
 #include <string.h>
@@ -70,13 +70,13 @@
 extern volatile int main_loop_exit_flag;
 
 dgram_user::dgram_user(u_int64_t u, Control *c)
-    : base_user(u, c), sin()
+    : base_user(u, c)
 {
 }
 
 const dgram_user& dgram_user::operator=(const dgram_user& du)
 {
-    this->sin = du.sin;
+    this->sa = du.sa;
     this->base_user::operator=(du);
     return *this;
 }
@@ -137,9 +137,9 @@ base_user *dgram_socket::login_user(u_int64_t userid,
                                     access_list& al)
 {
     dgram_user *dgu = new dgram_user(userid, con);
-    dgu->sin = al.what.login.who.dgram;
+    dgu->sa = build_sockaddr((struct sockaddr&)(al.what.login.who.dgram));
     users[userid] = dgu;
-    socks[al.what.login.who.dgram] = dgu;
+    socks[dgu->sa] = dgu;
     return users[userid];
 }
 
@@ -148,10 +148,11 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     dgram_socket *dgs = (dgram_socket *)arg;
     int len;
     packet buf;
-    Sockaddr from;
+    struct sockaddr_storage from;
     socklen_t fromlen;
     u_int64_t userid;
     std::map<u_int64_t, dgram_user *>::iterator i;
+    std::map<Sockaddr *, dgram_user *, less_sockaddr>::iterator found;
     access_list a;
     packet_list p;
 
@@ -163,18 +164,20 @@ void *dgram_socket::dgram_listen_worker(void *arg)
 
         pthread_testcancel();
         /* We HAVE to pass in a proper size value in fromlen */
-        fromlen = sizeof(struct sockaddr_in6);
+        fromlen = sizeof(Sockaddr);
+        userid = 0LL;
         /* Will this be interrupted by a pthread_cancel? */
         len = recvfrom(dgs->sock.sock,
                        (void *)&buf,
                        sizeof(packet),
                        0,
-                       (struct sockaddr *)&from.sin, &fromlen);
+                       (struct sockaddr *)&from, &fromlen);
         pthread_testcancel();
 
         /* Figure out who sent this packet */
-        if (dgs->socks.find(from) != dgs->socks.end())
-            userid = dgs->socks[from]->userid;
+        Sockaddr *sa = build_sockaddr((struct sockaddr&)from);
+        if (dgs->socks.find(sa) != dgs->socks.end())
+            userid = dgs->socks[sa]->userid;
 
         /* Do something with whatever we got */
         switch (buf.basic.type)
@@ -182,25 +185,28 @@ void *dgram_socket::dgram_listen_worker(void *arg)
           case TYPE_ACKPKT:
             /* Acknowledgement packet */
             syslog(LOG_DEBUG, "got an ack packet");
+            if (!userid)
+                break;
             dgs->users[userid]->timestamp = time(NULL);
             break;
 
           case TYPE_LOGREQ:
             /* Login request */
             syslog(LOG_DEBUG, "got a login packet");
-            memcpy((unsigned char *)&a.buf, (unsigned char *)&buf, len);
+            memcpy(&a.buf, &buf, len);
             a.parent = dgs;
-            memcpy((unsigned char *)&a.what.login.who.dgram,
-                   (unsigned char *)&from,
-                   sizeof(struct sockaddr_in));
+            memcpy(&a.what.login.who.dgram, &from,
+                   sizeof(struct sockaddr_storage));
             access_pool->push(a);
             break;
 
           case TYPE_LGTREQ:
             /* Logout request */
             syslog(LOG_DEBUG, "got a logout packet");
+            if (!userid)
+                break;
             dgs->users[userid]->timestamp = time(NULL);
-            memcpy((unsigned char *)&a.buf, (unsigned char *)&buf, len);
+            memcpy(&a.buf, &buf, len);
             a.parent = dgs;
             a.what.logout.who = userid;
             access_pool->push(a);
@@ -209,8 +215,10 @@ void *dgram_socket::dgram_listen_worker(void *arg)
           case TYPE_ACTREQ:
             /* Action request */
             syslog(LOG_DEBUG, "got an action request packet");
+            if (!userid)
+                break;
             dgs->users[userid]->timestamp = time(NULL);
-            memcpy((unsigned char *)&p.buf, (unsigned char *)&buf, len);
+            memcpy(&p.buf, &buf, len);
             p.who = userid;
             zone->action_pool->push(p);
             break;
@@ -262,7 +270,7 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
 		active_users->erase(dgu->userid);
 		pthread_mutex_unlock(&active_users_mutex);
 		delete dgu->control;
-		dgs->socks.erase(dgu->sin);
+		dgs->socks.erase(dgu->sa);
 		dgs->users.erase((*(i--)).second->userid);
 	    }
 	    else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
@@ -297,16 +305,15 @@ void *dgram_socket::dgram_send_worker(void *arg)
 	    /* TODO: Encryption */
 	    if (sendto(dgs->sock.sock,
 		       (void *)&req.buf, realsize, 0,
-		       (struct sockaddr *)&(dgu->sin.sin),
-		       sizeof(struct sockaddr_in)) == -1)
+		       (struct sockaddr *)&(dgu->sa),
+		       sizeof(struct sockaddr_storage)) == -1)
 		syslog(LOG_ERR,
 		       "error sending packet out datagram port %d: %s",
 		       dgs->sock.port_num, strerror(errno));
 	    else
-		syslog(LOG_DEBUG, "sent a packet of type %d to %s:%d",
+		syslog(LOG_DEBUG, "sent a packet of type %d to %s",
 		       req.buf.basic.type,
-		       inet_ntoa(dgu->sin.sin.sin_addr),
-		       ntohs(dgu->sin.sin.sin_port));
+		       dgu->sa->ntop());
 	}
     }
     syslog(LOG_DEBUG,

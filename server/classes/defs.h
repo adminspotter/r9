@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jun 2014, 08:06:51 tquirk
+ *   last updated 16 Jun 2014, 18:51:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -141,7 +141,7 @@ typedef struct access_list_tag
 	{
 	    union
 	    {
-		struct sockaddr_in dgram;
+		struct sockaddr_storage dgram;
 		struct
 		{
 		    int sub, sock;

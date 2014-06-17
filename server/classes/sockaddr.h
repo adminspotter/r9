@@ -1,9 +1,9 @@
 /* sockaddr.h                                           -*- C++ -*-
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 17 Sep 2007, 18:10:28 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 17 Jun 2014, 17:31:45 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,8 +20,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains a wrapper around the struct sockaddr_in, so that we
- * can use it in a more straightforward manner.
+ * This file contains a wrapper around the struct sockaddr family, so that we
+ * can use them in a more straightforward manner.
  *
  * Changes
  *   11 Aug 2006 TAQ - Created the file.
@@ -32,95 +32,176 @@
  *                     conditional compilation for IPV4 and IPV6.
  *   30 Jun 2007 TAQ - Quick fix of the IPV6 address assignment routine.
  *                     Fixed IN_ADDR_ANY to be the correct INADDR_ANY.
+ *   15 Jun 2014 TAQ - We want to support both IPv4 and IPv6 simultaneously,
+ *                     so out with the conditional compiles, and in with the
+ *                     base and derived classes.
+ *   17 Jun 2014 TAQ - Finally got everything working and building.  The
+ *                     less_sockaddr compare functor was the key.
  *
  * Things to do
  *
- * $Id: sockaddr.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_SOCKADDR_H__
 #define __INC_SOCKADDR_H__
 
+#include <string.h>
 #include <netinet/in.h>
-
-#if defined(USE_IPV4) || !defined(USE_IPV6)
+#include <arpa/inet.h>
 
 class Sockaddr
 {
   public:
-    struct sockaddr_in sin;
+    struct sockaddr_storage ss;
+  protected:
+    char str[INET6_ADDRSTRLEN];
 
+  public:
     Sockaddr()
-	{
-	    this->sin.sin_family = AF_INET;
-	    this->sin.sin_port = htons(0);
-	    this->sin.sin_addr.s_addr = htonl(INADDR_ANY);
-	};
-    Sockaddr(struct sockaddr_in &sock)
-	{
-	    this->sin.sin_family = sock.sin_family;
-	    this->sin.sin_port = sock.sin_port;
-	    this->sin.sin_addr.s_addr = sock.sin_addr.s_addr;
-	};
-    ~Sockaddr()
-	{
-	};
+        {
+            this->ss.ss_family = AF_INET;
+        };
+    Sockaddr(const Sockaddr& s)
+        {
+            this->ss.ss_family = s.ss.ss_family;
+        };
+    Sockaddr(const struct sockaddr& s)
+        {
+            this->ss.ss_family = s.sa_family;
+        };
+    virtual ~Sockaddr()
+        {
+        };
 
-    inline const Sockaddr &operator=(const Sockaddr &sock)
-	{
-	    this->sin.sin_family = sock.sin.sin_family;
-	    this->sin.sin_port = sock.sin.sin_port;
-	    this->sin.sin_addr.s_addr = sock.sin.sin_addr.s_addr;
-	    return *this;
-	};
-    inline const Sockaddr &operator=(const struct sockaddr_in &sock)
-	{
-	    this->sin.sin_family = sock.sin_family;
-	    this->sin.sin_port = sock.sin_port;
-	    this->sin.sin_addr.s_addr = sock.sin_addr.s_addr;
-	    return *this;
-	};
-    inline int operator==(const Sockaddr &sock) const
-	{
-	    return (this->sin.sin_family == sock.sin.sin_family
-		    && this->sin.sin_port == sock.sin.sin_port
-		    && this->sin.sin_addr.s_addr == sock.sin.sin_addr.s_addr);
-	};
-    inline int operator<(const Sockaddr& sock) const
-	{
-	    return (this->sin.sin_addr.s_addr < sock.sin.sin_addr.s_addr
-		    || this->sin.sin_port < sock.sin.sin_port);
-	};
+    virtual bool operator==(const Sockaddr& s)
+        {
+            return !memcmp(&(this->ss),
+                           &(s.ss),
+                           sizeof(struct sockaddr_storage));
+        };
+    virtual bool operator==(const struct sockaddr *s)
+        {
+            return !memcmp(&(this->ss), s, sizeof(struct sockaddr_storage));
+        };
+
+    virtual bool operator<(const Sockaddr& s) const = 0;
+    virtual bool operator<(const struct sockaddr& s) const = 0;
+
+    virtual Sockaddr& operator=(const Sockaddr& s)
+        {
+            memcpy(&(this->ss), &(s.ss), sizeof(sockaddr_storage));
+            return *this;
+        };
+    virtual Sockaddr& operator=(const struct sockaddr& s)
+        {
+            memcpy(&(this->ss), &s, sizeof(sockaddr_storage));
+            return *this;
+        }
+
+    virtual char *ntop(void) = 0;
 };
 
-#elif defined(USE_IPV6)
-
-/* A few functions to be able to handle IPV6 addresses easily:  assignment,
- * equality comparison, and less-than comparison.
+/* Since we can't use a Sockaddr directly in one of our map keys,
+ * we'll need to use pointers to them, to leverage the polymorphism
+ * here.  We need a compare functor to deref the pointers for the
+ * less-than comparison that's required by the map.
  */
-inline const struct in6_addr &operator=(struct in6_addr &a,
-					const struct in6_addr &b)
+struct less_sockaddr : std::binary_function<const Sockaddr *,
+                                            const Sockaddr *,
+                                            bool>
 {
-    a.s6_addr32[0] = b.s6_addr32[0];
-    a.s6_addr32[1] = b.s6_addr32[1];
-    a.s6_addr32[2] = b.s6_addr32[2];
-    a.s6_addr32[3] = b.s6_addr32[3];
-    return a;
+    bool operator()(const Sockaddr *a, const Sockaddr *b) const
+        {
+            return (*a < *b);
+        }
+};
+
+class Sockaddr_in : public Sockaddr
+{
+  public:
+    struct sockaddr_in *sin;
+
+    Sockaddr_in()
+	{
+            this->sin = (struct sockaddr_in *)&ss;
+	    this->sin->sin_family = AF_INET;
+	    this->sin->sin_port = htons(0);
+	    this->sin->sin_addr.s_addr = htonl(INADDR_ANY);
+            memset(this->str, 0, INET6_ADDRSTRLEN);
+	};
+    Sockaddr_in(const Sockaddr& s)
+        {
+            const Sockaddr_in& sin = dynamic_cast<const Sockaddr_in&>(s);
+            this->sin = (struct sockaddr_in *)&ss;
+	    this->sin->sin_family = sin.sin->sin_family;
+	    this->sin->sin_port = sin.sin->sin_port;
+	    this->sin->sin_addr.s_addr = sin.sin->sin_addr.s_addr;
+            memcpy(this->str, sin.str, INET6_ADDRSTRLEN);
+        };
+    Sockaddr_in(const struct sockaddr& s)
+	{
+            const struct sockaddr_in& sin
+                = reinterpret_cast<const struct sockaddr_in&>(s);
+            this->sin = (struct sockaddr_in *)&ss;
+	    this->sin->sin_family = sin.sin_family;
+	    this->sin->sin_port = sin.sin_port;
+	    this->sin->sin_addr.s_addr = sin.sin_addr.s_addr;
+            memset(this->str, 0, INET6_ADDRSTRLEN);
+	};
+    ~Sockaddr_in()
+	{
+	};
+
+    bool operator==(const Sockaddr& s) const
+	{
+            const Sockaddr_in *si = dynamic_cast<const Sockaddr_in *>(&s);
+            if (si == NULL)
+                return false;
+            return !memcmp(this->sin, si->sin, sizeof(struct sockaddr_in));
+	};
+    bool operator==(const struct sockaddr *s)
+        {
+            const struct sockaddr_in& sin
+                = reinterpret_cast<const struct sockaddr_in&>(s);
+            return !memcmp(&(this->ss), &sin, sizeof(struct sockaddr_in));
+        };
+
+    bool operator<(const Sockaddr& s) const
+	{
+            const Sockaddr_in *si = dynamic_cast<const Sockaddr_in *>(&s);
+            if (si == NULL)
+                return false;
+	    return (this->sin->sin_addr.s_addr < si->sin->sin_addr.s_addr
+		    || this->sin->sin_port < si->sin->sin_port);
+	};
+    bool operator<(const struct sockaddr& s) const
+	{
+            const struct sockaddr_in& sin
+                = reinterpret_cast<const struct sockaddr_in&>(s);
+	    return (this->sin->sin_addr.s_addr < sin.sin_addr.s_addr
+		    || this->sin->sin_port < sin.sin_port);
+	};
+
+    char *ntop(void)
+        {
+            inet_ntop(this->sin->sin_family, &(this->sin->sin_addr),
+                      this->str, INET6_ADDRSTRLEN);
+            return this->str;
+        };
+};
+
+/* A couple functions to be able to handle IPV6 addresses easily:
+ * equality comparison and less-than comparison.  v6 addresses are
+ * always stored in network byte order, so there's no need to convert
+ * at all in these routines.
+ */
+inline bool operator==(const struct in6_addr& a, const struct in6_addr& b)
+{
+    return !memcmp(&a, &b, sizeof(struct in6_addr));
 }
 
-inline int operator==(const struct in6_addr &a, const struct in6_addr &b)
+inline bool operator<(const struct in6_addr& a, const struct in6_addr& b)
 {
-    return (a.s6_addr32[0] == b.s6_addr32[0]
-	    && a.s6_addr32[1] == b.s6_addr32[1]
-	    && a.s6_addr32[2] == b.s6_addr32[2]
-	    && a.s6_addr32[3] == b.s6_addr32[3])
-}
-
-inline int operator<(const struct in6_addr &a, const struct in6_addr &b)
-{
-    /* We might need more granularity here, since network byte order and
-     * host byte order may be different.
-     */
     return (a.s6_addr[0] < b.s6_addr[0]
 	    || a.s6_addr[1] < b.s6_addr[1]
 	    || a.s6_addr[2] < b.s6_addr[2]
@@ -139,63 +220,104 @@ inline int operator<(const struct in6_addr &a, const struct in6_addr &b)
 	    || a.s6_addr[15] < b.s6_addr[15]);
 }
 
-class Sockaddr
+class Sockaddr_in6 : public Sockaddr
 {
   public:
-    struct sockaddr_in6 sin;
+    struct sockaddr_in6 *sin6;
 
-    Sockaddr()
+    Sockaddr_in6()
 	{
-	    this->sin.sin6_family = AF_INET;
-	    this->sin.sin6_port = htons(0);
-	    this->sin.sin6_flowinfo = htonl(0L);
-	    this->sin.sin6_addr.s6_addr = in6addr_any;
-	    this->sin.sin6_scope_id = htonl(0L);
+            this->sin6 = (struct sockaddr_in6 *)&ss;
+	    this->sin6->sin6_family = AF_INET;
+	    this->sin6->sin6_port = htons(0);
+	    this->sin6->sin6_flowinfo = htonl(0L);
+	    memcpy(&(this->sin6->sin6_addr.s6_addr),
+                   &in6addr_any,
+                    sizeof(struct in6_addr));
+	    this->sin6->sin6_scope_id = htonl(0L);
+            memset(this->str, 0, INET6_ADDRSTRLEN);
 	};
-    Sockaddr(struct sockaddr_in &sock)
+    Sockaddr_in6(const Sockaddr& s)
+        {
+            const Sockaddr_in6& sin6 = dynamic_cast<const Sockaddr_in6&>(s);
+            this->sin6 = (struct sockaddr_in6 *)&ss;
+	    this->sin6->sin6_family = sin6.sin6->sin6_family;
+	    this->sin6->sin6_port = sin6.sin6->sin6_port;
+            this->sin6->sin6_flowinfo = sin6.sin6->sin6_flowinfo;
+	    memcpy(&(this->sin6->sin6_addr),
+                   &(sin6.sin6->sin6_addr),
+                   sizeof(struct in6_addr));
+	    this->sin6->sin6_scope_id = sin6.sin6->sin6_scope_id;
+            memcpy(this->str, sin6.str, INET6_ADDRSTRLEN);
+        };
+    Sockaddr_in6(const struct sockaddr& s)
 	{
-	    this->sin.sin6_family = sock.sin6_family;
-	    this->sin.sin6_port = sock.sin6_port;
-	    this->sin.sin6_flowinfo = sock.sin6_flowinfo;
-	    this->sin.sin6_addr = sock.sin6_addr;
-	    this->sin.sin6_scope_id = sock.sin6_scope_id;
+            struct sockaddr_in6 *si = (struct sockaddr_in6 *)(&s);
+            this->sin6 = (struct sockaddr_in6 *)&ss;
+	    this->sin6->sin6_family = si->sin6_family;
+	    this->sin6->sin6_port = si->sin6_port;
+	    this->sin6->sin6_flowinfo = si->sin6_flowinfo;
+	    memcpy(&(this->sin6->sin6_addr),
+                   &(si->sin6_addr),
+                   sizeof(struct in6_addr));
+	    this->sin6->sin6_scope_id = si->sin6_scope_id;
+            memset(this->str, 0, INET6_ADDRSTRLEN);
 	};
-    ~Sockaddr()
+    ~Sockaddr_in6()
 	{
 	};
 
-    inline const Sockaddr &operator=(const Sockaddr &sock)
+    bool operator==(const Sockaddr &s) const
 	{
-	    this->sin.sin6_family = sock.sin.sin6_family;
-	    this->sin.sin6_port = sock.sin.sin6_port;
-	    this->sin.sin6_flowinfo = sock.sin.sin6_flowinfo;
-	    this->sin.sin6_addr = sock.sin.sin6_addr;
-	    this->sin.sin6_scope_id = sock.sin.sin6_scope_id;
-	    return *this;
+            const Sockaddr_in6 *si = dynamic_cast<const Sockaddr_in6 *>(&s);
+            if (si == NULL)
+                return false;
+            return !memcmp(this->sin6, si->sin6, sizeof(struct sockaddr_in6));
 	};
-    inline const Sockaddr &operator=(const struct sockaddr_in6 &sock)
+
+    bool operator<(const Sockaddr& s) const
 	{
-	    this->sin.sin6_family = sock.sin6_family;
-	    this->sin.sin6_port = sock.sin6_port;
-	    this->sin.sin6_flowinfo = sock.sin6_flowinfo;
-	    this->sin.sin6_addr = sock.sin6_addr;
-	    this->sin.sin6_scope_id = sock.sin6_scope_id;
-	    return *this;
+            const Sockaddr_in6 *si = dynamic_cast<const Sockaddr_in6 *>(&s);
+            if (si == NULL)
+                return false;
+	    return (this->sin6->sin6_addr < si->sin6->sin6_addr
+		    || this->sin6->sin6_port < si->sin6->sin6_port);
 	};
-    inline int operator==(const Sockaddr &sock) const
-	{
-	    return (this->sin.sin6_family == sock.sin.sin6_family
-		    && this->sin.sin6_port == sock.sin.sin6_port
-		    && this->sin.sin6_flowinfo == sock.sin.sin6_flowinfo
-		    && this->sin.sin6_addr == sock.sin.sin6_addr
-		    && this->sin.sin6_scope_id == sock.sin.sin6_scope_id);
-	};
-    inline int operator<(const Sockaddr& sock) const
-	{
-	    return (this->sin.sin6_addr < sock.sin.sin6_addr
-		    || this->sin.sin6_port < sock.sin.sin6_port);
-	};
+    bool operator<(const struct sockaddr& s) const
+        {
+            const struct sockaddr_in6& sin6
+                = reinterpret_cast<const struct sockaddr_in6&>(s);
+            return (this->sin6->sin6_addr < sin6.sin6_addr
+                    || this->sin6->sin6_port < sin6.sin6_port);
+        };
+
+    char *ntop(void)
+        {
+            inet_ntop(this->sin6->sin6_family, &(this->sin6->sin6_addr),
+                      this->str, INET6_ADDRSTRLEN);
+            return this->str;
+        };
 };
 
-#endif /* defined(USE_IPV4) || !defined(USE_IPV6) */
+inline Sockaddr *build_sockaddr(struct sockaddr& s)
+{
+    switch (s.sa_family)
+    {
+      case AF_INET:
+      {
+          Sockaddr_in *sin = new Sockaddr_in(s);
+          return dynamic_cast<Sockaddr *>(sin);
+      }
+
+      case AF_INET6:
+      {
+          Sockaddr_in6 *sin6 = new Sockaddr_in6(s);
+          return dynamic_cast<Sockaddr *>(sin6);
+      }
+
+      default:
+        return NULL;
+    }
+}
+
 #endif /* __INC_SOCKADDR_H__ */
