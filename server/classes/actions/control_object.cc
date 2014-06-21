@@ -1,6 +1,6 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 16:14:27 tquirk
+ *   last updated 21 Jun 2014, 09:54:45 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -50,7 +50,7 @@
 #include "game_obj.h"
 #include "control.h"
 #include "proto.h"
-#include "modules/sql.h"
+#include "zone_interface.h"
 
 /* ARGSUSED */
 void action_control_object(Motion *source,
@@ -65,8 +65,9 @@ void action_control_object(Motion *source,
     if (src->slave == NULL)
     {
 	/* Figure out if the player actually has access to the target */
-	if ((access_type = check_authorization(src->userid,
-					       target->object.get_object_id()))
+	if ((access_type
+             = database->check_authorization(src->userid,
+                                             target->object->get_object_id()))
 	    != ACCESS_NONE)
 	{
             if (target->connect(src))

@@ -1,6 +1,6 @@
 /* access.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jun 2014, 08:09:35 tquirk
+ *   last updated 21 Jun 2014, 09:37:53 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -62,10 +62,14 @@
  *                     gcc.
  *   10 May 2014 TAQ - The control object now uses std::string instead of
  *                     a char pointer.
+ *   17 Jun 2014 TAQ - We pass ourselves into the thread, instead of
+ *                     relying on a global.
+ *   21 Jun 2014 TAQ - Fixing minor stuff so we can compile.
  *
  * Things to do
+ *   - This should maybe be moved elsewhere.  Having it sitting in a file
+ *     by itself seems weird.  The zone?  Another as-yet-undefined object?
  *
- * $Id$
  */
 
 #include <time.h>
@@ -77,30 +81,20 @@
 #include "dgram.h"
 #include "stream.h"
 
+#include "modules/db.h"
+
 static void do_login(access_list&);
 static void do_logout(access_list&);
 
-/* Funcptrs for database access */
-u_int64_t (*check_authentication)(const char *, const char *);
-int (*check_authorization)(const char *, u_int64_t);
-int (*get_server_skills)(std::map<u_int16_t, action_rec>&);
-int (*get_server_objects)(std::map<u_int64_t, game_object_list_element>&);
-int (*get_player_server_skills)(const char *,
-				u_int64_t,
-				std::map<u_int16_t, action_level>&);
-int (*open_new_login)(u_int64_t, u_int64_t);
-int (*check_open_login)(u_int64_t, u_int64_t);
-int (*close_open_login)(u_int64_t, u_int64_t);
-
-/* ARGSUSED */
-void *access_pool_worker(void *notused)
+void *access_pool_worker(void *arg)
 {
+    ThreadPool<access_list> *ap = (ThreadPool<access_list> *)arg;
     access_list req;
 
     syslog(LOG_DEBUG, "started access pool worker");
     for (;;)
     {
-        access_pool->pop(&req);
+        ap->pop(&req);
 
 	ntoh_packet(&(req.buf), sizeof(packet));
 
@@ -122,8 +116,8 @@ static void do_login(access_list& p)
      * we start using them for stuff.
      */
 
-    userid = (*check_authentication)(p.buf.log.username,
-				     p.buf.log.password);
+    userid = database->check_authentication(p.buf.log.username,
+                                            p.buf.log.password);
     /* Don't want to keep passwords around in core if we can help it */
     memset(p.buf.log.password, 0, sizeof(p.buf.log.password));
     syslog(LOG_DEBUG,

@@ -1,6 +1,6 @@
 /* zone_interface.h
  *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 16 Sep 2007, 09:15:27 trinity
+ *   last updated 21 Jun 2014, 09:35:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2007  Trinity Annabelle Quirk
@@ -42,10 +42,13 @@
  *   10 Sep 2007 TAQ - The access pool now is of type access_list.  Added
  *                     active users list and mutex for access pool.  Cleaned
  *                     up the includes.
+ *   17 Jun 2014 TAQ - Moved most of the pool worker prototypes into the
+ *                     zone.
  *
  * Things to do
+ *   - See if we can get rid of this altogether.  There are better ways of
+ *     handling the stuff this file was originally meant to address.
  *
- * $Id: zone_interface.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_ZONE_INTERFACE_H__
@@ -61,17 +64,17 @@
 #include "defs.h"
 #include "thread_pool.h"
 #include "zone.h"
+#include "library.h"
+#include "modules/db.h"
 
 extern Zone *zone;
+extern Library *db_lib;
+extern DB *database;
 extern ThreadPool<access_list> *access_pool;
 extern pthread_mutex_t active_users_mutex;
 extern std::set<u_int64_t> *active_users;
 
 void *access_pool_worker(void *);
-void *action_pool_worker(void *);
-void *motion_pool_worker(void *);
-void *update_pool_worker(void *);
-void *send_pool_worker(void *);
 
 extern "C"
 {

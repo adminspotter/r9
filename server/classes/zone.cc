@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 May 2014, 22:16:04 tquirk
+ *   last updated 21 Jun 2014, 09:11:14 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -115,6 +115,9 @@
  *   14 Oct 2007 TAQ - Changed unsigned short steps arguments to u_int16_t.
  *   11 May 2014 TAQ - Added the execute_action method, to separate the
  *                     Control's part of executing actions from the zone's.
+ *   17 Jun 2014 TAQ - Moved the thread pool routines inside the class as
+ *                     static methods.
+ *   21 Jun 2014 TAQ - Moved the action library handling into this class.
  *
  * Things to do
  *   - Do we even want to handle geometry here, or would that be more
@@ -129,7 +132,6 @@
  *     objects will probably be nice; the first level will be a sphere, and
  *     the second will be a somewhat tight box (or set of boxes).
  *
- * $Id$
  */
 
 #include <stdio.h>
@@ -137,7 +139,6 @@
 #include <math.h>
 #include <syslog.h>
 #include <glob.h>
-#include <dlfcn.h>
 #include <errno.h>
 
 #include "zone.h"
@@ -145,8 +146,22 @@
 #include "../config.h"
 
 /* Private methods */
+void Zone::load_actions(const char *libname)
+{
+    try
+    {
+        this->action_lib = new Library(libname);
+        action_reg_t *reg
+            = (action_reg_t *)this->action_lib->symbol("actions_register");
+        (*reg)(this->actions);
+    }
+    catch (std::string& s)
+    {
+        syslog(LOG_ERR, "error loading actions library: %s", s.c_str());
+    }
+}
+
 void Zone::create_thread_pools(void)
-    throw (int)
 {
     try
     {
@@ -157,29 +172,142 @@ void Zone::create_thread_pools(void)
 	this->update_pool
 	    = new ThreadPool<Motion *>("update", config.update_threads);
     }
-    catch (int errval)
+    catch (int e)
     {
 	syslog(LOG_ERR,
-	       "couldn't create zone thread pool: %s",
-	       strerror(errval));
+	       "couldn't create zone thread pool: %s (%d)",
+	       strerror(e), e);
 	throw;
     }
 }
 
+void *Zone::action_pool_worker(void *arg)
+{
+    Zone *zone = (Zone *)arg;
+    packet_list req;
+    u_int16_t skillid;
+
+    syslog(LOG_DEBUG, "started action pool worker");
+    for (;;)
+    {
+	/* Grab the next packet off the queue */
+	zone->action_pool->pop(&req);
+
+	/* Process the packet */
+	ntoh_packet(&req.buf, sizeof(packet));
+
+	/* Make sure the action exists and is valid on this server,
+	 * before trying to do anything
+	 */
+	skillid = req.buf.act.action_id;
+	if (zone->actions.find(skillid) != zone->actions.end()
+	    && zone->actions[skillid].valid == true)
+	{
+	    /* Make the action call.
+	     *
+	     * The action routine will handle checking the environment
+	     * and relevant skills of the target, and spawning of any
+	     * new needed subobjects.
+	     */
+	    if (((Control *)req.who)->slave->object->get_object_id()
+		== req.buf.act.object_id)
+		((Control *)req.who)->execute_action(req.buf.act,
+						     sizeof(action_request));
+	}
+    }
+    syslog(LOG_DEBUG, "action pool worker ending");
+    return NULL;
+}
+
+void *Zone::motion_pool_worker(void *arg)
+{
+    Zone *zone = (Zone *)arg;
+    Motion *req;
+    struct timeval current;
+    double interval;
+
+    syslog(LOG_DEBUG, "started a motion pool worker");
+    for (;;)
+    {
+	/* Grab the next object to move off the queue */
+	zone->motion_pool->pop(&req);
+
+	/* Process the movement */
+	/* Get interval since last move */
+	gettimeofday(&current, NULL);
+	interval = (current.tv_sec + (current.tv_usec * 1000000))
+	    - (req->last_updated.tv_sec
+	       + (req->last_updated.tv_usec * 1000000));
+	/* Do the actual move, scaled by the interval */
+	req->position += req->movement * interval;
+	/*zone->game_objects[req->get_object_id()].orientation
+	    += req->rotation * interval;*/
+	/* Do collisions (not yet) */
+	/* Reset last update to "now" */
+	memcpy(&req->last_updated, &current, sizeof(struct timeval));
+	/* We've moved, so users need updating */
+	zone->update_pool->push(req);
+	/* If we're still moving, queue it up */
+	if ((req->movement[0] != 0.0
+	     || req->movement[1] != 0.0
+	     || req->movement[2] != 0.0)
+	    || (req->rotation[0] != 0.0
+		|| req->rotation[1] != 0.0
+		|| req->rotation[2] != 0.0))
+	    zone->motion_pool->push(req);
+    }
+    syslog(LOG_DEBUG, "motion pool worker ending");
+    return NULL;
+}
+
+void *Zone::update_pool_worker(void *arg)
+{
+    Zone *zone = (Zone *)arg;
+    Motion *req;
+    u_int64_t objid;
+    packet_list buf;
+
+    syslog(LOG_DEBUG, "started an update pool worker");
+    for (;;)
+    {
+	zone->update_pool->pop(&req);
+
+	/* Process the request */
+	/* We won't bother to figure out who can see what just yet */
+	buf.buf.pos.type = TYPE_POSUPD;
+	/* We're not using a sequence number yet, but don't forget about it */
+	objid = buf.buf.pos.object_id = req->object->get_object_id();
+	/* We're not doing frame number yet, but don't forget about it */
+	buf.buf.pos.x_pos = (u_int64_t)trunc(req->position[0] * 100);
+	buf.buf.pos.y_pos = (u_int64_t)trunc(req->position[1] * 100);
+	buf.buf.pos.z_pos = (u_int64_t)trunc(req->position[2] * 100);
+	/*buf.buf.pos.x_orient = (int32_t)trunc(req->orientation[0] * 100);
+	buf.buf.pos.y_orient = (int32_t)trunc(req->orientation[1] * 100);
+	buf.buf.pos.z_orient = (int32_t)trunc(req->orientation[2] * 100);*/
+	buf.buf.pos.x_look = (int32_t)trunc(req->look[0] * 100);
+	buf.buf.pos.y_look = (int32_t)trunc(req->look[1] * 100);
+	buf.buf.pos.z_look = (int32_t)trunc(req->look[2] * 100);
+	/* Figure out who to send it to */
+	/* Push the packet onto the send queue */
+	/*zone->sending_pool->push(&buf, sizeof(packet));*/
+    }
+    syslog(LOG_DEBUG, "update pool worker ending");
+    return NULL;
+}
+
 /* Public methods */
 Zone::Zone(u_int64_t dim, u_int16_t steps)
-    throw (int)
     : actions(), game_objects()
 {
     this->x_dim = this->y_dim = this->z_dim = dim;
     this->x_steps = this->y_steps = this->z_steps = steps;
+    this->load_actions(config.action_lib);
     try { this->create_thread_pools(); }
     catch (int errval) { throw; }
 }
 
 Zone::Zone(u_int64_t xd, u_int64_t yd, u_int64_t zd,
 	   u_int16_t xs, u_int16_t ys, u_int16_t zs)
-    throw (int)
     : actions(), game_objects()
 {
     this->x_dim = xd;
@@ -188,6 +316,7 @@ Zone::Zone(u_int64_t xd, u_int64_t yd, u_int64_t zd,
     this->x_steps = xs;
     this->y_steps = ys;
     this->z_steps = zs;
+    this->load_actions(config.action_lib);
     try { this->create_thread_pools(); }
     catch (int errval) { throw; }
 }
@@ -234,12 +363,13 @@ Zone::~Zone()
     syslog(LOG_DEBUG, "cleaning up action routines");
     if (this->actions.size())
 	this->actions.erase(this->actions.begin(), this->actions.end());
+
+    /* Close the actions library */
+    if (this->action_lib != NULL)
+        delete this->action_lib;
 }
 
-void Zone::start(void *(*action)(void *),
-		 void *(*motion)(void *),
-		 void *(*update)(void *))
-    throw (int)
+void Zone::start(void)
 {
     /* Do we want to load up all the game objects here, before we start
      * up the thread pools?
@@ -247,9 +377,14 @@ void Zone::start(void *(*action)(void *),
 
     try
     {
-	this->action_pool->start(action);
-	this->motion_pool->start(motion);
-	this->update_pool->start(update);
+        this->action_pool->startup_arg = (void *)this;
+	this->action_pool->start(Zone::action_pool_worker);
+
+        this->motion_pool->startup_arg = (void *)this;
+	this->motion_pool->start(Zone::motion_pool_worker);
+
+        this->update_pool->startup_arg = (void *)this;
+	this->update_pool->start(Zone::update_pool_worker);
     }
     catch (int errval)
     {
@@ -257,6 +392,18 @@ void Zone::start(void *(*action)(void *),
 	       "couldn't start zone thread pool: %s",
 	       strerror(errval));
 	throw;
+    }
+}
+
+void Zone::add_action_request(u_int64_t from, packet *buf, size_t len)
+{
+    packet_list pl;
+
+    if (this->action_pool != NULL)
+    {
+	memcpy(&(pl.buf), buf, len);
+	pl.who = from;
+	this->action_pool->push(pl);
     }
 }
 

@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 18:20:02 tquirk
+ *   last updated 21 Jun 2014, 08:35:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -113,10 +113,11 @@
  *                     between the Control object's execute_action and this
  *                     class was not very good, so we now also have a method
  *                     called execute_action, which does most of the checking.
+ *   17 Jun 2014 TAQ - Moved the thread pool functions into this class.
+ *   21 Jun 2014 TAQ - Moved the action library in here too.
  *
  * Things to do
  *
- * $Id: zone.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_ZONE_H__
@@ -128,6 +129,7 @@
 #include "control.h"
 #include "game_obj.h"
 #include "thread_pool.h"
+#include "library.h"
 #include "proto.h"
 
 class Zone
@@ -135,6 +137,9 @@ class Zone
   private:
     u_int16_t x_steps, y_steps, z_steps;
     u_int64_t x_dim, y_dim, z_dim;
+
+    Library *action_lib;
+
   public:
     std::map<u_int16_t, action_rec> actions;
     std::map<u_int64_t, game_object_list_element> game_objects;
@@ -143,18 +148,22 @@ class Zone
     ThreadPool<Motion *> *update_pool;      /* Prepares motion updates    */
 
   private:
-    void create_thread_pools(void)
-	throw (int);
+    void load_actions(const char *);
+    void create_thread_pools(void);
+
+    static void *action_pool_worker(void *);
+    static void *motion_pool_worker(void *);
+    static void *update_pool_worker(void *);
 
   public:
-    Zone(u_int64_t, u_int16_t)
-	throw (int);
-    Zone(u_int64_t, u_int64_t, u_int64_t, u_int16_t, u_int16_t, u_int16_t)
-	throw (int);
+    Zone(u_int64_t, u_int16_t);
+    Zone(u_int64_t, u_int64_t, u_int64_t, u_int16_t, u_int16_t, u_int16_t);
     ~Zone();
 
-    void start(void *(*)(void *), void *(*)(void *), void *(*)(void *))
-	throw (int);
+    void start(void);
+
+    /* Interface to the action pool */
+    void add_action_request(u_int64_t, packet *, size_t);
 
     void execute_action(Control *, action_request&, size_t);
 };

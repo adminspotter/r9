@@ -1,6 +1,6 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 May 2014, 10:36:47 tquirk
+ *   last updated 18 Jun 2014, 19:55:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -362,4 +362,15 @@ bool MySQL::db_connect(void)
         return false;
     }
     return true;
+}
+
+extern "C" DB *create_db(const char *a, const char *b,
+                         const char *c, const char *d)
+{
+    return new MySQL(a, b, c, d);
+}
+
+extern "C" void destroy_db(DB *db)
+{
+    delete db;
 }

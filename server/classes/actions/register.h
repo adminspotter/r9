@@ -1,6 +1,6 @@
 /* register.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 15:56:31 tquirk
+ *   last updated 21 Jun 2014, 09:51:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -33,16 +33,22 @@
  *   10 May 2014 TAQ - Switched to the Eigen math library.  Also updated
  *                     action routines to take Motion objects instead of
  *                     GameObjects.
+ *   20 Jun 2014 TAQ - Added typedefs for simple(r) usage.
+ *   21 Jun 2014 TAQ - Moved the register/unregister typedefs into ../defs.h,
+ *                     which is just a more sensible location.  Made a typedef
+ *                     for the action prototype to clean up the actions array
+ *                     definition.
  *
  * Things to do
  *
- * $Id$
  */
 
 #ifndef __INC_REGISTER_H__
 #define __INC_REGISTER_H__
 
 #include "motion.h"
+
+typedef void action_routine_t(Motion *, int, Motion *, Eigen::Vector3d&);
 
 /* Prototypes for each action function */
 void action_control_object(Motion *, int, Motion *, Eigen::Vector3d &);
@@ -54,7 +60,7 @@ struct action_routines_list_tag
 {
     int action_number;
     const char *action_name;
-    void (*action_routine)(Motion *, int, Motion *, Eigen::Vector3d&);
+    action_routine_t *action_routine;
 }
 actions[] =
 {

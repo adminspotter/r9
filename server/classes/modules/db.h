@@ -1,6 +1,6 @@
 /* db.h                                                     -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Jun 2014, 14:41:38 tquirk
+ *   last updated 21 Jun 2014, 09:28:38 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -32,10 +32,10 @@
  *                     IPv4/IPv6 structures.  Strings are now protected
  *                     because we need to access them in derived classes.
  *   07 Jun 2014 TAQ - Added the virtual keyword on most of the methods.
+ *   20 Jun 2014 TAQ - Added typedefs for dynamic loading.
  *
  * Things to do
  *
- * $Id$
  */
 
 #ifndef __INC_DB_H__
@@ -44,7 +44,7 @@
 #include <string>
 #include <map>
 
-#include "defs.h"
+#include "../defs.h"
 
 class DB
 {
@@ -66,7 +66,7 @@ class DB
 
   public:
     DB(const char *, const char *, const char *, const char *);
-    ~DB();
+    virtual ~DB();
 
     /* Player functions */
     virtual u_int64_t check_authentication(const char *, const char *) = 0;
@@ -83,5 +83,12 @@ class DB
     virtual int get_server_objects(std::map<u_int64_t,
                                    game_object_list_element> &) = 0;
 };
+
+/* Our database types will be dynamically loaded, so these typedefs
+ * will simplify loading the symbols from the library.
+ */
+typedef DB *create_db_t(const char *, const char *, const char *, const char *);
+typedef void destroy_db_t(DB *);
+
 
 #endif /* __INC_DB_H__ */

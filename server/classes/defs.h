@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jun 2014, 18:51:37 tquirk
+ *   last updated 21 Jun 2014, 09:38:17 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -77,6 +77,7 @@
  *                     quats for orientations.  Added look to the same
  *                     struct.
  *   10 May 2014 TAQ - Switched math libraries to Eigen.
+ *   21 Jun 2014 TAQ - Moved some library-related typedefs in here.
  *
  * Things to do
  *   - Flesh out the attribute and nature as needed.
@@ -87,6 +88,7 @@
 #define __INC_DEFS_H__
 
 #include <deque>
+#include <map>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -161,7 +163,6 @@ typedef struct access_list_tag
 }
 access_list;
 
-typedef int (*ZoneControl)(int);
 class action_rec
 {
   public:
@@ -194,5 +195,12 @@ typedef struct action_level_tag
     time_t last_level;
 }
 action_level;
+
+/* Typedefs we can use for casting things to come out of a dynamically
+ * loaded library.
+ */
+typedef int zone_control_t(int); /* placeholder */
+typedef void action_reg_t(std::map<u_int16_t, action_rec>&);
+typedef void action_unreg_t(std::map<u_int16_t, action_rec>&);
 
 #endif /* __INC_DEFS_H__ */
