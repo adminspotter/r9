@@ -1,6 +1,6 @@
 /* library.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 18:22:38 tquirk
+ *   last updated 22 Jun 2014, 15:49:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2007  Trinity Annabelle Quirk
@@ -27,6 +27,9 @@
  *   21 Jun 2014 TAQ - Instead of returning NULL on failures, we'll now throw
  *                     strings, and leave it to our caller to log or whatever.
  *                     Updated syslog to use new stream log.
+ *   22 Jun 2014 TAQ - Constructor now takes strings instead of char pointers.
+ *                     Also got rid of the magic lib name behaviour, instead
+ *                     just taking the raw name we get passed.
  *
  * Things to do
  *
@@ -37,7 +40,7 @@
 #include "library.h"
 #include "../log.h"
 
-Library::Library(const char *name)
+Library::Library(const std::string& name)
     : libname(name)
 {
     this->open();
@@ -50,11 +53,10 @@ Library::~Library()
 
 void Library::open(void)
 {
-    std::string fname = "libr9_" + libname + ".so";
     char *err;
 
     std::clog << "loading " << this->libname << " lib" << std::endl;
-    this->lib = dlopen(fname.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+    this->lib = dlopen(this->libname.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     if ((err = dlerror()) != NULL)
         throw std::string(err);
     dlerror();

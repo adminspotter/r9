@@ -1,6 +1,6 @@
 /* mysql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 May 2014, 10:16:44 tquirk
+ *   last updated 22 Jun 2014, 15:53:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -27,6 +27,7 @@
  *   31 May 2014 TAQ - Removed all IP-related stuff to the DB class, and all
  *                     we need now is a string.  Also added the db_handle
  *                     member and db_connect method.
+ *   22 Jun 2014 TAQ - Constructor changed in the base, so we're changing too.
  *
  * Things to do
  *
@@ -45,7 +46,8 @@ class MySQL : public DB
     MYSQL *db_handle;
 
   public:
-    MySQL(const char *, const char *, const char *, const char *);
+    MySQL(const std::string&, const std::string&,
+          const std::string&, const std::string&);
     ~MySQL();
 
   private:

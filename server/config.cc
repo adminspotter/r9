@@ -1,6 +1,6 @@
 /* config.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 10:39:39 tquirk
+ *   last updated 22 Jun 2014, 15:43:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -181,6 +181,7 @@
  *   20 May 2014 TAQ - For some reason, the int16 and int64 stuff was all
  *                     commented out.
  *   21 Jun 2014 TAQ - C++-ification has begun, starting with the syslog.
+ *   22 Jun 2014 TAQ - This class has gotten the C++ treatment.
  *
  * Things to do
  *   - Consider how we might move module-specific configuration items
@@ -189,9 +190,10 @@
  *     That way, we wouldn't need the huge array here, and each module
  *     that actually needs configuration items can just use the parsing
  *     primitives here, and handle everything it needs by itself.
- *   - Create command-line options for all the config file elements.  When
- *     parsing these, make them supercede the config file settings.  Probably
- *     a second conf structure is needed for this trick.
+ *   - Create command-line options for the config file elements that
+ *     need them.  If the options come before the config file, they will
+ *     probably be replaced, and if they come after, they should replace
+ *     what was (possibly) read from the config file.
  *
  */
 
@@ -199,14 +201,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/syslimits.h>
 #include <pwd.h>
 #include <grp.h>
 #include <sys/types.h>
 #include <errno.h>
 
+#include <fstream>
+#include <sstream>
+
 #include "config.h"
 #include "server.h"
-#include "defaults.h"
 #include "log.h"
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
@@ -222,26 +227,26 @@
 #define CF_INT16    10
 #define CF_INT64    11
 
-#ifndef FALSE
-#define FALSE       0
-#define TRUE        1
-#endif /* FALSE */
+const char config_data::SERVER_ROOT[] = "/Users/tquirk/src/revision9/server";
+const char config_data::LOG_PREFIX[]  = "revision9";
+const char config_data::PID_FNAME[]   = "/var/run/revision9.pid";
+const char config_data::DB_TYPE[]     = "MySQL";
+const char config_data::DB_HOST[]     = "localhost";
+const char config_data::DB_NAME[]     = "revision9";
+const char config_data::ACTION_LIB[]  = "libr9_actions.so";
 
 /* Function prototypes */
-static void setup_config_defaults(void);
-static void read_config_file(const char *);
-static int parse_config_line(char *);
-static void config_string_element(const char *, const char *, int, void *);
-static void config_integer_element(const char *, const char *, int, void *);
-static void config_int16_element(const char *, const char *, int, void *);
-static void config_int64_element(const char *, const char *, int, void *);
-static void config_float_element(const char *, const char *, int, void *);
-static void config_boolean_element(const char *, const char *, int, void *);
-static void config_user_element(const char *, const char *, int, void *);
-static void config_group_element(const char *, const char *, int, void *);
-static void config_logfac_element(const char *, const char *, int, void *);
-static void config_socket_element(const char *, const char *, int, void *);
-static void config_location_element(const char *, const char *, int, void *);
+static void config_string_element(const std::string& , const char *, int);
+static void config_integer_element(const std::string& , const char *, int);
+static void config_int16_element(const std::string& , const char *, int);
+static void config_int64_element(const std::string& , const char *, int);
+static void config_float_element(const std::string& , const char *, int);
+static void config_boolean_element(const std::string& , const char *, int);
+static void config_user_element(const std::string& , const char *, int);
+static void config_group_element(const std::string& , const char *, int);
+static void config_logfac_element(const std::string& , const char *, int);
+static void config_socket_element(const std::string& , const char *, int);
+static void config_location_element(const std::string& , const char *, int);
 
 /* Global variables */
 config_data config;
@@ -252,508 +257,394 @@ const struct config_handlers
     const char *keyword;
     int offset;
     int type;
-    void *defval;
 }
 handlers[] =
 {
-#define off(x)  (((char *) (&(((struct config_struct *)NULL)->x))) - ((char *) NULL))
-    { "AccessThreads", off(access_threads), CF_INTEGER, (void *)NUM_THREADS  },
-    { "ActionLib",     off(action_lib),     CF_STRING,  ACTION_LIB           },
-    { "ActionThreads", off(action_threads), CF_INTEGER, (void *)NUM_THREADS  },
-    { "ConFilename",   off(console_fname),  CF_STRING,  NULL                 },
-    { "ConHistFile",   off(console_hist),   CF_STRING,  HIST_FILE            },
-    { "ConHistLen",    off(history_len),    CF_INTEGER, (void *)1000         },
-    { "ConPort",       off(console_inet),   CF_INTEGER, (void *)0            },
-    { "DBDatabase",    off(db_name),        CF_STRING,  DB_NAME              },
-    { "DBHost",        off(db_host),        CF_STRING,  DB_HOST              },
-    { "DBPassword",    off(db_pass),        CF_STRING,  NULL                 },
-    { "DBType",        off(db_type),        CF_STRING,  DB_TYPE              },
-    { "DBUser",        off(db_user),        CF_STRING,  NULL                 },
-    { "DgramPort",     off(dgram),          CF_SOCKET,  NULL                 },
-    { "GeomThreads",   off(geom_threads),   CF_INTEGER, (void *)NUM_THREADS  },
-    { "LogFacility",   off(log_facility),   CF_LOGFAC,  (void *)LOG_FACILITY },
-    { "LogPrefix",     off(log_prefix),     CF_STRING,  LOG_PREFIX           },
-    { "MaxSubservers", off(max_subservers), CF_INTEGER, (void *)MAX_SUBSRV   },
-    { "MinSubservers", off(min_subservers), CF_INTEGER, (void *)MIN_SUBSRV   },
-    { "MotionThreads", off(motion_threads), CF_INTEGER, (void *)NUM_THREADS  },
-    { "PidFile",       off(pid_fname),      CF_STRING,  PID_FNAME            },
-    { "SendThreads",   off(send_threads),   CF_INTEGER, (void *)NUM_THREADS  },
-    { "ServerGID",     0,                   CF_GROUP,   NULL                 },
-    { "StreamPort",    off(stream),         CF_SOCKET,  NULL                 },
-    { "ServerRoot",    off(server_root),    CF_STRING,  SERVER_ROOT          },
-    { "ServerUID",     0,                   CF_USER,    NULL                 },
-    { "SpawnPoint",    off(spawn),          CF_LOC,     NULL                 },
-    { "UpdateThreads", off(update_threads), CF_INTEGER, (void *)NUM_THREADS  },
-    { "UseBalance",    off(load_threshold), CF_FLOAT,   (void *)LOAD_THRESH  },
-    { "UseKeepAlive",  off(use_keepalive),  CF_BOOLEAN, (void *)FALSE        },
-    { "UseLinger",     off(use_linger),     CF_INTEGER, (void *)LINGER_LEN   },
-    { "UseNonBlock",   off(use_nonblock),   CF_BOOLEAN, (void *)FALSE        },
-    { "UseReuse",      off(use_reuse),      CF_BOOLEAN, (void *)TRUE         },
-    { "ZoneSize",      off(size),           CF_LOC,     NULL                 }
+#define off(x)  (((char *) (&(((config_data *)NULL)->x))) - ((char *) NULL))
+    { "AccessThreads", off(access_threads), CF_INTEGER },
+    { "ActionLib",     off(action_lib),     CF_STRING  },
+    { "ActionThreads", off(action_threads), CF_INTEGER },
+    { "ConFilename",   off(console_fname),  CF_STRING  },
+    { "ConPort",       off(console_inet),   CF_INTEGER },
+    { "DBDatabase",    off(db_name),        CF_STRING  },
+    { "DBHost",        off(db_host),        CF_STRING  },
+    { "DBPassword",    off(db_pass),        CF_STRING  },
+    { "DBType",        off(db_type),        CF_STRING  },
+    { "DBUser",        off(db_user),        CF_STRING  },
+    { "DgramPort",     off(dgram),          CF_SOCKET  },
+    { "LogFacility",   off(log_facility),   CF_LOGFAC  },
+    { "LogPrefix",     off(log_prefix),     CF_STRING  },
+    { "MaxSubservers", off(max_subservers), CF_INTEGER },
+    { "MinSubservers", off(min_subservers), CF_INTEGER },
+    { "MotionThreads", off(motion_threads), CF_INTEGER },
+    { "PidFile",       off(pid_fname),      CF_STRING  },
+    { "SendThreads",   off(send_threads),   CF_INTEGER },
+    { "ServerGID",     0,                   CF_GROUP   },
+    { "StreamPort",    off(stream),         CF_SOCKET  },
+    { "ServerRoot",    off(server_root),    CF_STRING  },
+    { "ServerUID",     0,                   CF_USER    },
+    { "SpawnPoint",    off(spawn),          CF_LOC     },
+    { "UpdateThreads", off(update_threads), CF_INTEGER },
+    { "UseBalance",    off(load_threshold), CF_FLOAT   },
+    { "UseKeepAlive",  off(use_keepalive),  CF_BOOLEAN },
+    { "UseLinger",     off(use_linger),     CF_INTEGER },
+    { "UseNonBlock",   off(use_nonblock),   CF_BOOLEAN },
+    { "UseReuse",      off(use_reuse),      CF_BOOLEAN },
+    { "ZoneSize",      off(size),           CF_LOC     },
 #undef off
 };
 
-void setup_configuration(int argc, char **argv)
+config_data::config_data()
+    : argv(), stream(), dgram(),
+      server_root(config_data::SERVER_ROOT),
+      log_prefix(config_data::LOG_PREFIX), pid_fname(config_data::PID_FNAME),
+      db_type(config_data::DB_TYPE), db_host(config_data::DB_HOST),
+      db_user(), db_pass(), db_name(config_data::DB_NAME),
+      action_lib(config_data::ACTION_LIB), console_fname()
 {
-    int c;
-    char *tmp;
+    this->set_defaults();
+}
 
+config_data::~config_data()
+{
+    this->argv.clear();
+    this->stream.clear();
+    this->dgram.clear();
+}
+
+void config_data::set_defaults(void)
+{
+    this->server_root    = config_data::SERVER_ROOT;
+    this->log_prefix     = config_data::LOG_PREFIX;
+    this->pid_fname      = config_data::PID_FNAME;
+    this->db_type        = config_data::DB_TYPE;
+    this->db_host        = config_data::DB_HOST;
+    this->db_user        = "";
+    this->db_pass        = "";
+    this->db_name        = config_data::DB_NAME;
+    this->action_lib     = config_data::ACTION_LIB;
+    this->console_fname  = "";
+
+    this->use_keepalive  = false;
+    this->use_nonblock   = false;
+    this->use_reuse      = true;
+    this->use_linger     = config_data::LINGER_LEN;
+
+    this->log_facility   = config_data::LOG_FACILITY;
+
+    this->load_threshold = config_data::LOAD_THRESH;
+    this->min_subservers = config_data::MIN_SUBSERV;
+    this->max_subservers = config_data::MAX_SUBSERV;
+
+    this->access_threads = config_data::NUM_THREADS;
+    this->action_threads = config_data::NUM_THREADS;
+    this->motion_threads = config_data::NUM_THREADS;
+    this->send_threads   = config_data::NUM_THREADS;
+    this->update_threads = config_data::NUM_THREADS;
+}
+
+void setup_configuration(int count, char **args)
+{
     /* We only want a total init when we pass an actual argv/argc in. */
-    if (argc && argv)
-    {
-	memset(&config, 0, sizeof(config));
-	config.argv = argv;
-	config.argc = argc;
-	setup_config_defaults();
-    }
-
-    /* Not much here; check into adding CLOs for the config options. */
-    /* This might not work properly the second time around. */
-    while ((c = getopt(config.argc, config.argv, "f:")) != EOF)
-    {
-	switch (c)
-	{
-	  case 'f':
-	    tmp = optarg + strspn(optarg, " \t");
-	    read_config_file(tmp);
-	    break;
-
-	  case '?':
-	  default:
-            std::clog << "WARNING: Unknown option " << c;
-	    break;
-	}
-    }
+    if (count && args)
+        config.parse_command_line(count, args);
 }
 
 void cleanup_configuration(void)
 {
-    int argc = config.argc;
-    char **argv = config.argv;
-    int i;
+    /* We'll leave argv alone because this may be a reinit */
+    config.stream.clear();
+    config.dgram.clear();
+    config.set_defaults();
 
-    for (i = 0; i < ENTRIES(handlers); ++i)
-    {
-	if (handlers[i].type == CF_STRING)
-	{
-	    char **element = (char **)&(((char *)&config)[handlers[i].offset]);
-
-	    /* Free strings, but only if they're dynamically-allocated. */
-	    if ((*element) != NULL && *element != (char *)(handlers[i].defval))
-	    {
-		free(*element);
-		*element = NULL;
-	    }
-	}
-	if (handlers[i].type == CF_SOCKET)
-	{
-	    ports *element = (ports *)&(((char *)&config)[handlers[i].offset]);
-
-	    if (element->port_nums != NULL)
-	    {
-		free(element->port_nums);
-		element->port_nums = NULL;
-	    }
-	    element->num_ports = 0;
-	}
-    }
-
-    /* The rest of the cleanup. */
-    memset(&config, 0, sizeof(config));
     chdir("/");
     seteuid(getuid());
     setegid(getgid());
-
-    /* Save the initial arguments. */
-    config.argc = argc;
-    config.argv = argv;
 }
 
-static void setup_config_defaults(void)
+void config_data::parse_command_line(int count, char **args)
 {
     int i;
+    std::vector<std::string>::iterator j;
+
+    for (i = 0; i < count; ++i)
+        this->argv.push_back(std::string(args[i]));
+
+    /* getopt is great and everything, but it's a pretty low-level C
+     * function, and even the C++-wrapped version works the same.  We
+     * want something that operates more in the C++ idiom.
+     */
+    for (j = config.argv.begin(); j != config.argv.end(); ++j)
+    {
+        if ((*j) == "-f")
+	    config.read_config_file(*(++j));
+        else
+            std::clog << "WARNING: Unknown option " << *j;
+    }
+}
+
+void config_data::read_config_file(std::string& fname)
+{
+    std::ifstream ifs(fname);
+    std::string str;
+
+    do
+    {
+        std::getline(ifs, str);
+	this->parse_config_line(str);
+    }
+    while (!ifs.eof());
+}
+
+int config_data::parse_config_line(std::string& line)
+{
+    int i, retval = 1;
+    std::string::size_type found;
+
+    /* Throw away any comments to the end of the line */
+    if ((found = line.find_first_of('#')) != std::string::npos)
+        line.replace(found, std::string::npos, "");
+
+    /* Throw away all extra white space at the beginning and end of the line. */
+    if ((found = line.find_first_not_of(" \t")) != std::string::npos)
+        line.replace(0, found - 1, "");
+    if ((found = line.find_last_not_of(" \t")) != std::string::npos)
+        line.replace(found + 1, std::string::npos, "");
+
+    /* At this point we'll either have an empty string, a string of
+     * only whitespace, or "<keyword> <value>"
+     */
+    if ((found = line.find_first_not_of(" \t")) == std::string::npos)
+        return retval;
+
+    /* We've got a real line; found currently points to the start of the gap */
+    std::string keyword = line.substr(0, found - 1);
+    line.replace(0, found, "");
+    found = line.find_first_not_of(" \t");
+    std::string value = line.substr(found);
 
     for (i = 0; i < ENTRIES(handlers); ++i)
-    {
-	void *element = &(((char *)&config)[handlers[i].offset]);
+        if (keyword == handlers[i].keyword)
+        {
+            switch (handlers[i].type)
+            {
+              case CF_STRING:
+                config_string_element(value,
+                                      handlers[i].keyword,
+                                      handlers[i].offset);
+                break;
 
-	switch (handlers[i].type)
-	{
-	  case CF_STRING:
-	    *((char **)element) = (char *)(handlers[i].defval);
-	    break;
+              case CF_INTEGER:
+                config_integer_element(value,
+                                       handlers[i].keyword,
+                                       handlers[i].offset);
+                break;
 
-	  case CF_INTEGER:
-	  case CF_BOOLEAN:
-	  case CF_LOGFAC:
-	    *((int *)element) = (int)(handlers[i].defval);
-	    break;
+              case CF_INT16:
+                config_int16_element(value,
+                                     handlers[i].keyword,
+                                     handlers[i].offset);
+                break;
 
-	  case CF_INT16:
-	    *((u_int16_t *)element) = (u_int16_t)(int)(handlers[i].defval);
-	    break;
+              case CF_INT64:
+                config_int64_element(value,
+                                     handlers[i].keyword,
+                                     handlers[i].offset);
+                break;
 
-	  case CF_INT64:
-	    *((u_int64_t *)element) = (u_int64_t)(int)(handlers[i].defval);
-	    break;
+              case CF_FLOAT:
+                config_float_element(value,
+                                     handlers[i].keyword,
+                                     handlers[i].offset);
+                break;
 
-	  case CF_FLOAT:
-	    *((float *)element) = (float)((int)(handlers[i].defval) / 100.0);
-	    break;
+              case CF_BOOLEAN:
+                config_boolean_element(value,
+                                       handlers[i].keyword,
+                                       handlers[i].offset);
+                break;
 
-	  case CF_SOCKET:
-	    ((ports *)element)->num_ports = 0;
-	    ((ports *)element)->port_nums = NULL;
-	    break;
+              case CF_USER:
+                config_user_element(value,
+                                    handlers[i].keyword,
+                                    handlers[i].offset);
+                break;
 
-	  case CF_USER:
-	  case CF_GROUP:
-	  case CF_LOC:
-	  default:
-	    break;
-	}
-    }
-}
+              case CF_GROUP:
+                config_group_element(value,
+                                     handlers[i].keyword,
+                                     handlers[i].offset);
+                break;
 
-static void read_config_file(const char *fname)
-{
-    FILE *fp;
-    char str[PATH_MAX];
+              case CF_LOGFAC:
+                config_logfac_element(value,
+                                      handlers[i].keyword,
+                                      handlers[i].offset);
+                break;
 
-    /* Open configuration files and do whatever is necessary. */
-    if ((fp = fopen(fname, "r")) == NULL)
-    {
-        std::clog << "ERROR: couldn't open configuration file "
-                  << fname << ": "
-                  << strerror(errno) << " (" << errno << ")" << std::endl;
-	exit(1);
-    }
+              case CF_SOCKET:
+                config_socket_element(value,
+                                      handlers[i].keyword,
+                                      handlers[i].offset);
+                break;
 
-    while (fgets(str, sizeof(str), fp) != NULL)
-	parse_config_line(str);
-    fclose(fp);
-}
+              case CF_LOC:
+                config_location_element(value,
+                                        handlers[i].keyword,
+                                        handlers[i].offset);
+                break;
 
-static int parse_config_line(char *line)
-{
-    char *head, *tail;
-    int i, retval = 1;
-
-    /* Throw away all extra white space at the beginning of the line. */
-    head = line + strspn(line, " \t");
-    if (*head != '#')
-	for (i = 0; i < ENTRIES(handlers); ++i)
-	    if (!strncmp(handlers[i].keyword,
-			 head,
-			 strlen(handlers[i].keyword)))
-	    {
-		/* Move past the option name and following whitespace. */
-		head += strlen(handlers[i].keyword);
-		head += strspn(head, " \t");
-		if ((tail = strrchr(head, '\n')) != NULL)
-		    *tail = '\0';
-		switch (handlers[i].type)
-		{
-		  case CF_STRING:
-		    config_string_element(head,
-					  handlers[i].keyword,
-					  handlers[i].offset,
-					  handlers[i].defval);
-		    break;
-
-		  case CF_INTEGER:
-		    config_integer_element(head,
-					   handlers[i].keyword,
-					   handlers[i].offset,
-					   handlers[i].defval);
-		    break;
-
-                  case CF_INT16:
-		    config_int16_element(head,
-					 handlers[i].keyword,
-					 handlers[i].offset,
-					 handlers[i].defval);
-		    break;
-
-		  case CF_INT64:
-		    config_int64_element(head,
-					 handlers[i].keyword,
-					 handlers[i].offset,
-					 handlers[i].defval);
-		    break;
-
-		  case CF_FLOAT:
-		    config_float_element(head,
-					 handlers[i].keyword,
-					 handlers[i].offset,
-					 handlers[i].defval);
-		    break;
-
-		  case CF_BOOLEAN:
-		    config_boolean_element(head,
-					   handlers[i].keyword,
-					   handlers[i].offset,
-					   handlers[i].defval);
-		    break;
-
-		  case CF_USER:
-		    config_user_element(head,
-					handlers[i].keyword,
-					handlers[i].offset,
-					handlers[i].defval);
-		    break;
-
-		  case CF_GROUP:
-		    config_group_element(head,
-					 handlers[i].keyword,
-					 handlers[i].offset,
-					 handlers[i].defval);
-		    break;
-
-		  case CF_LOGFAC:
-		    config_logfac_element(head,
-					  handlers[i].keyword,
-					  handlers[i].offset,
-					  handlers[i].defval);
-		    break;
-
-		  case CF_SOCKET:
-		    config_socket_element(head,
-					  handlers[i].keyword,
-					  handlers[i].offset,
-					  handlers[i].defval);
-		    break;
-
-		  case CF_LOC:
-		    config_location_element(head,
-					    handlers[i].keyword,
-					    handlers[i].offset,
-					    handlers[i].defval);
-		    break;
-
-		  default:
-		    break;
-		}
-		retval = 0;
-		break;
-	    }
+              default:
+                break;
+            }
+            retval = 0;
+            break;
+        }
     /* Silently ignore anything we don't otherwise recognize. */
     return retval;
 }
 
-static void config_string_element(const char *str,
+static void config_string_element(const std::string& str,
 				  const char *item,
-				  int offset,
-				  void *defval)
+				  int offset)
 {
-    char **element = (char **)&(((char *)&config)[offset]);
+    std::string *element = (std::string *)&(((char *)&config)[offset]);
 
-    if (str != NULL && strlen(str) > 0)
-    {
-	if (*element != NULL
-	    && (defval != NULL && *element != (char *)defval))
-	    free(*element);
-	*element = strdup(str);
-    }
-    else
-    {
-        std::clog << "WARNING: null " << item << ", using " << (char *)defval
-                  << std::endl;
-	*element = (char *)defval;
-    }
+    if (str.size() > 0)
+	*element = str;
 }
 
-static void config_integer_element(const char *str,
+static void config_integer_element(const std::string& str,
 				   const char *item,
-				   int offset,
-				   void *defval)
+				   int offset)
 {
     int *element = (int *)&(((char *)&config)[offset]);
 
-    if ((*element = atoi(str)) < 1 || *element > USHRT_MAX)
-    {
-        std::clog << "WARNING: invalid value (" << *element
-                  << ") for " << item << ", using " << (int)defval << std::endl;
-	*element = (int)defval;
-    }
+    *element = std::stoi(str);
 }
 
-static void config_int16_element(const char *str,
+static void config_int16_element(const std::string& str,
 				 const char *item,
-				 int offset,
-				 void *defval)
+				 int offset)
 {
     u_int16_t *element = (u_int16_t *)&(((char *)&config)[offset]);
 
-    if ((*element = (u_int16_t)atoi(str)) == 0)
-    {
-        std::clog << "WARNING: invalid value (" << *element
-                  << ") for " << item << ", using " << (int)defval << std::endl;
-	*element = (u_int16_t)(int)defval;
-    }
+    *element = (u_int16_t)std::stoul(str);
 }
 
-static void config_int64_element(const char *str,
+static void config_int64_element(const std::string& str,
 				 const char *item,
-				 int offset,
-				 void *defval)
+				 int offset)
 {
     u_int64_t *element = (u_int64_t *)&(((char *)&config)[offset]);
 
-    if ((*element = strtoull(str, NULL, 10)) == 0)
-    {
-        std::clog << "WARNING: invalid value (" << *element
-                  << ") for " << item << ", using " << (int)defval << std::endl;
-	*element = (u_int64_t)(int)defval;
-    }
+    *element = std::stoull(str);
 }
 
-static void config_float_element(const char *str,
+static void config_float_element(const std::string& str,
 				 const char *item,
-				 int offset,
-				 void *defval)
+				 int offset)
 {
     float *element = (float *)&(((char *)&config)[offset]);
-    float realdefval = (float)((int)defval / 100.0);
 
-    if ((*element = atof(str)) <= 0.0)
-    {
-        std::clog << "WARNING: invalid value (" << *element
-                  << ") for " << item << ", using " << realdefval << std::endl;
-	*element = realdefval;
-    }
+    *element = std::stof(str);
 }
 
-static void config_boolean_element(const char *str,
+static void config_boolean_element(const std::string& str,
 				   const char *item,
-				   int offset,
-				   void *defval)
+				   int offset)
 {
-    int *element = (int *)&(((char *)&config)[offset]);
+    bool *element = (bool *)&(((char *)&config)[offset]);
 
-    if (str == NULL
-	|| strlen(str) == 0
-	|| !strcasecmp(str, "yes")
-	|| !strcasecmp(str, "true")
-	|| !strcasecmp(str, "on")
-	|| atoi(str) > 0)
-	*element = 1;
+    if (str == ""
+	|| str == "yes"
+	|| str == "true"
+	|| str == "on"
+	|| std::stoi(str) > 0)
+	*element = true;
     else
-	*element = 0;
+	*element = false;
 }
 
 /* ARGSUSED */
-static void config_user_element(const char *str,
+static void config_user_element(const std::string& str,
 				const char *item,
-				int offset,
-				void *defval)
+				int offset)
 {
     struct passwd *up;
 
-    if (str != NULL && strlen(str) > 0)
-    {
-	if ((up = getpwnam(str)) != NULL)
-	    seteuid(up->pw_uid);
-	else
-            std::clog << "ERROR: couldn't find user " << str << std::endl;
-    }
+    if ((up = getpwnam(str.c_str())) != NULL)
+        seteuid(up->pw_uid);
+    else
+        std::clog << "ERROR: couldn't find user " << str << std::endl;
 }
 
 /* ARGSUSED */
-static void config_group_element(const char *str,
+static void config_group_element(const std::string& str,
 				 const char *item,
-				 int offset,
-				 void *defval)
+				 int offset)
 {
     struct group *gp;
 
-    if (str != NULL && strlen(str) > 0)
-    {
-	if ((gp = getgrnam(str)) != NULL)
-	    setegid(gp->gr_gid);
-	else
-            std::clog << "ERROR: couldn't find group " << str << std::endl;
-    }
+    if ((gp = getgrnam(str.c_str())) != NULL)
+        setegid(gp->gr_gid);
+    else
+        std::clog << "ERROR: couldn't find group " << str << std::endl;
 }
 
-static void config_logfac_element(const char *str,
+static void config_logfac_element(const std::string& str,
 				  const char *item,
-				  int offset,
-				  void *defval)
+				  int offset)
 {
     int *element = (int *)&(((char *)&config)[offset]);
 
-    if (!strcasecmp(str, "auth"))           *element = LOG_AUTH;
-    else if (!strcasecmp(str, "authpriv"))  *element = LOG_AUTHPRIV;
-    else if (!strcasecmp(str, "cron"))      *element = LOG_CRON;
-    else if (!strcasecmp(str, "daemon"))    *element = LOG_DAEMON;
-    else if (!strcasecmp(str, "kern"))      *element = LOG_KERN;
-    else if (!strcasecmp(str, "local0"))    *element = LOG_LOCAL0;
-    else if (!strcasecmp(str, "local1"))    *element = LOG_LOCAL1;
-    else if (!strcasecmp(str, "local2"))    *element = LOG_LOCAL2;
-    else if (!strcasecmp(str, "local3"))    *element = LOG_LOCAL3;
-    else if (!strcasecmp(str, "local4"))    *element = LOG_LOCAL4;
-    else if (!strcasecmp(str, "local5"))    *element = LOG_LOCAL5;
-    else if (!strcasecmp(str, "local6"))    *element = LOG_LOCAL6;
-    else if (!strcasecmp(str, "local7"))    *element = LOG_LOCAL7;
-    else if (!strcasecmp(str, "lpr"))       *element = LOG_LPR;
-    else if (!strcasecmp(str, "mail"))      *element = LOG_MAIL;
-    else if (!strcasecmp(str, "news"))      *element = LOG_NEWS;
-    else if (!strcasecmp(str, "syslog"))    *element = LOG_SYSLOG;
-    else if (!strcasecmp(str, "user"))      *element = LOG_USER;
-    else if (!strcasecmp(str, "uucp"))      *element = LOG_UUCP;
+    if (str == "auth")           *element = LOG_AUTH;
+    else if (str == "authpriv")  *element = LOG_AUTHPRIV;
+    else if (str == "cron")      *element = LOG_CRON;
+    else if (str == "daemon")    *element = LOG_DAEMON;
+    else if (str == "kern")      *element = LOG_KERN;
+    else if (str == "local0")    *element = LOG_LOCAL0;
+    else if (str == "local1")    *element = LOG_LOCAL1;
+    else if (str == "local2")    *element = LOG_LOCAL2;
+    else if (str == "local3")    *element = LOG_LOCAL3;
+    else if (str == "local4")    *element = LOG_LOCAL4;
+    else if (str == "local5")    *element = LOG_LOCAL5;
+    else if (str == "local6")    *element = LOG_LOCAL6;
+    else if (str == "local7")    *element = LOG_LOCAL7;
+    else if (str == "lpr")       *element = LOG_LPR;
+    else if (str == "mail")      *element = LOG_MAIL;
+    else if (str == "news")      *element = LOG_NEWS;
+    else if (str == "syslog")    *element = LOG_SYSLOG;
+    else if (str == "user")      *element = LOG_USER;
+    else if (str == "uucp")      *element = LOG_UUCP;
     else
-    {
         std::clog << "Unknown facility (" << str << ") for "
-                << item << ", using " << (int)defval << std::endl;
-	*element = (int)defval;
-    }
+                << item << std::endl;
 }
 
 /* ARGSUSED */
-static void config_socket_element(const char *str,
+static void config_socket_element(const std::string& str,
 				  const char *item,
-				  int offset,
-				  void *defval)
+				  int offset)
 {
-    ports *element = (ports *)&(((char *)&config)[offset]);
-    int new_num, *new_ports = NULL;
+    std::vector<int> *element
+        = (std::vector<int> *)&(((char *)&config)[offset]);
 
-    new_num = element->num_ports + 1;
-    if ((new_ports = realloc(element->port_nums,
-			     sizeof(int) * new_num)) == NULL)
-    {
-        std::clog << "ERROR: couldn't allocate memory for ports: "
-                  << strerror(errno) << " (" << errno << ")" << std::endl;
-	return;
-    }
-    element->port_nums = new_ports;
-    element->port_nums[element->num_ports] = atoi(str);
-    element->num_ports = new_num;
+    element->push_back(std::stoi(str));
 }
 
 /* ARGSUSED */
-static void config_location_element(const char *str,
+static void config_location_element(const std::string& str,
 				    const char *item,
-				    int offset,
-				    void *defval)
+				    int offset)
 {
     location *element = (location *)&(((char *)&config)[offset]);
-    char *ptr = (char *)str;
-    int i;
+    std::istringstream iss(str);
 
-    for (i = 0; i < 6; ++i)
-    {
-	errno = 0;
-	if (i < 3)
-	    element->dim[i] = strtoull(ptr, &ptr, 10);
-	else
-	    element->steps[i - 3] = (u_int16_t)strtoul(ptr, &ptr, 10);
-	if (errno != 0)
-	{
-            std::clog << "ERROR: parsing location element \"" << ptr << "\": "
-                strerror(errno) << " (" << errno << ")" << std::endl;
-	    break;
-	}
-    }
+    iss >> element->dim[0];
+    iss >> element->dim[1];
+    iss >> element->dim[2];
+    iss >> element->steps[0];
+    iss >> element->steps[1];
+    iss >> element->steps[2];
 }

@@ -1,6 +1,6 @@
 /* zone_interface.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 22:50:00 tquirk
+ *   last updated 22 Jun 2014, 15:56:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk

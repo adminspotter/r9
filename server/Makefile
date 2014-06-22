@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <trinity@ymb.net>
-#   last updated 21 Jun 2014, 17:35:28 tquirk
+#   last updated 22 Jun 2014, 15:58:46 tquirk
 #
 # This is the main makefile for the revision9 server.
 #
@@ -30,7 +30,7 @@
 CXXFLAGS = -Wall -g -fPIC -DPIC -D_REENTRANT $(CINCLUDE)
 
 LDFLAGS = -rdynamic -L/usr/local/lib -L/home/trinity/lib
-LDLIBS = -lr9_console -lr9_classes -lr9_proto -lmath3d -lm -ldl -lpthread -lstdc++
+LDLIBS = -lr9_console -lr9_proto -lmath3d -lm -ldl -lpthread -lstdc++
 
 DEPEND = $(MAKEDEPEND) -f-
 
@@ -49,7 +49,7 @@ proto :
 classes :
 	$(MAKE) -C classes
 
-$(TARGET) : $(OBJS) classes/libr9_classes.so ../proto/libr9_proto.so
+$(TARGET) : $(OBJS) classes/r9_classes.a ../proto/libr9_proto.so
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
 Makefile.depend : $(SRCS) $(HDRS)

@@ -1,6 +1,6 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Jun 2014, 14:41:08 tquirk
+ *   last updated 22 Jun 2014, 15:53:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -35,7 +35,6 @@
  *
  * Things to do
  *
- * $Id$
  */
 
 #include <stdio.h>
@@ -83,7 +82,8 @@ void DB::get_host_address(void)
     freeaddrinfo(info);
 }
 
-DB::DB(const char *host, const char *user, const char *pass, const char *name)
+DB::DB(const std::string& host, const std::string& user,
+       const std::string& pass, const std::string& name)
     : dbhost(host), dbuser(user), dbpass(pass), dbname(name)
 {
     try

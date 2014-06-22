@@ -1,6 +1,6 @@
 /* pgsql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 May 2014, 10:39:38 tquirk
+ *   last updated 22 Jun 2014, 15:55:10 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -24,6 +24,7 @@
  *
  * Changes
  *   31 May 2014 TAQ - Created the file.
+ *   22 Jun 2014 TAQ - Constructor changed in the base, so we will too.
  *
  * Things to do
  *
@@ -42,7 +43,8 @@ class PgSQL : public DB
     PGconn *db_handle;
 
   public:
-    PgSQL(const char *, const char *, const char *, const char *);
+    PgSQL(const std::string&, const std::string&,
+          const std::string&, const std::string&);
     ~PgSQL();
 
   private:

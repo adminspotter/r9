@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 May 2014, 10:39:13 tquirk
+ *   last updated 22 Jun 2014, 15:55:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -33,6 +33,7 @@
  *   13 Sep 2013 TAQ - Just wanted this to compile, so updated the function
  *                     prototypes, and changed the filename to pgsql.cc.
  *   31 May 2014 TAQ - We're now a subclass of DB.
+ *   22 Jun 2014 TAQ - Constructor changed in the base, so we need to also.
  *
  * Things to do
  *   - Implement the stubbed-out functions.
@@ -48,8 +49,8 @@
 #include "server.h"
 #include "pgsql.h"
 
-PgSQL::PgSQL(const char *host, const char *user,
-             const char *pass, const char *db)
+PgSQL::PgSQL(const std::string& host, const std::string& user,
+             const std::string& pass, const std::string& db)
     : DB(host, user, pass, db)
 {
 }

@@ -1,6 +1,6 @@
 /* db.h                                                     -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 09:28:38 tquirk
+ *   last updated 22 Jun 2014, 15:57:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -33,6 +33,8 @@
  *                     because we need to access them in derived classes.
  *   07 Jun 2014 TAQ - Added the virtual keyword on most of the methods.
  *   20 Jun 2014 TAQ - Added typedefs for dynamic loading.
+ *   22 Jun 2014 TAQ - We're now using strings in the config, so we'll
+ *                     use them in the constructors too.
  *
  * Things to do
  *
@@ -65,7 +67,8 @@ class DB
     void get_host_address(void);
 
   public:
-    DB(const char *, const char *, const char *, const char *);
+    DB(const std::string&, const std::string&,
+       const std::string&, const std::string&);
     virtual ~DB();
 
     /* Player functions */
@@ -87,7 +90,8 @@ class DB
 /* Our database types will be dynamically loaded, so these typedefs
  * will simplify loading the symbols from the library.
  */
-typedef DB *create_db_t(const char *, const char *, const char *, const char *);
+typedef DB *create_db_t(const std::string&, const std::string&,
+                        const std::string&, const std::string&);
 typedef void destroy_db_t(DB *);
 
 

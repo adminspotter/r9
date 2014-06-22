@@ -1,6 +1,6 @@
 /* library.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2014, 21:00:09 tquirk
+ *   last updated 22 Jun 2014, 15:48:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -25,6 +25,9 @@
  * Changes
  *   18 Jun 2014 TAQ - Created the file.
  *   20 Jun 2014 TAQ - We'll use chars instead of strings.  Just simpler.
+ *   22 Jun 2014 TAQ - Config object changed, so we've got a bunch of
+ *                     strings hanging around.  It'll be easier to use
+ *                     strings to construct.
  *
  * Things to do
  *
@@ -42,7 +45,7 @@ class Library
     std::string libname;
 
   public:
-    Library(const char *);
+    Library(const std::string&);
     ~Library();
 
     void open(void);

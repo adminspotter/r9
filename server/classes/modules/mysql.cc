@@ -1,6 +1,6 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jun 2014, 19:55:18 tquirk
+ *   last updated 22 Jun 2014, 15:56:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -66,11 +66,11 @@
  *                     get_host_address into the DB class.
  *   31 May 2014 TAQ - The stringified version of our IP is now an instance
  *                     member, so we don't have to compute it when we need it.
+ *   22 Jun 2014 TAQ - Constructor changed in the base, so we're changing too.
  *
  * Things to do
  *   - Finish writing open_new_login and close_open_login.
  *
- * $Id$
  */
 
 #include <stdio.h>
@@ -83,8 +83,8 @@
 
 #include "mysql.h"
 
-MySQL::MySQL(const char *host, const char *user,
-             const char *pass, const char *db)
+MySQL::MySQL(const std::string& host, const std::string& user,
+             const std::string& pass, const std::string& db)
     : DB(host, user, pass, db)
 {
     /* Create a MYSQL structure, since mysql_init isn't in the lib. */

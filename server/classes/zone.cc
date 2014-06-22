@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 22:45:28 tquirk
+ *   last updated 22 Jun 2014, 15:45:43 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -147,7 +147,7 @@
 #include "../log.h"
 
 /* Private methods */
-void Zone::load_actions(const char *libname)
+void Zone::load_actions(const std::string& libname)
 {
     try
     {

@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 08:35:52 tquirk
+ *   last updated 22 Jun 2014, 15:45:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -115,6 +115,7 @@
  *                     called execute_action, which does most of the checking.
  *   17 Jun 2014 TAQ - Moved the thread pool functions into this class.
  *   21 Jun 2014 TAQ - Moved the action library in here too.
+ *   22 Jun 2014 TAQ - Slight changes to reflect the updated config object.
  *
  * Things to do
  *
@@ -148,7 +149,7 @@ class Zone
     ThreadPool<Motion *> *update_pool;      /* Prepares motion updates    */
 
   private:
-    void load_actions(const char *);
+    void load_actions(const std::string&);
     void create_thread_pools(void);
 
     static void *action_pool_worker(void *);

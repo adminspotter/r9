@@ -1,9 +1,9 @@
-/* config.h
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 19 Sep 2013, 20:13:52 trinity
+/* config.h                                                -*- C++ -*-
+ *   by Trinity Quirk <tquick@ymb.net>
+ *   last updated 22 Jun 2014, 14:11:58 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,8 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains function prototypes and global variable
- * declarations for the configuration subsystem.
+ * This file contains the configuration class declaration.
  *
  * Changes
  *   11 Apr 1998 TAQ - Created the file.
@@ -73,10 +72,14 @@
  *                     Added a spawn point typedef.  Removed syslog.h include,
  *                     since it's not actually used in this file.
  *   19 Sep 2013 TAQ - Added console items back in.  It's console testing time.
+ *   22 Jun 2014 TAQ - Got rid of the console history stuff, since it never
+ *                     really worked like I expected.  Changed the struct
+ *                     to a class, since doing default values is just going
+ *                     to be simpler than the current weirdness.  Moved the
+ *                     interesting parts of defaults.h into the class.
  *
  * Things to do
  *
- * $Id: config.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_CONFIG_H__
@@ -84,12 +87,10 @@
 
 #include <limits.h>
 #include <sys/types.h>
+#include <syslog.h>
 
-typedef struct ports_struct
-{
-    int num_ports, *port_nums;
-}
-ports;
+#include <vector>
+#include <string>
 
 typedef struct location_struct
 {
@@ -98,28 +99,52 @@ typedef struct location_struct
 }
 location;
 
-typedef struct config_struct
+class config_data
 {
-    int argc;
-    char **argv;
-    ports stream, dgram;
-    int use_keepalive, use_linger, use_nonblock, use_reuse;
-    int log_facility;
-    char *server_root, *log_prefix, *pid_fname;
+  public:
+    /* Some default values for our members */
+    static const int LINGER_LEN     = 0;
+    static const int LOG_FACILITY   = LOG_DAEMON;
+    static const int MIN_SUBSERV    = 1;
+    static const int MAX_SUBSERV    = 250;
+    static const int NUM_THREADS    = 8;
+    static const float LOAD_THRESH  = 0.75;
+    /* These are initialized in the .cc file */
+    static const char SERVER_ROOT[];
+    static const char LOG_PREFIX[];
+    static const char PID_FNAME[];
+    static const char DB_TYPE[];
+    static const char DB_HOST[];
+    static const char DB_NAME[];
+    static const char ACTION_LIB[];
+
+    std::vector<std::string> argv;
+    std::vector<int> stream, dgram;
+    bool use_keepalive, use_nonblock, use_reuse;
+    int use_linger, log_facility;
+    std::string server_root, log_prefix, pid_fname;
     float load_threshold;
     int min_subservers, max_subservers;
-    int access_threads, action_threads, geom_threads, motion_threads;
-    int send_threads, update_threads;
+    int access_threads, action_threads, motion_threads, send_threads;
+    int update_threads;
     location size, spawn;
-    char *db_type, *db_host, *db_user, *db_pass, *db_name;
-    char *action_lib;
+    std::string db_type, db_host, db_user, db_pass, db_name;
+    std::string action_lib;
 
-    char *console_fname;
+    std::string console_fname;
     int console_inet;
-    char *console_hist;
-    int history_len;
-}
-config_data;
+
+    config_data();
+    ~config_data();
+
+    void parse_command_line(int, char **);
+    void read_config_file(std::string&);
+
+    void set_defaults(void);
+
+  private:
+    int parse_config_line(std::string&);
+};
 
 extern config_data config;
 

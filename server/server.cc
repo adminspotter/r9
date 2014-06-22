@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 10:08:06 tquirk
+ *   last updated 22 Jun 2014, 13:58:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -121,6 +121,7 @@
  *                     server should be C, and starting to convert some
  *                     items to C++, the first of which is the syslog.
  *                     Renamed the file to reflect the actual language.
+ *   22 Jun 2014 TAQ - C++-ification of the configuration is underway.
  *
  * Things to do
  *   - Complete C++-ification.
@@ -229,7 +230,7 @@ static int setup_daemon(void)
     umask(0);
 
     /* Now write the pid file if we can. */
-    if ((fd = open(config.pid_fname,
+    if ((fd = open(config.pid_fname.c_str(),
 		   O_CREAT | O_WRONLY | O_EXCL,
 		   S_IRUSR | S_IWUSR)) != -1)
     {
@@ -260,31 +261,30 @@ static void setup_log(void)
 static void setup_sockets(void)
 {
     struct addrinfo *ai;
-    int i;
+    std::vector<int>::iterator i;
+    int created = 0;
 
     /* Bailout now if there are no sockets to create */
-    if (config.stream.num_ports == 0 && config.dgram.num_ports == 0)
+    if (config.stream.size() == 0 && config.dgram.size() == 0)
     {
 	std::clog << syslogErr << "no sockets to create" << std::endl;
         throw ENOENT;
     }
 
     std::clog << "going to create "
-              << config.stream.num_ports << " stream port"
-              << (config.stream.num_ports == 1 ? "" : "s")
-              << " and " << config.dgram.num_ports << " dgram port"
-              << (config.dgram.num_ports == 1 ? "" : "s") << std::endl;
+              << config.stream.size() << " stream port"
+              << (config.stream.size() == 1 ? "" : "s")
+              << " and " << config.dgram.size() << " dgram port"
+              << (config.dgram.size() == 1 ? "" : "s") << std::endl;
 
-    for (i = 0; i < config.stream.num_ports; ++i)
+    for (i = config.stream.begin(); i != config.stream.end(); ++i)
     {
         /* First get an addrinfo struct for the socket */
-        if ((ai = get_addr_info(SOCK_DGRAM,
-                                config.stream.port_nums[i])) == NULL)
+        if ((ai = get_addr_info(SOCK_DGRAM, *i)) == NULL)
             continue;
         try
         {
-            stream_socket *sock
-                = new stream_socket(ai, config.stream.port_nums[i]);
+            stream_socket *sock = new stream_socket(ai, *i);
             sockets.push_back(sock);
         }
         catch (int e)
@@ -297,21 +297,20 @@ static void setup_sockets(void)
             throw;
 	}
         freeaddrinfo(ai);
+        ++created;
     }
-    if (i > 0)
-	std::clog << "created " << i << " stream socket"
-                  << (i == 1 ? "" : "s") << std::endl;
+    if (created > 0)
+	std::clog << "created " << created << " stream socket"
+                  << (created == 1 ? "" : "s") << std::endl;
 
-    for (i = 0; i < config.dgram.num_ports; ++i)
+    for (i = config.dgram.begin(); i != config.dgram.end(); ++i)
     {
         /* First get an addrinfo struct for the socket */
-        if ((ai = get_addr_info(SOCK_STREAM,
-                                config.dgram.port_nums[i])) == NULL)
+        if ((ai = get_addr_info(SOCK_STREAM, *i)) == NULL)
             continue;
         try
         {
-            dgram_socket *sock
-                = new dgram_socket(ai, config.dgram.port_nums[i]);
+            dgram_socket *sock = new dgram_socket(ai, *i);
             sockets.push_back(sock);
         }
         catch (int e)
@@ -325,9 +324,10 @@ static void setup_sockets(void)
 	}
         freeaddrinfo(ai);
     }
-    if (i > 0)
-	std::clog << "created " << i << " dgram socket"
-                  << (i == 1 ? "" : "s") << std::endl;
+    created = sockets.size() - created;
+    if (created > 0)
+	std::clog << "created " << created << " dgram socket"
+                  << (created == 1 ? "" : "s") << std::endl;
 }
 
 struct addrinfo *get_addr_info(int type, int port)
@@ -380,7 +380,7 @@ static void cleanup_log(void)
 static void cleanup_daemon(void)
 {
     /* Remove the pidfile so another invocation can run. */
-    unlink(config.pid_fname);
+    unlink(config.pid_fname.c_str());
 }
 
 /* For the signal handlers. */
