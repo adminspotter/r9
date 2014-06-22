@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 17:17:11 tquirk
+ *   last updated 22 Jun 2014, 10:08:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -124,7 +124,6 @@
  *
  * Things to do
  *   - Complete C++-ification.
- *     - sockets to listen_socket/stream_socket/dgram_socket
  *     - zone creation/deletion (most of zone_interface.cc)
  *   - Figure out if we can use a pthread_cond_t without having to have a
  *     mutex around.
@@ -136,7 +135,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <pthread.h>
@@ -147,18 +148,24 @@
 #include "config.h"
 #include "classes/zone_interface.h"
 
+#include "classes/basesock.h"
+#include "classes/stream.h"
+#include "classes/dgram.h"
+
 /* Static function prototypes */
 static int setup_daemon(void);
 static void setup_log(void);
-static int setup_sockets(void);
+static void setup_sockets(void);
 static void cleanup_sockets(void);
 static void cleanup_log(void);
 static void cleanup_daemon(void);
 
+static struct addrinfo *get_addr_info(int, int);
+
 /* File-global variables */
 void *zone_lib = NULL;
 int main_loop_exit_flag = 0;
-static pthread_t *sockets = NULL;
+std::vector<listen_socket *> sockets;
 /* Really don't need this mutex, but whatever */
 static pthread_mutex_t exit_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t exit_flag = PTHREAD_COND_INITIALIZER;
@@ -176,9 +183,8 @@ int main(int argc, char **argv)
     /* The thread pools are created on zone setup */
     if ((retval = setup_zone()) != 0)
 	goto BAILOUT1;
-    /* The socket threads */
-    if ((retval = setup_sockets()) != 0)
-	goto BAILOUT2;
+    try { setup_sockets(); }
+    catch (...) { goto BAILOUT2; }
     setup_console();
 
     /* Since all our stuff is running in other threads, we'll just
@@ -251,15 +257,16 @@ static void setup_log(void)
     std::clog << syslogNotice << "starting" << std::endl;
 }
 
-static int setup_sockets(void)
+static void setup_sockets(void)
 {
-    int i, j, retval;
+    struct addrinfo *ai;
+    int i;
 
     /* Bailout now if there are no sockets to create */
     if (config.stream.num_ports == 0 && config.dgram.num_ports == 0)
     {
 	std::clog << syslogErr << "no sockets to create" << std::endl;
-	return ENOENT;
+        throw ENOENT;
     }
 
     std::clog << "going to create "
@@ -267,66 +274,83 @@ static int setup_sockets(void)
               << (config.stream.num_ports == 1 ? "" : "s")
               << " and " << config.dgram.num_ports << " dgram port"
               << (config.dgram.num_ports == 1 ? "" : "s") << std::endl;
-    /* Create all the threads for the listening sockets */
-    if ((sockets = (pthread_t *)malloc(sizeof(pthread_t)
-				       * (config.stream.num_ports
-					  + config.dgram.num_ports))) == NULL)
-	return errno;
 
     for (i = 0; i < config.stream.num_ports; ++i)
-	if ((retval = pthread_create(&(sockets[i]), NULL,
-				     start_stream_socket,
-				     (void *)&(config.stream.port_nums[i])))
-	    != 0)
-	{
-            std::clog << syslogErr
-                      << "couldn't start socket thread for stream port "
-                      << config.stream.port_nums[i] << ": "
-                      << strerror(retval) << " (" << retval << ")"
-                      << std::endl;
-	    /* On bailout, go ahead and kill all the running threads */
-	    for (; i >= 0; --i)
-	    {
-		pthread_cancel(sockets[i]);
-		sleep(0);
-		pthread_join(sockets[i], NULL);
-	    }
-	    return retval;
+    {
+        /* First get an addrinfo struct for the socket */
+        if ((ai = get_addr_info(SOCK_DGRAM,
+                                config.stream.port_nums[i])) == NULL)
+            continue;
+        try
+        {
+            stream_socket *sock
+                = new stream_socket(ai, config.stream.port_nums[i]);
+            sockets.push_back(sock);
+        }
+        catch (int e)
+        {
+            while (sockets.size())
+            {
+                delete sockets.back();
+                sockets.pop_back();
+            }
+            throw;
 	}
+        freeaddrinfo(ai);
+    }
     if (i > 0)
-	std::clog << "started " << i << " stream socket thread"
+	std::clog << "created " << i << " stream socket"
                   << (i == 1 ? "" : "s") << std::endl;
 
-    for (j = 0; j < config.dgram.num_ports; ++j)
-	if ((retval = pthread_create(&(sockets[i + j]), NULL,
-				     start_dgram_socket,
-				     (void *)&(config.dgram.port_nums[j])))
-	    != 0)
-	{
-            std::clog << syslogErr
-                      << "couldn't start socket thread for datagram port "
-                      << config.dgram.port_nums[j]
-                      << ": " << strerror(retval) << " (" << retval << ")"
-                      << std::endl;
-	    /* On bailout, go ahead and kill all the running threads */
-	    for (; j >= 0; --j)
+    for (i = 0; i < config.dgram.num_ports; ++i)
+    {
+        /* First get an addrinfo struct for the socket */
+        if ((ai = get_addr_info(SOCK_STREAM,
+                                config.dgram.port_nums[i])) == NULL)
+            continue;
+        try
+        {
+            dgram_socket *sock
+                = new dgram_socket(ai, config.dgram.port_nums[i]);
+            sockets.push_back(sock);
+        }
+        catch (int e)
+        {
+            while (sockets.size())
 	    {
-		pthread_cancel(sockets[i + j]);
-		sleep(0);
-		pthread_join(sockets[i + j], NULL);
+                delete sockets.back();
+                sockets.pop_back();
 	    }
-	    for (; i >= 0; --i)
-	    {
-		pthread_cancel(sockets[i]);
-		sleep(0);
-		pthread_join(sockets[i], NULL);
-	    }
-	    return retval;
+            throw;
 	}
-    if (j > 0)
-	std::clog << "started " << j << " datagram socket thread"
-                  << (j == 1 ? "" : "s") << std::endl;
-    return 0;
+        freeaddrinfo(ai);
+    }
+    if (i > 0)
+	std::clog << "created " << i << " dgram socket"
+                  << (i == 1 ? "" : "s") << std::endl;
+}
+
+struct addrinfo *get_addr_info(int type, int port)
+{
+    struct addrinfo hints, *ai = NULL;
+    int ret;
+    char port_str[16];
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = type;
+    snprintf(port_str, sizeof(port_str), "%d", port);
+    if ((ret = getaddrinfo(NULL, port_str, &hints, &ai)) != 0)
+    {
+        std::clog << syslogErr
+                  << "failed to get address info for "
+                  << (type == SOCK_STREAM ? "stream" : "dgram")
+                  << " port " << port << ": "
+                  << gai_strerror(ret) << " (" << ret << ")" << std::endl;
+        return NULL;
+    }
+    return ai;
 }
 
 void set_exit_flag(void)
@@ -339,33 +363,11 @@ void set_exit_flag(void)
 
 static void cleanup_sockets(void)
 {
-    int i, j, retval;
-
-    /* Kill all the socket threads */
-    for (i = 0; i < config.stream.num_ports; ++i)
+    while (sockets.size())
     {
-	if ((retval = pthread_cancel(sockets[i])) != 0)
-            std::clog << syslogErr
-                      << "couldn't terminate socket thread for stream port "
-                      << config.stream.port_nums[i] << ": "
-                      << strerror(retval) << " (" << retval << ")" << std::endl;
-	else
-	    pthread_join(sockets[i], NULL);
+        delete sockets.back();
+        sockets.pop_back();
     }
-    std::clog << "terminated " << i << " stream socket thread"
-              << (i == 1 ? "" : "s") << std::endl;
-    for (j = 0; j < config.dgram.num_ports; ++j)
-    {
-	if ((retval =  pthread_cancel(sockets[i + j])) != 0)
-            std::clog << syslogErr
-                      << "couldn't terminate socket thread for dgram port "
-                      << config.dgram.port_nums[j] << ": "
-                      << strerror(retval) << " (" << retval << ")" << std::endl;
-	else
-	    pthread_join(sockets[i + j], NULL);
-    }
-    std::clog << "terminated " << j << " datagram socket thread"
-              << (j == 1 ? "" : "s") << std::endl;
 }
 
 static void cleanup_log(void)
@@ -389,8 +391,8 @@ void complete_startup(void)
 	exit(1);
     setup_log();
     setup_signals();
-    if (setup_sockets() != 0)
-	exit(1);
+    try { setup_sockets(); }
+    catch (...) { exit(1); }
 }
 
 /* For the signal handlers. */

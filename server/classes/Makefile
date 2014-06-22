@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 21 Jun 2014, 09:10:04 tquirk
+#   last updated 22 Jun 2014, 11:05:02 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -42,6 +42,8 @@
 #                     Moved a bunch of defs into a top level Makefile.defs.
 #   15 Jun 2014 TAQ - send.cc has gone away.
 #   17 Jun 2014 TAQ - action.cc, motion_worker.cc, and update.cc are gone.
+#   22 Jun 2014 TAQ - Since we're going all C++ (and since linking is being
+#                     a pain on the Mac), our target here is now an archive.
 #
 # Things to do
 #
@@ -61,7 +63,7 @@ EXTRALIBS = -ldl
 
 DEPEND = $(MAKEDEPEND) -f-
 
-ARFLAGS = rcs
+ARFLAGS = -rcs
 
 HDRS = control.h defs.h game_obj.h geometry.h motion.h library.h \
 	thread_pool.h zone.h zone_interface.h basesock.h dgram.h stream.h
@@ -69,9 +71,9 @@ SRCS = control.cc game_obj.cc geometry.cc zone.cc access.cc library.cc \
 	motion.cc zone_interface.cc \
 	basesock.cc dgram.cc stream.cc
 OBJS = ${SRCS:.cc=.o}
-TARGET = libr9_classes.so
+TARGET = r9_classes.a
 
-.SUFFIXES : .y .cc .o
+.SUFFIXES : .cc .o
 
 .cc.o :
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -89,7 +91,7 @@ actions :
 #	$(MAKE) -C modules
 
 $(TARGET) : $(OBJS)
-	$(LD) $(LDFLAGS) $(LDPATHS) -o $(TARGET) $(OBJS) $(LDLIBS)
+	$(AR) $(ARFLAGS) $(TARGET) $(OBJS)
 
 Makefile.depend : $(SRCS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) 2> /dev/null > Makefile.depend

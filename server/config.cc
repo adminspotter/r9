@@ -1,6 +1,6 @@
 /* config.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 17:19:07 tquirk
+ *   last updated 22 Jun 2014, 10:39:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -249,7 +249,7 @@ config_data config;
 /* File-global variables */
 const struct config_handlers
 {
-    char *keyword;
+    const char *keyword;
     int offset;
     int type;
     void *defval;
