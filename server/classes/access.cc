@@ -1,6 +1,6 @@
 /* access.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 09:37:53 tquirk
+ *   last updated 21 Jun 2014, 17:50:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -64,7 +64,8 @@
  *                     a char pointer.
  *   17 Jun 2014 TAQ - We pass ourselves into the thread, instead of
  *                     relying on a global.
- *   21 Jun 2014 TAQ - Fixing minor stuff so we can compile.
+ *   21 Jun 2014 TAQ - Fixing minor stuff so we can compile.  Updated the
+ *                     syslog to use the new logging object.
  *
  * Things to do
  *   - This should maybe be moved elsewhere.  Having it sitting in a file
@@ -73,9 +74,9 @@
  */
 
 #include <time.h>
-#include <syslog.h>
 #include <pthread.h>
 
+#include "../log.h"
 #include "zone.h"
 #include "zone_interface.h"
 #include "dgram.h"
@@ -91,7 +92,7 @@ void *access_pool_worker(void *arg)
     ThreadPool<access_list> *ap = (ThreadPool<access_list> *)arg;
     access_list req;
 
-    syslog(LOG_DEBUG, "started access pool worker");
+    std::clog << "started access pool worker";
     for (;;)
     {
         ap->pop(&req);
@@ -104,7 +105,7 @@ void *access_pool_worker(void *arg)
 	    do_logout(req);
 	/* Otherwise, we don't recognize it, and will ignore it */
     }
-    syslog(LOG_DEBUG, "access pool worker ending");
+    std::clog << "access pool worker ending";
     return NULL;
 }
 
@@ -120,9 +121,8 @@ static void do_login(access_list& p)
                                             p.buf.log.password);
     /* Don't want to keep passwords around in core if we can help it */
     memset(p.buf.log.password, 0, sizeof(p.buf.log.password));
-    syslog(LOG_DEBUG,
-	   "login request from %s (%lld)",
-	   p.buf.log.username, userid);
+    std::clog << "login request from "
+              << p.buf.log.username << " (" << userid << ")" << std::endl;
     if (userid != 0LL)
     {
 	pthread_mutex_lock(&active_users_mutex);
@@ -139,9 +139,9 @@ static void do_login(access_list& p)
             p.parent->login_user(userid, newcontrol, p);
             newcontrol->parent = (void *)(p.parent->send);
 
-            syslog(LOG_DEBUG,
-                   "logged in user %s (%lld)",
-                   newcontrol->username.c_str(), userid);
+            std::clog << "logged in user "
+                      << newcontrol->username
+                      << " (" << userid << ")" << std::endl;
 
             /* Send an ack packet, to let the user know they're in */
             newcontrol->send_ack(TYPE_LOGREQ);
@@ -159,9 +159,9 @@ static void do_logout(access_list& p)
     if (active_users->find(p.what.logout.who) != active_users->end())
     {
         base_user *bu = p.parent->logout_user(p.what.logout.who);
-	syslog(LOG_DEBUG,
-	       "logout request from %s (%lld)",
-	       bu->control->username.c_str(), bu->control->userid);
+	std::clog << "logout request from "
+                  << bu->control->username
+                  << " (" << bu->control->userid << ")" << std::endl;
 	bu->control->send_ack(TYPE_LGTREQ);
     }
 }

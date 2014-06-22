@@ -1,9 +1,9 @@
-/* signals.c
- *   by Trinity Quirk <trinity@io.com>
- *   last updated 23 Aug 2007, 20:20:15 trinity
+/* signals.cc
+ *   by Trinity Quirk <tquirk@io.com>
+ *   last updated 21 Jun 2014, 17:42:44 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -45,25 +45,25 @@
  *                     does nothing, but can be implemented later.
  *   04 Jul 2007 TAQ - Hopefully this thing will spit out a stack trace
  *                     when a SEGV happens.
+ *   21 Jun 2014 TAQ - C++-ification begins!  Starting with the syslog.
  *
  * Things to do
  *   - See if we can make the sigsegv handler dump core.
  *   - Catch everything else that may need to be caught.
  *
- * $Id: signals.c 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <syslog.h>
 #include <errno.h>
 #include <execinfo.h>
 
 #include "signals.h"
 #include "server.h"
 #include "config.h"
+#include "log.h"
 
 /* Function prototypes */
 static void sighup_handler(int);
@@ -89,22 +89,22 @@ void setup_signals(void)
     sa.sa_flags = 0;
     if (sigaction(SIGHUP, &sa, NULL) == -1)
     {
-	syslog(LOG_ERR, "couldn't set SIGHUP handler: %s (%d)",
-	       strerror(errno), errno);
+	std::clog << syslogErr << "couldn't set SIGHUP handler: "
+                  << strerror(errno) << "(" << errno << ")" << std::endl;
     }
     /* SIGHUP - reread the configuration files. */
     sa.sa_handler = sigusr1_handler;
     if (sigaction(SIGUSR1, &sa, NULL) == -1)
     {
-	syslog(LOG_ERR, "couldn't set SIGUSR1 handler: %s (%d)",
-	       strerror(errno), errno);
+	std::clog << syslogErr << "couldn't set SIGUSR1 handler: "
+                  << strerror(errno) << "(" << errno << ")" << std::endl;
     }
     /* SIGUSR2 - recreate the zone. */
     sa.sa_handler = sigusr2_handler;
     if (sigaction(SIGUSR2, &sa, NULL) == -1)
     {
-	syslog(LOG_ERR, "couldn't set SIGUSR2 handler: %s (%d)",
-	       strerror(errno), errno);
+	std::clog << syslogErr << "couldn't set SIGUSR2 handler: "
+                  << strerror(errno) << "(" << errno << ")" << std::endl;
     }
     /* SIGTERM - terminate the process normally. */
     sa.sa_handler = sigterm_handler;
@@ -112,15 +112,15 @@ void setup_signals(void)
     sa.sa_mask = ss;
     if (sigaction(SIGTERM, &sa, NULL) == -1)
     {
-	syslog(LOG_ERR, "couldn't set SIGTERM handler: %s (%d)",
-	       strerror(errno), errno);
+	std::clog << syslogErr << "couldn't set SIGTERM handler: "
+                  << strerror(errno) << "(" << errno << ")" << std::endl;
     }
     /* SIGSEGV - clean up and terminate the process. */
     sa.sa_handler = sigsegv_handler;
     if (sigaction(SIGSEGV, &sa, NULL) == -1)
     {
-	syslog(LOG_ERR, "couldn't set SIGSEGV handler: %s (%d)",
-	       strerror(errno), errno);
+	std::clog << syslogErr << "couldn't set SIGSEGV handler: "
+                  << strerror(errno) << "(" << errno << ")" << std::endl;
     }
 }
 
@@ -144,26 +144,30 @@ void cleanup_signals(void)
 
 static void sighup_handler(int sig)
 {
-    syslog(LOG_INFO, "received SIGHUP, restarting application");
+    std::clog << syslogInfo
+              << "received SIGHUP, restarting application" << std::endl;
     complete_cleanup();
     complete_startup();
 }
 
 static void sigusr1_handler(int sig)
 {
-    syslog(LOG_INFO, "received SIGUSR1, reloading configuration");
+    std::clog << syslogInfo
+              << "received SIGUSR1, reloading configuration" << std::endl;
     cleanup_configuration();
     setup_configuration(0, NULL);
 }
 
 static void sigusr2_handler(int sig)
 {
-    syslog(LOG_INFO, "received SIGUSR2, reloading zone (unimplemented)");
+    std::clog << syslogInfo
+              << "received SIGUSR2, reloading zone (unimplemented)"
+              << std::endl;
 }
 
 static void sigterm_handler(int sig)
 {
-    syslog(LOG_INFO, "received SIGTERM, terminating");
+    std::clog << syslogInfo << "received SIGTERM, terminating" << std::endl;
     set_exit_flag();
 }
 
@@ -173,7 +177,7 @@ static void sigsegv_handler(int sig)
     char **strings;
     size_t trace_size, i;
 
-    syslog(LOG_INFO, "received SIGSEGV, detonating");
+    std::clog << syslogInfo << "received SIGSEGV, detonating" << std::endl;
 
     /* Generate a stack dump.  This seems like it might be dangerous in
      * a signal handler (for SIGSEGV, even) because it appears that quite
@@ -183,7 +187,7 @@ static void sigsegv_handler(int sig)
     trace_size = backtrace(stack_trace, sizeof(stack_trace));
     strings = backtrace_symbols(stack_trace, trace_size);
     for (i = 0; i < trace_size; ++i)
-	syslog(LOG_DEBUG, "%s", strings[i]);
+	std::clog << strings[i] << std::endl;
 
     /* Let's try to actually get a corefile */
     abort();

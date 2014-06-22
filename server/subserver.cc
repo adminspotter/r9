@@ -1,9 +1,9 @@
-/* subserver.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 05 Sep 2007, 08:25:11 trinity
+/* subserver.cc
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 21 Jun 2014, 17:44:31 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -110,17 +110,18 @@
  *   16 Aug 2006 TAQ - The exit flag is now volatile.  Misc tiny tweaks.
  *   05 Sep 2007 TAQ - Figured out how we want to pass data between the
  *                     master listening thread and us.
+ *   21 Jun 2014 TAQ - The C++-ification has begun, starting with syslog.
  *
  * Things to do
+ *   - Move the interesting parts of this file into classes/stream.{h,cc}
+ *     and get rid of this file.
  *   - Finish up the sending and recieving code.
  *
- * $Id: subserver.c 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -132,6 +133,7 @@
 #include <errno.h>
 
 #include "subserver.h"
+#include "log.h"
 
 #define CONTROLLEN   (sizeof(struct cmsghdr) + sizeof(int))
 #define max(x, y)    ((x) > (y) ? (x) : (y))
@@ -161,8 +163,8 @@ void subserver_main_loop(void)
     signal(SIGTERM, sigterm_handler);
 
     /* Open up a connection to the syslog. */
-    openlog("subserver", LOG_PID, LOG_DAEMON);
-    syslog(LOG_NOTICE, "subserver starting");
+    std::clog.rdbuf(new Log("subserver", LOG_DAEMON));
+    std::clog << syslogNotice << "subserver starting";
 
     /* Set up the select descriptor set. */
     FD_ZERO(&master_readfs);
@@ -192,11 +194,15 @@ void subserver_main_loop(void)
 		continue;
 
 	      case ENOMEM:
-		syslog(LOG_ERR, "select memory error: %s", strerror(errno));
+		std::clog << syslogErr << "select memory error: "
+                          << strerror(errno) << " (" << errno << ")"
+                          << std::endl;
 		break;
 
 	      default:
-		syslog(LOG_ERR, "select error: %s", strerror(errno));
+		std::clog << syslogErr << "select error: "
+                          << strerror(errno) << " (" << errno << ")"
+                          << std::endl;
 		break;
 	    }
 	}
@@ -213,23 +219,26 @@ void subserver_main_loop(void)
 		int *new_conn;
 
 		/* We're out of space, and have to grow the list */
-		if ((new_conn = realloc(connections,
-					sizeof(int) * new_size))
+		if ((new_conn = (int *)realloc(connections,
+                                               sizeof(int) * new_size))
 		    == NULL)
 		{
-		    syslog(LOG_ERR,
-			   "couldn't grow connections list to %d: %s",
-			   new_size, strerror(errno));
+		    std::clog << syslogErr
+                              << "couldn't grow connections list to "
+                              << new_size << ": " << strerror(errno)
+                              << " (" << errno << ")" << std::endl;
 		    /* FIXME:  Do we want to die here, or what? */
 		}
-		syslog(LOG_DEBUG, "grew connections list to %d", new_size);
+		std::clog << "grew connections list to "
+                          << new_size << std::endl;
 		connections_size = new_size;
 		connections = new_conn;
 	    }
 	    connections[num_connections] = val;
 	    FD_SET(val, &master_readfs);
 	    max_fd = max(val + 1, max_fd);
-	    syslog(LOG_NOTICE, "Got connection %d", num_connections);
+            std::clog << syslogNotice
+                      << "Got connection " << num_connections << std::endl;
 	    ++num_connections;
 	}
 
@@ -240,7 +249,8 @@ void subserver_main_loop(void)
 		/* Somebody dropped their connection, or there was
 		 * some other problem.
 		 */
-		syslog(LOG_NOTICE, "Lost connection %d", i);
+		std::clog << syslogNotice
+                          << "Lost connection " << i << std::endl;
 		close(connections[i]);
 		FD_CLR(connections[i], &master_readfs);
 		FD_CLR(connections[i], &readfs);
@@ -323,7 +333,9 @@ static int recv_fd(void)
     /* Our read pipe is *always* going to be on STDIN_FILENO */
     if ((nread = recvmsg(STDIN_FILENO, &msg, 0)) < 0)
     {
-	syslog(LOG_ERR, "recvmsg error: %s", strerror(errno));
+	std::clog << syslogErr
+                  << "recvmsg error: " << strerror(errno)
+                  << " (" << errno << ")" << std::endl;
 	return -1;
     }
     else if (nread == 0)
@@ -332,7 +344,7 @@ static int recv_fd(void)
          * this condition *should* never happen, but it might.  We'll
          * exit nicely if it does.
 	 */
-	syslog(LOG_ERR, "connection closed by server");
+	std::clog << syslogErr << "connection closed by server" << std::endl;
 	subserver_set_exit_flag();
     }
 
@@ -342,7 +354,7 @@ static int recv_fd(void)
 	{
 	    if (ptr != &buf[nread - 1])
 	    {
-		syslog(LOG_ERR, "message format error");
+		std::clog << syslogErr << "message format error" << std::endl;
 		return -1;
 	    }
 	    status = *ptr & 255;
@@ -350,7 +362,8 @@ static int recv_fd(void)
 	    {
 		if (msg.msg_controllen != CONTROLLEN)
 		{
-		    syslog(LOG_ERR, "status = 0 but no fd");
+		    std::clog << syslogErr
+                              << "status = 0 but no fd" << std::endl;
 		    return -1;
 		}
 		newfd = *(int *)CMSG_DATA(cmptr);
@@ -369,7 +382,7 @@ static int recv_fd(void)
  */
 static void cleanup_subserver(void)
 {
-    syslog(LOG_INFO, "subserver terminating");
+    std::clog << syslogInfo << "subserver terminating" << std::endl;
     closelog();
 }
 
@@ -379,7 +392,7 @@ static void cleanup_subserver(void)
 static void sigterm_handler(int sig)
 {
     signal(SIGTERM, SIG_IGN);
-    syslog(LOG_INFO, "Recieved SIGTERM, terminating");
+    std::clog << syslogInfo << "Recieved SIGTERM, terminating" << std::endl;
     subserver_set_exit_flag();
     signal(SIGTERM, sigterm_handler);
 }

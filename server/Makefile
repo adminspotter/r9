@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <trinity@ymb.net>
-#   last updated 19 Sep 2013, 16:15:20 trinity
+#   last updated 21 Jun 2014, 17:35:28 tquirk
 #
 # This is the main makefile for the revision9 server.
 #
@@ -19,33 +19,24 @@
 #   15 Dec 2007 TAQ - $TARGET is dependent on the classes and proto libs too.
 #   12 Sep 2013 TAQ - makedepend is no longer in /usr/X11R6/bin.
 #   19 Sep 2013 TAQ - We now link against libr9_console.so.
+#   21 Jun 2014 TAQ - Moving the main stuff to C++.  Also modified to include
+#                     our general Makefile.defs file.
 #
 # Things to do
 #
-# $Id: Makefile 10 2013-01-25 22:13:00Z trinity $
 
-SHELL = /bin/sh
+-include ../Makefile.defs
 
-CC = /usr/bin/gcc
-CINCLUDE = -I../proto -Iclasses
-CDEBUG = -g
-# COPTIM = -O2
-CDEFS = -D_REENTRANT # -DSERVER_ROOT=\"/home/trinity/src/revision9/server\"
-CFLAGS = -Wall $(CDEFS) $(CDEBUG) $(COPTIM) $(CINCLUDE)
+CXXFLAGS = -Wall -g -fPIC -DPIC -D_REENTRANT $(CINCLUDE)
 
-LD = /usr/bin/gcc
 LDFLAGS = -rdynamic -L/usr/local/lib -L/home/trinity/lib
 LDLIBS = -lr9_console -lr9_classes -lr9_proto -lmath3d -lm -ldl -lpthread -lstdc++
 
-DEPEND = /usr/bin/makedepend -f-
-
-MAKETAGS = /usr/bin/etags
-
-RM = /bin/rm -f
+DEPEND = $(MAKEDEPEND) -f-
 
 HDRS = config.h server.h signals.h subserver.h
-SRCS = config.c server.c signals.c subserver.c
-OBJS = ${SRCS:.c=.o}
+CXXSRCS = config.cc server.cc signals.cc subserver.cc
+OBJS = ${CXXSRCS:.cc=.o}
 TARGET = server
 
 .PHONY : clean proto classes

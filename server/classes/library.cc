@@ -1,6 +1,6 @@
 /* library.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 08:52:32 tquirk
+ *   last updated 21 Jun 2014, 18:22:38 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2007  Trinity Annabelle Quirk
@@ -26,15 +26,16 @@
  *   18 Jun 2014 TAQ - Created the file.
  *   21 Jun 2014 TAQ - Instead of returning NULL on failures, we'll now throw
  *                     strings, and leave it to our caller to log or whatever.
+ *                     Updated syslog to use new stream log.
  *
  * Things to do
  *
  */
 
 #include <dlfcn.h>
-#include <syslog.h>
 
 #include "library.h"
+#include "../log.h"
 
 Library::Library(const char *name)
     : libname(name)
@@ -52,7 +53,7 @@ void Library::open(void)
     std::string fname = "libr9_" + libname + ".so";
     char *err;
 
-    syslog(LOG_DEBUG, "loading %s lib", this->libname.c_str());
+    std::clog << "loading " << this->libname << " lib" << std::endl;
     this->lib = dlopen(fname.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     if ((err = dlerror()) != NULL)
         throw std::string(err);

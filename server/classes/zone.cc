@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 09:11:14 tquirk
+ *   last updated 21 Jun 2014, 22:45:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -118,6 +118,7 @@
  *   17 Jun 2014 TAQ - Moved the thread pool routines inside the class as
  *                     static methods.
  *   21 Jun 2014 TAQ - Moved the action library handling into this class.
+ *                     Updated the syslog to use the stream logger.
  *
  * Things to do
  *   - Do we even want to handle geometry here, or would that be more
@@ -137,13 +138,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <syslog.h>
 #include <glob.h>
 #include <errno.h>
 
 #include "zone.h"
 #include "thread_pool.h"
 #include "../config.h"
+#include "../log.h"
 
 /* Private methods */
 void Zone::load_actions(const char *libname)
@@ -157,7 +158,8 @@ void Zone::load_actions(const char *libname)
     }
     catch (std::string& s)
     {
-        syslog(LOG_ERR, "error loading actions library: %s", s.c_str());
+        std::clog << syslogErr
+                  << "error loading actions library: " << s << std::endl;
     }
 }
 
@@ -174,9 +176,9 @@ void Zone::create_thread_pools(void)
     }
     catch (int e)
     {
-	syslog(LOG_ERR,
-	       "couldn't create zone thread pool: %s (%d)",
-	       strerror(e), e);
+	std::clog << syslogErr
+                  << "couldn't create zone thread pool: "
+                  << strerror(e) << " (" << e << ")" << std::endl;
 	throw;
     }
 }
@@ -187,7 +189,7 @@ void *Zone::action_pool_worker(void *arg)
     packet_list req;
     u_int16_t skillid;
 
-    syslog(LOG_DEBUG, "started action pool worker");
+    std::clog << "started action pool worker" << std::endl;
     for (;;)
     {
 	/* Grab the next packet off the queue */
@@ -215,7 +217,7 @@ void *Zone::action_pool_worker(void *arg)
 						     sizeof(action_request));
 	}
     }
-    syslog(LOG_DEBUG, "action pool worker ending");
+    std::clog << "action pool worker ending" << std::endl;
     return NULL;
 }
 
@@ -226,7 +228,7 @@ void *Zone::motion_pool_worker(void *arg)
     struct timeval current;
     double interval;
 
-    syslog(LOG_DEBUG, "started a motion pool worker");
+    std::clog << "started a motion pool worker" << std::endl;
     for (;;)
     {
 	/* Grab the next object to move off the queue */
@@ -256,7 +258,7 @@ void *Zone::motion_pool_worker(void *arg)
 		|| req->rotation[2] != 0.0))
 	    zone->motion_pool->push(req);
     }
-    syslog(LOG_DEBUG, "motion pool worker ending");
+    std::clog << "motion pool worker ending" << std::endl;
     return NULL;
 }
 
@@ -267,7 +269,7 @@ void *Zone::update_pool_worker(void *arg)
     u_int64_t objid;
     packet_list buf;
 
-    syslog(LOG_DEBUG, "started an update pool worker");
+    std::clog << "started an update pool worker" << std::endl;
     for (;;)
     {
 	zone->update_pool->pop(&req);
@@ -291,7 +293,7 @@ void *Zone::update_pool_worker(void *arg)
 	/* Push the packet onto the send queue */
 	/*zone->sending_pool->push(&buf, sizeof(packet));*/
     }
-    syslog(LOG_DEBUG, "update pool worker ending");
+    std::clog << "update pool worker ending" << std::endl;
     return NULL;
 }
 
@@ -327,7 +329,7 @@ Zone::~Zone()
      * destructor, which will terminate all the threads and clean up
      * the queues and stuff.
      */
-    syslog(LOG_DEBUG, "deleting thread pools");
+    std::clog << "deleting thread pools" << std::endl;
     if (this->action_pool != NULL)
     {
 	delete this->action_pool;
@@ -345,7 +347,7 @@ Zone::~Zone()
     }
 
     /* Delete all the game objects. */
-    syslog(LOG_DEBUG, "deleting game objects");
+    std::clog << "deleting game objects" << std::endl;
     if (this->game_objects.size())
     {
 	std::map<u_int64_t, game_object_list_element>::iterator i;
@@ -360,7 +362,7 @@ Zone::~Zone()
     }
 
     /* Unregister all the action routines. */
-    syslog(LOG_DEBUG, "cleaning up action routines");
+    std::clog << "cleaning up action routines" << std::endl;
     if (this->actions.size())
 	this->actions.erase(this->actions.begin(), this->actions.end());
 
@@ -388,9 +390,9 @@ void Zone::start(void)
     }
     catch (int errval)
     {
-	syslog(LOG_ERR,
-	       "couldn't start zone thread pool: %s",
-	       strerror(errval));
+	std::clog << syslogErr
+                  << "couldn't start zone thread pool: "
+                  << strerror(errval) << " (" << errval << ")" << std::endl;
 	throw;
     }
 }

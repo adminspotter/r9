@@ -1,9 +1,9 @@
-/* config.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 20 May 2014, 17:28:16 tquirk
+/* config.cc
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 21 Jun 2014, 17:19:07 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -180,13 +180,19 @@
  *                     ConHistFile, and ConHistLen.
  *   20 May 2014 TAQ - For some reason, the int16 and int64 stuff was all
  *                     commented out.
+ *   21 Jun 2014 TAQ - C++-ification has begun, starting with the syslog.
  *
  * Things to do
+ *   - Consider how we might move module-specific configuration items
+ *     into the modules themselves.  Perhaps an ini-like format, with the
+ *     module in question (zone, database, etc.) being the section title.
+ *     That way, we wouldn't need the huge array here, and each module
+ *     that actually needs configuration items can just use the parsing
+ *     primitives here, and handle everything it needs by itself.
  *   - Create command-line options for all the config file elements.  When
  *     parsing these, make them supercede the config file settings.  Probably
  *     a second conf structure is needed for this trick.
  *
- * $Id: config.c 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <stdio.h>
@@ -196,12 +202,12 @@
 #include <pwd.h>
 #include <grp.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <errno.h>
 
 #include "config.h"
 #include "server.h"
 #include "defaults.h"
+#include "log.h"
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 #define CF_STRING   1
@@ -314,7 +320,7 @@ void setup_configuration(int argc, char **argv)
 
 	  case '?':
 	  default:
-	    fprintf(stderr, "WARNING: Unknown option %c", c);
+            std::clog << "WARNING: Unknown option " << c;
 	    break;
 	}
     }
@@ -417,9 +423,9 @@ static void read_config_file(const char *fname)
     /* Open configuration files and do whatever is necessary. */
     if ((fp = fopen(fname, "r")) == NULL)
     {
-	fprintf(stderr,
-		"ERROR: couldn't open configuration file %s: %s",
-		fname, strerror(errno));
+        std::clog << "ERROR: couldn't open configuration file "
+                  << fname << ": "
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
 	exit(1);
     }
 
@@ -551,7 +557,8 @@ static void config_string_element(const char *str,
     }
     else
     {
-	fprintf(stderr, "WARNING: null %s, using %s", item, (char *)defval);
+        std::clog << "WARNING: null " << item << ", using " << (char *)defval
+                  << std::endl;
 	*element = (char *)defval;
     }
 }
@@ -565,9 +572,8 @@ static void config_integer_element(const char *str,
 
     if ((*element = atoi(str)) < 1 || *element > USHRT_MAX)
     {
-	fprintf(stderr,
-		"WARNING: invalid value (%d) for %s, using %d",
-		*element, item, (int)defval);
+        std::clog << "WARNING: invalid value (" << *element
+                  << ") for " << item << ", using " << (int)defval << std::endl;
 	*element = (int)defval;
     }
 }
@@ -581,9 +587,8 @@ static void config_int16_element(const char *str,
 
     if ((*element = (u_int16_t)atoi(str)) == 0)
     {
-	fprintf(stderr,
-		"WARNING: invalid value (%d) for %s, using %d",
-		*element, item, (int)defval);
+        std::clog << "WARNING: invalid value (" << *element
+                  << ") for " << item << ", using " << (int)defval << std::endl;
 	*element = (u_int16_t)(int)defval;
     }
 }
@@ -597,9 +602,8 @@ static void config_int64_element(const char *str,
 
     if ((*element = strtoull(str, NULL, 10)) == 0)
     {
-	fprintf(stderr,
-		"WARNING: invalid value (%lld) for %s, using %d",
-		*element, item, (int)defval);
+        std::clog << "WARNING: invalid value (" << *element
+                  << ") for " << item << ", using " << (int)defval << std::endl;
 	*element = (u_int64_t)(int)defval;
     }
 }
@@ -614,9 +618,8 @@ static void config_float_element(const char *str,
 
     if ((*element = atof(str)) <= 0.0)
     {
-	fprintf(stderr,
-		"WARNING: invalid value (%f) for %s, using %f",
-		*element, item, realdefval);
+        std::clog << "WARNING: invalid value (" << *element
+                  << ") for " << item << ", using " << realdefval << std::endl;
 	*element = realdefval;
     }
 }
@@ -652,7 +655,7 @@ static void config_user_element(const char *str,
 	if ((up = getpwnam(str)) != NULL)
 	    seteuid(up->pw_uid);
 	else
-	    fprintf(stderr, "ERROR: couldn't find user %s", str);
+            std::clog << "ERROR: couldn't find user " << str << std::endl;
     }
 }
 
@@ -669,7 +672,7 @@ static void config_group_element(const char *str,
 	if ((gp = getgrnam(str)) != NULL)
 	    setegid(gp->gr_gid);
 	else
-	    fprintf(stderr, "ERROR: couldn't find group %s", str);
+            std::clog << "ERROR: couldn't find group " << str << std::endl;
     }
 }
 
@@ -701,8 +704,8 @@ static void config_logfac_element(const char *str,
     else if (!strcasecmp(str, "uucp"))      *element = LOG_UUCP;
     else
     {
-	fprintf(stderr, "Unknown facility (%s) for %s, using %d",
-		str, item, (int)defval);
+        std::clog << "Unknown facility (" << str << ") for "
+                << item << ", using " << (int)defval << std::endl;
 	*element = (int)defval;
     }
 }
@@ -720,9 +723,8 @@ static void config_socket_element(const char *str,
     if ((new_ports = realloc(element->port_nums,
 			     sizeof(int) * new_num)) == NULL)
     {
-	fprintf(stderr,
-		"ERROR: couldn't allocate memory for ports: %s",
-		strerror(errno));
+        std::clog << "ERROR: couldn't allocate memory for ports: "
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
 	return;
     }
     element->port_nums = new_ports;
@@ -749,9 +751,8 @@ static void config_location_element(const char *str,
 	    element->steps[i - 3] = (u_int16_t)strtoul(ptr, &ptr, 10);
 	if (errno != 0)
 	{
-	    fprintf(stderr,
-		    "ERROR: parsing location element \"%s\": %s",
-		    ptr, strerror(errno));
+            std::clog << "ERROR: parsing location element \"" << ptr << "\": "
+                strerror(errno) << " (" << errno << ")" << std::endl;
 	    break;
 	}
     }

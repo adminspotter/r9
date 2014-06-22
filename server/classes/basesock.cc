@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jun 2014, 08:53:38 tquirk
+ *   last updated 21 Jun 2014, 18:09:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -32,6 +32,7 @@
  *   14 Jun 2014 TAQ - Moved the guts of the new socket into here, so this
  *                     can be used wherever we need a listening socket.
  *                     Added the base_user and listen_socket base classes.
+ *   21 Jun 2014 TAQ - Converted syslog to new style stream log.
  *
  * Things to do
  *
@@ -44,11 +45,11 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <errno.h>
-#include <syslog.h>
 
 #include "basesock.h"
 
 #include "../config.h"
+#include "../log.h"
 
 basesock::basesock(struct addrinfo *ai, u_int16_t port)
 {
@@ -87,15 +88,17 @@ void basesock::create_socket(struct addrinfo *ai)
     gid_t gid = getegid();
     int do_uid = this->port_num <= 1024 && uid != 0;
     int opt = 1;
-    const char *typestr = (ai->ai_socktype == SOCK_DGRAM ? "dgram" : "stream");
+    const std::string typestr
+        = (ai->ai_socktype == SOCK_DGRAM ? "dgram" : "stream");
 
     if ((this->sock = socket(ai->ai_family,
                              ai->ai_socktype,
                              ai->ai_protocol)) < 0)
     {
-	syslog(LOG_ERR,
-	       "socket creation failed for %s port %d: %s (%d)",
-	       typestr, this->port_num, strerror(errno), errno);
+	std::clog << syslogErr
+                  << "socket creation failed for " << typestr << " port "
+                  << this->port_num << ": "
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
         this->sock = 0;
 	throw errno;
     }
@@ -122,9 +125,8 @@ void basesock::create_socket(struct addrinfo *ai)
     {
 	if (getuid() != 0)
 	{
-	    syslog(LOG_ERR,
-		   "can't open %s port %d as non-root user",
-		   typestr, this->port_num);
+	    std::clog << syslogErr << "can't open " << typestr << " port "
+                      << this->port_num << " as non-root user" << std::endl;
 	    close(this->sock);
             this->sock = 0;
 	    throw EACCES;
@@ -143,9 +145,9 @@ void basesock::create_socket(struct addrinfo *ai)
             seteuid(uid);
             setegid(gid);
         }
-	syslog(LOG_ERR,
-	       "bind failed for %s port %d: %s (%d)",
-	       typestr, this->port_num, strerror(errno), errno);
+	std::clog << syslogErr << "bind failed for " << typestr << " port "
+                  << this->port_num << ": "
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
 	close(this->sock);
         this->sock = 0;
         throw errno;
@@ -161,18 +163,19 @@ void basesock::create_socket(struct addrinfo *ai)
     {
 	if (listen(this->sock, basesock::LISTEN_BACKLOG) < 0)
 	{
-	    syslog(LOG_ERR,
-		   "listen failed for %s port %d: %s (%d)",
-		   typestr, this->port_num, strerror(errno), errno);
+	    std::clog << syslogErr
+                      << "listen failed for " << typestr << " port "
+                      << this->port_num << ": "
+                      << strerror(errno) << " (" << errno << ")" << std::endl;
 	    close(this->sock);
             this->sock = 0;
             throw errno;
 	}
     }
 
-    syslog(LOG_DEBUG,
-	   "created %s socket %d on port %d",
-	   typestr, this->sock, this->port_num);
+    std::clog << "created " << typestr << " socket "
+              << this->sock << " on port "
+              << this->port_num << std::endl;
 }
 
 void basesock::start(void *(*func)(void *))
@@ -181,9 +184,8 @@ void basesock::start(void *(*func)(void *))
 
     if (this->sock == 0)
     {
-        syslog(LOG_ERR,
-               "no socket available to listen for port %d",
-               this->port_num);
+        std::clog << syslogErr << "no socket available to listen for port "
+                  << this->port_num << std::endl;
         throw ENOENT;
     }
     if ((ret = pthread_create(&(this->listen_thread),
@@ -191,9 +193,9 @@ void basesock::start(void *(*func)(void *))
                               func,
                               this->listen_arg)) != 0)
     {
-        syslog(LOG_ERR,
-               "couldn't start listen thread for port %d: %s (%d)",
-               this->port_num, strerror(ret), ret);
+        std::clog << syslogErr << "couldn't start listen thread for port "
+                  << this->port_num << ": "
+                  << strerror(ret) << " (" << ret << ")" << std::endl;
         throw ret;
     }
 }
@@ -204,17 +206,17 @@ void basesock::stop(void)
 
     if ((ret = pthread_cancel(this->listen_thread)) != 0)
     {
-        syslog(LOG_ERR,
-               "couldn't cancel listen thread for port %d: %s (%d)",
-               this->port_num, strerror(ret), ret);
+        std::clog << syslogErr << "couldn't cancel listen thread for port "
+                  << this->port_num << ": "
+                  << strerror(ret) << " (" << ret << ")" << std::endl;
         throw ret;
     }
     sleep(0);
     if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
     {
-        syslog(LOG_ERR,
-               "couldn't join listen thread for port %d: %s (%d)",
-               this->port_num, strerror(ret), ret);
+        std::clog << syslogErr << "couldn't join listen thread for port "
+                  << this->port_num << ": "
+                  << strerror(ret) << " (" << ret << ")" << std::endl;
         throw ret;
     }
 }
@@ -268,15 +270,15 @@ listen_socket::~listen_socket()
 
     if ((retval = pthread_cancel(this->reaper)) != 0)
     {
-        syslog(LOG_ERR,
-               "couldn't cancel reaper thread for port %d: %s (%d)",
-               this->sock.port_num, strerror(retval), retval);
+        std::clog << syslogErr << "couldn't cancel reaper thread for port "
+                  << this->sock.port_num << ": "
+                  << strerror(retval) << " (" << retval << ")" << std::endl;
     }
     sleep(0);
     if ((retval = pthread_join(this->reaper, NULL)) != 0)
-	syslog(LOG_ERR,
-	       "error terminating reaper thread for port %d: %s (%d)",
-	       this->sock.port_num, strerror(retval), retval);
+	std::clog << syslogErr << "error terminating reaper thread for port "
+                  << this->sock.port_num << ": "
+                  << strerror(retval) << " (" << retval << ")" << std::endl;
 
     /* Clear out the users map */
     for (i = this->users.begin(); i != this->users.end(); ++i)

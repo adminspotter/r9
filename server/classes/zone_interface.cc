@@ -1,9 +1,9 @@
 /* zone_interface.cc
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 21 Jun 2014, 09:43:08 tquirk
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 21 Jun 2014, 22:50:00 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -61,6 +61,7 @@
  *   25 Oct 2007 TAQ - Some of the DB functions changed prototype.
  *   29 Nov 2009 TAQ - Added get_server_objects references.
  *   20 Jun 2014 TAQ - New library stuff, new database stuff.
+ *   21 Jun 2014 TAQ - Converted syslog to use the logging stream.
  *
  * Things to do
  *   - See if we can get rid of this file.  Maybe this ought to be main
@@ -73,6 +74,7 @@
 #include "zone_interface.h"
 
 #include "../config.h"
+#include "../log.h"
 
 /* The single zone pointer. */
 Zone *zone = NULL;
@@ -87,7 +89,7 @@ int setup_zone(void)
     int ret = 0;
     create_db_t *create_db;
 
-    syslog(LOG_DEBUG, "in zone setup");
+    std::clog << "in zone setup" << std::endl;
     try
     {
 	zone = new Zone(config.size.dim[0], config.size.dim[1],
@@ -129,14 +131,16 @@ int setup_zone(void)
     }
     catch (int errval)
     {
-	syslog(LOG_ERR, "couldn't create thread pools: %s", strerror(errval));
+	std::clog << syslogErr << "couldn't create thread pools: "
+                  << strerror(errval) << " (" << errval << ")" << std::endl;
 	ret = errval;
 	goto BAILOUT2;
     }
     access_pool->clean_on_pop = true;
     if ((active_users = new std::set<u_int64_t>) == NULL)
     {
-	syslog(LOG_ERR, "couldn't create active users set");
+	std::clog << syslogErr
+                  << "couldn't create active users set" << std::endl;
 	ret = ENOMEM;
 	goto BAILOUT3;
     }
@@ -150,12 +154,13 @@ int setup_zone(void)
     }
     catch (int errval)
     {
-	syslog(LOG_ERR, "couldn't start thread pools: %s", strerror(errval));
+	std::clog << syslogErr << "couldn't start thread pools: "
+                  << strerror(errval) << " (" << errval << ")" << std::endl;
 	ret = errval;
 	goto BAILOUT4;
     }
 
-    syslog(LOG_DEBUG, "zone setup done");
+        std::clog << "zone setup done" << std::endl;
     return ret;
 
   BAILOUT4:
@@ -177,7 +182,7 @@ int setup_zone(void)
 
 void cleanup_zone(void)
 {
-    syslog(LOG_DEBUG, "in zone cleanup");
+    std::clog << "in zone cleanup" << std::endl;
     if (access_pool != NULL)
     {
 	delete access_pool;
@@ -185,23 +190,23 @@ void cleanup_zone(void)
     }
     if (active_users != NULL)
     {
-	syslog(LOG_DEBUG, "deleting active users set");
+	std::clog << "deleting active users set" << std::endl;
 	delete active_users;
 	active_users = NULL;
     }
     if (zone != NULL)
     {
-	syslog(LOG_DEBUG, "deleting zone");
+	std::clog << "deleting zone" << std::endl;
 	delete zone;
 	zone = NULL;
     }
     if (db_lib != NULL)
     {
-	syslog(LOG_DEBUG, "closing database library");
+	std::clog << "closing database library" << std::endl;
         destroy_db_t *destroy_db = (destroy_db_t *)db_lib->symbol("destroy_db");
         (*destroy_db)(database);
         delete db_lib;
 	db_lib = NULL;
     }
-    syslog(LOG_DEBUG, "zone cleanup done");
+    std::clog << "zone cleanup done" << std::endl;
 }

@@ -1,9 +1,9 @@
 /* thread_pool.h                                           -*- C++ -*-
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 22 Nov 2009, 12:18:31 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 21 Jun 2014, 22:39:36 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2009  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -107,11 +107,11 @@
  *                     size.
  *   22 Nov 2009 TAQ - Added const to constructor's string argument to get
  *                     rid of a compiler warning.
+ *   21 Jun 2014 TAQ - Updated syslog to use the stream-based log.
  *
  * Things to do
  *   - Might we need a way to gun a stuck thread?
  *
- * $Id: thread_pool.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_THREAD_POOL_H__
@@ -122,10 +122,11 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <errno.h>
-#include <syslog.h>
 #include <vector>
 #include <queue>
 #include <exception>
+
+#include "../log.h"
 
 template <class T>
 class ThreadPool
@@ -163,17 +164,19 @@ class ThreadPool
 	    /* Initialize the mutex and condition variables */
 	    if ((ret = pthread_mutex_init(&(this->queue_lock), NULL)) != 0)
 	    {
-		syslog(LOG_ERR,
-		       "couldn't init %s queue mutex: %s",
-		       this->name, strerror(ret));
+		std::clog << syslogErr
+                          << "couldn't init " << this->name
+                          << " queue mutex: "
+                          << strerror(ret) << " (" << ret << ")" << std::endl;
 		free(this->name);
 		throw ret;
 	    }
 	    if ((ret = pthread_cond_init(&(this->queue_not_empty), NULL)) != 0)
 	    {
-		syslog(LOG_ERR,
-		       "couldn't init %s queue not-empty cond: %s",
-		       this->name, strerror(ret));
+		std::clog << syslogErr
+                          << "couldn't init " << this->name
+                          << " queue not-empty cond: "
+                          << strerror(ret) << " (" << ret << ")" << std::endl;
 		pthread_mutex_destroy(&(this->queue_lock));
 		free(this->name);
 		throw ret;
@@ -186,7 +189,7 @@ class ThreadPool
 	    this->stop();
 	    pthread_cond_destroy(&(this->queue_not_empty));
 	    pthread_mutex_destroy(&(this->queue_lock));
-	    syslog(LOG_DEBUG, "destroyed the %s mutexes", this->name);
+            std::clog << "destroyed the " << this->name << " mutexes";
 	    free(this->name);
 	};
 
@@ -210,9 +213,10 @@ class ThreadPool
 					  this->startup_arg)) != 0)
 		{
 		    /* Error! */
-		    syslog(LOG_ERR,
-			   "couldn't start a %s thread: %s",
-			   this->name, strerror(ret));
+		    std::clog << syslogErr
+                              << "couldn't start a " << this->name
+                              << " thread: " << strerror(ret)
+                              << " (" << ret << ")" << std::endl;
 		    /* Something's messed up; stop all the threads */
 		    this->stop();
 		    throw ret;
@@ -308,8 +312,8 @@ class ThreadPool
 	    /* If it's time to exit, go ahead and exit */
 	    if (this->exit_flag)
 	    {
-		syslog(LOG_DEBUG,
-		       "%s thread into the exit routine", this->name);
+                std::clog << this->name
+                          << " thread into the exit routine" << std::endl;
 		pthread_mutex_unlock(&(this->queue_lock));
 		pthread_exit(NULL);
 	    }

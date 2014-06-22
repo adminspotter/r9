@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jun 2014, 17:51:16 tquirk
+ *   last updated 21 Jun 2014, 18:20:17 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -48,6 +48,7 @@
  *   14 Jun 2014 TAQ - Lots of restructuring of base classes.
  *   15 Jun 2014 TAQ - Moved the send worker in here.  Sockaddr is now a class
  *                     hierarchy, and the behaviour has changed slightly.
+ *   21 Jun 2014 TAQ - Changed syslog to new stream log.
  *
  * Things to do
  *   - We might need to have a mutex on the socket, since we'll probably
@@ -66,6 +67,8 @@
 
 #include "zone.h"
 #include "zone_interface.h"
+
+#include "../log.h"
 
 extern volatile int main_loop_exit_flag;
 
@@ -99,9 +102,8 @@ void dgram_socket::start(void)
 {
     int retval;
 
-    syslog(LOG_DEBUG,
-	   "starting connection loop for datagram port %d",
-	   this->sock.port_num);
+    std::clog << "starting connection loop for datagram port "
+              << this->sock.port_num << std::endl;
 
     /* Start up the sending thread pool */
     sleep(0);
@@ -112,9 +114,10 @@ void dgram_socket::start(void)
     }
     catch (int e)
     {
-	syslog(LOG_ERR,
-	       "couldn't start send pool for datagram port %d: %s (%d)",
-	       this->sock.port_num, strerror(e), e);
+	std::clog << syslogErr
+                  << "couldn't start send pool for datagram port "
+                  << this->sock.port_num << ": "
+                  << strerror(e) << " (" << e << ")" << std::endl;
         throw;
     }
 
@@ -122,9 +125,10 @@ void dgram_socket::start(void)
     if ((retval = pthread_create(&this->reaper, NULL,
 				 dgram_reaper_worker, (void *)this)) != 0)
     {
-	syslog(LOG_ERR,
-	       "couldn't create reaper thread for datagram port %d: %s (%d)",
-	       this->sock.port_num, strerror(retval), retval);
+	std::clog << syslogErr
+                  << "couldn't create reaper thread for datagram port "
+                  << this->sock.port_num << ": "
+                  << strerror(retval) << " (" << retval << ")" << std::endl;
         throw retval;
     }
 
@@ -184,7 +188,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         {
           case TYPE_ACKPKT:
             /* Acknowledgement packet */
-            syslog(LOG_DEBUG, "got an ack packet");
+            std::clog << "got an ack packet" << std::endl;
             if (!userid)
                 break;
             dgs->users[userid]->timestamp = time(NULL);
@@ -192,7 +196,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
 
           case TYPE_LOGREQ:
             /* Login request */
-            syslog(LOG_DEBUG, "got a login packet");
+            std::clog << "got a login packet" << std::endl;
             memcpy(&a.buf, &buf, len);
             a.parent = dgs;
             memcpy(&a.what.login.who.dgram, &from,
@@ -202,7 +206,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
 
           case TYPE_LGTREQ:
             /* Logout request */
-            syslog(LOG_DEBUG, "got a logout packet");
+            std::clog << "got a logout packet" << std::endl;
             if (!userid)
                 break;
             dgs->users[userid]->timestamp = time(NULL);
@@ -214,7 +218,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
 
           case TYPE_ACTREQ:
             /* Action request */
-            syslog(LOG_DEBUG, "got an action request packet");
+            std::clog << "got an action request packet" << std::endl;
             if (!userid)
                 break;
             dgs->users[userid]->timestamp = time(NULL);
@@ -228,9 +232,8 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         }
         pthread_testcancel();
     }
-    syslog(LOG_DEBUG,
-	   "exiting connection loop for datagram port %d",
-	   dgs->sock.port_num);
+    std::clog << "exiting connection loop for datagram port "
+              << dgs->sock.port_num << std::endl;
     return NULL;
 }
 
@@ -241,9 +244,8 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
     dgram_user *dgu;
     time_t now;
 
-    syslog(LOG_DEBUG,
-	   "started reaper thread for datagram port %d",
-	   dgs->sock.port_num);
+    std::clog << "started reaper thread for datagram port "
+              << dgs->sock.port_num << std::endl;
     for (;;)
     {
 	sleep(listen_socket::REAP_TIMEOUT);
@@ -255,11 +257,10 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
 	    if (dgu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
 	    {
 		/* We'll consider the user link-dead */
-		syslog(LOG_DEBUG,
-		       "removing user %s (%llu) from datagram port %d",
-		       dgu->control->username.c_str(),
-                       dgu->userid,
-		       dgs->sock.port_num);
+                std::clog << "removing user "
+                          << dgu->control->username << " ("
+                          << dgu->userid << ") from datagram port "
+                          << dgs->sock.port_num << std::endl;
 		if (dgu->control->slave != NULL)
 		{
 		    /* Clean up a user who has logged out */
@@ -289,9 +290,8 @@ void *dgram_socket::dgram_send_worker(void *arg)
     packet_list req;
     size_t realsize;
 
-    syslog(LOG_DEBUG,
-	   "started send pool worker for datagram port %d",
-	   dgs->sock.port_num);
+    std::clog << "started send pool worker for datagram port "
+              << dgs->sock.port_num << std::endl;
     for (;;)
     {
 	dgs->send->pop(&req);
@@ -307,17 +307,18 @@ void *dgram_socket::dgram_send_worker(void *arg)
 		       (void *)&req.buf, realsize, 0,
 		       (struct sockaddr *)&(dgu->sa),
 		       sizeof(struct sockaddr_storage)) == -1)
-		syslog(LOG_ERR,
-		       "error sending packet out datagram port %d: %s",
-		       dgs->sock.port_num, strerror(errno));
+		std::clog << syslogErr
+                          << "error sending packet out datagram port "
+                          << dgs->sock.port_num << ": "
+                          << strerror(errno) << " (" << errno << ")"
+                          << std::endl;
 	    else
-		syslog(LOG_DEBUG, "sent a packet of type %d to %s",
-		       req.buf.basic.type,
-		       dgu->sa->ntop());
+                std::clog << "sent a packet of type "
+                          << req.buf.basic.type << " to "
+                          << dgu->sa->ntop() << std::endl;
 	}
     }
-    syslog(LOG_DEBUG,
-	   "exiting send pool worker for datagram port %d",
-	   dgs->sock.port_num);
+    std::clog << "exiting send pool worker for datagram port "
+              << dgs->sock.port_num << std::endl;
     return NULL;
 }

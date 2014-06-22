@@ -1,5 +1,3 @@
-$Id$
-
 In no particular order:
 
 1)  Get the basic protocol elements implemented:  action requests, motion
@@ -27,3 +25,13 @@ In no particular order:
     since we'll be starting with space, but it's going to come up.
 11) Rework the basic server skeleton so that each listening port is handled
     in a thread, and does all its own user management in that thread.
+12) Move the configuration-handling logic into the modules where the given
+    configuration data is used.  We might look at doing a multi-level config
+    structure, and possibly an ini-style config file, with the section
+    titles as the module names (zone, database, etc.), and the elements in
+    those sections handled by some config parser within the module.  A
+    friend function?  A separate (static?) struct?
+13) Work on getting rid of the subserver files in the top level server
+    directory, and moving whatever needs to be moved into the stream socket
+    files in the classes subdirectory.
+14) Consider whether we need the classes subdirectory at all any longer.
