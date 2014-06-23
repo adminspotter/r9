@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 08 Jun 2014, 15:02:41 tquirk
+#   last updated 23 Jun 2014, 18:29:59 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -72,7 +72,7 @@ HDRS = db.h console.h mysql.h pgsql.h
 CXXSRCS = db.cc mysql.cc pgsql.cc console.cc unix_console.cc inet_console.cc
 SRCS = perl.c tcl.c
 OBJS = ${CXXSRCS:.cc=.o} ${SRCS:.c=.o}
-TARGETS = libr9_console.so libr9_mysql.so libr9_pgsql.so libr9_perl.so \
+TARGETS = r9_console.a libr9_mysql.so libr9_pgsql.so libr9_perl.so \
 	libr9_tcl.so
 
 .SUFFIXES : .cc .o
@@ -84,13 +84,13 @@ TARGETS = libr9_console.so libr9_mysql.so libr9_pgsql.so libr9_perl.so \
 
 all : Makefile.depend TAGS $(TARGETS)
 
-libr9_console.so : console.o unix_console.o inet_console.o
-	$(CXX) $(LDFLAGS) $(LIBWRAP) $< -o $@
+r9_console.a : console.o unix_console.o inet_console.o
+	$(AR) $(ARFLAGS) $(LIBWRAP) $@ $<
 
-libr9_mysql.so : mysql.o
+libr9_mysql.so : mysql.o db.o
 	$(CXX) $(LDFLAGS) $(LIBMYSQL) $< -o $@
 
-libr9_pgsql.so : pgsql.o
+libr9_pgsql.so : pgsql.o db.o
 	$(CXX) $(LDFLAGS) $(LIBPQ) $< -o $@
 
 libr9_perl.so : perl.o

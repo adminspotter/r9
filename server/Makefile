@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <trinity@ymb.net>
-#   last updated 22 Jun 2014, 15:58:46 tquirk
+#   last updated 23 Jun 2014, 18:32:01 tquirk
 #
 # This is the main makefile for the revision9 server.
 #
@@ -21,6 +21,7 @@
 #   19 Sep 2013 TAQ - We now link against libr9_console.so.
 #   21 Jun 2014 TAQ - Moving the main stuff to C++.  Also modified to include
 #                     our general Makefile.defs file.
+#   23 Jun 2014 TAQ - Working on getting the binary to link properly.
 #
 # Things to do
 #
@@ -29,13 +30,13 @@
 
 CXXFLAGS = -Wall -g -fPIC -DPIC -D_REENTRANT $(CINCLUDE)
 
-LDFLAGS = -rdynamic -L/usr/local/lib -L/home/trinity/lib
-LDLIBS = -lr9_console -lr9_proto -lmath3d -lm -ldl -lpthread -lstdc++
+LDFLAGS = -rdynamic -L/usr/local/lib -L$(HOME)/lib -Lclasses/modules
+LDLIBS = -lr9_proto -lm -ldl -lpthread -lstdc++
 
 DEPEND = $(MAKEDEPEND) -f-
 
-HDRS = config.h server.h signals.h subserver.h
-CXXSRCS = config.cc server.cc signals.cc subserver.cc
+HDRS = config.h server.h signals.h subserver.h log.h
+CXXSRCS = config.cc server.cc signals.cc subserver.cc log.cc
 OBJS = ${CXXSRCS:.cc=.o}
 TARGET = server
 
@@ -49,8 +50,8 @@ proto :
 classes :
 	$(MAKE) -C classes
 
-$(TARGET) : $(OBJS) classes/r9_classes.a ../proto/libr9_proto.so
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+$(TARGET) : $(OBJS) classes/r9_classes.a classes/modules/r9_console.a ../proto/libr9_proto.so
+	$(LD) $(LDFLAGS) -o $@ $(OBJS) classes/r9_classes.a classes/modules/r9_console.a $(LDLIBS)
 
 Makefile.depend : $(SRCS) $(HDRS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) 2> /dev/null > Makefile.depend

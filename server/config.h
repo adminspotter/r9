@@ -1,6 +1,6 @@
 /* config.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquick@ymb.net>
- *   last updated 22 Jun 2014, 14:11:58 tquirk
+ *   last updated 23 Jun 2014, 18:23:33 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -77,6 +77,7 @@
  *                     to a class, since doing default values is just going
  *                     to be simpler than the current weirdness.  Moved the
  *                     interesting parts of defaults.h into the class.
+ *   23 Jun 2014 TAQ - Moved all the constant initializers into the .cc file.
  *
  * Things to do
  *
@@ -84,10 +85,6 @@
 
 #ifndef __INC_CONFIG_H__
 #define __INC_CONFIG_H__
-
-#include <limits.h>
-#include <sys/types.h>
-#include <syslog.h>
 
 #include <vector>
 #include <string>
@@ -102,14 +99,13 @@ location;
 class config_data
 {
   public:
-    /* Some default values for our members */
-    static const int LINGER_LEN     = 0;
-    static const int LOG_FACILITY   = LOG_DAEMON;
-    static const int MIN_SUBSERV    = 1;
-    static const int MAX_SUBSERV    = 250;
-    static const int NUM_THREADS    = 8;
-    static const float LOAD_THRESH  = 0.75;
-    /* These are initialized in the .cc file */
+    /* Some default constants */
+    static const int LINGER_LEN;
+    static const int LOG_FACILITY;
+    static const int MIN_SUBSERV;
+    static const int MAX_SUBSERV;
+    static const int NUM_THREADS;
+    static const float LOAD_THRESH;
     static const char SERVER_ROOT[];
     static const char LOG_PREFIX[];
     static const char PID_FNAME[];

@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 22 Jun 2014, 11:05:02 tquirk
+#   last updated 23 Jun 2014, 18:29:10 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -44,6 +44,7 @@
 #   17 Jun 2014 TAQ - action.cc, motion_worker.cc, and update.cc are gone.
 #   22 Jun 2014 TAQ - Since we're going all C++ (and since linking is being
 #                     a pain on the Mac), our target here is now an archive.
+#   23 Jun 2014 TAQ - Tweaks to make things build correctly.
 #
 # Things to do
 #
@@ -78,17 +79,16 @@ TARGET = r9_classes.a
 .cc.o :
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-#.PHONY : actions modules clean tags all
-.PHONY : actions clean tags all
+.PHONY : actions modules clean tags all
 
 #all : actions modules Makefile.depend TAGS $(TARGET)
-all : Makefile.depend TAGS $(TARGET)
+all : modules Makefile.depend TAGS $(TARGET)
 
 actions :
 	$(MAKE) -C actions
 
-#modules :
-#	$(MAKE) -C modules
+modules :
+	$(MAKE) -C modules r9_console.a
 
 $(TARGET) : $(OBJS)
 	$(AR) $(ARFLAGS) $(TARGET) $(OBJS)
@@ -98,14 +98,14 @@ Makefile.depend : $(SRCS)
 
 tags : TAGS
 	$(MAKE) -C actions tags
-#	$(MAKE) -C modules tags
+	$(MAKE) -C modules tags
 
 TAGS : $(HDRS) $(SRCS)
 	@$(MAKETAGS) $(HDRS) $(SRCS)
 
 clean:
 	$(MAKE) -C actions clean
-#	$(MAKE) -C modules clean
+	$(MAKE) -C modules clean
 	$(RM) $(OBJS) $(TARGET) core TAGS Makefile.bak Makefile.depend
 
 -include Makefile.depend

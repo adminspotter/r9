@@ -1,6 +1,6 @@
 /* log.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 16:09:17 tquirk
+ *   last updated 23 Jun 2014, 18:17:57 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -25,6 +25,7 @@
  *
  * Changes
  *   21 Jun 2014 TAQ - Created the file.
+ *   23 Jun 2014 TAQ - Small tweaks to get things compiling properly.
  *
  * Things to do
  *
@@ -36,10 +37,10 @@ Log::Log(std::string ident, int fac)
 {
     this->facility = fac;
     this->priority = LOG_DEBUG;
-    strncpy(this->name, ident.c_str(), sizeof(this->name));
-    this->ident[sizeof(this->name) - 1] = '\0';
+    strncpy(this->ident, ident.c_str(), sizeof(this->ident));
+    this->ident[sizeof(this->ident) - 1] = '\0';
 
-    openlog(this->name, LOG_PID, this->facility);
+    openlog(this->ident, LOG_PID, this->facility);
 }
 
 Log::~Log()
@@ -61,7 +62,7 @@ int Log::sync(void)
 int Log::overflow(int c)
 {
     if (c != EOF)
-        this->buffer += static_cast<char>(c);
+        this->buf += static_cast<char>(c);
     else
         this->sync();
     return c;
@@ -69,6 +70,6 @@ int Log::overflow(int c)
 
 std::ostream& operator<<(std::ostream& os, const LogPriority& prio)
 {
-    static_cast<Log *>(os.rdbuf())->priority = (int)LogPriority;
+    static_cast<Log *>(os.rdbuf())->priority = (int)prio;
     return os;
 }

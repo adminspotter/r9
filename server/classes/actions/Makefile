@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 10 May 2014, 15:36:37 tquirk
+#   last updated 23 Jun 2014, 17:48:59 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -40,7 +40,7 @@
 CFLAGS = -Wall -g -fPIC -DPIC -D_REENTRANT
 
 LDPATHS = -L/usr/local/lib
-LDFLAGS = -shared -rdynamic
+LDFLAGS = -shared -rdynamic $(CFLAGS)
 
 DEPEND = $(MAKEDEPEND) -f-
 

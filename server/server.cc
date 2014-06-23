@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 13:58:51 tquirk
+ *   last updated 23 Jun 2014, 17:35:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -157,6 +157,8 @@
 static int setup_daemon(void);
 static void setup_log(void);
 static void setup_sockets(void);
+static void setup_console(void);
+static void cleanup_console(void);
 static void cleanup_sockets(void);
 static void cleanup_log(void);
 static void cleanup_daemon(void);
@@ -359,6 +361,14 @@ void set_exit_flag(void)
     main_loop_exit_flag = 1;
     pthread_cond_broadcast(&exit_flag);
     pthread_mutex_unlock(&exit_mutex);
+}
+
+static void setup_console(void)
+{
+}
+
+static void cleanup_console(void)
+{
 }
 
 static void cleanup_sockets(void)

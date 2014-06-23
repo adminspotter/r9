@@ -1,9 +1,9 @@
 /* server.h
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 19 Sep 2013, 17:22:53 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 23 Jun 2014, 17:51:42 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,10 +44,10 @@
  *   04 Sep 2007 TAQ - Added create_socket prototype.
  *   13 Sep 2007 TAQ - Removed create_socket prototype, since it's being
  *                     done elsewhere now.
+ *   23 Jun 2014 TAQ - Removed nonexistent prototypes.
  *
  * Things to do
  *
- * $Id: server.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_SERVER_H__
@@ -57,13 +57,5 @@
 void set_exit_flag(void);
 void complete_startup(void);
 void complete_cleanup(void);
-
-/* The thread startup routines for the listening sockets */
-void *start_stream_socket(void *);
-void *start_dgram_socket(void *);
-
-/* Routines for the console(s) */
-void setup_console(void);
-void cleanup_console(void);
 
 #endif /* __INC_SERVER_H__ */

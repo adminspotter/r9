@@ -1,6 +1,6 @@
 /* config.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:43:11 tquirk
+ *   last updated 23 Jun 2014, 18:22:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -182,6 +182,7 @@
  *                     commented out.
  *   21 Jun 2014 TAQ - C++-ification has begun, starting with the syslog.
  *   22 Jun 2014 TAQ - This class has gotten the C++ treatment.
+ *   23 Jun 2014 TAQ - Moved all the constant initializers in here.
  *
  * Things to do
  *   - Consider how we might move module-specific configuration items
@@ -205,6 +206,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <sys/types.h>
+#include <syslog.h>
 #include <errno.h>
 
 #include <fstream>
@@ -227,6 +229,12 @@
 #define CF_INT16    10
 #define CF_INT64    11
 
+const int config_data::LINGER_LEN     = 0;
+const int config_data::LOG_FACILITY   = LOG_DAEMON;
+const int config_data::MIN_SUBSERV    = 1;
+const int config_data::MAX_SUBSERV    = 250;
+const int config_data::NUM_THREADS    = 8;
+const float config_data::LOAD_THRESH  = 0.75;
 const char config_data::SERVER_ROOT[] = "/Users/tquirk/src/revision9/server";
 const char config_data::LOG_PREFIX[]  = "revision9";
 const char config_data::PID_FNAME[]   = "/var/run/revision9.pid";
