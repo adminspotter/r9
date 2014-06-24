@@ -1,6 +1,6 @@
 /* access.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 17:50:24 tquirk
+ *   last updated 23 Jun 2014, 18:54:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -79,8 +79,7 @@
 #include "../log.h"
 #include "zone.h"
 #include "zone_interface.h"
-#include "dgram.h"
-#include "stream.h"
+#include "basesock.h"
 
 #include "modules/db.h"
 

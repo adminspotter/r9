@@ -1,9 +1,9 @@
 /* game_obj.h                                               -*- C++ -*-
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 10 May 2014, 17:21:50 tquirk
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jun 2014, 18:25:16 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -68,11 +68,12 @@
  *                     motion.h/cc and control.h/cc respectively.  Added
  *                     clone.  Removed can_see, since it's not meaningful
  *                     in here any longer.
+ *   24 Jun 2014 TAQ - Took another look at the const id member, and didn't
+ *                     come up with anything.
  *
  * Things to do
  *   - Scale might be a useful thing to add here.
  *
- * $Id$
  */
 
 #ifndef __INC_GAME_OBJ_H__

@@ -1,6 +1,6 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:56:15 tquirk
+ *   last updated 24 Jun 2014, 17:29:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -67,6 +67,8 @@
  *   31 May 2014 TAQ - The stringified version of our IP is now an instance
  *                     member, so we don't have to compute it when we need it.
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we're changing too.
+ *   24 Jun 2014 TAQ - Updated logging to use std::clog.  Small tweaks to
+ *                     get things to compile properly.
  *
  * Things to do
  *   - Finish writing open_new_login and close_open_login.
@@ -78,10 +80,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include <syslog.h>
 #include <errno.h>
 
 #include "mysql.h"
+#include "../../log.h"
+#include "../game_obj.h"
 
 MySQL::MySQL(const std::string& host, const std::string& user,
              const std::string& pass, const std::string& db)
@@ -89,7 +92,8 @@ MySQL::MySQL(const std::string& host, const std::string& user,
 {
     /* Create a MYSQL structure, since mysql_init isn't in the lib. */
     if ((this->db_handle = mysql_init(NULL)) == NULL)
-	syslog(LOG_ERR, "couldn't init MySQL handle: %s", mysql_error(db));
+        std::clog << syslogErr << "couldn't init MySQL handle: "
+                  << mysql_error(this->db_handle) << std::endl;
 }
 
 /* Check that the user really is who he says he is */
@@ -193,7 +197,7 @@ int MySQL::get_server_skills(std::map<u_int16_t, action_rec>& actions)
 	    mysql_free_result(res);
 	}
 	mysql_close(this->db_handle);
-	syslog(LOG_DEBUG, "got %d server skills", count);
+	std::clog << "got " << count << " server skills" << std::endl;
     }
     return retval;
 }
@@ -221,14 +225,13 @@ int MySQL::get_server_objects(std::map<u_int64_t,
 	    {
 		u_int64_t id = strtoull(row[0], NULL, 10);
 		game_object_list_element gole;
-		Geometry *geom = new Geometry;
+                Geometry *geom = new Geometry();
 
-		syslog(LOG_DEBUG, "creating object %lld", id);
-		gole.obj = new GameObject(geom, NULL);
+		std::clog << "creating object " << id << std::endl;
+		gole.obj = new GameObject(geom, id);
 		gole.position[0] = atol(row[1]) / 100.0;
 		gole.position[1] = atol(row[2]) / 100.0;
 		gole.position[2] = atol(row[3]) / 100.0;
-		gole.obj->set_object_id(id);
 		/* All objects first rez invisible and non-interactive */
 		gole.obj->natures["invisible"] = 1;
 		gole.obj->natures["non-interactive"] = 1;
@@ -238,7 +241,7 @@ int MySQL::get_server_objects(std::map<u_int64_t,
 	    mysql_free_result(res);
 	}
 	mysql_close(this->db_handle);
-	syslog(LOG_DEBUG, "got %d server characters", count);
+	std::clog << "got " << count << " server characters" << std::endl;
     }
     return retval;
 }
@@ -283,7 +286,8 @@ int MySQL::get_player_server_skills(u_int64_t userid,
 	    mysql_free_result(res);
 	}
 	mysql_close(this->db_handle);
-	syslog(LOG_DEBUG, "got %d skills for character %lld", count, charid);
+	std::clog << "got " << count
+                  << " skills for character " << charid << std::endl;
     }
     return retval;
 }
@@ -291,20 +295,20 @@ int MySQL::get_player_server_skills(u_int64_t userid,
 int MySQL::open_new_login(u_int64_t userid, u_int64_t charid)
 {
     /*MYSQL_RES *res;
-    MYSQL_ROW row;*/
-    char str[256];
+    MYSQL_ROW row;
+    char str[256];*/
     int retval = 0;
 
-    snprintf(str, sizeof(str),
+    /*snprintf(str, sizeof(str),
 	     "INSERT INTO player_logins "
 	     "(playerid, characterid, serverid, src_ip, src_port, login_time) "
-	     "VALUES (%lld,%lld,%d,%d,%d)", userid, charid);
+	     "VALUES (%lld,%lld,%s,%d,%d)", userid, charid);
     if (this->db_connect())
     {
 	if ((retval = mysql_real_query(this->db_handle, str, strlen(str))) == 0)
 	    ;
         mysql_close(this->db_handle);
-    }
+    }*/
     return retval;
 }
 
@@ -357,8 +361,8 @@ bool MySQL::db_connect(void)
                            this->dbuser.c_str(), this->dbpass.c_str(),
                            this->dbname.c_str(), 0, NULL, 0) == NULL)
     {
-        syslog(LOG_ERR, "couldn't connect to MySQL server: %s",
-               mysql_error(this->db_handle));
+        std::clog << syslogErr << "couldn't connect to MySQL server: "
+                  << mysql_error(this->db_handle) << std::endl;
         return false;
     }
     return true;

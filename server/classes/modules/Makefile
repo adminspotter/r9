@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 23 Jun 2014, 18:29:59 tquirk
+#   last updated 24 Jun 2014, 17:30:20 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -46,7 +46,8 @@
 
 CPERLINC = -I/usr/lib/perl/5.14/CORE
 CTCLINC = -I/usr/include/tcl
-CMOREINCLUDE = -I.. -I../.. $(CPERLINC) $(CTCLINC)
+CMYINC = -I/usr/local/mysql/include
+CMOREINCLUDE = -I.. -I../.. $(CPERLINC) $(CTCLINC) $(CMYINC)
 CDEBUG = -g
 # COPTIM = -O2
 CDEFS = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_GNU_SOURCE -D_REENTRANT
@@ -57,7 +58,7 @@ LFLAGS =
 YFLAGS = -y -d -v
 
 #LIBWRAP = -lwrap
-LIBMYSQL = -lmysqlclient_r
+LIBMYSQL = -L/usr/local/mysql/lib -lmysqlclient_r
 LIBPQ = -lpq
 LIBPERL = -lperl
 LIBTCL = -ltcl
@@ -72,7 +73,7 @@ HDRS = db.h console.h mysql.h pgsql.h
 CXXSRCS = db.cc mysql.cc pgsql.cc console.cc unix_console.cc inet_console.cc
 SRCS = perl.c tcl.c
 OBJS = ${CXXSRCS:.cc=.o} ${SRCS:.c=.o}
-TARGETS = r9_console.a libr9_mysql.so libr9_pgsql.so libr9_perl.so \
+TARGETS = r9_console.a libr9_MySQL.so libr9_pgsql.so libr9_perl.so \
 	libr9_tcl.so
 
 .SUFFIXES : .cc .o
@@ -87,8 +88,8 @@ all : Makefile.depend TAGS $(TARGETS)
 r9_console.a : console.o unix_console.o inet_console.o
 	$(AR) $(ARFLAGS) $(LIBWRAP) $@ $<
 
-libr9_mysql.so : mysql.o db.o
-	$(CXX) $(LDFLAGS) $(LIBMYSQL) $< -o $@
+libr9_MySQL.so : mysql.o db.o
+	$(CXX) $(LDFLAGS) $(LIBMYSQL) mysql.o db.o -o $@
 
 libr9_pgsql.so : pgsql.o db.o
 	$(CXX) $(LDFLAGS) $(LIBPQ) $< -o $@

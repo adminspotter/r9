@@ -1,6 +1,6 @@
 /* mysql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:53:52 tquirk
+ *   last updated 24 Jun 2014, 17:28:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -28,6 +28,8 @@
  *                     we need now is a string.  Also added the db_handle
  *                     member and db_connect method.
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we're changing too.
+ *   24 Jun 2014 TAQ - Changed include.  Added prototypes for virtuals we
+ *                     inherit from DB.
  *
  * Things to do
  *
@@ -36,7 +38,7 @@
 #ifndef __INC_MYSQL_H__
 #define __INC_MYSQL_H__
 
-#include <mysql/mysql.h>
+#include <mysql.h>
 
 #include "db.h"
 
@@ -49,6 +51,20 @@ class MySQL : public DB
     MySQL(const std::string&, const std::string&,
           const std::string&, const std::string&);
     ~MySQL();
+
+    /* Player functions */
+    u_int64_t check_authentication(const char *, const char *);
+    int check_authorization(u_int64_t, u_int64_t);
+    int open_new_login(u_int64_t, u_int64_t);
+    int check_open_login(u_int64_t, u_int64_t);
+    int close_open_login(u_int64_t, u_int64_t);
+    int get_player_server_skills(u_int64_t, u_int64_t,
+                                 std::map<u_int16_t,
+                                 action_level>&);
+
+    /* Server functions */
+    int get_server_skills(std::map<u_int16_t, action_rec>&);
+    int get_server_objects(std::map<u_int64_t, game_object_list_element> &);
 
   private:
     bool db_connect(void);

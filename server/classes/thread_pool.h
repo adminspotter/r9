@@ -1,6 +1,6 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 22:39:36 tquirk
+ *   last updated 24 Jun 2014, 18:18:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -189,7 +189,8 @@ class ThreadPool
 	    this->stop();
 	    pthread_cond_destroy(&(this->queue_not_empty));
 	    pthread_mutex_destroy(&(this->queue_lock));
-            std::clog << "destroyed the " << this->name << " mutexes";
+            std::clog << "destroyed the " << this->name
+                      << " mutexes" << std::endl;
 	    free(this->name);
 	};
 

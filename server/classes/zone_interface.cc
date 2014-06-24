@@ -1,6 +1,6 @@
 /* zone_interface.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:56:26 tquirk
+ *   last updated 23 Jun 2014, 18:55:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -62,6 +62,7 @@
  *   29 Nov 2009 TAQ - Added get_server_objects references.
  *   20 Jun 2014 TAQ - New library stuff, new database stuff.
  *   21 Jun 2014 TAQ - Converted syslog to use the logging stream.
+ *   23 Jun 2014 TAQ - Fixed the database library name.
  *
  * Things to do
  *   - See if we can get rid of this file.  Maybe this ought to be main
@@ -69,7 +70,6 @@
  *
  */
 
-#include <dlfcn.h>
 #include "zone.h"
 #include "zone_interface.h"
 
@@ -103,20 +103,11 @@ int setup_zone(void)
     }
 
     /* Load up the database lib before we start the access thread pool */
-    try { db_lib = new Library(config.db_type); }
-    catch (std::string& s)
-    {
-        goto BAILOUT1;
-    }
+    try { db_lib = new Library("libr9_" + config.db_type + ".so"); }
+    catch (std::string& s) { goto BAILOUT1; }
 
-    try
-    {
-        create_db = (create_db_t *)db_lib->symbol("create_db");
-    }
-    catch (std::string& s)
-    {
-        goto BAILOUT2;
-    }
+    try { create_db = (create_db_t *)db_lib->symbol("create_db"); }
+    catch (std::string& s) { goto BAILOUT2; }
 
     database = (*create_db)(config.db_host, config.db_user,
                             config.db_pass, config.db_name);

@@ -1,6 +1,6 @@
 /* config.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jun 2014, 18:22:55 tquirk
+ *   last updated 24 Jun 2014, 18:11:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -183,6 +183,7 @@
  *   21 Jun 2014 TAQ - C++-ification has begun, starting with the syslog.
  *   22 Jun 2014 TAQ - This class has gotten the C++ treatment.
  *   23 Jun 2014 TAQ - Moved all the constant initializers in here.
+ *   24 Jun 2014 TAQ - Small tweaks to get things functioning.
  *
  * Things to do
  *   - Consider how we might move module-specific configuration items
@@ -382,10 +383,10 @@ void config_data::parse_command_line(int count, char **args)
      * function, and even the C++-wrapped version works the same.  We
      * want something that operates more in the C++ idiom.
      */
-    for (j = config.argv.begin(); j != config.argv.end(); ++j)
+    for (j = this->argv.begin() + 1; j != this->argv.end(); ++j)
     {
         if ((*j) == "-f")
-	    config.read_config_file(*(++j));
+	    this->read_config_file(*(++j));
         else
             std::clog << "WARNING: Unknown option " << *j;
     }
@@ -414,19 +415,20 @@ int config_data::parse_config_line(std::string& line)
         line.replace(found, std::string::npos, "");
 
     /* Throw away all extra white space at the beginning and end of the line. */
-    if ((found = line.find_first_not_of(" \t")) != std::string::npos)
-        line.replace(0, found - 1, "");
     if ((found = line.find_last_not_of(" \t")) != std::string::npos)
-        line.replace(found + 1, std::string::npos, "");
+        line = line.substr(0, found + 1);
+    if ((found = line.find_first_not_of(" \t")) != std::string::npos)
+        line = line.substr(found);
 
     /* At this point we'll either have an empty string, a string of
      * only whitespace, or "<keyword> <value>"
      */
-    if ((found = line.find_first_not_of(" \t")) == std::string::npos)
+    if (line.find_first_not_of(" \t") == std::string::npos)
         return retval;
 
-    /* We've got a real line; found currently points to the start of the gap */
-    std::string keyword = line.substr(0, found - 1);
+    /* We've got a real line */
+    found = line.find_first_of(" \t");
+    std::string keyword = line.substr(0, found);
     line.replace(0, found, "");
     found = line.find_first_not_of(" \t");
     std::string value = line.substr(found);
