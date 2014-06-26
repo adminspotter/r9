@@ -33,6 +33,13 @@ In no particular order:
     directory, and moving whatever needs to be moved into the stream socket
     files in the classes subdirectory.
 13) Consider whether we need the classes subdirectory at all any longer.
+    The original plan was to have a general-purpose server which could run
+    any number of subservers that handled different games, and the classes
+    subdirectory contained one such game.  However, we've abandoned the
+    multiple games idea, and are focusing on one.
 14) struct addrinfo actually contains the port we're interested in, so
     we should consider whether we need a separate port argument to the
-    socket constructors.
+    socket constructors.  The constructors already take an addrinfo.
+15) The sectors should be dynamic.  If they are empty, they will be
+    deleted (or not created), and once something enters the sector, it will
+    be automatically created.

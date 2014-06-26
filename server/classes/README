@@ -1,74 +1,137 @@
-$Id$
-
 This is a description of the server-side classes and the way they
 interact.
 
-Zone:  This is the main overlying object which encompasses an entire
-server.  Its purpose is to keep track of: 1) the geometry of the
-section of the world that the server encompasses, 2) the complete list
-of actions which may be performed in that world section, 3) the
-complete list of inhabitants of the world section, and 4) the basic
-behaviour of the world section (gravity, weather, etc).  The zone also
-has record of which zones are adjacent to it in each direction, so it
+Space management objects:
+
+Zone (zone.h, zone.cc):  This is the main overlying object which
+encompasses an entire server.  Its purpose is to keep track of:
+    1) the complete list of actions which may be performed in that world
+    section
+    2) the complete list of game objects within the world section
+    3) the basic behaviour of the world section (gravity, weather, etc).
+The zone maintains three thread pools, to manage action requests by
+actors, handling motion of items within the space, and processing any
+updates to inform actors what objects have changed.  The zone will
+eventually record which zones are adjacent to it in each direction, so it
 can inform players when they are reaching the edges of the server's
-responsibility.  It may maintain a complete map geometry even after
-all the sectors have been created (and geometry added to each sector).
-One goal is to have dynamically-allocated sectors in the case of empty
-space; when something enters the space, the sector is created, and
-when all objects exit a sector, it is deleted.  The memory savings
-may become important on some systems (such as a space genre, where
-there are vast expanses of completely empty space).
+responsibility, and hand them off to the appropriate neighbor.  The
+constructor and start methods can throw int.
 
-Sector (currently unused):  This is the basic subdivision of space.  A
-zone is represented as a 3-dimensional grid of sectors, possibly a
-sparsely populated grid.  Each sector contains an octree, which
-contains all the elements of that sector.  The octree maintains a list
-of the polys which it contains, and each leaf octant contains pointers
-to elements of the poly list.  Each octant also has pointers to each
-of its neighbors, for simpler traversal.  It might be even more
-efficient to maintain a zone- wide list of polys, and have each
-sector's octree point to elements in this master list, instead of
-having possibly duplicate data floating around.
+Sector (sector.h, sector.cc, currently unused):  This is the basic
+subdivision of space.  A zone is represented as a 3-dimensional grid of
+sectors.  Each sector contains an octree, which contains all the elements
+of that sector.
 
-Game Object:  This is the basic dynamic object.  Everything which *can*
-move around in the world is represented as such an object.  The game
-object contains references to default control objects and geometries,
-as well as current control objects and geometries, which may be
-changed at any time.  Removing the control or geometry will cause the
-object to revert to its default.  Each object also contains an object
-ID value, currently represented as a 64-bit integer.  The game object
-also knows about attributes, natures, and actions that it has/can use.
-Each game object has a two-stage bounding volume; the first stage is a
-simple sphere, and the second stage is a tight box or set of boxes.
+Octree (octree.h, octree.cc, currently unused, needs a lot of rework):
+General space representation within each sector.  The octree will maintain
+a list of game objects it contains.  Each octant also has pointers to each
+of its neighbors, for simpler traversal.
 
-Control:  This object keeps track of a logged-in player, and the game
-object to which s/he is associated.  The control object will be the
-basic method for accessing a given character's object, and also be a
-dispatcher for taking action requests from the user and (possibly)
-turning them into game activity.
+User management objects:
 
-Action routine:  These will not be classes per se, but more probably
-either templatized routines, or just a set of routines with an
-enforced signature.  They will be responsible for checking if the
-source game object can either perform the action or some other default
-action, and doing the actual action.  The action routines are the only
-part of this API which can actually create command objects and/or game
-objects.  For example, a fireball would necessitate creation of the
-fireball itself, and a control object to make it move and explode on
-contact with something (or fizzle out after a time, or what have you).
-These functions will require a source object (objectid), a destination
-object, an operation vector (i.e. the direction), and a power level.
+Control (control.h, control.cc):  This object keeps track of a logged-in
+actor, the current actions that the actor may perform, and the motion
+object to which s/he is associated.  The control object is the basic
+method for mapping an actor to an object, and the dispatcher for taking
+action requests from the actor, verifying that the object can perform
+those actions, and turning them into game activity.
 
-Some ancillary support types
+Motion (motion.h, motion.cc):  This is a class which describes the motion
+attributes (position, rotation, and linear and angular velocities) for a
+GameObject, so we do not need to modify the game objects themselves.  This
+sits between the Control object, and the GameObject itself.
 
-Octree (currently unused):  General space representation of each sector.
+GameObject (game_obj.h, game_obj.cc):  This is the basic dynamic object.
+Everything which is able move around in space is represented as such an
+object.  The game object contains references to default motion objects and
+geometries, as well as current motion objects and geometries, which may be
+changed at any time.  Removing the motion or geometry will cause the
+object to revert to its default.  Each object also contains an object ID
+value, currently represented as a 64-bit integer.  The game object also
+knows about attributes and natures that it has.
 
-Nature (currently unused):  An integer (possibly just a boolean value)
-representing some fundamental state of the game object, such as "wet"
-or "cold".
+Geometry (geometry.h, geometry.cc, mostly unimplemented):  This is the
+representation of the geometry of an object.
 
-Attribute:  An integer representing the game object's power level in
-a given attribute.  Attributes are basic physical parameters that
-the object has, such as strength, stamina, agility, etc.
+Polygon (polygon.h, polygon.cc, currently unused, mostly unimplemented):
+This is a simple polygon object, which comprises the geometry of a given
+object.  This may no longer be needed.
 
-ActionLevel:  An integer representation of a game object's skill level.
+Socket objects:
+
+Sockaddr (sockaddr.h):  The base class to simplify handling of IPv4 or
+IPv6 socket types.
+
+Sockaddr_in (sockaddr.h):  Handling of IPv4 socket types, derived from
+Sockaddr.
+
+Sockaddr_in6 (sockaddr.h):  Handling of IPv6 socket types, derived from
+Sockaddr.
+
+basesock (basesock.h, basesock.cc):  This is a basic listening socket,
+which includes a listening thread.  All methods can throw int.
+
+listen_socket (basesock.h, basesock.cc):  This is a virtual base class
+which contains a basesock, a user list, and a thread pool to handle
+sending data out.  The constructor and init methods can throw int.
+
+stream_socket (stream.h, stream.cc):  This class is derived from the
+listen_socket, and implements stream (TCP) sending and receiving.  It adds
+subservers (separate processes, in order to maximize the number of allowed
+filehandles, and to further parallelize the I/O, along the same lines as
+the Apache Prefork MPM).  The start method can throw int.
+
+dgram_socket (dgram.h, dgram.cc):  This class is derived from the
+listen_socket, and implements datagram sending and receiving, and adds a
+map of Sockaddr objects to users.  The start method can throw int.
+
+User list objects:
+
+base_user (basesock.h, basesock.cc):  This is a virtual base class which
+contains a user ID, a pointer to a control object, and some elements to
+keep track of possible link-dead or logged-out users.
+
+stream_user (stream.h, stream.cc):  This class is derived from the
+base_user, and adds subserver number and file descriptor.
+
+dgram_user (dgram.h, dgram.cc):  This class is derived from the base_user,
+and adds a Sockaddr object, which is used both to uniquely identify the
+user for received packets, and to simplify sending to the user.
+
+Support objects:
+
+Library (library.h, library.cc):  This class abstracts dynamic
+libraries - opening, finding symbols within, and closing.  All methods
+can throw std::string.
+
+ThreadPool (thread_pool.h):  This template creates a work queue of a
+given type, and creates a pool of threads which handle items which are
+pushed onto the work queue.  For access-type applications, such as
+accepting passwords, the queue can automatically clear any element
+once it is removed from the queue.  It can resize the thread pool on
+the fly, and can start and stop the pool as needed.  The constructor,
+start, and resize methods can throw int.
+
+Some ancillary support types:
+
+Action routine (actions/):  These will not be classes per se, but rather
+functions with a given prototype.  These functions will require a source
+motion object, a destination motion object, an operation vector (i.e. the
+direction), and an intensity.  They will be responsible for checking if
+the source object/actor can perform the action, and doing the actual
+action.  Action routines may create game objects, motion objects, and
+possibly control objects.
+
+Nature (defs.h, currently unused):  An integer (possibly just a boolean
+value) representing some fundamental state of the game object, such as
+"wet" or "cold".  Currently contained within the GameObject, mapped from a
+std::string.
+
+Attribute (defs.h, currently unused):  An integer representing the game
+object's power level in a given attribute.  Attributes are basic physical
+parameters that the object has, such as strength, stamina, agility, etc.
+Currently contained within the GameObject, mapped from a std::string.
+
+ActionLevel (defs.h, currently unused):  An integer representation of a
+game object's skill level, current advancement, and last time of leveling
+up.

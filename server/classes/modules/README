@@ -7,7 +7,41 @@ consider is having a separate database routine server, so that we can
 both enforce proper use of the database, and perform adequate checking
 for who's actually supposed to be using this thing.
 
-TODO:  Since we supply the database type in our config structure, we
-will be making each of the database types a separate library with
-built-in registration functions for the common operations, so that we
-can dynamically change our database type.
+DB (db.h, db.cc): The pure virtual base class for database access.
+The only things that are implemented are getting a textual
+representation of the host's IP address, regardless of IP version.
+There are also some typedefs to simplify dynamically loading the
+create and destroy factories which will be implemented per database
+type, and will be loaded with the libraries themselves.
+
+MySQL (mysql.h, mysql.cc):  A derived class from DB, which contains
+the MySQL-specific implementations for each of the needed database
+functions.  Also contains the MySQL-specific create and delete factory
+functions.
+
+PgSQL (pgsql.h, pgsql.cc, mostly unimplemented):  A derived class from
+DB, which contails the PostgreSQL-specific implementations for the
+database functions.
+
+Console (console.h, console.cc):  A base class for server consoles,
+which contains a listening thread, and the base functionality to start
+and stop that thread.  There is also a list of active sessions.
+
+UnixConsole (console.h, unix_console.cc):  Extends the Console, adding
+the Unix-domain socket name, and implementing the listen worker
+routine.
+
+InetConsole (console.h, inet_console.cc):  Extends the Console, adding
+port number and addrinfo to support IP-based console sockets.
+Implements an IP-specific listen thread worker.
+
+ConsoleSession (console.h, console.cc):  Each accepted session on a
+console socket will create a new thread which is handled by this
+object.  Handles I/O and dispatch, and also contains a static mutex
+which will allow multiple console sessions to be active and not stomp
+all over each other.
+
+We may want to embed languages in the server by some means, possibly
+for writing control logic for automated objects.  There are perl.c and
+tcl.c files which contain stubs for their respective languages; these
+are by no means the only languages that should be embedded.

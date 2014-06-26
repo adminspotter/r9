@@ -1,19 +1,19 @@
-$Id$
+This is a description of the objects and general contents of the
+base-level server files.
 
-README for the base-level server parts
+server.cc, server.h:  The main routine, and most of the setup/cleanup
+routines for the large subsections of the server program.
 
-server.[ch]:  These are the files which contain main and some of the
-setup and cleanup functions, notably for daemonhood, logging, and
-listening sockets.
+config_data (config.cc, config.h):  Configuration parsing class,
+including both command-line options, and configuration file parsing.
 
-config.[ch]:  Configuration file parsing routines and data structures.
+Log (log.cc, log.h):  A streambuf implementation, to enable the
+standard C++ std::clog object to log to syslog, rather than just
+stdout.
 
-connect.[ch]:  These are the files which contain some abstraction
-routines, so that TCP and UDP servers act about the same as far as the
-connection loop calls are concerned.
+signals.cc, signals.h:  Signal-handling routines.
 
-signals.[ch]:  Signal-handling routines.
-
-subserver.[ch]:  The client-connection portion of the TCP-based server
-program.  Maintains an open connection to the main server and to each
-client.
+subserver.cc, subserver.h:  The client-connection portion of the
+TCP-based server program.  Maintains an open connection to the main
+server and to each client.  TODO: whatever has not already been moved
+to classes/stream.cc needs to be moved, and these files deleted.
