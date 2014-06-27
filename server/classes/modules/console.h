@@ -1,6 +1,6 @@
 /* console.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Jun 2014, 14:48:42 tquirk
+ *   last updated 27 Jun 2014, 18:26:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -41,6 +41,8 @@
  *                     everything without leaking open descriptors.
  *   08 Jun 2014 TAQ - Cleaned up the unix and inet consoles, and the console
  *                     sessions.
+ *   27 Jun 2014 TAQ - Some slight changes to allow stream-based handling
+ *                     of the session sockets.
  *
  * Things to do
  *
@@ -56,6 +58,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 /* Each accepted session on a console socket will create a new thread
  * which is handled by a ConsoleSession.  The function calls are
@@ -67,7 +70,8 @@ class ConsoleSession
   public:
     pthread_t thread_id;
     int sock;
-    FILE *in, *out;
+    std::istream *in;
+    std::ostream *out;
     static pthread_mutex_t dispatch_lock;
 
     ConsoleSession(int);
@@ -82,7 +86,7 @@ class ConsoleSession
     static std::string dispatch(std::string &);
     static void cleanup(void *);
 
-    std::string &get_line(void);
+    std::string get_line(void);
 };
 
 class Console

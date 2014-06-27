@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 24 Jun 2014, 17:30:20 tquirk
+#   last updated 27 Jun 2014, 18:31:49 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -47,7 +47,7 @@
 CPERLINC = -I/usr/lib/perl/5.14/CORE
 CTCLINC = -I/usr/include/tcl
 CMYINC = -I/usr/local/mysql/include
-CMOREINCLUDE = -I.. -I../.. $(CPERLINC) $(CTCLINC) $(CMYINC)
+CMOREINCLUDE = -I.. -I../.. $(CPERLINC) $(CTCLINC) $(CMYINC) -I/usr/include/c++/4.2.1
 CDEBUG = -g
 # COPTIM = -O2
 CDEFS = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_GNU_SOURCE -D_REENTRANT
@@ -63,7 +63,7 @@ LIBPQ = -lpq
 LIBPERL = -lperl
 LIBTCL = -ltcl
 LDFLAGS = -shared -rdynamic -L/usr/local/lib -L$(HOME)/lib
-LDLIBS =
+LDLIBS = -lstdc++
 
 DEPEND = $(MAKEDEPEND) -f-
 

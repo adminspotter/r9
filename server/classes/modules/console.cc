@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Jun 2014, 14:48:38 tquirk
+ *   last updated 27 Jun 2014, 18:30:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -33,18 +33,24 @@
  *   07 Jun 2014 TAQ - Removed a couple remnants of a previous bad idea.
  *                     Created the new ConsoleSession, which solves the
  *                     file descriptor leaking problem.
+ *   27 Jun 2014 TAQ - We now log to std::clog.  Trying out the GNU
+ *                     stdio_filebuf from libstdc++, in order to use streams
+ *                     on our session sockets.
  *
  * Things to do
+ *   - See if we can use the basesock, rather than mostly reimplementing it.
  *
  */
 
-#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <syslog.h>
 #include <pthread.h>
 
+#include <ext/stdio_filebuf.h>
+
 #include "console.h"
+#include "../../log.h"
 
 pthread_mutex_t ConsoleSession::dispatch_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -53,27 +59,19 @@ ConsoleSession::ConsoleSession(int sock)
     int ret;
 
     this->sock = sock;
-    /* Let's simplify things with some file pointers */
-    if ((this->in = fdopen(sock, "r")) == NULL)
-    {
-	syslog(LOG_ERR, "error in inbound fdopen: %s (%d)",
-               strerror(errno), errno);
-	throw errno;
-    }
-    if ((this->out = fdopen(sock, "w")) == NULL)
-    {
-	syslog(LOG_ERR, "error in outbound fdopen: %s (%d)",
-               strerror(errno), errno);
-        throw errno;
-    }
+    __gnu_cxx::stdio_filebuf<char> inbuf(sock, std::ios::in);
+    this->in = new std::istream(&inbuf);
+    __gnu_cxx::stdio_filebuf<char> outbuf(sock, std::ios::out);
+    this->out = new std::ostream(&outbuf);
+
     if ((ret = pthread_create(&(this->thread_id), NULL,
                               ConsoleSession::start,
                               (void *)this)) != 0)
     {
-        syslog(LOG_ERR,
-               "error creating console thread: %s (%d)",
-               strerror(ret), ret);
-        throw errno;
+        std::clog << syslogErr
+                  << "error creating console thread: "
+                  << strerror(ret) << " (" << ret << ")" << std::endl;
+        throw ret;
     }
 }
 
@@ -101,23 +99,21 @@ void *ConsoleSession::start(void *arg)
 
     while (!done)
     {
-        std::string &str = sess->get_line();
+        std::string str = sess->get_line();
 
 	/* Do we need to exit? */
 	if (str == "exit")
 	{
-	    fprintf(sess->out, "exiting\n");
-	    fflush(sess->out);
+	    (*sess->out) << "exiting" << std::endl;
 	    done = 1;
             break;
 	}
 
         sess->get_lock();
-        fprintf(sess->out, ConsoleSession::dispatch(str).c_str());
+        *(sess->out) << ConsoleSession::dispatch(str) << std::endl;
         sess->drop_lock();
-        fflush(sess->out);
     }
-    syslog(LOG_NOTICE, "closing console");
+    std::clog << syslogNotice << "closing console" << std::endl;
 
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &old_cancel_type);
     pthread_cleanup_pop(1);
@@ -137,16 +133,8 @@ void ConsoleSession::cleanup(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;
 
-    if (sess->in)
-    {
-        fclose(sess->in);
-        sess->in = NULL;
-    }
-    if (sess->out)
-    {
-        fclose(sess->out);
-        sess->out = NULL;
-    }
+    delete sess->in;
+    delete sess->out;
     if (sess->sock)
     {
         close(sess->sock);
@@ -154,25 +142,15 @@ void ConsoleSession::cleanup(void *arg)
     }
 }
 
-std::string &ConsoleSession::get_line(void)
+std::string ConsoleSession::get_line(void)
 {
-    char line[1024];
-    static std::string str = "";
+    std::string str = "";
 
-    fprintf(this->out, "r9 ~> ");
-    fflush(this->out);
-    /* Make sure we're sane here.  Maybe also flush the in once we're done
-     * to prevent any other stuff just hanging out?
-     */
-    if (fgets(line, sizeof(line), this->in) == NULL)
-    {
-        /* The other end went away */
+    (*this->out) << "r9 ~> ";
+    this->out->flush();
+    (*this->in) >> str;
+    if (this->in->eof())
         str = "exit";
-        return str;
-    }
-    /* The \r and \n are left on the string */
-    line[strlen(line) - 2] = '\0';
-    str = line;
     return str;
 }
 
@@ -196,7 +174,7 @@ void Console::start(void *(*func)(void *))
 
     if (this->console_sock == 0)
     {
-        syslog(LOG_ERR, "no socket available to listen");
+        std::clog << syslogErr << "no socket available to listen" << std::endl;
         throw ENOENT;
     }
     if ((ret = pthread_create(&(this->listen_thread),
@@ -204,9 +182,9 @@ void Console::start(void *(*func)(void *))
                               func,
                               (void *)this)) != 0)
     {
-        syslog(LOG_ERR,
-               "couldn't start listen thread: %s (%d)",
-               strerror(ret), ret);
+        std::clog << syslogErr
+                  << "couldn't start listen thread: "
+                  << strerror(ret) << " (" << ret << ")" << std::endl;
         throw ret;
     }
 }
@@ -217,9 +195,9 @@ void Console::stop(void)
 
     if ((ret = pthread_cancel(this->listen_thread)) != 0)
     {
-        syslog(LOG_ERR,
-               "couldn't terminate console thread: %s (%d)",
-               strerror(ret), ret);
+        std::clog << syslogErr
+                  << "couldn't terminate console thread: "
+                  << strerror(ret) << " (" << ret << ")" << std::endl;
         throw ret;
     }
     close(this->console_sock);
