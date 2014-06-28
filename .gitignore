@@ -3,7 +3,7 @@
 *.la
 *.lo
 *.so
-*.dynlib
+*.dylib
 #*#
 .#*#
 *~
