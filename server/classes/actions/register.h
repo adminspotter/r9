@@ -1,6 +1,6 @@
 /* register.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 09:51:16 tquirk
+ *   last updated 28 Jun 2014, 09:39:33 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -38,6 +38,8 @@
  *                     which is just a more sensible location.  Made a typedef
  *                     for the action prototype to clean up the actions array
  *                     definition.
+ *   28 Jun 2014 TAQ - Cleanups on include paths in Makefiles, so local
+ *                     includes now need full relative path.
  *
  * Things to do
  *
@@ -46,7 +48,7 @@
 #ifndef __INC_REGISTER_H__
 #define __INC_REGISTER_H__
 
-#include "motion.h"
+#include "../motion.h"
 
 typedef void action_routine_t(Motion *, int, Motion *, Eigen::Vector3d&);
 

@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 23 Jun 2014, 18:29:10 tquirk
+#   last updated 28 Jun 2014, 10:21:31 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -45,53 +45,43 @@
 #   22 Jun 2014 TAQ - Since we're going all C++ (and since linking is being
 #                     a pain on the Mac), our target here is now an archive.
 #   23 Jun 2014 TAQ - Tweaks to make things build correctly.
+#   28 Jun 2014 TAQ - Switched over to libtool.  Back to shared libs.
 #
 # Things to do
 #
 
 -include ../../Makefile.defs
 
-CXXFLAGS = -Wall -g -fPIC -DPIC -D_REENTRANT $(CINCLUDE)
+CXXFLAGS = -Wall -g -D_REENTRANT $(CINCLUDE)
 
-LFLAGS =
-
-YFLAGS = -y -d -v
-
-LDPATHS = -L/usr/local/lib -L/Users/tquirk/lib
-LDLIBS = -lr9_proto -lpthread
-LDFLAGS = -shared -rdynamic
-EXTRALIBS = -ldl
-
-DEPEND = $(MAKEDEPEND) -f-
-
-ARFLAGS = -rcs
+LDPATHS =
+LDLIBS = ../../proto/libr9_proto.la -lpthread -ldl
 
 HDRS = control.h defs.h game_obj.h geometry.h motion.h library.h \
 	thread_pool.h zone.h zone_interface.h basesock.h dgram.h stream.h
 SRCS = control.cc game_obj.cc geometry.cc zone.cc access.cc library.cc \
 	motion.cc zone_interface.cc \
 	basesock.cc dgram.cc stream.cc
-OBJS = ${SRCS:.cc=.o}
-TARGET = r9_classes.a
+OBJS = ${SRCS:.cc=.lo}
+TARGET = libr9_classes.la
 
-.SUFFIXES : .cc .o
+.SUFFIXES : .cc .lo
 
-.cc.o :
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+.cc.lo :
+	$(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -c $<
 
-.PHONY : actions modules clean tags all
+.PHONY : actions modules install uninstall clean tags all
 
-#all : actions modules Makefile.depend TAGS $(TARGET)
-all : modules Makefile.depend TAGS $(TARGET)
+all : actions modules Makefile.depend TAGS $(TARGET)
 
 actions :
 	$(MAKE) -C actions
 
 modules :
-	$(MAKE) -C modules r9_console.a
+	$(MAKE) -C modules libr9_console.la
 
 $(TARGET) : $(OBJS)
-	$(AR) $(ARFLAGS) $(TARGET) $(OBJS)
+	$(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) -o $@ $(OBJS) -rpath $(LIBDIR) $(LDLIBS)
 
 Makefile.depend : $(SRCS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) 2> /dev/null > Makefile.depend
@@ -103,9 +93,15 @@ tags : TAGS
 TAGS : $(HDRS) $(SRCS)
 	@$(MAKETAGS) $(HDRS) $(SRCS)
 
+install : $(TARGET)
+	$(LIBTOOL) --mode=install $(CP) $< $(LIBDIR)
+
+uninstall :
+	$(LIBTOOL) --mode=uninstall $(RM) $(LIBDIR)/$(TARGET)
+
 clean:
 	$(MAKE) -C actions clean
 	$(MAKE) -C modules clean
-	$(RM) $(OBJS) $(TARGET) core TAGS Makefile.bak Makefile.depend
+	$(LIBTOOL) --mode=clean $(RM) $(OBJS) $(TARGET) core TAGS Makefile.bak Makefile.depend
 
 -include Makefile.depend

@@ -1,6 +1,6 @@
 /* log.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jun 2014, 18:17:57 tquirk
+ *   last updated 27 Jun 2014, 18:58:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -26,6 +26,7 @@
  * Changes
  *   21 Jun 2014 TAQ - Created the file.
  *   23 Jun 2014 TAQ - Small tweaks to get things compiling properly.
+ *   27 Jun 2014 TAQ - Handled a possible format string vulnerability.
  *
  * Things to do
  *
@@ -52,7 +53,7 @@ int Log::sync(void)
 {
     if (this->buf.length())
     {
-        syslog(this->priority, this->buf.c_str());
+        syslog(this->priority, "%s", this->buf.c_str());
         this->buf.erase();
         this->priority = LOG_DEBUG;
     }

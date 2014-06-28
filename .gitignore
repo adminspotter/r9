@@ -1,11 +1,15 @@
 *.a
 *.o
+*.la
+*.lo
 *.so
+*.dynlib
 #*#
 .#*#
 *~
 TAGS
 Makefile.depend
+.libs/
 conf/
 old/
 server

@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 16:06:33 tquirk
+ *   last updated 28 Jun 2014, 09:43:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -26,15 +26,16 @@
  *   14 Aug 2006 TAQ - Created the file.
  *   10 Oct 2009 TAQ - Added action_rotate stub.
  *   10 May 2014 TAQ - Action routines now take Motion, rather than GameObject.
+ *   28 Jun 2014 TAQ - Include fixups.
  *
  * Things to do
+ *   - Implement these functions, obviously.
  *
- * $Id$
  */
 
 #include <Eigen/Core>
 
-#include "motion.h"
+#include "../motion.h"
 
 void action_move(Motion *source,
 		 int intensity,

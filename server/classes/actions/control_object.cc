@@ -1,6 +1,6 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 09:54:45 tquirk
+ *   last updated 28 Jun 2014, 09:42:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -35,6 +35,7 @@
  *                     Added action_uncontrol_object, to drop control of an
  *                     object.
  *   10 May 2014 TAQ - Switched to Eigen math library.
+ *   28 Jun 2014 TAQ - Include fixups.
  *
  * Things to do
  *   - Need to make more database calls - we need to figure out where the
@@ -42,15 +43,13 @@
  *     then we will need to make sure it's visible and interactible, and only
  *     then can we actually take control of it.
  *
- * $Id: control_object.cc 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <Eigen/Core>
 
-#include "game_obj.h"
-#include "control.h"
-#include "proto.h"
-#include "zone_interface.h"
+#include "../game_obj.h"
+#include "../motion.h"
+#include "../zone_interface.h"
 
 /* ARGSUSED */
 void action_control_object(Motion *source,

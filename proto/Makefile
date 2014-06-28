@@ -1,9 +1,9 @@
 # Makefile
-#   by Trinity Quirk <trinity@ymb.net>
-#   last updated 12 May 2014, 21:32:15 tquirk
+#   by Trinity Quirk <tquirk@ymb.net>
+#   last updated 28 Jun 2014, 09:24:38 tquirk
 #
 # Revision IX game server
-# Copyright (C) 2007  Trinity Annabelle Quirk
+# Copyright (C) 2014  Trinity Annabelle Quirk
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,33 +28,33 @@
 #   29 Sep 2007 TAQ - Changed target name.
 #   20 Oct 2007 TAQ - Renamed LIBFLAGS to LDFLAGS, added -rdynamic.
 #   22 Oct 2007 TAQ - Added -D_REENTRANT to CDEFS.
+#   28 Jun 2014 TAQ - Moved over to libtool.  It's pretty darned neat.
 #
 # Things to do
 #
-# $Id: Makefile 10 2013-01-25 22:13:00Z trinity $
 
 -include ../Makefile.defs
 
-CDEBUG = -g
-# COPTIM = -O2 -fno-strength-reduce
-CINCLUDE =
-CDEFS = -fPIC -DPIC -D_REENTRANT
-CFLAGS = -Wall $(CDEFS) $(CDEBUG) $(COPTIM) $(CINCLUDE)
+CFLAGS = -Wall -g -D_REENTRANT $(CINCLUDE)
 
-LDFLAGS = -shared -rdynamic
 LDLIBS =
-
-ARFLAGS = rcs
 
 HDRS = proto.h
 SRCS = byteswap.c
-OBJS = ${SRCS:.c=.o}
-TARGET = libr9_proto.so
+OBJS = ${SRCS:.c=.lo}
+TARGET = libr9_proto.la
+
+.SUFFIXES : .c .lo
+
+.c.lo :
+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -c $<
+
+.PHONY : install uninstall clean tags all
 
 all : Makefile.depend TAGS $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(LD) $(LDFLAGS) $(LDPATHS) -o $@ $(OBJS) $(LDLIBS)
+	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $(OBJS) -rpath $(LIBDIR) $(LDLIBS)
 
 Makefile.depend : $(SRCS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) 2> /dev/null > Makefile.depend
@@ -64,7 +64,13 @@ tags : TAGS
 TAGS : $(HDRS) $(SRCS)
 	@$(MAKETAGS) $(HDRS) $(SRCS)
 
+install : $(TARGET)
+	$(LIBTOOL) --mode=install $(CP) $< $(LIBDIR)
+
+uninstall :
+	$(LIBTOOL) --mode=uninstall $(RM) $(LIBDIR)/$(TARGET)
+
 clean :
-	$(RM) $(OBJS) $(TARGET) core TAGS Makefile.bak Makefile.depend
+	$(LIBTOOL) --mode=clean $(RM) $(OBJS) $(TARGET) core TAGS Makefile.bak Makefile.depend
 
 -include Makefile.depend

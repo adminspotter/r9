@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 27 Jun 2014, 18:31:49 tquirk
+#   last updated 28 Jun 2014, 10:19:19 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -37,68 +37,62 @@
 #   19 Sep 2013 TAQ - Genericized the TCL includes and libs.  We now build
 #                     the pgsql lib by default.
 #   10 May 2014 TAQ - Moved a bunch of defs into a top level file.
+#   28 Jun 2014 TAQ - Moved over to libtool.  So much easier.  We've also
+#                     got install/uninistall rules which will only operate
+#                     on targets which have been built.
 #
 # Things to do
 #
-# $Id$
 
 -include ../../../Makefile.defs
 
 CPERLINC = -I/usr/lib/perl/5.14/CORE
 CTCLINC = -I/usr/include/tcl
 CMYINC = -I/usr/local/mysql/include
-CMOREINCLUDE = -I.. -I../.. $(CPERLINC) $(CTCLINC) $(CMYINC) -I/usr/include/c++/4.2.1
-CDEBUG = -g
-# COPTIM = -O2
+CMOREINCLUDE = $(CPERLINC) $(CTCLINC) $(CMYINC) -I/usr/include/c++/4.2.1
 CDEFS = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_GNU_SOURCE -D_REENTRANT
-CFLAGS = -Wall -fPIC -DPIC $(CDEFS) $(CDEBUG) $(COPTIM) $(CINCLUDE) $(CMOREINCLUDE)
-
-LFLAGS =
-
-YFLAGS = -y -d -v
+CFLAGS = -Wall -g $(CDEFS) $(CINCLUDE) $(CMOREINCLUDE)
 
 #LIBWRAP = -lwrap
 LIBMYSQL = -L/usr/local/mysql/lib -lmysqlclient_r
 LIBPQ = -lpq
 LIBPERL = -lperl
 LIBTCL = -ltcl
-LDFLAGS = -shared -rdynamic -L/usr/local/lib -L$(HOME)/lib
-LDLIBS = -lstdc++
-
-DEPEND = $(MAKEDEPEND) -f-
-
-ARFLAGS = rcs
+LIBSTDCPP = -lstdc++
 
 HDRS = db.h console.h mysql.h pgsql.h
 CXXSRCS = db.cc mysql.cc pgsql.cc console.cc unix_console.cc inet_console.cc
 SRCS = perl.c tcl.c
-OBJS = ${CXXSRCS:.cc=.o} ${SRCS:.c=.o}
-TARGETS = r9_console.a libr9_MySQL.so libr9_pgsql.so libr9_perl.so \
-	libr9_tcl.so
+OBJS = ${CXXSRCS:.cc=.lo} ${SRCS:.c=.lo}
+TARGETS = libr9_console.la libr9_MySQL.la libr9_pgsql.la libr9_perl.la \
+	libr9_tcl.la
 
-.SUFFIXES : .cc .o
+.SUFFIXES : .c .cc .lo
 
-.cc.o :
-	$(CXX) $(CFLAGS) -c $< -o $@
+.c.lo :
+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -c $<
 
-.PHONY : clean tags all
+.cc.lo :
+	$(LIBTOOL) --mode=compile $(CXX) $(CFLAGS) -c $<
+
+.PHONY : install uninstall clean tags all
 
 all : Makefile.depend TAGS $(TARGETS)
 
-r9_console.a : console.o unix_console.o inet_console.o
-	$(AR) $(ARFLAGS) $(LIBWRAP) $@ $<
+libr9_console.la : console.lo unix_console.lo inet_console.lo
+	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBWRAP) $(LIBSTDCPP)
 
-libr9_MySQL.so : mysql.o db.o
-	$(CXX) $(LDFLAGS) $(LIBMYSQL) mysql.o db.o -o $@
+libr9_MySQL.la : mysql.lo db.lo
+	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBMYSQL)
 
-libr9_pgsql.so : pgsql.o db.o
+libr9_pgsql.la : pgsql.lo db.lo
 	$(CXX) $(LDFLAGS) $(LIBPQ) $< -o $@
 
-libr9_perl.so : perl.o
-	$(LD) $(LDFLAGS) $(LIBPERL) $< -o $@
+libr9_perl.la : perl.lo
+	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBPERL)
 
-libr9_tcl.so : tcl.o
-	$(LD) $(LDFLAGS) $(LIBTCL) $< -o $@
+libr9_tcl.la : tcl.lo
+	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBTCL)
 
 Makefile.depend : $(SRCS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) $(CXXSRCS) 2> /dev/null > Makefile.depend
@@ -108,7 +102,15 @@ tags : TAGS
 TAGS : $(HDRS) $(CXXSRCS) $(SRCS)
 	@$(MAKETAGS) $(HDRS) $(CXXSRCS) $(SRCS)
 
+# Only install the targets which have been built
+install :
+	for file in $(TARGETS) ; do if [ -e $$file ] ; then echo $$file ; $(LIBTOOL) --mode=install $(CP) $$file $(LIBDIR) ; fi ; done
+
+# Only uninstall the targets which have been built
+uninstall :
+	for file in $(TARGETS) ; do if [ -e $$file ] ; then $(LIBTOOL) --mode=uninstall $(RM) $(LIBDIR)/$$file ; fi ; done
+
 clean :
-	$(RM) $(OBJS) $(TARGETS) core TAGS Makefile.bak Makefile.depend
+	$(LIBTOOL) --mode=clean $(RM) $(OBJS) $(TARGETS) core TAGS Makefile.bak Makefile.depend
 
 -include Makefile.depend

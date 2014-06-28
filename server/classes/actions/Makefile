@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 23 Jun 2014, 17:48:59 tquirk
+#   last updated 28 Jun 2014, 09:44:24 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -30,38 +30,33 @@
 #   22 Oct 2007 TAQ - Added -D_REENTRANT to CFLAGS.
 #   19 Sep 2013 TAQ - makedepend no longer lives in /usr/X11R6/bin.
 #   10 May 2014 TAQ - Moved a bunch of defs into a top level Makefile.defs.
+#   28 Jun 2014 TAQ - Switched over to libtool.
 #
 # Things to do
 #
-# $Id$
 
 -include ../../../Makefile.defs
 
-CFLAGS = -Wall -g -fPIC -DPIC -D_REENTRANT
+CXXFLAGS = -Wall -g -D_REENTRANT $(CINCLUDE)
 
-LDPATHS = -L/usr/local/lib
-LDFLAGS = -shared -rdynamic $(CFLAGS)
-
-DEPEND = $(MAKEDEPEND) -f-
-
-ARFLAGS = rcs
+LDPATHS =
 
 HDRS = register.h
 SRCS = register.cc control_object.cc move.cc
-OBJS = ${SRCS:.cc=.o}
-TARGET = libr9_actions.so
+OBJS = ${SRCS:.cc=.lo}
+TARGET = libr9_actions.la
 
-.SUFFIX : .cc .o
+.SUFFIXES : .cc .lo
 
-.cc.o :
-	$(CXX) $(CFLAGS) $(CINCLUDE) -I.. -c $< -o $@
+.cc.lo :
+	$(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) -c $<
 
-.PHONY : clean
+.PHONY : install uninstall clean tags all
 
 all : Makefile.depend TAGS $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(LD) $(LDFLAGS) $(LDPATHS) -o $(TARGET) $(OBJS) $(LDLIBS)
+	$(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) -o $@ $(OBJS) -rpath $(LIBDIR) $(LDLIBS)
 
 Makefile.depend : $(SRCS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) 2> /dev/null > Makefile.depend
@@ -71,7 +66,13 @@ tags : TAGS
 TAGS : $(HDRS) $(SRCS)
 	@$(MAKETAGS) $(HDRS) $(SRCS)
 
+install : $(TARGET)
+	$(LIBTOOL) --mode=install $(CP) $< $(LIBDIR)
+
+uninstall :
+	$(LIBTOOL) --mode=uninstall $(RM) $(LIBDIR)/$(TARGET)
+
 clean:
-	$(RM) $(OBJS) $(TARGET) core TAGS Makefile.bak Makefile.depend
+	$(LIBTOOL) --mode=clean $(RM) $(OBJS) $(TARGET) core TAGS Makefile.bak Makefile.depend
 
 -include Makefile.depend
