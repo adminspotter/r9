@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 28 Jun 2014, 10:21:31 tquirk
+#   last updated 29 Jun 2014, 12:12:52 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -94,9 +94,13 @@ TAGS : $(HDRS) $(SRCS)
 	@$(MAKETAGS) $(HDRS) $(SRCS)
 
 install : $(TARGET)
+	$(MAKE) -C actions install
+	$(MAKE) -C modules install
 	$(LIBTOOL) --mode=install $(CP) $< $(LIBDIR)
 
 uninstall :
+	$(MAKE) -C actions uninstall
+	$(MAKE) -C modules uninstall
 	$(LIBTOOL) --mode=uninstall $(RM) $(LIBDIR)/$(TARGET)
 
 clean:

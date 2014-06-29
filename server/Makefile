@@ -1,6 +1,6 @@
 # Makefile
-#   by Trinity Quirk <trinity@ymb.net>
-#   last updated 23 Jun 2014, 18:32:01 tquirk
+#   by Trinity Quirk <tquirk@ymb.net>
+#   last updated 29 Jun 2014, 12:18:11 tquirk
 #
 # This is the main makefile for the revision9 server.
 #
@@ -22,6 +22,7 @@
 #   21 Jun 2014 TAQ - Moving the main stuff to C++.  Also modified to include
 #                     our general Makefile.defs file.
 #   23 Jun 2014 TAQ - Working on getting the binary to link properly.
+#   29 Jun 2014 TAQ - The final part of the libtool-ification.
 #
 # Things to do
 #
@@ -30,28 +31,28 @@
 
 CXXFLAGS = -Wall -g -fPIC -DPIC -D_REENTRANT $(CINCLUDE)
 
-LDFLAGS = -rdynamic -L/usr/local/lib -L$(HOME)/lib -Lclasses/modules
-LDLIBS = -lr9_proto -lm -ldl -lpthread -lstdc++
-
-DEPEND = $(MAKEDEPEND) -f-
+LDLIBS = -lpthread -lstdc++
 
 HDRS = config.h server.h signals.h subserver.h log.h
 CXXSRCS = config.cc server.cc signals.cc subserver.cc log.cc
 OBJS = ${CXXSRCS:.cc=.o}
 TARGET = server
 
-.PHONY : clean proto classes
+.PHONY : install uninstall clean
 
-all : proto classes Makefile.depend TAGS $(TARGET)
+all : Makefile.depend TAGS $(TARGET)
 
-proto :
+../proto/libr9_proto.la :
 	$(MAKE) -C ../proto
 
-classes :
+classes/libr9_classes.la :
 	$(MAKE) -C classes
 
-$(TARGET) : $(OBJS) classes/r9_classes.a classes/modules/r9_console.a ../proto/libr9_proto.so
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) classes/r9_classes.a classes/modules/r9_console.a $(LDLIBS)
+classes/modules/libr9_console.la :
+	$(MAKE) -C classes/modules libr9_console.la
+
+$(TARGET) : ../proto/libr9_proto.la classes/libr9_classes.la classes/modules/libr9_console.la $(OBJS)
+	$(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) -o $@ $(OBJS) classes/libr9_classes.la classes/modules/libr9_console.la ../proto/libr9_proto.la $(LDLIBS)
 
 Makefile.depend : $(SRCS) $(HDRS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) 2> /dev/null > Makefile.depend
@@ -62,8 +63,20 @@ tags : TAGS
 TAGS : $(HDRS) $(SRCS)
 	@$(MAKETAGS) $(HDRS) $(SRCS)
 
+install :
+	$(MAKE) -C ../proto install
+	$(MAKE) -C classes install
+	$(LIBTOOL) --mode=install $(CP) $(TARGET) $(HOME)/bin
+
+uninstall :
+	$(MAKE) -C ../proto uninstall
+	$(MAKE) -C classes uninstall
+	$(RM) $(HOME)/bin/$(TARGET)
+
 clean :
+	$(MAKE) -C ../proto clean
 	$(MAKE) -C classes clean
-	$(RM) $(OBJS) $(TARGET) core TAGS Makefile.bak Makefile.depend
+	$(LIBTOOL) --mode=clean $(RM) $(TARGET)
+	$(RM) $(OBJS) core TAGS Makefile.bak Makefile.depend
 
 -include Makefile.depend
