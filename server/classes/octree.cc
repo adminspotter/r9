@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 20 May 2014, 17:48:49 tquirk
+ *   last updated 28 Jun 2014, 22:44:05 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2004  Trinity Annabelle Quirk
@@ -83,6 +83,10 @@
  *                     in it, by simply not creating it.
  *   04 Apr 2006 TAQ - Fixed up namespaces for both std:: and Math3d:: objects.
  *   10 May 2006 TAQ - Altered MAX_OCTREE_POLYS for collider testing.
+ *   28 Jun 2014 TAQ - Made this into a proper class.  Got rid of individual
+ *                     polygons in the tree, in favor of geometry objects.
+ *                     We should probably only deal with bounding boxes here,
+ *                     and do collisions in the zone somewhere.
  *
  * Things to do
  *   - Make the neighbor-finder BFS, not DFS as it is now.  Half the
@@ -97,270 +101,13 @@
  *   compares and three pointer derefs, not a tall order cycle-wise.
  *   The optimizer should be able to simplify the repetition of terms.
  *
- *   - We should be able to delete things from and add things to this
- *   octree on the fly.  If only a part of the octree is effected,
- *   then only that part should be recomputed.  Make sure to recompute
- *   neighbors as well.
- *
- *   - We need to calculate the normal of each poly we put into our
- *   tree, so we can easily do the line-plane intersection
- *   calculation.
- *
- * $Id: octree.cc 10 2013-01-25 22:13:00Z trinity $
  */
 
-#include <string.h>
-#include <math.h>
-#include <list>
-#include <algorithm>
-#include <iostream>
 #include "octree.h"
-#include "polygon.h"
 
-#ifdef REVISION9SERVER
-#include "../config.h"
-#define MIN_OCTREE_DEPTH  config.min_octree_depth
-#define MAX_OCTREE_DEPTH  config.max_octree_depth
-#define MAX_OCTREE_POLYS  config.max_octree_polys
-#else
-#define MIN_OCTREE_DEPTH  1
-#define MAX_OCTREE_DEPTH  10
-#define MAX_OCTREE_POLYS  3
-#endif /* REVISION9SERVER */
-
-static int classify_polygon(Eigen::Vector3d &, polygon *);
-static void split_polygon(polygon *, octree, std::list<polygon *> []);
-void compute_neighbors(octree);
-
-void build_octree(octree tree,
-		  const Eigen::Vector3d &max_pos,
-		  std::list<polygon *> &polys,
-		  int depth)
-{
-    std::list<polygon *> poly_list[8];
-    std::list<polygon *>::iterator i;
-    double factor = pow(0.5, depth + 1);
-    int j;
-
-    /* Set the center and min/max points. */
-    if (tree->parent == NULL)
-    {
-	tree->min_point << 0, 0, 0;
-	tree->center_point << max_pos[0] * factor,
-            max_pos[1] * factor,
-            max_pos[2] * factor;
-	tree->max_point = max_pos;
-    }
-    else
-    {
-	tree->center_point << tree->parent->center_point[0]
-            + (tree->parent_index & 4
-               ? max_pos[0] * factor : -(max_pos[0] * factor)),
-            tree->parent->center_point[1]
-            + (tree->parent_index & 2
-               ? max_pos[1] * factor : -(max_pos[1] * factor)),
-            tree->parent->center_point[2]
-            + (tree->parent_index & 1
-               ? max_pos[2] * factor : -(max_pos[2] * factor));
-	tree->min_point << tree->center_point[0] - (max_pos[0] * factor),
-            tree->center_point[1] - (max_pos[1] * factor),
-            tree->center_point[2] - (max_pos[2] * factor);
-	tree->max_point << tree->center_point[0] + (max_pos[0] * factor),
-            tree->center_point[1] + (max_pos[1] * factor),
-            tree->center_point[2] + (max_pos[2] * factor);
-    }
-#ifdef DEBUG
-    for (j = 0; j < depth; ++j)
-	std::cout << " ";
-    std::cout << "(" << depth << " " << (int)tree->parent_index
-	      << ") <" << tree->center_point[0]
-	      << ", " << tree->center_point[1]
-	      << ", " << tree->center_point[2] << "> "
-	      << polys.size() << " polys ";
-#endif /* DEBUG */
-
-    if (depth == MAX_OCTREE_DEPTH
-	|| (depth >= MIN_OCTREE_DEPTH && polys.size() <= MAX_OCTREE_POLYS))
-    {
-	/* Copy the list's elements into the node and stop recursing
-	 * along this branch of the tree.
-	 */
-#ifdef DEBUG
-	std::cout << "not recursing, " << polys.size() << " polys\n";
-#endif /* DEBUG */
-	for (i = polys.begin(); i != polys.end(); ++i)
-	    tree->contents.push_back(*i);
-    }
-    else
-    {
-	for (i = polys.begin(); i != polys.end(); ++i)
-	{
-	    if ((j = classify_polygon(tree->center_point, *i)) == -1)
-		split_polygon(*i, tree, poly_list);
-	    else
-	    {
-#ifdef DEBUG
-		std::cout << "pushing poly into list " << j << std::endl;
-#endif /* DEBUG */
-		poly_list[j].push_back(*i);
-	    }
-	}
-
-	/* Recurse if required for each octant. */
-	for (j = 0; j < 8; ++j)
-	{
-	    if (depth < MIN_OCTREE_DEPTH
-		|| (poly_list[j].size() > 0 && depth < MAX_OCTREE_DEPTH))
-	    {
-#ifdef DEBUG
-		std::cout << "recursing->(" << depth + 1 << " " << j
-			  << ") " << poly_list[j].size() << " polys"
-			  << std::endl;
-#endif /* DEBUG */
-		tree->octants[j] = new octant;
-		tree->octants[j]->parent = tree;
-		tree->octants[j]->parent_index = j;
-		memset(tree->octants[j]->octants, 0, sizeof(octree) * 8);
-		build_octree(tree->octants[j],
-			     max_pos,
-			     poly_list[j],
-			     depth + 1);
-#ifdef DEBUG
-		std::cout << std::endl;
-		for (int m = 0; m < depth; ++m)
-		    std::cout << " ";
-#endif /* DEBUG */
-	    }
-	}
-    }
-    /* Once we're back out of the creation recursion, calculate
-     * everybody's neighbor pointers.  I don't think we can do this
-     * during creation because of the way we do the higher-numbered
-     * octants' check, and the fact that the target octants will not
-     * have been created yet, though I'll look into it.
-     */
-    if (depth == 0)
-	compute_neighbors(tree);
-}
-
-void octree_delete(octree tree)
-{
-    int i;
-
-    for (i = 0; i < 8; ++i)
-	if (tree->octants[i] != NULL)
-	    octree_delete(tree->octants[i]);
-    delete tree;
-}
-
-/* This routine figures out which octant the poly is in, or if it spans
- * multiple octants.  Returns either the octant number (0-7) or -1 if
- * it spans and needs splitting.
- */
-int classify_polygon(Eigen::Vector3d &center, polygon *poly)
-{
-    std::vector<Eigen::Vector3d>::iterator i = poly->points.begin();
-    int octant, retval = -1;
-
-    retval = which_octant(center, *i);
-#ifdef DEBUG
-    std::cout << poly->points.size() << " points, octants " << retval;
-#endif /* DEBUG */
-    for (++i; i != poly->points.end(); ++i)
-    {
-	if ((octant = which_octant(center, *i)) != retval)
-	    retval = -1;
-#ifdef DEBUG
-	std::cout << " " << octant;
-#endif /* DEBUG */
-    }
-#ifdef DEBUG
-    std::cout << std::endl;
-#endif /* DEBUG */
-    return retval;
-}
-
-/* Any polygon we get in this function will have to be split; we've
- * filtered out all other polygons before we call split_polygon.
- */
-void split_polygon(polygon *poly,
-		   octree tree,
-		   std::list<polygon *> poly_list[8])
-{
-    polygon new_poly;
-    int i;
-
-    /* Do the clipping for *each* octant. */
-    for (i = 0; i < 8; ++i)
-    {
-	/* Bail out whenever we end up with nothing. */
-	new_poly = clip(poly, tree->center_point, i, 4, 0);
-#ifdef DEBUG
-	std::cout << "points " << new_poly.points.size();
-#endif /* DEBUG */
-	if (new_poly.points.size())
-	{
-	    new_poly = clip(&new_poly, tree->center_point, i, 2, 1);
-#ifdef DEBUG
-	    std::cout << " " << new_poly.points.size();
-#endif /* DEBUG */
-	    if (new_poly.points.size())
-	    {
-		new_poly = clip(&new_poly, tree->center_point, i, 1, 2);
-#ifdef DEBUG
-		std::cout << " " << new_poly.points.size();
-#endif /* DEBUG */
-		if (new_poly.points.size())
-		    poly_list[i].push_back(poly);
-	    }
-	}
-#ifdef DEBUG
-	std::cout << std::endl;
-#endif /* DEBUG */
-    }
-}
-
-polygon clip(polygon *poly, Eigen::Vector3d &clip, int octant, int mask, int e)
-{
-    std::vector<Eigen::Vector3d>::iterator pt_a, pt_b;
-    polygon new_poly;
-    Eigen::Vector3d pt_i;
-    int octant_a, octant_b;
-    double scale;
-
-    octant &= mask;
-    for (pt_a = poly->points.end() - 1, pt_b = poly->points.begin();
-	 pt_b != poly->points.end();
-	 ++pt_a, ++pt_b)
-    {
-	/* Handle starting point wraparound properly. */
-	if (pt_a == poly->points.end())
-	    pt_a = poly->points.begin();
-	octant_a = which_octant(clip, *pt_a) & mask;
-	octant_b = which_octant(clip, *pt_b) & mask;
-	if (octant_b == octant)
-	{
-	    if (octant_a != octant)
-	    {
-		/* The starting point is in another octant; clip. */
-		scale = (double)(clip[e] - (*pt_a)[e])
-		    / (double)((*pt_b)[e] - (*pt_a)[e]);
-		pt_i = *pt_a + ((*pt_b - *pt_a) * scale);
-		new_poly.points.push_back(pt_i);
-	    }
-	    new_poly.points.push_back(*pt_b);
-	}
-	else if (octant_a == octant)
-	{
-	    /* The ending point is in another octant; clip. */
-	    scale = (double)(clip[e] - (*pt_a)[e])
-		/ (double)((*pt_b)[e] - (*pt_a)[e]);
-	    pt_i = *pt_a + ((*pt_b - *pt_a) * scale);
-	    new_poly.points.push_back(pt_i);
-	}
-    }
-    return new_poly;
-}
+const int Octree::MAX_LEAF_OBJECTS = 3;
+const int Octree::MIN_DEPTH = 5;
+const int Octree::MAX_DEPTH = 10;
 
 /* Orientation of octants and neighbors:
 
@@ -400,28 +147,25 @@ else
 
 */
 
-void compute_neighbors(octree tree)
+void Octree::compute_neighbors(void)
 {
     int i;
 
-    if (tree->parent == NULL)
-	/* We are the root, and have no neighbors.  This may not be completely
-	 * true, since we'll be in a 3D grid of octrees.
-	 */
-	for (i = 0; i < 6; ++i)
-	    tree->neighbor[i] = NULL;
-    else
+    /* The root octant has no neighbors, and they have already been set
+     * to NULL in the constructor, so that's a no-op.
+     */
+    if (this->parent != NULL)
     {
 	/* There is likely a much more general way to do this, but I'm just
 	 * going to get it working right now.  A lookup table is possible,
 	 * based on the pattern that has emerged.
 	 */
-	switch (tree->parent_index)
+	switch (this->parent_index)
 	{
-#define neighbor_test(x,y) (tree->parent->neighbor[(x)] == NULL ? NULL \
-    : (tree->parent->neighbor[(x)]->octants[(y)] == NULL \
-       ? tree->parent->neighbor[(x)] \
-       : tree->parent->neighbor[(x)]->octants[(y)]))
+#define neighbor_test(x,y) (this->parent->neighbor[(x)] == NULL ? NULL \
+    : (this->parent->neighbor[(x)]->octants[(y)] == NULL \
+       ? this->parent->neighbor[(x)] \
+       : this->parent->neighbor[(x)]->octants[(y)]))
 
 	  case 0:
 	    /* An interesting pattern has emerged:  the + and - direction
@@ -429,81 +173,214 @@ void compute_neighbors(octree tree)
 	     * the fact that we may be looking to an indirect sibling.
 	     * Interesting.  This is screaming lookup-table to me.
 	     */
-	    tree->neighbor[0] = tree->parent->octants[4];
-	    tree->neighbor[1] = neighbor_test(1, 4);
-	    tree->neighbor[2] = tree->parent->octants[2];
-	    tree->neighbor[3] = neighbor_test(3, 2);
-	    tree->neighbor[4] = tree->parent->octants[1];
-	    tree->neighbor[5] = neighbor_test(5, 1);
+	    this->neighbor[0] = this->parent->octants[4];
+	    this->neighbor[1] = neighbor_test(1, 4);
+	    this->neighbor[2] = this->parent->octants[2];
+	    this->neighbor[3] = neighbor_test(3, 2);
+	    this->neighbor[4] = this->parent->octants[1];
+	    this->neighbor[5] = neighbor_test(5, 1);
 	    break;
 
 	  case 1:
-	    tree->neighbor[0] = tree->parent->octants[5];
-	    tree->neighbor[1] = neighbor_test(1, 5);
-	    tree->neighbor[2] = tree->parent->octants[3];
-	    tree->neighbor[3] = neighbor_test(3, 3);
-	    tree->neighbor[4] = neighbor_test(4, 0);
-	    tree->neighbor[5] = tree->parent->octants[0];
+	    this->neighbor[0] = this->parent->octants[5];
+	    this->neighbor[1] = neighbor_test(1, 5);
+	    this->neighbor[2] = this->parent->octants[3];
+	    this->neighbor[3] = neighbor_test(3, 3);
+	    this->neighbor[4] = neighbor_test(4, 0);
+	    this->neighbor[5] = this->parent->octants[0];
 	    break;
 
 	  case 2:
-	    tree->neighbor[0] = tree->parent->octants[6];
-	    tree->neighbor[1] = neighbor_test(1, 6);
-	    tree->neighbor[2] = neighbor_test(2, 0);
-	    tree->neighbor[3] = tree->parent->octants[0];
-	    tree->neighbor[4] = tree->parent->octants[3];
-	    tree->neighbor[5] = neighbor_test(5, 3);
+	    this->neighbor[0] = this->parent->octants[6];
+	    this->neighbor[1] = neighbor_test(1, 6);
+	    this->neighbor[2] = neighbor_test(2, 0);
+	    this->neighbor[3] = this->parent->octants[0];
+	    this->neighbor[4] = this->parent->octants[3];
+	    this->neighbor[5] = neighbor_test(5, 3);
 	    break;
 
 	  case 3:
-	    tree->neighbor[0] = tree->parent->octants[7];
-	    tree->neighbor[1] = neighbor_test(1, 7);
-	    tree->neighbor[2] = neighbor_test(2, 1);
-	    tree->neighbor[3] = tree->parent->octants[1];
-	    tree->neighbor[4] = neighbor_test(4, 2);
-	    tree->neighbor[5] = tree->parent->octants[2];
+	    this->neighbor[0] = this->parent->octants[7];
+	    this->neighbor[1] = neighbor_test(1, 7);
+	    this->neighbor[2] = neighbor_test(2, 1);
+	    this->neighbor[3] = this->parent->octants[1];
+	    this->neighbor[4] = neighbor_test(4, 2);
+	    this->neighbor[5] = this->parent->octants[2];
 	    break;
 
 	  case 4:
-	    tree->neighbor[0] = neighbor_test(0, 0);
-	    tree->neighbor[1] = tree->parent->octants[0];
-	    tree->neighbor[2] = tree->parent->octants[6];
-	    tree->neighbor[3] = neighbor_test(3, 6);
-	    tree->neighbor[4] = tree->parent->octants[5];
-	    tree->neighbor[5] = neighbor_test(5, 5);
+	    this->neighbor[0] = neighbor_test(0, 0);
+	    this->neighbor[1] = this->parent->octants[0];
+	    this->neighbor[2] = this->parent->octants[6];
+	    this->neighbor[3] = neighbor_test(3, 6);
+	    this->neighbor[4] = this->parent->octants[5];
+	    this->neighbor[5] = neighbor_test(5, 5);
 	    break;
 
 	  case 5:
-	    tree->neighbor[0] = neighbor_test(0, 1);
-	    tree->neighbor[1] = tree->parent->octants[1];
-	    tree->neighbor[2] = tree->parent->octants[7];
-	    tree->neighbor[3] = neighbor_test(3, 7);
-	    tree->neighbor[4] = neighbor_test(4, 4);
-	    tree->neighbor[5] = tree->parent->octants[4];
+	    this->neighbor[0] = neighbor_test(0, 1);
+	    this->neighbor[1] = this->parent->octants[1];
+	    this->neighbor[2] = this->parent->octants[7];
+	    this->neighbor[3] = neighbor_test(3, 7);
+	    this->neighbor[4] = neighbor_test(4, 4);
+	    this->neighbor[5] = this->parent->octants[4];
 	    break;
 
 	  case 6:
-	    tree->neighbor[0] = neighbor_test(0, 2);
-	    tree->neighbor[1] = tree->parent->octants[2];
-	    tree->neighbor[2] = neighbor_test(2, 4);
-	    tree->neighbor[3] = tree->parent->octants[4];
-	    tree->neighbor[4] = tree->parent->octants[7];
-	    tree->neighbor[5] = neighbor_test(5, 7);
+	    this->neighbor[0] = neighbor_test(0, 2);
+	    this->neighbor[1] = this->parent->octants[2];
+	    this->neighbor[2] = neighbor_test(2, 4);
+	    this->neighbor[3] = this->parent->octants[4];
+	    this->neighbor[4] = this->parent->octants[7];
+	    this->neighbor[5] = neighbor_test(5, 7);
 	    break;
 
 	  case 7:
-	    tree->neighbor[0] = neighbor_test(0, 3);
-	    tree->neighbor[1] = tree->parent->octants[3];
-	    tree->neighbor[2] = neighbor_test(2, 5);
-	    tree->neighbor[3] = tree->parent->octants[5];
-	    tree->neighbor[4] = neighbor_test(4, 6);
-	    tree->neighbor[5] = tree->parent->octants[6];
+	    this->neighbor[0] = neighbor_test(0, 3);
+	    this->neighbor[1] = this->parent->octants[3];
+	    this->neighbor[2] = neighbor_test(2, 5);
+	    this->neighbor[3] = this->parent->octants[5];
+	    this->neighbor[4] = neighbor_test(4, 6);
+	    this->neighbor[5] = this->parent->octants[6];
 	    break;
 	}
 #undef neighbor_test
     }
     for (i = 0; i < 8; ++i)
 	/* Recurse for each subspace */
-	if (tree->octants[i] != NULL)
-	    compute_neighbors(tree->octants[i]);
+	if (this->octants[i] != NULL)
+	    this->octants[i]->compute_neighbors();
+}
+
+Octree::Octree(Octree *parent,
+               Eigen::Vector3d& min,
+               Eigen::Vector3d& max,
+               u_int8_t index)
+    : min_point(min), center_point((max - min) * 0.5), max_point(max),
+      objects()
+{
+    this->parent = parent;
+    memset(this->octants, 0, sizeof(Octree *) * 8);
+    memset(this->neighbor, 0, sizeof(Octree *) * 6);
+    this->parent_index = index;
+}
+
+Octree::~Octree()
+{
+    int i;
+
+    for (i = 0; i < 8; ++i)
+        if (this->octants[i] != NULL)
+            delete this->octants[i];
+
+    /* It is possible that we may only remove part of a tree, so make
+     * any neighbors point to our parent, and our parent point to
+     * nothing, for consistency.  If we're the root of the tree, it
+     * doesn't matter, of course.
+     */
+    if (this->parent != NULL)
+    {
+        /* Detach from our parent so the neighbor recalc will ignore us */
+        if (this->parent->octants[this->parent_index] == this)
+            this->parent->octants[this->parent_index] = NULL;
+        /* Reset our neighbors' neighbor pointers */
+        for (i = 0; i < 6; ++i)
+            if (this->neighbor[i] != NULL)
+                this->neighbor[i]->compute_neighbors();
+
+        /* Move all our objects into our parent */
+        this->parent->objects.insert(this->objects.begin(),
+                                     this->objects.end());
+    }
+    /* Allowing the map destructor to clear itself out will delete all
+     * the things in the map... not what we want.
+     */
+    this->objects.erase(this->objects.begin(), this->objects.end());
+}
+
+bool Octree::empty(void)
+{
+    return objects.empty();
+}
+
+void Octree::build(std::list<Motion *>& objs, int depth)
+{
+    std::list<Motion *> obj_list[8];
+    std::list<Motion *>::iterator i;
+    int j;
+
+    if (depth == Octree::MAX_DEPTH
+	|| (depth >= Octree::MIN_DEPTH
+            && objs.size() <= Octree::MAX_LEAF_OBJECTS))
+    {
+	/* Copy the list's elements into the node and stop recursing
+	 * along this branch of the tree.
+	 */
+        this->objects.insert(objs.begin(), objs.end());
+    }
+    else
+    {
+	for (i = objs.begin(); i != objs.end(); ++i)
+	{
+            obj_list[this->which_octant((*i)->position)].push_back(*i);
+	}
+
+	/* Recurse if required for each octant. */
+	for (j = 0; j < 8; ++j)
+	{
+	    if (!obj_list[j].empty())
+	    {
+                Eigen::Vector3d min, max;
+
+                if (j & 4)
+                {
+                    min[0] = this->center_point[0];
+                    max[0] = this->max_point[0];
+                }
+                else
+                {
+                    min[0] = this->min_point[0];
+                    max[0] = this->center_point[0];
+                }
+                if (j & 2)
+                {
+                    min[1] = this->center_point[1];
+                    max[1] = this->max_point[1];
+                }
+                else
+                {
+                    min[1] = this->min_point[1];
+                    max[1] = this->center_point[1];
+                }
+                if (j & 1)
+                {
+                    min[2] = this->center_point[2];
+                    max[2] = this->max_point[2];
+                }
+                else
+                {
+                    min[2] = this->min_point[2];
+                    max[2] = this->center_point[2];
+                }
+		this->octants[j] = new Octree(this, min, max, j);
+		this->octants[j]->build(obj_list[j], depth + 1);
+	    }
+	}
+    }
+    /* Once we're back out of the creation recursion, calculate
+     * everybody's neighbor pointers.  I don't think we can do this
+     * during creation because of the way we do the higher-numbered
+     * octants' check, and the fact that the target octants will not
+     * have been created yet, though I'll look into it.
+     */
+    if (depth == 0)
+	this->compute_neighbors();
+}
+
+void Octree::insert(Motion *mot)
+{
+}
+
+void Octree::remove(Motion *mot)
+{
 }

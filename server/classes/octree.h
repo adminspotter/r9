@@ -1,6 +1,6 @@
 /* octree.h                                                -*- C++ -*-
  *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 20 May 2014, 17:36:20 tquirk
+ *   last updated 28 Jun 2014, 17:49:10 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2004  Trinity Annabelle Quirk
@@ -20,21 +20,26 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the declarations for an octree structure.
+ * This file contains the declarations for the octree class.
  *
- * For a start, we're going to try to subdivide the polys we get until
- * there is no more than a given number of polys inside each voxel.
- * Hopefully that won't make us too crazy.
+ * We are not going to subdivide anything - it's more work than we may
+ * ever need to do.  For the time being, we'll just classify based on
+ * the center of the object.  We may eventually need to test our
+ * neighbors' contents for a full collision test, but this'll be
+ * lightweight for now.
  *
  * We need to have a max tree height too, but I don't know what range
- * is realistic.  Perhaps 10 or so might be a good start?  We might also
- * want to have a minimum tree height as well, to get a particular maximum
- * sized voxel.
+ * is realistic.  Perhaps 10 or so might be a good start?  We might
+ * also want to have a minimum tree height as well, to get a
+ * particular maximum sized voxel.  We may need to have config options
+ * which determine these parameters, but for the time being, we'll
+ * just have constants in the class.
  *
  * Some links that look like decent info:
  * http://hpcc.engin.umich.edu/CFD/users/charlton/Thesis/html/node29.html
  * http://www.csd.uwo.ca/faculty/irene/octree.html
  * http://www.cg.tuwien.ac.at/research/vr/lodestar/tech/octree/
+ * http://www.altdev.co/2011/08/01/loose-octrees-for-frustum-culling-part-1/
  *
  * Changes
  *   16 Jun 2000 TAQ - Created the file.
@@ -55,32 +60,52 @@
  *                     objects.
  *   06 Jul 2006 TAQ - Added C++ tag at the top to get emacs to use the
  *                     right mode.
+ *   28 Jul 2014 TAQ - Started making this into a class.
  *
  * Things to do
- *   - Think about making this a class.  Though we want to be able to walk
- *   the tree without problems.
  *
- * $Id: octree.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_OCTREE_H__
 #define __INC_OCTREE_H__
 
-#include <vector>
-#include <deque>
 #include <list>
-#include "defs.h"
+#include <set>
+#include <Eigen/Core>
 
-/* o is an octree center point and p is a point */
-#define which_octant(o, p)  (((p)[0] < (o)[0] ? 0 : 4) \
-	                     | ((p)[1] < (o)[1] ? 0 : 2) \
-                             | ((p)[2] < (o)[2] ? 0 : 1))
+#include "motion.h"
 
-void build_octree(octree,
-		  const Eigen::Vector3d &,
-		  std::list<polygon *> &,
-		  int = 0);
-polygon clip(polygon *, Eigen::Vector3d &, int, int, int);
-void octree_delete(octree);
+class Octree
+{
+  public:
+    static const int MAX_LEAF_OBJECTS;
+    static const int MIN_DEPTH;
+    static const int MAX_DEPTH;
+
+    Eigen::Vector3d min_point, center_point, max_point;
+    Octree *parent, *octants[8], *neighbor[6];
+    u_int8_t parent_index;
+
+    std::set<Motion *> objects;
+
+  private:
+    inline int which_octant(const Eigen::Vector3d& p)
+        {
+            return ((p[0] < this->center_point[0] ? 0 : 4)
+                    | (p[1] < this->center_point[1] ? 0 : 2)
+                    | (p[2] < this->center_point[2] ? 0 : 1));
+        }
+    void compute_neighbors(void);
+
+  public:
+    Octree(Octree *, Eigen::Vector3d&, Eigen::Vector3d&, u_int8_t);
+    ~Octree();
+
+    bool empty(void);
+
+    void build(std::list<Motion *>&, int);
+    void insert(Motion *);
+    void remove(Motion *);
+};
 
 #endif /* INC_OCTREE_H__ */
