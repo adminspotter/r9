@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:45:43 tquirk
+ *   last updated 28 Jun 2014, 23:12:59 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -299,7 +299,7 @@ void *Zone::update_pool_worker(void *arg)
 
 /* Public methods */
 Zone::Zone(u_int64_t dim, u_int16_t steps)
-    : actions(), game_objects()
+    : trees(), actions(), game_objects()
 {
     this->x_dim = this->y_dim = this->z_dim = dim;
     this->x_steps = this->y_steps = this->z_steps = steps;
@@ -310,7 +310,7 @@ Zone::Zone(u_int64_t dim, u_int16_t steps)
 
 Zone::Zone(u_int64_t xd, u_int64_t yd, u_int64_t zd,
 	   u_int16_t xs, u_int16_t ys, u_int16_t zs)
-    : actions(), game_objects()
+    : trees(), actions(), game_objects()
 {
     this->x_dim = xd;
     this->y_dim = yd;

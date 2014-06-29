@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:45:34 tquirk
+ *   last updated 28 Jun 2014, 23:12:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -124,6 +124,7 @@
 #ifndef __INC_ZONE_H__
 #define __INC_ZONE_H__
 
+#include <vector>
 #include <map>
 
 #include "defs.h"
@@ -131,13 +132,16 @@
 #include "game_obj.h"
 #include "thread_pool.h"
 #include "library.h"
-#include "proto.h"
+#include "octree.h"
+#include "../../proto/proto.h"
 
 class Zone
 {
   private:
     u_int16_t x_steps, y_steps, z_steps;
     u_int64_t x_dim, y_dim, z_dim;
+
+    std::vector< std::vector< std::vector<Octree *> > > trees;
 
     Library *action_lib;
 
