@@ -17,15 +17,10 @@ can inform players when they are reaching the edges of the server's
 responsibility, and hand them off to the appropriate neighbor.  The
 constructor and start methods can throw int.
 
-Sector (sector.h, sector.cc, currently unused):  This is the basic
-subdivision of space.  A zone is represented as a 3-dimensional grid of
-sectors.  Each sector contains an octree, which contains all the elements
-of that sector.
-
-Octree (octree.h, octree.cc, currently unused, needs a lot of rework):
-General space representation within each sector.  The octree will maintain
-a list of game objects it contains.  Each octant also has pointers to each
-of its neighbors, for simpler traversal.
+Octree (octree.h, octree.cc):  General space representation within
+each portion of the zone's managed space.  The octree maintains a list
+of game objects it contains.  Each octant also has pointers to each of
+its neighbors, for simpler traversal.
 
 User management objects:
 
