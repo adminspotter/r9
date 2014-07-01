@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jun 2014, 09:46:51 tquirk
+ *   last updated 01 Jul 2014, 18:00:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -35,6 +35,8 @@
  *   14 Jun 2014 TAQ - Totally reworked the basesock, and this needed a lot
  *                     of work as well.
  *   15 Jun 2014 TAQ - Moved the send worker here as well.
+ *   01 Jul 2014 TAQ - Base class changed slightly with move of access pool
+ *                     into the listen_socket, so login_user became do_login.
  *
  * Things to do
  *
@@ -88,7 +90,7 @@ class stream_socket : public listen_socket
 
     void start(void);
 
-    base_user *login_user(u_int64_t, Control *, access_list&);
+    void do_login(u_int64_t, Control *, access_list&);
 
     static void *stream_listen_worker(void *);
     static void *stream_reaper_worker(void *);

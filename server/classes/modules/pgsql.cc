@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:55:52 tquirk
+ *   last updated 01 Jul 2014, 18:13:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -34,6 +34,7 @@
  *                     prototypes, and changed the filename to pgsql.cc.
  *   31 May 2014 TAQ - We're now a subclass of DB.
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we need to also.
+ *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
  *
  * Things to do
  *   - Implement the stubbed-out functions.
@@ -55,7 +56,7 @@ PgSQL::PgSQL(const std::string& host, const std::string& user,
 {
 }
 
-u_int64_t PgSQL::check_authentication(const char *user, const char *pass)
+u_int64_t PgSQL::check_authentication(const std::string& user, const std::string& pass)
 {
     PGresult *res;
     char str[256];

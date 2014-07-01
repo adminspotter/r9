@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 18:20:17 tquirk
+ *   last updated 01 Jul 2014, 18:28:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -49,6 +49,7 @@
  *   15 Jun 2014 TAQ - Moved the send worker in here.  Sockaddr is now a class
  *                     hierarchy, and the behaviour has changed slightly.
  *   21 Jun 2014 TAQ - Changed syslog to new stream log.
+ *   01 Jul 2014 TAQ - Moved the access pool into this.
  *
  * Things to do
  *   - We might need to have a mutex on the socket, since we'll probably
@@ -93,9 +94,7 @@ dgram_socket::~dgram_socket()
 {
     /* Should we send logout messages to everybody? */
 
-    /* Stop the sending thread pool */
-    if (this->send != NULL)
-	delete this->send;
+    /* Thread pools are handled by the listen_socket destructor */
 }
 
 void dgram_socket::start(void)
@@ -105,17 +104,21 @@ void dgram_socket::start(void)
     std::clog << "starting connection loop for datagram port "
               << this->sock.port_num << std::endl;
 
-    /* Start up the sending thread pool */
+    /* Start up the listen thread and thread pools */
     sleep(0);
-    this->send->startup_arg = (void *)this;
     try
     {
-	this->send->start(dgram_send_worker);
+        this->send_pool->startup_arg = (void *)this;
+        this->send_pool->start(dgram_socket::dgram_send_worker);
+        this->access_pool->startup_arg = (void *)this;
+        this->access_pool->start(listen_socket::access_pool_worker);
+        this->sock.listen_arg = (void *)this;
+        this->sock.start(dgram_socket::dgram_listen_worker);
     }
     catch (int e)
     {
 	std::clog << syslogErr
-                  << "couldn't start send pool for datagram port "
+                  << "couldn't start threads for datagram port "
                   << this->sock.port_num << ": "
                   << strerror(e) << " (" << e << ")" << std::endl;
         throw;
@@ -131,20 +134,14 @@ void dgram_socket::start(void)
                   << strerror(retval) << " (" << retval << ")" << std::endl;
         throw retval;
     }
-
-    this->sock.listen_arg = (void *)this;
-    this->sock.start(dgram_socket::dgram_listen_worker);
 }
 
-base_user *dgram_socket::login_user(u_int64_t userid,
-                                    Control *con,
-                                    access_list& al)
+void dgram_socket::do_login(u_int64_t userid, Control *con, access_list& al)
 {
     dgram_user *dgu = new dgram_user(userid, con);
     dgu->sa = build_sockaddr((struct sockaddr&)(al.what.login.who.dgram));
-    users[userid] = dgu;
-    socks[dgu->sa] = dgu;
-    return users[userid];
+    this->users[userid] = dgu;
+    this->socks[dgu->sa] = dgu;
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
@@ -201,7 +198,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
             a.parent = dgs;
             memcpy(&a.what.login.who.dgram, &from,
                    sizeof(struct sockaddr_storage));
-            access_pool->push(a);
+            dgs->access_pool->push(a);
             break;
 
           case TYPE_LGTREQ:
@@ -213,7 +210,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
             memcpy(&a.buf, &buf, len);
             a.parent = dgs;
             a.what.logout.who = userid;
-            access_pool->push(a);
+            dgs->access_pool->push(a);
             break;
 
           case TYPE_ACTREQ:
@@ -267,9 +264,6 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
 		    dgu->control->slave->object->natures["invisible"] = 1;
 		    dgu->control->slave->object->natures["non-interactive"] = 1;
 		}
-		pthread_mutex_lock(&active_users_mutex);
-		active_users->erase(dgu->userid);
-		pthread_mutex_unlock(&active_users_mutex);
 		delete dgu->control;
 		dgs->socks.erase(dgu->sa);
 		dgs->users.erase((*(i--)).second->userid);
@@ -294,7 +288,7 @@ void *dgram_socket::dgram_send_worker(void *arg)
               << dgs->sock.port_num << std::endl;
     for (;;)
     {
-	dgs->send->pop(&req);
+	dgs->send_pool->pop(&req);
 
 	realsize = packet_size(&req.buf);
 	if (hton_packet(&req.buf, realsize))

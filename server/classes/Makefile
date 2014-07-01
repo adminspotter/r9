@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 29 Jun 2014, 12:12:52 tquirk
+#   last updated 01 Jul 2014, 18:18:39 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -46,6 +46,8 @@
 #                     a pain on the Mac), our target here is now an archive.
 #   23 Jun 2014 TAQ - Tweaks to make things build correctly.
 #   28 Jun 2014 TAQ - Switched over to libtool.  Back to shared libs.
+#   01 Jul 2014 TAQ - Access pool moved into the listen_socket, so they're
+#                     gone as a separate file.
 #
 # Things to do
 #
@@ -59,7 +61,7 @@ LDLIBS = ../../proto/libr9_proto.la -lpthread -ldl
 
 HDRS = control.h defs.h game_obj.h geometry.h motion.h library.h \
 	thread_pool.h zone.h zone_interface.h basesock.h dgram.h stream.h
-SRCS = control.cc game_obj.cc geometry.cc zone.cc access.cc library.cc \
+SRCS = control.cc game_obj.cc geometry.cc zone.cc library.cc \
 	motion.cc zone_interface.cc \
 	basesock.cc dgram.cc stream.cc
 OBJS = ${SRCS:.cc=.lo}

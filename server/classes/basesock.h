@@ -1,6 +1,6 @@
 /* basesock.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jun 2014, 08:53:40 tquirk
+ *   last updated 01 Jul 2014, 17:52:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -29,6 +29,10 @@
  *   14 Jun 2014 TAQ - This is now much more of a base socket, which will
  *                     be directly usable everyplace we need a listener.
  *                     Added the base_user and listen_socket base classes.
+ *   01 Jul 2014 TAQ - The access pools really belong in the sockets.  Also
+ *                     added a stop method to the listen_socket.  Rearranged
+ *                     the login_user/logout_user methods and added do_login
+ *                     as a pure virtual.
  *
  * Things to do
  *
@@ -101,7 +105,8 @@ class listen_socket {
 
   public:
     std::map<u_int64_t, base_user *> users;
-    ThreadPool<packet_list> *send;
+    ThreadPool<packet_list> *send_pool;
+    ThreadPool<access_list> *access_pool;
     basesock sock;
 
   public:
@@ -111,9 +116,14 @@ class listen_socket {
     void init(void);
 
     virtual void start(void) = 0;
+    virtual void stop(void);
 
-    virtual base_user *login_user(u_int64_t, Control *, access_list&) = 0;
-    virtual base_user *logout_user(u_int64_t);
+    static void *access_pool_worker(void *);
+
+    virtual void login_user(access_list&);
+    virtual void logout_user(access_list&);
+
+    virtual void do_login(u_int64_t, Control *, access_list&) = 0;
 };
 
 #endif /* __INC_BASESOCK_H__ */

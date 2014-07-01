@@ -1,6 +1,6 @@
 /* pgsql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:55:10 tquirk
+ *   last updated 01 Jul 2014, 18:12:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -25,6 +25,8 @@
  * Changes
  *   31 May 2014 TAQ - Created the file.
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we will too.
+ *   01 Jul 2014 TAQ - Added primary function prototypes.  They're pure
+ *                     virtual, but we still have to declare them.
  *
  * Things to do
  *
@@ -34,6 +36,8 @@
 #define __INC_PGSQL_H__
 
 #include <postgresql/libpq-fe.h>
+
+#include <string>
 
 #include "db.h"
 
@@ -46,6 +50,20 @@ class PgSQL : public DB
     PgSQL(const std::string&, const std::string&,
           const std::string&, const std::string&);
     ~PgSQL();
+
+    /* Player functions */
+    u_int64_t check_authentication(const std::string&, const std::string&);
+    int check_authorization(u_int64_t, u_int64_t);
+    int open_new_login(u_int64_t, u_int64_t);
+    int check_open_login(u_int64_t, u_int64_t);
+    int close_open_login(u_int64_t, u_int64_t);
+    int get_player_server_skills(u_int64_t, u_int64_t,
+                                 std::map<u_int16_t,
+                                 action_level>&);
+
+    /* Server functions */
+    int get_server_skills(std::map<u_int16_t, action_rec>&);
+    int get_server_objects(std::map<u_int64_t, game_object_list_element> &);
 
   private:
     bool db_connect(void);

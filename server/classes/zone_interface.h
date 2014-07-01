@@ -1,6 +1,6 @@
 /* zone_interface.h
  *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 21 Jun 2014, 09:35:58 tquirk
+ *   last updated 01 Jul 2014, 18:26:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2007  Trinity Annabelle Quirk
@@ -44,6 +44,9 @@
  *                     up the includes.
  *   17 Jun 2014 TAQ - Moved most of the pool worker prototypes into the
  *                     zone.
+ *   01 Jul 2014 TAQ - Access pool moved into the listen_socket.  Also
+ *                     removed the active_users list.  We can add it back if
+ *                     we really need it.
  *
  * Things to do
  *   - See if we can get rid of this altogether.  There are better ways of
@@ -59,10 +62,6 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#include <set>
-
-#include "defs.h"
-#include "thread_pool.h"
 #include "zone.h"
 #include "library.h"
 #include "modules/db.h"
@@ -70,11 +69,6 @@
 extern Zone *zone;
 extern Library *db_lib;
 extern DB *database;
-extern ThreadPool<access_list> *access_pool;
-extern pthread_mutex_t active_users_mutex;
-extern std::set<u_int64_t> *active_users;
-
-void *access_pool_worker(void *);
 
 extern "C"
 {

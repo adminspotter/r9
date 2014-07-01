@@ -1,6 +1,6 @@
 /* zone_interface.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jun 2014, 18:55:46 tquirk
+ *   last updated 01 Jul 2014, 18:27:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -63,6 +63,9 @@
  *   20 Jun 2014 TAQ - New library stuff, new database stuff.
  *   21 Jun 2014 TAQ - Converted syslog to use the logging stream.
  *   23 Jun 2014 TAQ - Fixed the database library name.
+ *   01 Jul 2014 TAQ - The access pool moved into the listen_socket.  The
+ *                     active_users set didn't seem to be used at all, so
+ *                     it's gone too.
  *
  * Things to do
  *   - See if we can get rid of this file.  Maybe this ought to be main
@@ -80,9 +83,6 @@
 Zone *zone = NULL;
 Library *db_lib = NULL;
 DB *database = NULL;
-ThreadPool<access_list> *access_pool = NULL;
-pthread_mutex_t active_users_mutex = PTHREAD_MUTEX_INITIALIZER;
-std::set<u_int64_t> *active_users = NULL;
 
 int setup_zone(void)
 {
@@ -92,14 +92,14 @@ int setup_zone(void)
     std::clog << "in zone setup" << std::endl;
     try
     {
-	zone = new Zone(config.size.dim[0], config.size.dim[1],
-			config.size.dim[2], config.size.steps[0],
-			config.size.steps[1], config.size.steps[2]);
+        zone = new Zone(config.size.dim[0], config.size.dim[1],
+                        config.size.dim[2], config.size.steps[0],
+                        config.size.steps[1], config.size.steps[2]);
     }
     catch (int errval)
     {
-	ret = errval;
-	goto BAILOUT1;
+        ret = errval;
+        goto BAILOUT1;
     }
 
     /* Load up the database lib before we start the access thread pool */
@@ -114,55 +114,21 @@ int setup_zone(void)
     database->get_server_skills(zone->actions);
     database->get_server_objects(zone->game_objects);
 
-    /* Create the access thread pool */
     try
     {
-	access_pool = new ThreadPool<access_list>("access",
-						  config.access_threads);
+        zone->start();
     }
     catch (int errval)
     {
-	std::clog << syslogErr << "couldn't create thread pools: "
+        std::clog << syslogErr << "couldn't start zone thread pools: "
                   << strerror(errval) << " (" << errval << ")" << std::endl;
-	ret = errval;
-	goto BAILOUT2;
-    }
-    access_pool->clean_on_pop = true;
-    if ((active_users = new std::set<u_int64_t>) == NULL)
-    {
-	std::clog << syslogErr
-                  << "couldn't create active users set" << std::endl;
-	ret = ENOMEM;
-	goto BAILOUT3;
+        ret = errval;
+        goto BAILOUT2;
     }
 
-    try
-    {
-	/* Now start the actual thread pools up */
-        access_pool->startup_arg = (void *)access_pool;
-	access_pool->start(&access_pool_worker);
-	zone->start();
-    }
-    catch (int errval)
-    {
-	std::clog << syslogErr << "couldn't start thread pools: "
-                  << strerror(errval) << " (" << errval << ")" << std::endl;
-	ret = errval;
-	goto BAILOUT4;
-    }
-
-        std::clog << "zone setup done" << std::endl;
+    std::clog << "zone setup done" << std::endl;
     return ret;
 
-  BAILOUT4:
-    delete active_users;
-    active_users = NULL;
-  BAILOUT3:
-    if (access_pool != NULL)
-    {
-	delete access_pool;
-	access_pool = NULL;
-    }
   BAILOUT2:
     delete db_lib;
   BAILOUT1:
@@ -174,30 +140,19 @@ int setup_zone(void)
 void cleanup_zone(void)
 {
     std::clog << "in zone cleanup" << std::endl;
-    if (access_pool != NULL)
-    {
-	delete access_pool;
-	access_pool = NULL;
-    }
-    if (active_users != NULL)
-    {
-	std::clog << "deleting active users set" << std::endl;
-	delete active_users;
-	active_users = NULL;
-    }
     if (zone != NULL)
     {
-	std::clog << "deleting zone" << std::endl;
-	delete zone;
-	zone = NULL;
+        std::clog << "deleting zone" << std::endl;
+        delete zone;
+        zone = NULL;
     }
     if (db_lib != NULL)
     {
-	std::clog << "closing database library" << std::endl;
+        std::clog << "closing database library" << std::endl;
         destroy_db_t *destroy_db = (destroy_db_t *)db_lib->symbol("destroy_db");
         (*destroy_db)(database);
         delete db_lib;
-	db_lib = NULL;
+        db_lib = NULL;
     }
     std::clog << "zone cleanup done" << std::endl;
 }

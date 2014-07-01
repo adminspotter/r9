@@ -1,6 +1,6 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jun 2014, 17:29:39 tquirk
+ *   last updated 01 Jul 2014, 17:49:38 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -69,6 +69,7 @@
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we're changing too.
  *   24 Jun 2014 TAQ - Updated logging to use std::clog.  Small tweaks to
  *                     get things to compile properly.
+ *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
  *
  * Things to do
  *   - Finish writing open_new_login and close_open_login.
@@ -97,7 +98,8 @@ MySQL::MySQL(const std::string& host, const std::string& user,
 }
 
 /* Check that the user really is who he says he is */
-u_int64_t MySQL::check_authentication(const char *user, const char *pass)
+u_int64_t MySQL::check_authentication(const std::string& user,
+                                      const std::string& pass)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -110,8 +112,8 @@ u_int64_t MySQL::check_authentication(const char *user, const char *pass)
 	     "WHERE username='%.*s' "
 	     "AND password=SHA1('%.*s') "
 	     "AND suspended=0",
-	     DB::MAX_USERNAME, user,
-	     DB::MAX_PASSWORD, pass);
+	     DB::MAX_USERNAME, user.c_str(),
+	     DB::MAX_PASSWORD, pass.c_str());
     if (this->db_connect())
     {
 	if (mysql_real_query(this->db_handle, str, strlen(str)) == 0

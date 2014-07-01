@@ -1,6 +1,6 @@
 /* db.h                                                     -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:57:07 tquirk
+ *   last updated 01 Jul 2014, 17:44:17 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -35,6 +35,8 @@
  *   20 Jun 2014 TAQ - Added typedefs for dynamic loading.
  *   22 Jun 2014 TAQ - We're now using strings in the config, so we'll
  *                     use them in the constructors too.
+ *   01 Jul 2014 TAQ - check_authentication now takes std::strings, rather
+ *                     than char *s.
  *
  * Things to do
  *
@@ -72,7 +74,8 @@ class DB
     virtual ~DB();
 
     /* Player functions */
-    virtual u_int64_t check_authentication(const char *, const char *) = 0;
+    virtual u_int64_t check_authentication(const std::string&,
+                                           const std::string&) = 0;
     virtual int check_authorization(u_int64_t, u_int64_t) = 0;
     virtual int open_new_login(u_int64_t, u_int64_t) = 0;
     virtual int check_open_login(u_int64_t, u_int64_t) = 0;

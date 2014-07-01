@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 22:51:25 tquirk
+ *   last updated 01 Jul 2014, 18:28:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -42,6 +42,8 @@
  *                     the derived types to the actual socket.
  *   15 Jun 2014 TAQ - Moved the send worker into the class as well.
  *   21 Jun 2014 TAQ - Converted syslog to use the logger stream.
+ *   01 Jul 2014 TAQ - Base class got an access pool, and virtuals changed
+ *                     a little bit.
  *
  * Things to do
  *   - Move the contents of ../old/subserver.c in here.
@@ -280,9 +282,7 @@ stream_socket::~stream_socket()
     }
     this->subservers.erase(this->subservers.begin(), this->subservers.end());
 
-    /* Stop the sending thread pool */
-    if (send != NULL)
-	delete send;
+    /* Thread pools are handled by the listen_socket destructor */
 }
 
 void stream_socket::start(void)
@@ -307,15 +307,19 @@ void stream_socket::start(void)
 
     /* Start up the sending thread pool */
     sleep(0);
-    this->send->startup_arg = (void *)this;
     try
     {
-	this->send->start(stream_socket::stream_send_worker);
+        this->send_pool->startup_arg = (void *)this;
+        this->send_pool->start(stream_socket::stream_send_worker);
+        this->access_pool->startup_arg = (void *)this;
+        this->access_pool->start(listen_socket::access_pool_worker);
+        this->sock.listen_arg = (void *)this;
+        this->sock.start(stream_socket::stream_listen_worker);
     }
     catch (int e)
     {
 	std::clog << syslogErr
-                  << "couldn't start send pool for stream port "
+                  << "couldn't start threads for stream port "
                   << this->sock.port_num << ": "
                   << strerror(e) << " (" << e << ")" << std::endl;
         throw;
@@ -331,20 +335,14 @@ void stream_socket::start(void)
                   << strerror(retval) << " (" << retval << ")" << std::endl;
         throw retval;
     }
-
-    this->sock.listen_arg = (void *)this;
-    this->sock.start(stream_socket::stream_listen_worker);
 }
 
-base_user *stream_socket::login_user(u_int64_t userid,
-                                     Control *con,
-                                     access_list& al)
+void stream_socket::do_login(u_int64_t userid, Control *con, access_list& al)
 {
     stream_user *stu = new stream_user(userid, con);
     stu->subsrv = al.what.login.who.stream.sub;
     stu->fd = al.what.login.who.stream.sock;
     users[userid] = stu;
-    return users[userid];
 }
 
 void *stream_socket::stream_listen_worker(void *arg)
@@ -490,9 +488,6 @@ void *stream_socket::stream_reaper_worker(void *arg)
 		    stu->control->slave->object->natures["invisible"] = 1;
 		    stu->control->slave->object->natures["non-interactive"] = 1;
 		}
-		pthread_mutex_lock(&active_users_mutex);
-		active_users->erase(stu->userid);
-		pthread_mutex_unlock(&active_users_mutex);
 		delete stu->control;
 		/* Tell subserver stu->subserv to close and erase user
 		 * stu->fd
@@ -522,7 +517,7 @@ void *stream_socket::stream_send_worker(void *arg)
               << sts->sock.port_num << std::endl;
     for (;;)
     {
-	sts->send->pop(&req);
+	sts->send_pool->pop(&req);
 
 	realsize = packet_size(&req.buf);
 	if (hton_packet(&req.buf, realsize))

@@ -1,6 +1,6 @@
 /* mysql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jun 2014, 17:28:18 tquirk
+ *   last updated 01 Jul 2014, 17:45:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -30,6 +30,7 @@
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we're changing too.
  *   24 Jun 2014 TAQ - Changed include.  Added prototypes for virtuals we
  *                     inherit from DB.
+ *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
  *
  * Things to do
  *
@@ -53,7 +54,7 @@ class MySQL : public DB
     ~MySQL();
 
     /* Player functions */
-    u_int64_t check_authentication(const char *, const char *);
+    u_int64_t check_authentication(const std::string&, const std::string&);
     int check_authorization(u_int64_t, u_int64_t);
     int open_new_login(u_int64_t, u_int64_t);
     int check_open_login(u_int64_t, u_int64_t);
