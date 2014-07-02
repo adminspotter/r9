@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 02 Jul 2014, 08:03:27 tquirk
+#   last updated 02 Jul 2014, 08:48:37 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -41,6 +41,7 @@
 #                     got install/uninistall rules which will only operate
 #                     on targets which have been built.
 #   02 Jul 2014 TAQ - We're now linking libr9_console to the right libstdc++.
+#                     Perl is now C++.
 #
 # Things to do
 #
@@ -62,8 +63,9 @@ LIBTCL = -ltcl
 LIBSTDCPP = -lstdc++.6
 
 HDRS = db.h console.h mysql.h pgsql.h
-CXXSRCS = db.cc mysql.cc pgsql.cc console.cc unix_console.cc inet_console.cc
-SRCS = perl.c tcl.c
+CXXSRCS = db.cc mysql.cc pgsql.cc console.cc unix_console.cc inet_console.cc \
+	perl.cc
+SRCS = tcl.c
 OBJS = ${CXXSRCS:.cc=.lo} ${SRCS:.c=.lo}
 TARGETS = libr9_console.la libr9_MySQL.la libr9_pgsql.la libr9_perl.la \
 	libr9_tcl.la
@@ -90,7 +92,7 @@ libr9_pgsql.la : pgsql.lo db.lo
 	$(CXX) $(LDFLAGS) $(LIBPQ) $< -o $@
 
 libr9_perl.la : perl.lo
-	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBPERL)
+	$(LIBTOOL) --mode=link $(CX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBPERL)
 
 libr9_tcl.la : tcl.lo
 	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBTCL)
