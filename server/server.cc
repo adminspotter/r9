@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jun 2014, 17:35:39 tquirk
+ *   last updated 02 Jul 2014, 08:01:45 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -122,6 +122,9 @@
  *                     items to C++, the first of which is the syslog.
  *                     Renamed the file to reflect the actual language.
  *   22 Jun 2014 TAQ - C++-ification of the configuration is underway.
+ *   02 Jul 2014 TAQ - We weren't catching some possible socket exceptions
+ *                     on delete, and were also never starting up the sockets
+ *                     once they were created.
  *
  * Things to do
  *   - Complete C++-ification.
@@ -264,6 +267,7 @@ static void setup_sockets(void)
 {
     struct addrinfo *ai;
     std::vector<int>::iterator i;
+    std::vector<listen_socket *>::iterator j;
     int created = 0;
 
     /* Bailout now if there are no sockets to create */
@@ -330,6 +334,10 @@ static void setup_sockets(void)
     if (created > 0)
 	std::clog << "created " << created << " dgram socket"
                   << (created == 1 ? "" : "s") << std::endl;
+
+    /* Now start them all up */
+    for (j = sockets.begin(); j != sockets.end(); ++j)
+        (*j)->start();
 }
 
 struct addrinfo *get_addr_info(int type, int port)
@@ -375,7 +383,8 @@ static void cleanup_sockets(void)
 {
     while (sockets.size())
     {
-        delete sockets.back();
+        try { delete sockets.back(); }
+        catch (...) { }
         sockets.pop_back();
     }
 }

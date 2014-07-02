@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 29 Jun 2014, 12:18:11 tquirk
+#   last updated 02 Jul 2014, 08:02:48 tquirk
 #
 # This is the main makefile for the revision9 server.
 #
@@ -23,6 +23,7 @@
 #                     our general Makefile.defs file.
 #   23 Jun 2014 TAQ - Working on getting the binary to link properly.
 #   29 Jun 2014 TAQ - The final part of the libtool-ification.
+#   02 Jul 2014 TAQ - Finally got the binary to link to the right stdc++ lib.
 #
 # Things to do
 #
@@ -31,7 +32,7 @@
 
 CXXFLAGS = -Wall -g -fPIC -DPIC -D_REENTRANT $(CINCLUDE)
 
-LDLIBS = -lpthread -lstdc++
+LDLIBS = -lpthread
 
 HDRS = config.h server.h signals.h subserver.h log.h
 CXXSRCS = config.cc server.cc signals.cc subserver.cc log.cc

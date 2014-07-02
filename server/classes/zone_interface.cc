@@ -1,6 +1,6 @@
 /* zone_interface.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 18:27:25 tquirk
+ *   last updated 02 Jul 2014, 08:02:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -66,6 +66,7 @@
  *   01 Jul 2014 TAQ - The access pool moved into the listen_socket.  The
  *                     active_users set didn't seem to be used at all, so
  *                     it's gone too.
+ *   02 Jul 2014 TAQ - Updated the filename extension for the actions lib.
  *
  * Things to do
  *   - See if we can get rid of this file.  Maybe this ought to be main
@@ -103,7 +104,7 @@ int setup_zone(void)
     }
 
     /* Load up the database lib before we start the access thread pool */
-    try { db_lib = new Library("libr9_" + config.db_type + ".so"); }
+    try { db_lib = new Library("libr9_" + config.db_type + ".dylib"); }
     catch (std::string& s) { goto BAILOUT1; }
 
     try { create_db = (create_db_t *)db_lib->symbol("create_db"); }

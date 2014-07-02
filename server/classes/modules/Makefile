@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 28 Jun 2014, 10:19:19 tquirk
+#   last updated 02 Jul 2014, 08:03:27 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -40,6 +40,7 @@
 #   28 Jun 2014 TAQ - Moved over to libtool.  So much easier.  We've also
 #                     got install/uninistall rules which will only operate
 #                     on targets which have been built.
+#   02 Jul 2014 TAQ - We're now linking libr9_console to the right libstdc++.
 #
 # Things to do
 #
@@ -58,7 +59,7 @@ LIBMYSQL = -L/usr/local/mysql/lib -lmysqlclient_r
 LIBPQ = -lpq
 LIBPERL = -lperl
 LIBTCL = -ltcl
-LIBSTDCPP = -lstdc++
+LIBSTDCPP = -lstdc++.6
 
 HDRS = db.h console.h mysql.h pgsql.h
 CXXSRCS = db.cc mysql.cc pgsql.cc console.cc unix_console.cc inet_console.cc
