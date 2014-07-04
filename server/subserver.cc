@@ -1,6 +1,6 @@
 /* subserver.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 17:44:31 tquirk
+ *   last updated 04 Jul 2014, 17:07:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -111,11 +111,12 @@
  *   05 Sep 2007 TAQ - Figured out how we want to pass data between the
  *                     master listening thread and us.
  *   21 Jun 2014 TAQ - The C++-ification has begun, starting with syslog.
+ *   04 Jul 2014 TAQ - We're now a completely separate binary.
  *
  * Things to do
- *   - Move the interesting parts of this file into classes/stream.{h,cc}
- *     and get rid of this file.
  *   - Finish up the sending and recieving code.
+ *   - We can send things to the master, but we'll never receive anything
+ *     back, other than a file descriptor.  Not quite what we're after.
  *
  */
 
@@ -132,11 +133,13 @@
 #include <signal.h>
 #include <errno.h>
 
+#include <algorithm>
+#include <set>
+
 #include "subserver.h"
 #include "log.h"
 
 #define CONTROLLEN   (sizeof(struct cmsghdr) + sizeof(int))
-#define max(x, y)    ((x) > (y) ? (x) : (y))
 
 /* Function prototypes */
 static int handle_client(int);
@@ -149,15 +152,16 @@ static void sigterm_handler(int);
 static struct cmsghdr *cmptr = NULL;
 static fd_set readfs, master_readfs;
 static volatile int subserver_loop_exit_flag = 0;
-static int num_connections = 0, *connections = NULL, connections_size = 0;
+static std::set<int> connections;
 static int max_fd = 0;
 
 /* This next function is the main loop; it does nothing now, and dies
  * when it exits.
  */
-void subserver_main_loop(void)
+int main(int argc, char **argv)
 {
-    int select_stat, val, i, j;
+    std::set<int>::iterator i;
+    int select_stat, val;
 
     /* Install our sigterm handler so we exit in a timely fashion. */
     signal(SIGTERM, sigterm_handler);
@@ -169,104 +173,81 @@ void subserver_main_loop(void)
     /* Set up the select descriptor set. */
     FD_ZERO(&master_readfs);
     FD_SET(STDIN_FILENO, &master_readfs);
-    max_fd = max(STDIN_FILENO + 1, max_fd);
+    max_fd = STDIN_FILENO + 1;
 
     for (;;)
     {
-	if (subserver_loop_exit_flag == 1)
-	    break;
+        if (subserver_loop_exit_flag == 1)
+            break;
 
-	/* The state of readfs is undefined after select returns,
-	 * or on entry to this loop; define it.
-	 */
-	memcpy(&readfs, &master_readfs, sizeof(fd_set));
+        /* The state of readfs is undefined after select returns,
+         * or on entry to this loop; define it.
+         */
+        memcpy(&readfs, &master_readfs, sizeof(fd_set));
 
-	/* Here we go... */
-	if ((select_stat = select(max_fd, &readfs, NULL, NULL, NULL)) == 0)
-	    continue;
-	else if (select_stat == -1)
-	{
-	    /* There was some kind of error */
-	    switch (errno)
-	    {
-	      case EINTR:
-		/* we got a signal */
-		continue;
+        /* Here we go... */
+        if ((select_stat = select(max_fd, &readfs, NULL, NULL, NULL)) == 0)
+            continue;
+        else if (select_stat == -1)
+        {
+            /* There was some kind of error */
+            switch (errno)
+            {
+              case EINTR:
+                /* we got a signal */
+                continue;
 
-	      case ENOMEM:
-		std::clog << syslogErr << "select memory error: "
+              case ENOMEM:
+                std::clog << syslogErr << "select memory error: "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
-		break;
+                break;
 
-	      default:
-		std::clog << syslogErr << "select error: "
+              default:
+                std::clog << syslogErr << "select error: "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
-		break;
-	    }
-	}
+                break;
+            }
+        }
 
-	/* At this point, we should know that we had a valid reason
-	 * for select to exit, so look at our descriptors.
-	 */
-	if (FD_ISSET(STDIN_FILENO, &readfs) && (val = recv_fd()) >= 0)
-	{
-	    /* It's a new connection from the parent. */
-	    if (connections_size == num_connections)
-	    {
-		int new_size = connections_size * 2;
-		int *new_conn;
+        if (subserver_loop_exit_flag == 1)
+            break;
 
-		/* We're out of space, and have to grow the list */
-		if ((new_conn = (int *)realloc(connections,
-                                               sizeof(int) * new_size))
-		    == NULL)
-		{
-		    std::clog << syslogErr
-                              << "couldn't grow connections list to "
-                              << new_size << ": " << strerror(errno)
-                              << " (" << errno << ")" << std::endl;
-		    /* FIXME:  Do we want to die here, or what? */
-		}
-		std::clog << "grew connections list to "
-                          << new_size << std::endl;
-		connections_size = new_size;
-		connections = new_conn;
-	    }
-	    connections[num_connections] = val;
-	    FD_SET(val, &master_readfs);
-	    max_fd = max(val + 1, max_fd);
-            std::clog << syslogNotice
-                      << "Got connection " << num_connections << std::endl;
-	    ++num_connections;
-	}
+        /* At this point, we should know that we had a valid reason
+         * for select to exit, so look at our descriptors.
+         */
+        if (FD_ISSET(STDIN_FILENO, &readfs) && (val = recv_fd()) >= 0)
+        {
+            /* It's a new connection from the parent. */
+            connections.insert(val);
+            FD_SET(val, &master_readfs);
+            max_fd = std::max(val + 1, max_fd);
+            std::clog << syslogNotice << "Got connection " << val << std::endl;
+        }
 
-	for (i = 0; i < num_connections; ++i)
-	    if (FD_ISSET(connections[i], &readfs)
-		&& !handle_client(connections[i]))
-	    {
-		/* Somebody dropped their connection, or there was
-		 * some other problem.
-		 */
-		std::clog << syslogNotice
-                          << "Lost connection " << i << std::endl;
-		close(connections[i]);
-		FD_CLR(connections[i], &master_readfs);
-		FD_CLR(connections[i], &readfs);
-		memmove(&connections[i], &connections[i + 1],
-			sizeof(int) * (--num_connections - i));
-		memset(&connections[num_connections], 0, sizeof(int));
-		/* No reallocation. */
+        if (subserver_loop_exit_flag == 1)
+            break;
 
-		/* Make sure max_fd is valid. */
-		max_fd = STDIN_FILENO + 1;
-		for (j = 0; j < num_connections; ++j)
-		    max_fd = max(connections[j] + 1, max_fd);
+        for (i = connections.begin(); i != connections.end(); ++i)
+            if (FD_ISSET(*i, &readfs) && !handle_client(*i))
+            {
+                /* Somebody dropped their connection, or there was
+                 * some other problem.
+                 */
+                std::clog << syslogNotice
+                          << "Lost connection " << *i << std::endl;
+                close(*i);
+                FD_CLR(*i, &master_readfs);
+                FD_CLR(*i, &readfs);
+                connections.erase(*(i--));
 
-		/* Don't skip a connection. */
-		--i;
-	    }
+                /* Make sure max_fd is valid. */
+                if (connections.rbegin() != connections.rend())
+                    max_fd = *(connections.rbegin()) + 1;
+                else
+                    max_fd = STDIN_FILENO + 1;
+            }
     }
 
     /* Clean up the connections and exit. */
@@ -290,9 +271,9 @@ static int handle_client(int fd)
      */
     if ((retval = read(fd, buf + sizeof(int), sizeof(buf) - sizeof(int))) > 0)
     {
-	/* Replace the first sizeof(int) bytes with the fd number */
-	*((int *)buf) = fd;
-	write(STDIN_FILENO, buf, retval + sizeof(int));
+        /* Replace the first sizeof(int) bytes with the fd number */
+        *((int *)buf) = fd;
+        write(STDIN_FILENO, buf, retval + sizeof(int));
     }
     return retval;
 }
@@ -325,56 +306,56 @@ static int recv_fd(void)
     msg.msg_name = NULL;
     msg.msg_namelen = 0;
     if (cmptr == NULL
-	&& (cmptr = (struct cmsghdr *)malloc(CONTROLLEN)) == NULL)
-	return -1;
+        && (cmptr = (struct cmsghdr *)malloc(CONTROLLEN)) == NULL)
+        return -1;
     msg.msg_control = (caddr_t)cmptr;
     msg.msg_controllen = CONTROLLEN;
 
     /* Our read pipe is *always* going to be on STDIN_FILENO */
     if ((nread = recvmsg(STDIN_FILENO, &msg, 0)) < 0)
     {
-	std::clog << syslogErr
+        std::clog << syslogErr
                   << "recvmsg error: " << strerror(errno)
                   << " (" << errno << ")" << std::endl;
-	return -1;
+        return -1;
     }
     else if (nread == 0)
     {
-	/* This happens when the main server closes its socket to us;
+        /* This happens when the main server closes its socket to us;
          * this condition *should* never happen, but it might.  We'll
          * exit nicely if it does.
-	 */
-	std::clog << syslogErr << "connection closed by server" << std::endl;
-	subserver_set_exit_flag();
+         */
+        std::clog << syslogErr << "connection closed by server" << std::endl;
+        subserver_set_exit_flag();
     }
 
     for (ptr = buf; ptr < &buf[nread]; )
     {
-	if (*ptr++ == 0)
-	{
-	    if (ptr != &buf[nread - 1])
-	    {
-		std::clog << syslogErr << "message format error" << std::endl;
-		return -1;
-	    }
-	    status = *ptr & 255;
-	    if (status == 0)
-	    {
-		if (msg.msg_controllen != CONTROLLEN)
-		{
-		    std::clog << syslogErr
+        if (*ptr++ == 0)
+        {
+            if (ptr != &buf[nread - 1])
+            {
+                std::clog << syslogErr << "message format error" << std::endl;
+                return -1;
+            }
+            status = *ptr & 255;
+            if (status == 0)
+            {
+                if (msg.msg_controllen != CONTROLLEN)
+                {
+                    std::clog << syslogErr
                               << "status = 0 but no fd" << std::endl;
-		    return -1;
-		}
-		newfd = *(int *)CMSG_DATA(cmptr);
-	    }
-	    else
-		newfd = -status;
-	    nread -= 2;
-	}
+                    return -1;
+                }
+                newfd = *(int *)CMSG_DATA(cmptr);
+            }
+            else
+                newfd = -status;
+            nread -= 2;
+        }
     }
     if (status >= 0)
-	return newfd;
+        return newfd;
     return status;
 }
 

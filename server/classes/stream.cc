@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 18:28:31 tquirk
+ *   last updated 04 Jul 2014, 16:59:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -44,9 +44,11 @@
  *   21 Jun 2014 TAQ - Converted syslog to use the logger stream.
  *   01 Jul 2014 TAQ - Base class got an access pool, and virtuals changed
  *                     a little bit.
+ *   04 Jul 2014 TAQ - Instead of moving subserver here, we separated it out
+ *                     into a completely separate binary and exec it once we
+ *                     get the file descriptors set up correctly.
  *
  * Things to do
- *   - Move the contents of ../old/subserver.c in here.
  *
  */
 
@@ -146,11 +148,6 @@ int stream_socket::create_subserver(void)
                       << " for stream port " << i << std::endl;
 	    _exit(1);
 	}
-	/* In case the open-file rlimit is set to infinity, we should
-	 * impose *some* sort of cap.
-	 */
-	if (rlim.rlim_cur == RLIM_INFINITY)
-	    rlim.rlim_cur = 1024;
 
 	/* Close all the open files except for our server
 	 * communication socket.
@@ -162,7 +159,8 @@ int stream_socket::create_subserver(void)
 		close(i);
 
 	/* This call will never return */
-	subserver_main_loop();
+	execlp(SUBSERVER_PROG, NULL);
+
 	/* And in case it does... */
 	close(STDIN_FILENO);
 	_exit(0);

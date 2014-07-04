@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 01 Jul 2014, 18:18:39 tquirk
+#   last updated 04 Jul 2014, 17:01:28 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -48,13 +48,16 @@
 #   28 Jun 2014 TAQ - Switched over to libtool.  Back to shared libs.
 #   01 Jul 2014 TAQ - Access pool moved into the listen_socket, so they're
 #                     gone as a separate file.
+#   04 Jul 2014 TAQ - Since the subserver is now a separate binary that gets
+#                     exec'ed from stream.cc, we needed to set a define to
+#                     point to the binary.
 #
 # Things to do
 #
 
 -include ../../Makefile.defs
 
-CXXFLAGS = -Wall -g -D_REENTRANT $(CINCLUDE)
+CXXFLAGS = -Wall -g -D_REENTRANT -DSUBSERVER_PROG=\"$(HOME)/bin/subserver\" $(CINCLUDE)
 
 LDPATHS =
 LDLIBS = ../../proto/libr9_proto.la -lpthread -ldl
