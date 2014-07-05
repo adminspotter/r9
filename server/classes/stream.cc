@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Jul 2014, 16:59:28 tquirk
+ *   last updated 05 Jul 2014, 07:58:10 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -47,6 +47,7 @@
  *   04 Jul 2014 TAQ - Instead of moving subserver here, we separated it out
  *                     into a completely separate binary and exec it once we
  *                     get the file descriptors set up correctly.
+ *   05 Jul 2014 TAQ - This file didn't really need the zone_interface.
  *
  * Things to do
  *
@@ -65,11 +66,9 @@
 #include <algorithm>
 
 #include "stream.h"
+#include "game_obj.h"
 
-#include "zone.h"
-#include "zone_interface.h"
 #include "../config.h"
-#include "../subserver.h"
 #include "../log.h"
 
 extern volatile int main_loop_exit_flag;

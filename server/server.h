@@ -1,6 +1,6 @@
 /* server.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jun 2014, 17:51:42 tquirk
+ *   last updated 05 Jul 2014, 07:47:43 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -53,7 +53,12 @@
 #ifndef __INC_SERVER_H__
 #define __INC_SERVER_H__
 
-/* Global function prototypes */
+#include "classes/zone.h"
+#include "classes/modules/db.h"
+
+extern Zone *zone;
+extern DB *database;
+
 void set_exit_flag(void);
 void complete_startup(void);
 void complete_cleanup(void);

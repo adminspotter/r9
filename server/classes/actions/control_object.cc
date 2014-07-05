@@ -1,6 +1,6 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Jun 2014, 09:42:23 tquirk
+ *   last updated 05 Jul 2014, 08:00:43 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -36,6 +36,7 @@
  *                     object.
  *   10 May 2014 TAQ - Switched to Eigen math library.
  *   28 Jun 2014 TAQ - Include fixups.
+ *   05 Jul 2014 TAQ - The zone_interface is moved into server.h.
  *
  * Things to do
  *   - Need to make more database calls - we need to figure out where the
@@ -49,7 +50,7 @@
 
 #include "../game_obj.h"
 #include "../motion.h"
-#include "../zone_interface.h"
+#include "../../server.h"
 
 /* ARGSUSED */
 void action_control_object(Motion *source,

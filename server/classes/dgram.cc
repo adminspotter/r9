@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 18:28:09 tquirk
+ *   last updated 05 Jul 2014, 07:54:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -50,6 +50,7 @@
  *                     hierarchy, and the behaviour has changed slightly.
  *   21 Jun 2014 TAQ - Changed syslog to new stream log.
  *   01 Jul 2014 TAQ - Moved the access pool into this.
+ *   05 Jul 2014 TAQ - The zone_interface stuff has moved into server.h.
  *
  * Things to do
  *   - We might need to have a mutex on the socket, since we'll probably
@@ -66,9 +67,7 @@
 
 #include "dgram.h"
 
-#include "zone.h"
-#include "zone_interface.h"
-
+#include "../server.h"
 #include "../log.h"
 
 extern volatile int main_loop_exit_flag;

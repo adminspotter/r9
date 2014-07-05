@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jul 2014, 08:01:45 tquirk
+ *   last updated 05 Jul 2014, 07:48:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -125,10 +125,9 @@
  *   02 Jul 2014 TAQ - We weren't catching some possible socket exceptions
  *                     on delete, and were also never starting up the sockets
  *                     once they were created.
+ *   05 Jul 2014 TAQ - Moved the remainder of zone_interface in here.
  *
  * Things to do
- *   - Complete C++-ification.
- *     - zone creation/deletion (most of zone_interface.cc)
  *   - Figure out if we can use a pthread_cond_t without having to have a
  *     mutex around.
  *
@@ -150,45 +149,43 @@
 #include "server.h"
 #include "signals.h"
 #include "config.h"
-#include "classes/zone_interface.h"
 
+#include "classes/library.h"
 #include "classes/basesock.h"
 #include "classes/stream.h"
 #include "classes/dgram.h"
 
-/* Static function prototypes */
-static int setup_daemon(void);
+static void setup_daemon(void);
 static void setup_log(void);
 static void setup_sockets(void);
+static struct addrinfo *get_addr_info(int, int);
+static void setup_zone(void);
 static void setup_console(void);
 static void cleanup_console(void);
+static void cleanup_zone(void);
 static void cleanup_sockets(void);
 static void cleanup_log(void);
 static void cleanup_daemon(void);
 
-static struct addrinfo *get_addr_info(int, int);
-
-/* File-global variables */
-void *zone_lib = NULL;
 int main_loop_exit_flag = 0;
-std::vector<listen_socket *> sockets;
-/* Really don't need this mutex, but whatever */
+Zone *zone = NULL;
+DB *database = NULL;
+static Library *db_lib = NULL;
+static std::vector<listen_socket *> sockets;
+/* May need this mutex */
 static pthread_mutex_t exit_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t exit_flag = PTHREAD_COND_INITIALIZER;
 
 int main(int argc, char **argv)
 {
-    int retval;
-
     /* Set everything up. */
     setup_configuration(argc, argv);
-    if ((retval = setup_daemon()) != 0)
-	return retval;
+    try { setup_daemon(); }
+    catch (...) { return 1; }
     setup_log();
     setup_signals();
-    /* The thread pools are created on zone setup */
-    if ((retval = setup_zone()) != 0)
-	goto BAILOUT1;
+    try { setup_zone(); }
+    catch (...) { goto BAILOUT1; }
     try { setup_sockets(); }
     catch (...) { goto BAILOUT2; }
     setup_console();
@@ -214,10 +211,10 @@ int main(int argc, char **argv)
     cleanup_daemon();
     cleanup_configuration();
     cleanup_signals();
-    return retval;
+    return 0;
 }
 
-static int setup_daemon(void)
+static void setup_daemon(void)
 {
     int fd;
     pid_t pid;
@@ -225,7 +222,11 @@ static int setup_daemon(void)
 
     /* Start up like a proper daemon */
     if ((pid = fork()) < 0)
-	return -1;
+    {
+        std::clog << "failed to fork: " << strerror(errno)
+                  << " (" << errno << "), terminating" << std::endl;
+        throw errno;
+    }
     else if (pid != 0)
 	exit(0);
 
@@ -248,12 +249,11 @@ static int setup_daemon(void)
 	/* Apparently another invocation is running, so we can't. */
         std::clog << "couldn't create lock file: " << strerror(errno)
                   << " (" << errno << "), terminating" << std::endl;
-	return -1;
+        throw errno;
     }
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
-    return 0;
 }
 
 static void setup_log(void)
@@ -340,7 +340,7 @@ static void setup_sockets(void)
         (*j)->start();
 }
 
-struct addrinfo *get_addr_info(int type, int port)
+static struct addrinfo *get_addr_info(int type, int port)
 {
     struct addrinfo hints, *ai = NULL;
     int ret;
@@ -371,12 +371,82 @@ void set_exit_flag(void)
     pthread_mutex_unlock(&exit_mutex);
 }
 
+static void setup_zone(void)
+{
+    int ret;
+    create_db_t *create_db;
+
+    std::clog << "in zone setup" << std::endl;
+    try
+    {
+        zone = new Zone(config.size.dim[0], config.size.dim[1],
+                        config.size.dim[2], config.size.steps[0],
+                        config.size.steps[1], config.size.steps[2]);
+    }
+    catch (int e)
+    {
+        ret = e;
+        goto BAILOUT1;
+    }
+
+    /* Load up the database lib before we start the access thread pool */
+    try { db_lib = new Library("libr9_" + config.db_type + ".dylib"); }
+    catch (std::string& s) { goto BAILOUT1; }
+
+    try { create_db = (create_db_t *)db_lib->symbol("create_db"); }
+    catch (std::string& s) { goto BAILOUT2; }
+
+    database = (*create_db)(config.db_host, config.db_user,
+                            config.db_pass, config.db_name);
+    database->get_server_skills(zone->actions);
+    database->get_server_objects(zone->game_objects);
+
+    try { zone->start(); }
+    catch (int e)
+    {
+        std::clog << syslogErr << "couldn't start zone thread pools: "
+                  << strerror(e) << " (" << e << ")" << std::endl;
+        ret = e;
+        goto BAILOUT2;
+    }
+
+    std::clog << "zone setup done" << std::endl;
+    return;
+
+  BAILOUT2:
+    delete db_lib;
+  BAILOUT1:
+    delete zone;
+    zone = NULL;
+    throw ret;
+}
+
 static void setup_console(void)
 {
 }
 
 static void cleanup_console(void)
 {
+}
+
+static void cleanup_zone(void)
+{
+    std::clog << "in zone cleanup" << std::endl;
+    if (zone != NULL)
+    {
+        std::clog << "deleting zone" << std::endl;
+        delete zone;
+        zone = NULL;
+    }
+    if (db_lib != NULL)
+    {
+        std::clog << "closing database library" << std::endl;
+        destroy_db_t *destroy_db = (destroy_db_t *)db_lib->symbol("destroy_db");
+        (*destroy_db)(database);
+        delete db_lib;
+        db_lib = NULL;
+    }
+    std::clog << "zone cleanup done" << std::endl;
 }
 
 static void cleanup_sockets(void)
@@ -406,8 +476,8 @@ static void cleanup_daemon(void)
 void complete_startup(void)
 {
     setup_configuration(0, NULL);
-    if (setup_daemon() == -1)
-	exit(1);
+    try { setup_daemon(); }
+    catch (...) { exit(1); }
     setup_log();
     setup_signals();
     try { setup_sockets(); }

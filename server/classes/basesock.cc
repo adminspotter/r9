@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 18:17:53 tquirk
+ *   last updated 05 Jul 2014, 07:56:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -35,6 +35,7 @@
  *   21 Jun 2014 TAQ - Converted syslog to new style stream log.
  *   01 Jul 2014 TAQ - Moved the access thread pool into the listen_socket.
  *                     Added a stop method as well.
+ *   05 Jul 2014 TAQ - The zone_interface has gone away, moved to server.h.
  *
  * Things to do
  *
@@ -49,8 +50,8 @@
 #include <errno.h>
 
 #include "basesock.h"
-#include "zone_interface.h"
 
+#include "../server.h"
 #include "../config.h"
 #include "../log.h"
 

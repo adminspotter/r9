@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 04 Jul 2014, 17:01:28 tquirk
+#   last updated 05 Jul 2014, 07:50:26 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -51,6 +51,7 @@
 #   04 Jul 2014 TAQ - Since the subserver is now a separate binary that gets
 #                     exec'ed from stream.cc, we needed to set a define to
 #                     point to the binary.
+#   05 Jul 2014 TAQ - The zone_interface is now gone, moved into server.cc.
 #
 # Things to do
 #
@@ -63,10 +64,9 @@ LDPATHS =
 LDLIBS = ../../proto/libr9_proto.la -lpthread -ldl
 
 HDRS = control.h defs.h game_obj.h geometry.h motion.h library.h \
-	thread_pool.h zone.h zone_interface.h basesock.h dgram.h stream.h
+	thread_pool.h zone.h basesock.h dgram.h stream.h
 SRCS = control.cc game_obj.cc geometry.cc zone.cc library.cc \
-	motion.cc zone_interface.cc \
-	basesock.cc dgram.cc stream.cc
+	motion.cc basesock.cc dgram.cc stream.cc
 OBJS = ${SRCS:.cc=.lo}
 TARGET = libr9_classes.la
 

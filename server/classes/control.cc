@@ -1,6 +1,6 @@
 /* control.cc
  *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 10 May 2014, 18:07:48 tquirk
+ *   last updated 05 Jul 2014, 07:52:50 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -78,10 +78,11 @@
  *                     execute_action into the same-named function within
  *                     the zone - we know what *we* can do, but zone needs
  *                     to do checking, and check its own tables.
+ *   05 Jul 2014 TAQ - The zone_interface is gone, moved into server.cc and
+ *                     server.h.
  *
  * Things to do
  *
- * $Id$
  */
 
 #include <Eigen/Core>
@@ -91,7 +92,7 @@
 #include "motion.h"
 #include "thread_pool.h"
 #include "zone.h"
-#include "zone_interface.h"
+#include "../server.h"
 
 Control::Control(u_int64_t userid, Motion *slave)
 {
