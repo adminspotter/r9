@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Jun 2014, 18:30:30 tquirk
+ *   last updated 06 Jul 2014, 11:46:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -36,6 +36,9 @@
  *   27 Jun 2014 TAQ - We now log to std::clog.  Trying out the GNU
  *                     stdio_filebuf from libstdc++, in order to use streams
  *                     on our session sockets.
+ *   06 Jul 2014 TAQ - A blank constructor in the Console base class was
+ *                     preventing the derived classes from linking properly,
+ *                     so it's gone.
  *
  * Things to do
  *   - See if we can use the basesock, rather than mostly reimplementing it.
@@ -152,11 +155,6 @@ std::string ConsoleSession::get_line(void)
     if (this->in->eof())
         str = "exit";
     return str;
-}
-
-Console::Console()
-{
-    this->console_sock = 0;
 }
 
 Console::~Console()

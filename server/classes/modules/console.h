@@ -1,6 +1,6 @@
 /* console.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Jun 2014, 18:26:11 tquirk
+ *   last updated 06 Jul 2014, 11:46:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -43,6 +43,9 @@
  *                     sessions.
  *   27 Jun 2014 TAQ - Some slight changes to allow stream-based handling
  *                     of the session sockets.
+ *   06 Jul 2014 TAQ - A blank constructor in the Console base class was
+ *                     preventing the derived classes from linking properly,
+ *                     so it's gone.
  *
  * Things to do
  *
@@ -99,8 +102,7 @@ class Console
     std::vector<ConsoleSession *> sessions;
 
   public:
-    Console();
-    ~Console();
+    virtual ~Console();
 
     /* Both can throw int */
     void start(void *(*)(void *));
