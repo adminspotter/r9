@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:45:34 tquirk
+ *   last updated 06 Jul 2014, 16:44:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -116,6 +116,7 @@
  *   17 Jun 2014 TAQ - Moved the thread pool functions into this class.
  *   21 Jun 2014 TAQ - Moved the action library in here too.
  *   22 Jun 2014 TAQ - Slight changes to reflect the updated config object.
+ *   06 Jul 2014 TAQ - Added stop and init methods, renamed trees to sectors.
  *
  * Things to do
  *
@@ -124,6 +125,7 @@
 #ifndef __INC_ZONE_H__
 #define __INC_ZONE_H__
 
+#include <vector>
 #include <map>
 
 #include "defs.h"
@@ -131,13 +133,16 @@
 #include "game_obj.h"
 #include "thread_pool.h"
 #include "library.h"
-#include "proto.h"
+#include "octree.h"
+#include "../../proto/proto.h"
 
 class Zone
 {
   private:
     u_int16_t x_steps, y_steps, z_steps;
     u_int64_t x_dim, y_dim, z_dim;
+
+    std::vector< std::vector< std::vector<Octree *> > > sectors;
 
     Library *action_lib;
 
@@ -149,6 +154,7 @@ class Zone
     ThreadPool<Motion *> *update_pool;      /* Prepares motion updates    */
 
   private:
+    void init(void);
     void load_actions(const std::string&);
     void create_thread_pools(void);
 
@@ -162,6 +168,7 @@ class Zone
     ~Zone();
 
     void start(void);
+    void stop(void);
 
     /* Interface to the action pool */
     void add_action_request(u_int64_t, packet *, size_t);

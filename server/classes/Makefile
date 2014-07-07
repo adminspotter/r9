@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 05 Jul 2014, 07:50:26 tquirk
+#   last updated 07 Jul 2014, 10:04:32 trinityquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk

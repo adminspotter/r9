@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2014, 09:38:17 tquirk
+ *   last updated 28 Jun 2014, 17:35:01 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -78,6 +78,8 @@
  *                     struct.
  *   10 May 2014 TAQ - Switched math libraries to Eigen.
  *   21 Jun 2014 TAQ - Moved some library-related typedefs in here.
+ *   28 Jun 2014 TAQ - Removed some old octree-related stuff, since it's now
+ *                     moving into the class.
  *
  * Things to do
  *   - Flesh out the attribute and nature as needed.
@@ -94,22 +96,12 @@
 
 #include <stdlib.h>
 
-#include "proto.h"
+#include "../../proto/proto.h"
 
 /* Eliminate the multiple-include problems */
 class GameObject;
 class Motion;
-class polygon;
 class listen_socket;
-
-typedef struct octree_tag
-{
-    Eigen::Vector3d center_point, min_point, max_point;
-    struct octree_tag *octants[8], *parent, *neighbor[6];
-    char parent_index;
-    std::deque<polygon *> contents;
-}
-octant, *octree;
 
 typedef struct sequence_tag
 {

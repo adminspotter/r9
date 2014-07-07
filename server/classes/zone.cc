@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:45:43 tquirk
+ *   last updated 06 Jul 2014, 16:46:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -119,19 +119,13 @@
  *                     static methods.
  *   21 Jun 2014 TAQ - Moved the action library handling into this class.
  *                     Updated the syslog to use the stream logger.
+ *   06 Jul 2014 TAQ - We now reserve space in the sectors (formerly trees)
+ *                     vectors for all the octrees we may need.  Also moved
+ *                     some of the initialization into the init method, since
+ *                     it was shared by more than one routine.  Added the
+ *                     stop method to stop the thread pools.
  *
  * Things to do
- *   - Do we even want to handle geometry here, or would that be more
- *     appropriate to handle in each of the game objects?  Saving geometry
- *     for a single object in a file might actually make sense, and allow
- *     the game object to hide that bit of complexity from everybody else.
- *     So the Load World operation becomes more of a "create this list of
- *     game objects, in these given locations".
- *   - Get a handle on our geometry file format.  We'll probably want to
- *     use the same files as the client, but we'll need the bounding boxes
- *     instead of the actual geometry of the object.  Two-level bounding
- *     objects will probably be nice; the first level will be a sphere, and
- *     the second will be a somewhat tight box (or set of boxes).
  *
  */
 
@@ -141,12 +135,42 @@
 #include <glob.h>
 #include <errno.h>
 
+#include <stdexcept>
+
 #include "zone.h"
 #include "thread_pool.h"
 #include "../config.h"
 #include "../log.h"
 
 /* Private methods */
+void Zone::init(void)
+{
+    int i, j;
+
+    this->load_actions(config.action_lib);
+    try { this->create_thread_pools(); }
+    catch (int errval) { throw; }
+    try
+    {
+        sectors.reserve(x_steps);
+        for (i = 0; i < x_steps; ++i)
+        {
+            sectors[i].reserve(y_steps);
+            for (j = 0; j < y_steps; ++j)
+                sectors[i][j].reserve(z_steps);
+        }
+    }
+    catch (std::length_error& e)
+    {
+        std::clog << syslogErr << "couldn't reserve "
+                  << this->x_steps << "x" << this->y_steps
+                  << "x" << this->z_steps << " ("
+                  << this->x_steps * this->y_steps * this->z_steps
+                  << ") elements in the zone: " << e.what() << std::endl;
+        throw ENOMEM;
+    }
+}
+
 void Zone::load_actions(const std::string& libname)
 {
     try
@@ -299,18 +323,16 @@ void *Zone::update_pool_worker(void *arg)
 
 /* Public methods */
 Zone::Zone(u_int64_t dim, u_int16_t steps)
-    : actions(), game_objects()
+    : sectors(), actions(), game_objects()
 {
     this->x_dim = this->y_dim = this->z_dim = dim;
     this->x_steps = this->y_steps = this->z_steps = steps;
-    this->load_actions(config.action_lib);
-    try { this->create_thread_pools(); }
-    catch (int errval) { throw; }
+    this->init();
 }
 
 Zone::Zone(u_int64_t xd, u_int64_t yd, u_int64_t zd,
 	   u_int16_t xs, u_int16_t ys, u_int16_t zs)
-    : actions(), game_objects()
+    : sectors(), actions(), game_objects()
 {
     this->x_dim = xd;
     this->y_dim = yd;
@@ -318,9 +340,7 @@ Zone::Zone(u_int64_t xd, u_int64_t yd, u_int64_t zd,
     this->x_steps = xs;
     this->y_steps = ys;
     this->z_steps = zs;
-    this->load_actions(config.action_lib);
-    try { this->create_thread_pools(); }
-    catch (int errval) { throw; }
+    this->init();
 }
 
 Zone::~Zone()
@@ -395,6 +415,13 @@ void Zone::start(void)
                   << strerror(errval) << " (" << errval << ")" << std::endl;
 	throw;
     }
+}
+
+void Zone::stop(void)
+{
+    this->action_pool->stop();
+    this->motion_pool->stop();
+    this->update_pool->stop();
 }
 
 void Zone::add_action_request(u_int64_t from, packet *buf, size_t len)

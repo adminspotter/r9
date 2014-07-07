@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 04 Jul 2014, 16:59:49 tquirk
+#   last updated 07 Jul 2014, 10:06:15 trinityquirk
 #
 # This is the main makefile for the revision9 server.
 #
