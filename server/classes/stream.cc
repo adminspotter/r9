@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2014, 07:58:10 tquirk
+ *   last updated 09 Jul 2014, 13:38:40 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -48,6 +48,7 @@
  *                     into a completely separate binary and exec it once we
  *                     get the file descriptors set up correctly.
  *   05 Jul 2014 TAQ - This file didn't really need the zone_interface.
+ *   09 Jul 2014 TAQ - Normalized the exception-throwing.
  *
  * Things to do
  *
@@ -64,6 +65,8 @@
 #endif
 
 #include <algorithm>
+#include <sstream>
+#include <stdexcept>
 
 #include "stream.h"
 #include "game_obj.h"
@@ -295,42 +298,31 @@ void stream_socket::start(void)
     for (i = 0; i < config.min_subservers; ++i)
 	if ((this->create_subserver()) == -1)
 	{
-	    std::clog << syslogErr
-                      << "couldn't create subserver for stream port "
-                      << this->sock.port_num << ": "
-                      << strerror(errno) << " (" << errno << ")" << std::endl;
-	    throw errno;
+	    std::ostringstream s;
+            s << "couldn't create subserver for stream port "
+              << this->sock.port_num << ": "
+              << strerror(errno) << " (" << errno << ")";
+	    throw std::runtime_error(s.str());
 	}
 
     /* Start up the sending thread pool */
     sleep(0);
-    try
-    {
-        this->send_pool->startup_arg = (void *)this;
-        this->send_pool->start(stream_socket::stream_send_worker);
-        this->access_pool->startup_arg = (void *)this;
-        this->access_pool->start(listen_socket::access_pool_worker);
-        this->sock.listen_arg = (void *)this;
-        this->sock.start(stream_socket::stream_listen_worker);
-    }
-    catch (int e)
-    {
-	std::clog << syslogErr
-                  << "couldn't start threads for stream port "
-                  << this->sock.port_num << ": "
-                  << strerror(e) << " (" << e << ")" << std::endl;
-        throw;
-    }
+    this->send_pool->startup_arg = (void *)this;
+    this->send_pool->start(stream_socket::stream_send_worker);
+    this->access_pool->startup_arg = (void *)this;
+    this->access_pool->start(listen_socket::access_pool_worker);
+    this->sock.listen_arg = (void *)this;
+    this->sock.start(stream_socket::stream_listen_worker);
 
     /* Start up the reaping thread */
     if ((retval = pthread_create(&this->reaper, NULL,
 				 stream_reaper_worker, (void *)this)) != 0)
     {
-	std::clog << syslogErr
-                  << "couldn't create reaper thread for stream port "
-                  << this->sock.port_num << ": "
-                  << strerror(retval) << " (" << retval << ")" << std::endl;
-        throw retval;
+	std::ostringstream s;
+        s << "couldn't create reaper thread for stream port "
+          << this->sock.port_num << ": "
+          << strerror(retval) << " (" << retval << ")";
+        throw std::runtime_error(s.str());
     }
 }
 

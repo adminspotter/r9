@@ -1,9 +1,9 @@
 /* library.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:49:35 tquirk
+ *   last updated 09 Jul 2014, 14:06:46 trinityquirk
  *
  * Revision IX game server
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,6 +30,7 @@
  *   22 Jun 2014 TAQ - Constructor now takes strings instead of char pointers.
  *                     Also got rid of the magic lib name behaviour, instead
  *                     just taking the raw name we get passed.
+ *   09 Jul 2014 TAQ - Normalized exceptions with the rest of the codebase.
  *
  * Things to do
  *
@@ -37,8 +38,10 @@
 
 #include <dlfcn.h>
 
+#include <sstream>
+#include <stdexcept>
+
 #include "library.h"
-#include "../log.h"
 
 Library::Library(const std::string& name)
     : libname(name)
@@ -55,10 +58,13 @@ void Library::open(void)
 {
     char *err;
 
-    std::clog << "loading " << this->libname << " lib" << std::endl;
     this->lib = dlopen(this->libname.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     if ((err = dlerror()) != NULL)
-        throw std::string(err);
+    {
+        std::ostringstream s;
+        s << "error opening library " << this->libname << ": " << err;
+        throw std::runtime_error(s.str());
+    }
     dlerror();
 }
 
@@ -71,7 +77,12 @@ void *Library::symbol(const char *symname)
     {
         sym = dlsym(this->lib, symname);
         if ((err = dlerror()) != NULL)
-            throw std::string(err);
+        {
+            std::ostringstream s;
+            s << "error finding symbol " << symname << " in library "
+              << this->libname << ": " << err;
+            throw std::runtime_error(s.str());
+        }
         dlerror();
     }
     return sym;
@@ -85,7 +96,11 @@ void Library::close(void)
     {
         dlclose(this->lib);
         if ((err = dlerror()) != NULL)
-            throw std::string(err);
+        {
+            std::ostringstream s;
+            s << "error closing library " << this->libname << ": " << err;
+            throw std::runtime_error(s.str());
+        }
     }
     dlerror();
 }

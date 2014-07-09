@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2014, 16:46:51 tquirk
+ *   last updated 09 Jul 2014, 13:44:30 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -124,6 +124,9 @@
  *                     some of the initialization into the init method, since
  *                     it was shared by more than one routine.  Added the
  *                     stop method to stop the thread pools.
+ *   09 Jul 2014 TAQ - Simplified exception handling and logging.  A lot of
+ *                     the exceptions that we get, we'll just let them
+ *                     continue on up the call chain.
  *
  * Things to do
  *
@@ -135,6 +138,7 @@
 #include <glob.h>
 #include <errno.h>
 
+#include <sstream>
 #include <stdexcept>
 
 #include "zone.h"
@@ -148,8 +152,7 @@ void Zone::init(void)
     int i, j;
 
     this->load_actions(config.action_lib);
-    try { this->create_thread_pools(); }
-    catch (int errval) { throw; }
+    this->create_thread_pools();
     try
     {
         sectors.reserve(x_steps);
@@ -162,12 +165,12 @@ void Zone::init(void)
     }
     catch (std::length_error& e)
     {
-        std::clog << syslogErr << "couldn't reserve "
-                  << this->x_steps << "x" << this->y_steps
-                  << "x" << this->z_steps << " ("
-                  << this->x_steps * this->y_steps * this->z_steps
-                  << ") elements in the zone: " << e.what() << std::endl;
-        throw ENOMEM;
+        std::ostringstream s;
+        s << "couldn't reserve "
+          << this->x_steps << "x" << this->y_steps << "x" << this->z_steps
+          << " (" << this->x_steps * this->y_steps * this->z_steps
+          << ") elements in the zone: " << e.what();
+        throw std::runtime_error(s.str());
     }
 }
 
@@ -180,31 +183,21 @@ void Zone::load_actions(const std::string& libname)
             = (action_reg_t *)this->action_lib->symbol("actions_register");
         (*reg)(this->actions);
     }
-    catch (std::string& s)
+    catch (std::runtime_error& e)
     {
         std::clog << syslogErr
-                  << "error loading actions library: " << s << std::endl;
+                  << "error loading actions library: " << e.what() << std::endl;
     }
 }
 
 void Zone::create_thread_pools(void)
 {
-    try
-    {
-	this->action_pool
-	    = new ThreadPool<packet_list>("action", config.action_threads);
-	this->motion_pool
-	    = new ThreadPool<Motion *>("motion", config.motion_threads);
-	this->update_pool
-	    = new ThreadPool<Motion *>("update", config.update_threads);
-    }
-    catch (int e)
-    {
-	std::clog << syslogErr
-                  << "couldn't create zone thread pool: "
-                  << strerror(e) << " (" << e << ")" << std::endl;
-	throw;
-    }
+    this->action_pool
+        = new ThreadPool<packet_list>("action", config.action_threads);
+    this->motion_pool
+        = new ThreadPool<Motion *>("motion", config.motion_threads);
+    this->update_pool
+        = new ThreadPool<Motion *>("update", config.update_threads);
 }
 
 void *Zone::action_pool_worker(void *arg)
@@ -397,24 +390,14 @@ void Zone::start(void)
      * up the thread pools?
      */
 
-    try
-    {
-        this->action_pool->startup_arg = (void *)this;
-	this->action_pool->start(Zone::action_pool_worker);
+    this->action_pool->startup_arg = (void *)this;
+    this->action_pool->start(Zone::action_pool_worker);
 
-        this->motion_pool->startup_arg = (void *)this;
-	this->motion_pool->start(Zone::motion_pool_worker);
+    this->motion_pool->startup_arg = (void *)this;
+    this->motion_pool->start(Zone::motion_pool_worker);
 
-        this->update_pool->startup_arg = (void *)this;
-	this->update_pool->start(Zone::update_pool_worker);
-    }
-    catch (int errval)
-    {
-	std::clog << syslogErr
-                  << "couldn't start zone thread pool: "
-                  << strerror(errval) << " (" << errval << ")" << std::endl;
-	throw;
-    }
+    this->update_pool->startup_arg = (void *)this;
+    this->update_pool->start(Zone::update_pool_worker);
 }
 
 void Zone::stop(void)

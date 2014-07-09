@@ -1,6 +1,6 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jun 2014, 18:18:47 tquirk
+ *   last updated 09 Jul 2014, 13:54:49 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -108,6 +108,8 @@
  *   22 Nov 2009 TAQ - Added const to constructor's string argument to get
  *                     rid of a compiler warning.
  *   21 Jun 2014 TAQ - Updated syslog to use the stream-based log.
+ *   09 Jul 2014 TAQ - Simplified the exception handling and logging.  Also
+ *                     changed the name member to a std::string.
  *
  * Things to do
  *   - Might we need a way to gun a stuck thread?
@@ -124,7 +126,9 @@
 #include <errno.h>
 #include <vector>
 #include <queue>
-#include <exception>
+#include <string>
+#include <sstream>
+#include <stdexcept>
 
 #include "../log.h"
 
@@ -132,7 +136,7 @@ template <class T>
 class ThreadPool
 {
   private:
-    char *name;
+    std::string name;
     std::vector<pthread_t> thread_pool;
     pthread_mutex_t queue_lock;
     pthread_cond_t queue_not_empty;
@@ -146,14 +150,9 @@ class ThreadPool
 
   public:
     ThreadPool(const char *pool_name, unsigned int pool_size)
-	throw (int)
-	: thread_pool(), request_queue()
+	: name(pool_name, 0, 8), thread_pool(), request_queue()
 	{
 	    int ret;
-
-	    /* Copy our name into local storage, to a maximum of 8 chars */
-	    if ((this->name = strndup(pool_name, 8)) == NULL)
-		throw ENOMEM;
 
 	    /* Initialize the elements of our pool */
 	    this->thread_count = pool_size;
@@ -164,22 +163,18 @@ class ThreadPool
 	    /* Initialize the mutex and condition variables */
 	    if ((ret = pthread_mutex_init(&(this->queue_lock), NULL)) != 0)
 	    {
-		std::clog << syslogErr
-                          << "couldn't init " << this->name
-                          << " queue mutex: "
-                          << strerror(ret) << " (" << ret << ")" << std::endl;
-		free(this->name);
-		throw ret;
+		std::ostringstream s;
+                s << "couldn't init " << this->name << " queue mutex: "
+                  << strerror(ret) << " (" << ret << ")";
+		throw std::runtime_error(s.str());
 	    }
 	    if ((ret = pthread_cond_init(&(this->queue_not_empty), NULL)) != 0)
 	    {
-		std::clog << syslogErr
-                          << "couldn't init " << this->name
-                          << " queue not-empty cond: "
-                          << strerror(ret) << " (" << ret << ")" << std::endl;
+		std::ostringstream s;
+                s << "couldn't init " << this->name << " queue not-empty cond: "
+                  << strerror(ret) << " (" << ret << ")";
 		pthread_mutex_destroy(&(this->queue_lock));
-		free(this->name);
-		throw ret;
+		throw std::runtime_error(s.str());
 	    }
 	    /* We've moved the starting of the threads into the start() call */
 	};
@@ -189,13 +184,9 @@ class ThreadPool
 	    this->stop();
 	    pthread_cond_destroy(&(this->queue_not_empty));
 	    pthread_mutex_destroy(&(this->queue_lock));
-            std::clog << "destroyed the " << this->name
-                      << " mutexes" << std::endl;
-	    free(this->name);
 	};
 
     void start(void *(*func)(void *))
-	throw (int)
 	{
 	    int ret;
 	    pthread_t thread;
@@ -214,13 +205,12 @@ class ThreadPool
 					  this->startup_arg)) != 0)
 		{
 		    /* Error! */
-		    std::clog << syslogErr
-                              << "couldn't start a " << this->name
-                              << " thread: " << strerror(ret)
-                              << " (" << ret << ")" << std::endl;
+		    std::ostringstream s;
+                    s << "couldn't start a " << this->name << " thread: "
+                      << strerror(ret) << " (" << ret << ")";
 		    /* Something's messed up; stop all the threads */
 		    this->stop();
-		    throw ret;
+		    throw std::runtime_error(s.str());
 		}
 		thread_pool.push_back(thread);
 	    }
@@ -254,7 +244,6 @@ class ThreadPool
 
     /* Resize the pool */
     void resize(unsigned int new_count)
-	throw (int)
 	{
 	    pthread_mutex_lock(&(this->queue_lock));
 	    this->thread_count = new_count;
@@ -278,9 +267,7 @@ class ThreadPool
 		/* Grow the pool */
 		/* We need to unlock here, because start() grabs the lock */
 		pthread_mutex_unlock(&(this->queue_lock));
-		/* If there's an error, just keep throwing it */
-		try { this->start(this->startup_func); }
-		catch (int err) { throw err; }
+		this->start(this->startup_func);
 	    }
 	};
 

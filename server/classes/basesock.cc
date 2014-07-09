@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2014, 07:56:34 tquirk
+ *   last updated 09 Jul 2014, 13:24:27 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -36,6 +36,11 @@
  *   01 Jul 2014 TAQ - Moved the access thread pool into the listen_socket.
  *                     Added a stop method as well.
  *   05 Jul 2014 TAQ - The zone_interface has gone away, moved to server.h.
+ *   09 Jul 2014 TAQ - We're now throwing std::runtime_error instead of a
+ *                     bunch of random stuff (int, std::string, etc.).  There
+ *                     are a couple of instances of exception-worthy errors
+ *                     within the listen_socket destructor - is it valid to
+ *                     throw exceptions out of a destructor?
  *
  * Things to do
  *
@@ -49,6 +54,9 @@
 #include <netdb.h>
 #include <errno.h>
 
+#include <sstream>
+#include <stdexcept>
+
 #include "basesock.h"
 
 #include "../server.h"
@@ -59,26 +67,13 @@ basesock::basesock(struct addrinfo *ai, u_int16_t port)
 {
     this->port_num = port;
     this->listen_arg = NULL;
-    try
-    {
-        this->create_socket(ai);
-    }
-    catch (int e)
-    {
-        throw;
-    }
+    this->create_socket(ai);
 }
 
 basesock::~basesock()
 {
-    try
-    {
-        this->stop();
-    }
-    catch (int e)
-    {
-        /* Is there anything to do here? */
-    }
+    try { this->stop(); }
+    catch (...) { /* Nothing to do here */ }
     if (this->sock)
     {
         close(this->sock);
@@ -99,12 +94,12 @@ void basesock::create_socket(struct addrinfo *ai)
                              ai->ai_socktype,
                              ai->ai_protocol)) < 0)
     {
-	std::clog << syslogErr
-                  << "socket creation failed for " << typestr << " port "
-                  << this->port_num << ": "
-                  << strerror(errno) << " (" << errno << ")" << std::endl;
+        std::ostringstream s;
+        s << "socket creation failed for " << typestr << " port "
+          << this->port_num << ": "
+          << strerror(errno) << " (" << errno << ")";
         this->sock = 0;
-	throw errno;
+	throw std::runtime_error(s.str());
     }
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 
@@ -121,7 +116,10 @@ void basesock::create_socket(struct addrinfo *ai)
       default:
         close(this->sock);
         this->sock = 0;
-        throw EINVAL;
+        std::ostringstream s;
+        s << "don't recognize address family " << ai->ai_addr->sa_family
+          << ": " << strerror(EINVAL) << " (" << EINVAL << ")";
+        throw std::runtime_error(s.str());
     }
 
     /* If root's gotta open the port, become root, if possible. */
@@ -129,11 +127,12 @@ void basesock::create_socket(struct addrinfo *ai)
     {
 	if (getuid() != 0)
 	{
-	    std::clog << syslogErr << "can't open " << typestr << " port "
-                      << this->port_num << " as non-root user" << std::endl;
+            std::ostringstream s;
+	    s << "can't open " << typestr << " port "
+              << this->port_num << " as non-root user";
 	    close(this->sock);
             this->sock = 0;
-	    throw EACCES;
+	    throw std::runtime_error(s.str());
 	}
 	else
 	{
@@ -149,12 +148,12 @@ void basesock::create_socket(struct addrinfo *ai)
             seteuid(uid);
             setegid(gid);
         }
-	std::clog << syslogErr << "bind failed for " << typestr << " port "
-                  << this->port_num << ": "
-                  << strerror(errno) << " (" << errno << ")" << std::endl;
+        std::ostringstream s;
+	s << "bind failed for " << typestr << " port " << this->port_num << ": "
+          << strerror(errno) << " (" << errno << ")";
 	close(this->sock);
         this->sock = 0;
-        throw errno;
+        throw std::runtime_error(s.str());
     }
     /* Restore the original euid and egid of the process, if necessary. */
     if (do_uid)
@@ -167,13 +166,13 @@ void basesock::create_socket(struct addrinfo *ai)
     {
 	if (listen(this->sock, basesock::LISTEN_BACKLOG) < 0)
 	{
-	    std::clog << syslogErr
-                      << "listen failed for " << typestr << " port "
-                      << this->port_num << ": "
-                      << strerror(errno) << " (" << errno << ")" << std::endl;
+            std::ostringstream s;
+	    s << "listen failed for " << typestr << " port "
+              << this->port_num << ": "
+              << strerror(errno) << " (" << errno << ")";
 	    close(this->sock);
             this->sock = 0;
-            throw errno;
+            throw std::runtime_error(s.str());
 	}
     }
 
@@ -188,19 +187,20 @@ void basesock::start(void *(*func)(void *))
 
     if (this->sock == 0)
     {
-        std::clog << syslogErr << "no socket available to listen for port "
-                  << this->port_num << std::endl;
-        throw ENOENT;
+        std::ostringstream s;
+        s << "no socket available to listen for port " << this->port_num << ": "
+          << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
+        throw std::runtime_error(s.str());
     }
     if ((ret = pthread_create(&(this->listen_thread),
                               NULL,
                               func,
                               this->listen_arg)) != 0)
     {
-        std::clog << syslogErr << "couldn't start listen thread for port "
-                  << this->port_num << ": "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
-        throw ret;
+        std::ostringstream s;
+        s << "couldn't start listen thread for port " << this->port_num << ": "
+          << strerror(ret) << " (" << ret << ")";
+        throw std::runtime_error(s.str());
     }
 }
 
@@ -210,18 +210,18 @@ void basesock::stop(void)
 
     if ((ret = pthread_cancel(this->listen_thread)) != 0)
     {
-        std::clog << syslogErr << "couldn't cancel listen thread for port "
-                  << this->port_num << ": "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
-        throw ret;
+        std::ostringstream s;
+        s << "couldn't cancel listen thread for port " << this->port_num << ": "
+          << strerror(ret) << " (" << ret << ")";
+        throw std::runtime_error(s.str());
     }
     sleep(0);
     if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
     {
-        std::clog << syslogErr << "couldn't join listen thread for port "
-                  << this->port_num << ": "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
-        throw ret;
+        std::ostringstream s;
+        s << "couldn't join listen thread for port " << this->port_num << ": "
+          << strerror(ret) << " (" << ret << ")";
+        throw std::runtime_error(s.str());
     }
 }
 

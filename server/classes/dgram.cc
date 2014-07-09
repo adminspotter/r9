@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2014, 07:54:03 tquirk
+ *   last updated 09 Jul 2014, 13:29:47 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -51,6 +51,7 @@
  *   21 Jun 2014 TAQ - Changed syslog to new stream log.
  *   01 Jul 2014 TAQ - Moved the access pool into this.
  *   05 Jul 2014 TAQ - The zone_interface stuff has moved into server.h.
+ *   09 Jul 2014 TAQ - Normalized exception handling and logging.
  *
  * Things to do
  *   - We might need to have a mutex on the socket, since we'll probably
@@ -64,6 +65,9 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <errno.h>
+
+#include <sstream>
+#include <stdexcept>
 
 #include "dgram.h"
 
@@ -105,33 +109,22 @@ void dgram_socket::start(void)
 
     /* Start up the listen thread and thread pools */
     sleep(0);
-    try
-    {
-        this->send_pool->startup_arg = (void *)this;
-        this->send_pool->start(dgram_socket::dgram_send_worker);
-        this->access_pool->startup_arg = (void *)this;
-        this->access_pool->start(listen_socket::access_pool_worker);
-        this->sock.listen_arg = (void *)this;
-        this->sock.start(dgram_socket::dgram_listen_worker);
-    }
-    catch (int e)
-    {
-	std::clog << syslogErr
-                  << "couldn't start threads for datagram port "
-                  << this->sock.port_num << ": "
-                  << strerror(e) << " (" << e << ")" << std::endl;
-        throw;
-    }
+    this->send_pool->startup_arg = (void *)this;
+    this->send_pool->start(dgram_socket::dgram_send_worker);
+    this->access_pool->startup_arg = (void *)this;
+    this->access_pool->start(listen_socket::access_pool_worker);
+    this->sock.listen_arg = (void *)this;
+    this->sock.start(dgram_socket::dgram_listen_worker);
 
     /* Start up the reaping thread */
     if ((retval = pthread_create(&this->reaper, NULL,
 				 dgram_reaper_worker, (void *)this)) != 0)
     {
-	std::clog << syslogErr
-                  << "couldn't create reaper thread for datagram port "
-                  << this->sock.port_num << ": "
-                  << strerror(retval) << " (" << retval << ")" << std::endl;
-        throw retval;
+	std::ostringstream s;
+        s << "couldn't create reaper thread for datagram port "
+          << this->sock.port_num << ": "
+          << strerror(retval) << " (" << retval << ")";
+        throw std::runtime_error(s.str());
     }
 }
 
