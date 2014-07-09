@@ -1,6 +1,6 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 12:07:04 trinityquirk
+ *   last updated 09 Jul 2014, 15:14:55 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -229,7 +229,6 @@ int MySQL::get_server_objects(std::map<u_int64_t,
             game_object_list_element gole;
             Geometry *geom = new Geometry();
 
-            std::clog << "creating object " << id << std::endl;
             gole.obj = new GameObject(geom, id);
             gole.position[0] = atol(row[1]) / 100.0;
             gole.position[1] = atol(row[2]) / 100.0;

@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2014, 07:48:09 tquirk
+ *   last updated 09 Jul 2014, 15:11:51 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -126,6 +126,7 @@
  *                     on delete, and were also never starting up the sockets
  *                     once they were created.
  *   05 Jul 2014 TAQ - Moved the remainder of zone_interface in here.
+ *   09 Jul 2014 TAQ - Normalized exception handling and logging of errors.
  *
  * Things to do
  *   - Figure out if we can use a pthread_cond_t without having to have a
@@ -144,6 +145,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <pthread.h>
+
+#include <sstream>
+#include <stdexcept>
 
 #include "log.h"
 #include "server.h"
@@ -181,13 +185,25 @@ int main(int argc, char **argv)
     /* Set everything up. */
     setup_configuration(argc, argv);
     try { setup_daemon(); }
-    catch (...) { return 1; }
+    catch (std::exception& e)
+    {
+        std::clog << e.what() << std::endl;
+        return 1;
+    }
     setup_log();
     setup_signals();
     try { setup_zone(); }
-    catch (...) { goto BAILOUT1; }
+    catch (std::exception& e)
+    {
+        std::clog << syslogErr << e.what() << std::endl;
+        goto BAILOUT1;
+    }
     try { setup_sockets(); }
-    catch (...) { goto BAILOUT2; }
+    catch (std::exception& e)
+    {
+        std::clog << syslogErr << e.what() << std::endl;
+        goto BAILOUT2;
+    }
     setup_console();
 
     /* Since all our stuff is running in other threads, we'll just
@@ -223,9 +239,9 @@ static void setup_daemon(void)
     /* Start up like a proper daemon */
     if ((pid = fork()) < 0)
     {
-        std::clog << "failed to fork: " << strerror(errno)
-                  << " (" << errno << "), terminating" << std::endl;
-        throw errno;
+        std::ostringstream s;
+        s << "failed to fork: " << strerror(errno) << " (" << errno << ")";
+        throw std::runtime_error(s.str());
     }
     else if (pid != 0)
 	exit(0);
@@ -247,9 +263,10 @@ static void setup_daemon(void)
     else
     {
 	/* Apparently another invocation is running, so we can't. */
-        std::clog << "couldn't create lock file: " << strerror(errno)
-                  << " (" << errno << "), terminating" << std::endl;
-        throw errno;
+        std::ostringstream s;
+        s << "couldn't create lock file: " << strerror(errno)
+          << " (" << errno << ")";
+        throw std::runtime_error(s.str());
     }
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
@@ -273,8 +290,8 @@ static void setup_sockets(void)
     /* Bailout now if there are no sockets to create */
     if (config.stream.size() == 0 && config.dgram.size() == 0)
     {
-	std::clog << syslogErr << "no sockets to create" << std::endl;
-        throw ENOENT;
+        std::string s("no sockets to create");
+        throw std::runtime_error(s);
     }
 
     std::clog << "going to create "
@@ -293,7 +310,7 @@ static void setup_sockets(void)
             stream_socket *sock = new stream_socket(ai, *i);
             sockets.push_back(sock);
         }
-        catch (int e)
+        catch (std::exception& e)
         {
             while (sockets.size())
             {
@@ -319,7 +336,7 @@ static void setup_sockets(void)
             dgram_socket *sock = new dgram_socket(ai, *i);
             sockets.push_back(sock);
         }
-        catch (int e)
+        catch (std::exception& e)
         {
             while (sockets.size())
 	    {
@@ -373,52 +390,23 @@ void set_exit_flag(void)
 
 static void setup_zone(void)
 {
-    int ret;
     create_db_t *create_db;
 
     std::clog << "in zone setup" << std::endl;
-    try
-    {
-        zone = new Zone(config.size.dim[0], config.size.dim[1],
-                        config.size.dim[2], config.size.steps[0],
-                        config.size.steps[1], config.size.steps[2]);
-    }
-    catch (int e)
-    {
-        ret = e;
-        goto BAILOUT1;
-    }
+    zone = new Zone(config.size.dim[0], config.size.dim[1],
+                    config.size.dim[2], config.size.steps[0],
+                    config.size.steps[1], config.size.steps[2]);
 
     /* Load up the database lib before we start the access thread pool */
-    try { db_lib = new Library("libr9_" + config.db_type + ".dylib"); }
-    catch (std::string& s) { goto BAILOUT1; }
-
-    try { create_db = (create_db_t *)db_lib->symbol("create_db"); }
-    catch (std::string& s) { goto BAILOUT2; }
-
+    db_lib = new Library("libr9_" + config.db_type + ".dylib");
+    create_db = (create_db_t *)db_lib->symbol("create_db");
     database = (*create_db)(config.db_host, config.db_user,
                             config.db_pass, config.db_name);
     database->get_server_skills(zone->actions);
     database->get_server_objects(zone->game_objects);
 
-    try { zone->start(); }
-    catch (int e)
-    {
-        std::clog << syslogErr << "couldn't start zone thread pools: "
-                  << strerror(e) << " (" << e << ")" << std::endl;
-        ret = e;
-        goto BAILOUT2;
-    }
-
+    zone->start();
     std::clog << "zone setup done" << std::endl;
-    return;
-
-  BAILOUT2:
-    delete db_lib;
-  BAILOUT1:
-    delete zone;
-    zone = NULL;
-    throw ret;
 }
 
 static void setup_console(void)
@@ -476,12 +464,17 @@ static void cleanup_daemon(void)
 void complete_startup(void)
 {
     setup_configuration(0, NULL);
-    try { setup_daemon(); }
-    catch (...) { exit(1); }
-    setup_log();
     setup_signals();
-    try { setup_sockets(); }
-    catch (...) { exit(1); }
+    try
+    {
+        setup_zone();
+        setup_sockets();
+    }
+    catch (std::exception& e)
+    {
+        std::clog << syslogErr << e.what() << std::endl;
+        exit(1);
+    }
 }
 
 /* For the signal handlers. */
@@ -489,7 +482,5 @@ void complete_cleanup(void)
 {
     cleanup_sockets();
     cleanup_zone();
-    cleanup_log();
-    cleanup_daemon();
     cleanup_configuration();
 }
