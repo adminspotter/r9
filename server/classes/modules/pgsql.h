@@ -1,6 +1,6 @@
 /* pgsql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 18:12:31 tquirk
+ *   last updated 09 Jul 2014, 12:41:04 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -27,6 +27,7 @@
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we will too.
  *   01 Jul 2014 TAQ - Added primary function prototypes.  They're pure
  *                     virtual, but we still have to declare them.
+ *   09 Jul 2014 TAQ - db_connect now returns nothing, and throws exceptions.
  *
  * Things to do
  *
@@ -66,7 +67,7 @@ class PgSQL : public DB
     int get_server_objects(std::map<u_int64_t, game_object_list_element> &);
 
   private:
-    bool db_connect(void);
+    void db_connect(void);
     void db_close(void);
 };
 

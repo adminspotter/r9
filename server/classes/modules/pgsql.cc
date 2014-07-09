@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 18:13:06 tquirk
+ *   last updated 09 Jul 2014, 12:12:52 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -35,6 +35,7 @@
  *   31 May 2014 TAQ - We're now a subclass of DB.
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we need to also.
  *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
+ *   09 Jul 2014 TAQ - Exceptionified this class.  No more syslog.
  *
  * Things to do
  *   - Implement the stubbed-out functions.
@@ -44,10 +45,11 @@
 #define _XOPEN_SOURCE
 #include <string.h>
 #include <unistd.h>
-#include <syslog.h>
 #include <time.h>
 
-#include "server.h"
+#include <sstream>
+#include <stdexcept>
+
 #include "pgsql.h"
 
 PgSQL::PgSQL(const std::string& host, const std::string& user,
@@ -69,14 +71,14 @@ u_int64_t PgSQL::check_authentication(const std::string& user, const std::string
 	     "AND password='%s' "
 	     "AND suspended=0;",
 	     user, pass);
-    if (db_connect())
-    {
-	res = PQexec(this->db_handle, str);
-	if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
-	    retval = atol(PQgetvalue(res, 0, 0));
-	PQclear(res);
-	db_close();
-    }
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = atol(PQgetvalue(res, 0, 0));
+    PQclear(res);
+    this->db_close();
+
     /* Don't want to keep passwords around in core if we can help it */
     memset(str, 0, sizeof(str));
     return retval;
@@ -119,7 +121,7 @@ int PgSQL::close_open_login(u_int64_t userid, u_int64_t charid)
     return 0;
 }
 
-bool PgSQL::db_connect(void)
+void PgSQL::db_connect(void)
 {
     this->db_handle = PQsetdbLogin(this->dbhost.c_str(),
                                    NULL,
@@ -130,16 +132,26 @@ bool PgSQL::db_connect(void)
                                    this->dbpass.c_str());
     if (PQstatus(this->db_handle) == CONNECTION_BAD)
     {
-	syslog(LOG_ERR,
-	       "couldn't connect to PGSQL server: %s",
-	       PQerrorMessage(this->db_handle));
+        std::ostringstream s;
+        s << "couldn't connect to PGSQL server: "
+          << PQerrorMessage(this->db_handle);
 	this->db_handle = NULL;
-        return false;
+        throw std::runtime_error(s.str());
     }
-    return true;
 }
 
 void PgSQL::db_close(void)
 {
     PQfinish(this->db_handle);
+}
+
+extern "C" DB *create_db(const char *a, const char *b,
+                         const char *c, const char *d)
+{
+    return new PgSQL(a, b, c, d);
+}
+
+extern "C" void destroy_db(DB *db)
+{
+    delete db;
 }

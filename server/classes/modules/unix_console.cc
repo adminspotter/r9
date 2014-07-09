@@ -1,6 +1,6 @@
 /* unix_console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Jun 2014, 14:45:21 tquirk
+ *   last updated 09 Jul 2014, 12:05:41 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -24,6 +24,7 @@
  *
  * Changes
  *   31 May 2014 TAQ - Created the file.
+ *   09 Jul 2014 TAQ - Changed all the logging to use exceptions.
  *
  * Things to do
  *
@@ -31,8 +32,10 @@
 
 #include <unistd.h>
 #include <sys/un.h>
-#include <syslog.h>
 #include <errno.h>
+
+#include <sstream>
+#include <stdexcept>
 
 #include "console.h"
 
@@ -53,9 +56,11 @@ void UnixConsole::open_socket(void)
 
     if ((this->console_sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
     {
-	syslog(LOG_ERR, "socket creation failed for console %s: %s (%d)",
-	       this->console_fname.c_str(), strerror(errno), errno);
-        throw errno;
+        std::ostringstream s;
+	s << "socket creation failed for console "
+          << this->console_fname.c_str() << ": "
+          << strerror(errno) << " (" << errno << ")";
+        throw std::runtime_error(s.str());
     }
 
     memset(&sun, 0, sizeof(struct sockaddr_un));
@@ -66,22 +71,23 @@ void UnixConsole::open_socket(void)
 
     if (bind(this->console_sock, (struct sockaddr *)&sun, sizeof(sun)) < 0)
     {
-	syslog(LOG_ERR, "bind failed for console %s: %s (%d)",
-	       this->console_fname.c_str(), strerror(errno), errno);
+        std::ostringstream s;
+	s << "bind failed for console "
+	  << this->console_fname.c_str() << ": "
+          << strerror(errno) << " (" << errno << ")";
 	close(this->console_sock);
-        throw errno;
+        throw std::runtime_error(s.str());
     }
 
     if (listen(this->console_sock, 5) < 0)
     {
-	syslog(LOG_ERR, "listen failed for console %s: %s (%d)",
-	       this->console_fname.c_str(), strerror(errno), errno);
+        std::ostringstream s;
+	s << "listen failed for console "
+          << this->console_fname.c_str() << ": "
+          << strerror(errno) << " (" << errno << ")";
 	close(this->console_sock);
-        throw errno;
+        throw std::runtime_error(s.str());
     }
-
-    syslog(LOG_DEBUG, "console %d created on %s",
-           this->console_sock, this->console_fname.c_str());
 }
 
 void *UnixConsole::listener(void *arg)
@@ -96,14 +102,8 @@ void *UnixConsole::listener(void *arg)
                              reinterpret_cast<struct sockaddr *>(&ss),
                              &ss_len)) != -1)
     {
-        syslog(LOG_NOTICE,
-               "began local console session on %s",
-               con->console_fname.c_str());
-        try
-        {
-            sess = new ConsoleSession(newsock);
-        }
-        catch (int e)
+        try { sess = new ConsoleSession(newsock); }
+        catch (std::exception& e)
         {
             close(newsock);
             delete sess;

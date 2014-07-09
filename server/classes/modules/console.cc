@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2014, 11:46:46 tquirk
+ *   last updated 09 Jul 2014, 11:42:00 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -39,6 +39,8 @@
  *   06 Jul 2014 TAQ - A blank constructor in the Console base class was
  *                     preventing the derived classes from linking properly,
  *                     so it's gone.
+ *   09 Jul 2014 TAQ - We're now doing no syslogging, and only throwing
+ *                     standard exceptions.
  *
  * Things to do
  *   - See if we can use the basesock, rather than mostly reimplementing it.
@@ -50,10 +52,11 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include <sstream>
+#include <stdexcept>
 #include <ext/stdio_filebuf.h>
 
 #include "console.h"
-#include "../../log.h"
 
 pthread_mutex_t ConsoleSession::dispatch_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -71,10 +74,10 @@ ConsoleSession::ConsoleSession(int sock)
                               ConsoleSession::start,
                               (void *)this)) != 0)
     {
-        std::clog << syslogErr
-                  << "error creating console thread: "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
-        throw ret;
+        std::ostringstream s;
+        s << "error creating console thread: "
+          << strerror(ret) << " (" << ret << ")";
+        throw std::runtime_error(s.str());
     }
 }
 
@@ -116,7 +119,6 @@ void *ConsoleSession::start(void *arg)
         *(sess->out) << ConsoleSession::dispatch(str) << std::endl;
         sess->drop_lock();
     }
-    std::clog << syslogNotice << "closing console" << std::endl;
 
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &old_cancel_type);
     pthread_cleanup_pop(1);
@@ -172,18 +174,19 @@ void Console::start(void *(*func)(void *))
 
     if (this->console_sock == 0)
     {
-        std::clog << syslogErr << "no socket available to listen" << std::endl;
-        throw ENOENT;
+        std::ostringstream s;
+        s << "no socket available to listen";
+        throw std::runtime_error(s.str());
     }
     if ((ret = pthread_create(&(this->listen_thread),
                               NULL,
                               func,
                               (void *)this)) != 0)
     {
-        std::clog << syslogErr
-                  << "couldn't start listen thread: "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
-        throw ret;
+        std::ostringstream s;
+        s << "couldn't start listen thread: "
+          << strerror(ret) << " (" << ret << ")";
+        throw std::runtime_error(s.str());
     }
 }
 
@@ -193,10 +196,10 @@ void Console::stop(void)
 
     if ((ret = pthread_cancel(this->listen_thread)) != 0)
     {
-        std::clog << syslogErr
-                  << "couldn't terminate console thread: "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
-        throw ret;
+        std::ostringstream s;
+        s << "couldn't terminate console thread: "
+          << strerror(ret) << " (" << ret << ")";
+        throw std::runtime_error(s.str());
     }
     close(this->console_sock);
     this->console_sock = 0;

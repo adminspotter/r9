@@ -1,6 +1,6 @@
 /* inet_console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Jun 2014, 14:30:39 tquirk
+ *   last updated 09 Jul 2014, 12:06:27 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -24,6 +24,7 @@
  *
  * Changes
  *   31 May 2014 TAQ - Created the file.
+ *   09 Jul 2014 TAQ - De-syslogged, and we only throw runtime_errors now.
  *
  * Things to do
  *   - Figure out a clean way to get the name information in here for
@@ -37,10 +38,12 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <errno.h>
-#include <syslog.h>
 #ifdef HAVE_LIBWRAP
 #include <tcpd.h>
 #endif
+
+#include <sstream>
+#include <stdexcept>
 
 #include "console.h"
 
@@ -66,9 +69,10 @@ void InetConsole::open_socket(struct addrinfo *ai)
                                      ai->ai_socktype,
                                      ai->ai_protocol)) < 0)
     {
-	syslog(LOG_ERR, "socket creation failed for console port %d: %s",
-	       port_num, strerror(errno));
-	throw errno;
+        std::ostringstream s;
+	s << "socket creation failed for console port " << port_num << ": "
+          << strerror(errno) << " (" << errno << ")";
+	throw std::runtime_error(s.str());
     }
     setsockopt(this->console_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 
@@ -92,11 +96,11 @@ void InetConsole::open_socket(struct addrinfo *ai)
     {
 	if (getuid() != 0)
 	{
-	    syslog(LOG_ERR,
-		   "can't open console port %d as non-root user",
-		   this->port_num);
             close(this->console_sock);
-	    throw EACCES;
+            std::ostringstream s;
+            s << "can't open console port " << this->port_num
+              << " as non-root user",
+            throw std::runtime_error(s.str());
 	}
 	else
 	{
@@ -112,11 +116,11 @@ void InetConsole::open_socket(struct addrinfo *ai)
 	    seteuid(uid);
 	    setegid(gid);
 	}
-	syslog(LOG_ERR,
-               "bind failed for console port %d: %s (%d)",
-	       this->port_num, strerror(errno), errno);
 	close(this->console_sock);
-	throw errno;
+        std::ostringstream s;
+        s << "bind failed for console port " << this->port_num << ": "
+          << strerror(errno) << " (" << errno << ")";
+	throw std::runtime_error(s.str());
     }
     /* Restore the original euid and egid of the process, if necessary. */
     if (do_uid)
@@ -127,16 +131,12 @@ void InetConsole::open_socket(struct addrinfo *ai)
 
     if (listen(this->console_sock, 5) < 0)
     {
-	syslog(LOG_ERR,
-               "listen failed for console port %d: %s",
-	       this->port_num, strerror(errno));
+        std::ostringstream s;
+        s << "listen failed for console port " << this->port_num << ": "
+          << strerror(errno) << " (" << errno << ")";
 	close(this->console_sock);
-	throw errno;
+	throw std::runtime_error(s.str());
     }
-
-    syslog(LOG_DEBUG,
-           "console socket %d created on port %d",
-           this->console_sock, this->port_num);
 }
 
 void *InetConsole::listener(void *arg)
@@ -169,11 +169,6 @@ void *InetConsole::listener(void *arg)
 
         if (con->wrap_request(newsock))
         {
-            syslog(LOG_NOTICE,
-                   "began console session on %d from %s (%d)",
-                   con->port_num,
-                   address,
-                   con->port_num);
             try
             {
                 sess = new ConsoleSession(newsock);
@@ -187,12 +182,7 @@ void *InetConsole::listener(void *arg)
             con->sessions.push_back(sess);
         }
         else
-        {
-            syslog(LOG_NOTICE,
-                   "console session on %d from %s failed wrapper check",
-                   con->port_num, address);
             close(newsock);
-        }
         ss_len = sizeof(ss);
     }
     pthread_exit(NULL);

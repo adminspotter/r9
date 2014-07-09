@@ -1,6 +1,6 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:53:07 tquirk
+ *   last updated 09 Jul 2014, 11:33:11 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -32,6 +32,8 @@
  *   07 Jun 2014 TAQ - Some minor casting stuff in order to get this to
  *                     compile.  Also, get_host_address now throws exceptions
  *                     instead of trying to return things.
+ *   09 Jul 2014 TAQ - Switched everything over to just throwing exceptions.
+ *                     No syslogging here - let our callers handle that.
  *
  * Things to do
  *
@@ -41,12 +43,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-#include <syslog.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <errno.h>
 #include <arpa/inet.h>
+
+#include <sstream>
+#include <stdexcept>
 
 #include "db.h"
 
@@ -58,15 +62,17 @@ void DB::get_host_address(void)
 
     if ((ret = gethostname(hostname, sizeof(hostname))) != 0)
     {
-	syslog(LOG_ERR, "couldn't get hostname: %s", strerror(errno));
-	throw ret;
+        std::ostringstream s;
+	s << "couldn't get hostname: "
+          << strerror(errno) << " (" << errno << ")";
+	throw std::runtime_error(s.str());
     }
     if ((ret = getaddrinfo(hostname, NULL, NULL, &info)) != 0)
     {
-        syslog(LOG_ERR,
-               "couldn't get address for %s: %s (%d)",
-               hostname, gai_strerror(ret), ret);
-        throw ret;
+        std::ostringstream s;
+        s << "couldn't get address for " << hostname << ": "
+          << gai_strerror(ret) << " (" << ret << ")";
+        throw std::runtime_error(s.str());
     }
     if (inet_ntop(info->ai_family,
                   info->ai_family == AF_INET
@@ -74,10 +80,10 @@ void DB::get_host_address(void)
                   : (void *)&(reinterpret_cast<struct sockaddr_in6 *>(info->ai_addr)->sin6_addr),
                   this->host_ip, INET6_ADDRSTRLEN) == NULL)
     {
-        syslog(LOG_ERR,
-               "couldn't convert IP for %s into a string: %s (%d)",
-               hostname, strerror(errno), errno);
-        throw errno;
+        std::ostringstream s;
+        s << "couldn't convert IP for " << hostname << " into a string: "
+          << strerror(errno) << " (" << errno << ")";
+        throw std::runtime_error(s.str());
     }
     freeaddrinfo(info);
 }
@@ -86,14 +92,7 @@ DB::DB(const std::string& host, const std::string& user,
        const std::string& pass, const std::string& name)
     : dbhost(host), dbuser(user), dbpass(pass), dbname(name)
 {
-    try
-    {
-        this->get_host_address();
-    }
-    catch (int e)
-    {
-        syslog(LOG_INFO, "caught exception in get_host_address: %d", e);
-    }
+    this->get_host_address();
 }
 
 DB::~DB()

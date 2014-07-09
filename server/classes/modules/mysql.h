@@ -1,6 +1,6 @@
 /* mysql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 17:45:16 tquirk
+ *   last updated 09 Jul 2014, 11:35:48 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -31,6 +31,7 @@
  *   24 Jun 2014 TAQ - Changed include.  Added prototypes for virtuals we
  *                     inherit from DB.
  *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
+ *   09 Jul 2014 TAQ - db_connect now returns nothing and throws exceptions.
  *
  * Things to do
  *
@@ -68,7 +69,7 @@ class MySQL : public DB
     int get_server_objects(std::map<u_int64_t, game_object_list_element> &);
 
   private:
-    bool db_connect(void);
+    void db_connect(void);
 };
 
 #endif /* __INC_MYSQL_H__ */

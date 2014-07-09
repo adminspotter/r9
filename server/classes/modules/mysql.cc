@@ -1,6 +1,6 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 17:49:38 tquirk
+ *   last updated 09 Jul 2014, 12:07:04 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -70,6 +70,7 @@
  *   24 Jun 2014 TAQ - Updated logging to use std::clog.  Small tweaks to
  *                     get things to compile properly.
  *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
+ *   09 Jul 2014 TAQ - We're now fully exception-happy.
  *
  * Things to do
  *   - Finish writing open_new_login and close_open_login.
@@ -83,18 +84,20 @@
 #include <time.h>
 #include <errno.h>
 
+#include <sstream>
+#include <stdexcept>
+
 #include "mysql.h"
-#include "../../log.h"
 #include "../game_obj.h"
 
 MySQL::MySQL(const std::string& host, const std::string& user,
              const std::string& pass, const std::string& db)
     : DB(host, user, pass, db)
 {
-    /* Create a MYSQL structure, since mysql_init isn't in the lib. */
-    if ((this->db_handle = mysql_init(NULL)) == NULL)
-        std::clog << syslogErr << "couldn't init MySQL handle: "
-                  << mysql_error(this->db_handle) << std::endl;
+}
+
+MySQL::~MySQL()
+{
 }
 
 /* Check that the user really is who he says he is */
@@ -114,17 +117,17 @@ u_int64_t MySQL::check_authentication(const std::string& user,
 	     "AND suspended=0",
 	     DB::MAX_USERNAME, user.c_str(),
 	     DB::MAX_PASSWORD, pass.c_str());
-    if (this->db_connect())
+    this->db_connect();
+
+    if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
+        && (res = mysql_use_result(this->db_handle)) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
     {
-	if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
-	    && (res = mysql_use_result(this->db_handle)) != NULL
-	    && (row = mysql_fetch_row(res)) != NULL)
-	{
-	    retval = atol(row[0]);
-	    mysql_free_result(res);
-	}
-	mysql_close(this->db_handle);
+        retval = atol(row[0]);
+        mysql_free_result(res);
     }
+    mysql_close(this->db_handle);
+
     /* Don't leave passwords lying around in memory */
     memset(str, 0, sizeof(str));
     return retval;
@@ -149,17 +152,16 @@ int MySQL::check_authorization(u_int64_t userid, u_int64_t charid)
 	     "AND c.serverid=d.serverid "
 	     "AND d.ip='%s'",
 	     userid, charid, this->host_ip);
-    if (this->db_connect())
+    this->db_connect();
+
+    if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
+        && (res = mysql_use_result(this->db_handle)) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
     {
-	if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
-	    && (res = mysql_use_result(this->db_handle)) != NULL
-	    && (row = mysql_fetch_row(res)) != NULL)
-	{
-	    retval = atoi(row[0]);
-	    mysql_free_result(res);
-	}
-	mysql_close(this->db_handle);
+        retval = atoi(row[0]);
+        mysql_free_result(res);
     }
+    mysql_close(this->db_handle);
     return retval;
 }
 
@@ -169,7 +171,7 @@ int MySQL::get_server_skills(std::map<u_int16_t, action_rec>& actions)
     MYSQL_RES *res;
     MYSQL_ROW row;
     char str[256];
-    int retval = 0, count = 0;
+    int count = 0;
 
     snprintf(str, sizeof(str),
 	     "SELECT b.skillname, c.skillid, c.defaultid, c.lower, c.upper "
@@ -178,30 +180,28 @@ int MySQL::get_server_skills(std::map<u_int16_t, action_rec>& actions)
 	     "AND a.serverid=c.serverid "
 	     "AND b.skillid=c.skillid",
              this->host_ip);
-    if (this->db_connect())
-    {
-	if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
-	    && (res = mysql_use_result(this->db_handle)) != NULL)
-	{
-	    while ((row = mysql_fetch_row(res)) != NULL)
-	    {
-		u_int64_t id = strtoull(row[1], NULL, 10);
+    this->db_connect();
 
-		if (actions[id].name != NULL)
-		    free(actions[id].name);
-		actions[id].name = strdup(row[0]);
-		actions[id].def = strtoull(row[2], NULL, 10);
-		actions[id].lower = atoi(row[3]);
-		actions[id].upper = atoi(row[4]);
-		actions[id].valid = true;
-		++count;
-	    }
-	    mysql_free_result(res);
-	}
-	mysql_close(this->db_handle);
-	std::clog << "got " << count << " server skills" << std::endl;
+    if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
+        && (res = mysql_use_result(this->db_handle)) != NULL)
+    {
+        while ((row = mysql_fetch_row(res)) != NULL)
+        {
+            u_int64_t id = strtoull(row[1], NULL, 10);
+
+            if (actions[id].name != NULL)
+                free(actions[id].name);
+            actions[id].name = strdup(row[0]);
+            actions[id].def = strtoull(row[2], NULL, 10);
+            actions[id].lower = atoi(row[3]);
+            actions[id].upper = atoi(row[4]);
+            actions[id].valid = true;
+            ++count;
+        }
+        mysql_free_result(res);
     }
-    return retval;
+    mysql_close(this->db_handle);
+    return count;
 }
 
 int MySQL::get_server_objects(std::map<u_int64_t,
@@ -210,7 +210,7 @@ int MySQL::get_server_objects(std::map<u_int64_t,
     MYSQL_RES *res;
     MYSQL_ROW row;
     char str[256];
-    int retval = 0, count = 0;
+    int count = 0;
 
     snprintf(str, sizeof(str),
 	     "SELECT b.objectid, b.pos_x, b.pos_y, b.pos_z "
@@ -218,34 +218,32 @@ int MySQL::get_server_objects(std::map<u_int64_t,
 	     "WHERE a.ip='%s' "
              "AND a.serverid=b.serverid",
 	     this->host_ip);
-    if (this->db_connect())
-    {
-	if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
-	    && (res = mysql_use_result(this->db_handle)) != NULL)
-	{
-	    while ((row = mysql_fetch_row(res)) != NULL)
-	    {
-		u_int64_t id = strtoull(row[0], NULL, 10);
-		game_object_list_element gole;
-                Geometry *geom = new Geometry();
+    this->db_connect();
 
-		std::clog << "creating object " << id << std::endl;
-		gole.obj = new GameObject(geom, id);
-		gole.position[0] = atol(row[1]) / 100.0;
-		gole.position[1] = atol(row[2]) / 100.0;
-		gole.position[2] = atol(row[3]) / 100.0;
-		/* All objects first rez invisible and non-interactive */
-		gole.obj->natures["invisible"] = 1;
-		gole.obj->natures["non-interactive"] = 1;
-		gomap[id] = gole;
-		++count;
-	    }
-	    mysql_free_result(res);
-	}
-	mysql_close(this->db_handle);
-	std::clog << "got " << count << " server characters" << std::endl;
+    if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
+        && (res = mysql_use_result(this->db_handle)) != NULL)
+    {
+        while ((row = mysql_fetch_row(res)) != NULL)
+        {
+            u_int64_t id = strtoull(row[0], NULL, 10);
+            game_object_list_element gole;
+            Geometry *geom = new Geometry();
+
+            std::clog << "creating object " << id << std::endl;
+            gole.obj = new GameObject(geom, id);
+            gole.position[0] = atol(row[1]) / 100.0;
+            gole.position[1] = atol(row[2]) / 100.0;
+            gole.position[2] = atol(row[3]) / 100.0;
+            /* All objects first rez invisible and non-interactive */
+            gole.obj->natures["invisible"] = 1;
+            gole.obj->natures["non-interactive"] = 1;
+            gomap[id] = gole;
+            ++count;
+        }
+        mysql_free_result(res);
     }
-    return retval;
+    mysql_close(this->db_handle);
+    return count;
 }
 
 /* Get the list of a player's skills which are valid on this server */
@@ -256,7 +254,7 @@ int MySQL::get_player_server_skills(u_int64_t userid,
     MYSQL_RES *res;
     MYSQL_ROW row;
     char str[256];
-    int retval = 0, count = 0;
+    int count = 0;
 
     snprintf(str, sizeof(str),
 	     "SELECT e.skillid, e.level, e.improvement, "
@@ -271,27 +269,24 @@ int MySQL::get_player_server_skills(u_int64_t userid,
 	     "AND c.serverid=d.serverid "
 	     "AND d.skillid=e.skillid",
 	     userid, charid, this->host_ip);
-    if (this->db_connect())
-    {
-	if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
-	    && (res = mysql_use_result(this->db_handle)) != NULL)
-	{
-	    while ((row = mysql_fetch_row(res)) != NULL)
-	    {
-		u_int64_t id = strtoull(row[0], NULL, 10);
+    this->db_connect();
 
-		actions[id].level = atoi(row[1]);
-		actions[id].improvement = atoi(row[2]);
-		actions[id].last_level = (time_t)atol(row[3]);
-		++count;
-	    }
-	    mysql_free_result(res);
-	}
-	mysql_close(this->db_handle);
-	std::clog << "got " << count
-                  << " skills for character " << charid << std::endl;
+    if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
+        && (res = mysql_use_result(this->db_handle)) != NULL)
+    {
+        while ((row = mysql_fetch_row(res)) != NULL)
+        {
+            u_int64_t id = strtoull(row[0], NULL, 10);
+
+            actions[id].level = atoi(row[1]);
+            actions[id].improvement = atoi(row[2]);
+            actions[id].last_level = (time_t)atol(row[3]);
+            ++count;
+        }
+        mysql_free_result(res);
     }
-    return retval;
+    mysql_close(this->db_handle);
+    return count;
 }
 
 int MySQL::open_new_login(u_int64_t userid, u_int64_t charid)
@@ -305,12 +300,11 @@ int MySQL::open_new_login(u_int64_t userid, u_int64_t charid)
 	     "INSERT INTO player_logins "
 	     "(playerid, characterid, serverid, src_ip, src_port, login_time) "
 	     "VALUES (%lld,%lld,%s,%d,%d)", userid, charid);
-    if (this->db_connect())
-    {
-	if ((retval = mysql_real_query(this->db_handle, str, strlen(str))) == 0)
-	    ;
-        mysql_close(this->db_handle);
-    }*/
+    this->db_connect();
+
+    if ((retval = mysql_real_query(this->db_handle, str, strlen(str))) == 0)
+        ;
+    mysql_close(this->db_handle);*/
     return retval;
 }
 
@@ -335,17 +329,16 @@ int MySQL::check_open_login(u_int64_t userid, u_int64_t charid)
 	     "AND c.serverid=d.serverid "
 	     "AND d.logout_time IS NULL",
 	     userid, charid, this->host_ip);
-    if (this->db_connect())
+    this->db_connect();
+
+    if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
+        && (res = mysql_use_result(this->db_handle)) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
     {
-	if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
-	    && (res = mysql_use_result(this->db_handle)) != NULL
-	    && (row = mysql_fetch_row(res)) != NULL)
-	{
-	    retval = atoi(row[0]);
-	    mysql_free_result(res);
-	}
-	mysql_close(this->db_handle);
+        retval = atoi(row[0]);
+        mysql_free_result(res);
     }
+    mysql_close(this->db_handle);
     return retval;
 }
 
@@ -354,20 +347,24 @@ int MySQL::close_open_login(u_int64_t userid, u_int64_t charid)
     return 0;
 }
 
-bool MySQL::db_connect(void)
+void MySQL::db_connect(void)
 {
-    if (this->db_handle == NULL)
-        return false;
+    if ((this->db_handle = mysql_init(NULL)) == NULL)
+    {
+        std::ostringstream s;
+        s << "couldn't init MySQL handle: " << mysql_error(this->db_handle);
+        throw std::runtime_error(s.str());
+    }
 
     if (mysql_real_connect(this->db_handle, this->dbhost.c_str(),
                            this->dbuser.c_str(), this->dbpass.c_str(),
                            this->dbname.c_str(), 0, NULL, 0) == NULL)
     {
-        std::clog << syslogErr << "couldn't connect to MySQL server: "
-                  << mysql_error(this->db_handle) << std::endl;
-        return false;
+        std::ostringstream s;
+        s << "couldn't connect to MySQL server: "
+          << mysql_error(this->db_handle);
+        throw std::runtime_error(s.str());
     }
-    return true;
 }
 
 extern "C" DB *create_db(const char *a, const char *b,
