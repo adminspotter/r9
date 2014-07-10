@@ -1,6 +1,6 @@
 /* inet_console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 12:06:27 trinityquirk
+ *   last updated 10 Jul 2014, 11:59:06 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -25,6 +25,9 @@
  * Changes
  *   31 May 2014 TAQ - Created the file.
  *   09 Jul 2014 TAQ - De-syslogged, and we only throw runtime_errors now.
+ *   10 Jul 2014 TAQ - Missed one catch of an int, now a runtime_error.  Also
+ *                     when a constructor throws an exception, memory is
+ *                     automatically cleaned up.
  *
  * Things to do
  *   - Figure out a clean way to get the name information in here for
@@ -169,14 +172,10 @@ void *InetConsole::listener(void *arg)
 
         if (con->wrap_request(newsock))
         {
-            try
-            {
-                sess = new ConsoleSession(newsock);
-            }
-            catch (int e)
+            try { sess = new ConsoleSession(newsock); }
+            catch (std::exception& e)
             {
                 close(newsock);
-                delete sess;
                 continue;
             }
             con->sessions.push_back(sess);
