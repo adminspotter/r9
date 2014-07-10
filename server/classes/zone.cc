@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 13:44:30 trinityquirk
+ *   last updated 10 Jul 2014, 14:34:16 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -183,7 +183,7 @@ void Zone::load_actions(const std::string& libname)
             = (action_reg_t *)this->action_lib->symbol("actions_register");
         (*reg)(this->actions);
     }
-    catch (std::runtime_error& e)
+    catch (std::exception& e)
     {
         std::clog << syslogErr
                   << "error loading actions library: " << e.what() << std::endl;
@@ -375,13 +375,20 @@ Zone::~Zone()
     }
 
     /* Unregister all the action routines. */
-    std::clog << "cleaning up action routines" << std::endl;
-    if (this->actions.size())
-	this->actions.erase(this->actions.begin(), this->actions.end());
-
-    /* Close the actions library */
     if (this->action_lib != NULL)
+    {
+        std::clog << "cleaning up action routines" << std::endl;
+        try
+        {
+            action_unreg_t *unreg
+                = (action_unreg_t *)this->action_lib->symbol("actions_unregister");
+            (*unreg)(this->actions);
+        }
+        catch (std::exception& e) { /* Do nothing */ }
+
+        /* Close the actions library */
         delete this->action_lib;
+    }
 }
 
 void Zone::start(void)

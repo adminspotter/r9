@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 15:11:51 trinityquirk
+ *   last updated 11 Jul 2014, 10:23:36 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -127,6 +127,7 @@
  *                     once they were created.
  *   05 Jul 2014 TAQ - Moved the remainder of zone_interface in here.
  *   09 Jul 2014 TAQ - Normalized exception handling and logging of errors.
+ *   11 Jul 2014 TAQ - Fixed closing of the std::clog handle.
  *
  * Things to do
  *   - Figure out if we can use a pthread_cond_t without having to have a
@@ -146,6 +147,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include <fstream>
 #include <sstream>
 #include <stdexcept>
 
@@ -429,8 +431,13 @@ static void cleanup_zone(void)
     if (db_lib != NULL)
     {
         std::clog << "closing database library" << std::endl;
-        destroy_db_t *destroy_db = (destroy_db_t *)db_lib->symbol("destroy_db");
-        (*destroy_db)(database);
+        try
+        {
+            destroy_db_t *destroy_db =
+                (destroy_db_t *)db_lib->symbol("destroy_db");
+            (*destroy_db)(database);
+        }
+        catch (std::exception& e) { /* Do nothing */ }
         delete db_lib;
         db_lib = NULL;
     }
@@ -441,8 +448,7 @@ static void cleanup_sockets(void)
 {
     while (sockets.size())
     {
-        try { delete sockets.back(); }
-        catch (...) { }
+        delete sockets.back();
         sockets.pop_back();
     }
 }

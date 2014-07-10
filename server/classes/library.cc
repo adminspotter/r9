@@ -1,6 +1,6 @@
 /* library.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 14:06:46 trinityquirk
+ *   last updated 10 Jul 2014, 14:21:56 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -31,6 +31,7 @@
  *                     Also got rid of the magic lib name behaviour, instead
  *                     just taking the raw name we get passed.
  *   09 Jul 2014 TAQ - Normalized exceptions with the rest of the codebase.
+ *   10 Jul 2014 TAQ - Handle any exceptions in the destructor.
  *
  * Things to do
  *
@@ -51,7 +52,8 @@ Library::Library(const std::string& name)
 
 Library::~Library()
 {
-    this->close();
+    try { this->close(); }
+    catch (std::exception& e) { /* Do nothing */ }
 }
 
 void Library::open(void)

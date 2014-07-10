@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 11:42:00 trinityquirk
+ *   last updated 10 Jul 2014, 14:25:26 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -161,7 +161,8 @@ std::string ConsoleSession::get_line(void)
 
 Console::~Console()
 {
-    this->stop();
+    try { this->stop(); }
+    catch (std::exception& e) { /* Do nothing */ }
     if (this->console_sock)
     {
         close(this->console_sock);

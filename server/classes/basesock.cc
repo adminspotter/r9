@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 13:24:27 trinityquirk
+ *   last updated 10 Jul 2014, 14:24:57 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -41,6 +41,8 @@
  *                     are a couple of instances of exception-worthy errors
  *                     within the listen_socket destructor - is it valid to
  *                     throw exceptions out of a destructor?
+ *   10 Jul 2014 TAQ - Turns out that it is NOT valid to throw exceptions
+ *                     from a destructor, so we just eat the errors.
  *
  * Things to do
  *
@@ -73,7 +75,7 @@ basesock::basesock(struct addrinfo *ai, u_int16_t port)
 basesock::~basesock()
 {
     try { this->stop(); }
-    catch (...) { /* Nothing to do here */ }
+    catch (std::exception& e) { /* Do nothing */ }
     if (this->sock)
     {
         close(this->sock);
@@ -272,7 +274,8 @@ listen_socket::~listen_socket()
     int retval;
     std::map<u_int64_t, base_user *>::iterator i;
 
-    this->stop();
+    try { this->stop(); }
+    catch (std::exception& e) { /* Do nothing */ }
 
     if ((retval = pthread_cancel(this->reaper)) != 0)
     {
