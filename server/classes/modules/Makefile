@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 02 Jul 2014, 08:03:27 tquirk
+#   last updated 11 Jul 2014, 16:46:55 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -62,9 +62,15 @@ LIBTCL = -ltcl
 LIBSTDCPP = -lstdc++.6
 
 HDRS = db.h console.h mysql.h pgsql.h
-CXXSRCS = db.cc mysql.cc pgsql.cc console.cc unix_console.cc inet_console.cc
+MY_SRCS = db.cc mysql.cc
+PQ_SRCS = db.cc pgsql.cc
+CON_SRCS = console.cc unix_console.cc inet_console.cc
+CXX_SRCS = $(MY_SRCS) $(PQ_SRCS) $(CON_SRCS)
 SRCS = perl.c tcl.c
-OBJS = ${CXXSRCS:.cc=.lo} ${SRCS:.c=.lo}
+MY_OBJS = ${MY_SRCS:.cc=.lo}
+PQ_OBJS = ${PQ_SRCS:.cc=.lo}
+CON_OBJS = ${CON_SRCS:.cc=.lo}
+OBJS = ${SRCS:.c=.lo}
 TARGETS = libr9_console.la libr9_MySQL.la libr9_pgsql.la libr9_perl.la \
 	libr9_tcl.la
 
@@ -80,17 +86,17 @@ TARGETS = libr9_console.la libr9_MySQL.la libr9_pgsql.la libr9_perl.la \
 
 all : Makefile.depend TAGS $(TARGETS)
 
-libr9_console.la : console.lo unix_console.lo inet_console.lo
-	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBWRAP) $(LIBSTDCPP)
+libr9_console.la : $(CON_OBJS)
+	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $(CON_OBJS) -rpath $(LIBDIR) $(LIBWRAP) $(LIBSTDCPP)
 
-libr9_MySQL.la : mysql.lo db.lo
-	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBMYSQL)
+libr9_MySQL.la : $(MY_OBJS)
+	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $(MY_OBJS) -rpath $(LIBDIR) $(LIBMYSQL)
 
-libr9_pgsql.la : pgsql.lo db.lo
-	$(CXX) $(LDFLAGS) $(LIBPQ) $< -o $@
+libr9_pgsql.la : $(PQ_OBJS)
+	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $(PQ_OBJS) -rpath $(LIBDIR) $(LIBPQ)
 
 libr9_perl.la : perl.lo
-	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBPERL)
+	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBPERL)
 
 libr9_tcl.la : tcl.lo
 	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBTCL)
@@ -112,6 +118,6 @@ uninstall :
 	for file in $(TARGETS) ; do if [ -e $$file ] ; then $(LIBTOOL) --mode=uninstall $(RM) $(LIBDIR)/$$file ; fi ; done
 
 clean :
-	$(LIBTOOL) --mode=clean $(RM) $(OBJS) $(TARGETS) core TAGS Makefile.bak Makefile.depend
+	$(LIBTOOL) --mode=clean $(RM) $(MY_OBJS) $(PQ_OBJS) $(CON_OBLS) $(OBJS) $(TARGETS) core TAGS Makefile.bak Makefile.depend
 
 -include Makefile.depend

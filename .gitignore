@@ -5,11 +5,10 @@
 *.so
 *.dylib
 #*#
-.#*#
+.#*
 *~
 TAGS
 Makefile.depend
 .libs/
-conf/
 old/
 server

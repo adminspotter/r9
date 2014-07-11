@@ -1,6 +1,6 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 11:33:11 trinityquirk
+ *   last updated 11 Jul 2014, 16:48:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -63,9 +63,9 @@ void DB::get_host_address(void)
     if ((ret = gethostname(hostname, sizeof(hostname))) != 0)
     {
         std::ostringstream s;
-	s << "couldn't get hostname: "
+        s << "couldn't get hostname: "
           << strerror(errno) << " (" << errno << ")";
-	throw std::runtime_error(s.str());
+        throw std::runtime_error(s.str());
     }
     if ((ret = getaddrinfo(hostname, NULL, NULL, &info)) != 0)
     {

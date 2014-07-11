@@ -1,6 +1,6 @@
 /* config.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquick@ymb.net>
- *   last updated 23 Jun 2014, 18:23:33 tquirk
+ *   last updated 11 Jul 2014, 17:22:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -78,6 +78,7 @@
  *                     to be simpler than the current weirdness.  Moved the
  *                     interesting parts of defaults.h into the class.
  *   23 Jun 2014 TAQ - Moved all the constant initializers into the .cc file.
+ *   11 Jul 2014 TAQ - Added constants for the zone size parameters.
  *
  * Things to do
  *
@@ -105,6 +106,8 @@ class config_data
     static const int MIN_SUBSERV;
     static const int MAX_SUBSERV;
     static const int NUM_THREADS;
+    static const int ZONE_SIZE;
+    static const int ZONE_STEPS;
     static const float LOAD_THRESH;
     static const char SERVER_ROOT[];
     static const char LOG_PREFIX[];
@@ -139,7 +142,7 @@ class config_data
     void set_defaults(void);
 
   private:
-    int parse_config_line(std::string&);
+    void parse_config_line(std::string&);
 };
 
 extern config_data config;
