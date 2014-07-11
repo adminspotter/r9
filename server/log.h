@@ -1,6 +1,6 @@
 /* log.h                                                   -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jun 2014, 18:18:37 tquirk
+ *   last updated 11 Jul 2014, 10:50:48 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -28,6 +28,7 @@
  * Changes
  *   21 Jun 2014 TAQ - Created the file.
  *   23 Jun 2014 TAQ - Small tweaks to get things compiling correctly.
+ *   11 Jul 2014 TAQ - Added a close method.
  *
  * Things to do
  *
@@ -64,6 +65,8 @@ class Log : public std::basic_streambuf<char, std::char_traits<char> >
   public:
     explicit Log(std::string, int);
     ~Log();
+
+    void close(void);
 
   protected:
     int sync();

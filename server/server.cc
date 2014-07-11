@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2014, 10:23:36 trinityquirk
+ *   last updated 11 Jul 2014, 10:48:35 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -457,7 +457,7 @@ static void cleanup_log(void)
 {
     /* Close the system log gracefully. */
     std::clog << syslogNotice << "terminating" << std::endl;
-    /* Figure out how to set the stream buffer back to normal */
+    dynamic_cast<Log *>(std::clog.rdbuf())->close();
 }
 
 static void cleanup_daemon(void)

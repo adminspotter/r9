@@ -1,6 +1,6 @@
 /* log.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Jun 2014, 18:58:22 tquirk
+ *   last updated 11 Jul 2014, 10:51:05 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -27,6 +27,7 @@
  *   21 Jun 2014 TAQ - Created the file.
  *   23 Jun 2014 TAQ - Small tweaks to get things compiling properly.
  *   27 Jun 2014 TAQ - Handled a possible format string vulnerability.
+ *   11 Jul 2014 TAQ - Added the close method.
  *
  * Things to do
  *
@@ -45,6 +46,11 @@ Log::Log(std::string ident, int fac)
 }
 
 Log::~Log()
+{
+    this->close();
+}
+
+void Log::close(void)
 {
     closelog();
 }
