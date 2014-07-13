@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2014, 11:12:31 tquirk
+ *   last updated 13 Jul 2014, 16:01:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -68,16 +68,18 @@
  *                     parser as a private class.
  *   12 Jul 2014 TAQ - We want to use hex numbers in our file names/paths,
  *                     and they're XML files, so use the .xml extension.
+ *   13 Jul 2014 TAQ - We were leaking lots of display lists, in both the
+ *                     reaper and in the destructor.  Fixed.
  *
  * Things to do
- *   - The parser is a massive race condition - we're constructing display
- *     lists as we see the elements.  The regular display loop could be
- *     operating at the same time, and we'd get a bunch of stuff we don't
- *     expect in our list.  A mutex will probably be necessary, to lock out
- *     the regular display loop while we're parsing.
- *   - Oh, so it turns out that using display lists is massively deprecated
- *     or no longer supported at all, so I guess we'll have to figure out
- *     how to use the new-style vertex stuff.
+ *   - The parser is a massive race condition - we're constructing
+ *     display lists as we see the elements.  The regular display loop
+ *     could be operating at the same time, and we'd get a bunch of
+ *     stuff we don't expect in our list.  A mutex may be necessary,
+ *     to lock out the regular display loop while we're parsing.
+ *   - Oh, so it turns out that using display lists is massively
+ *     deprecated or no longer supported at all, so I guess we'll have
+ *     to figure out how to use the new-style vertex stuff.
  *
  */
 
@@ -544,6 +546,9 @@ void *GeometryCache::prune_worker(void *arg)
                 }
             if (too_old)
             {
+                /* Say no to display list leakage! */
+                for (j = i->second.begin(); j != i->second.end(); ++j)
+                    glDeleteLists(j->disp_list, 1);
                 gc->geom.erase(i--);
                 ++count;
             }
@@ -618,6 +623,8 @@ GeometryCache::GeometryCache()
 GeometryCache::~GeometryCache()
 {
     int ret;
+    std::unordered_map<u_int64_t, std::vector<geometry> >::iterator i;
+    std::vector<geometry>::iterator j;
 
     if ((ret = pthread_cancel(this->prune_thread)) != 0)
     {
@@ -634,6 +641,11 @@ GeometryCache::~GeometryCache()
           << strerror(ret) << " (" << ret << ")";
         main_post_message(s.str());
     }
+
+    /* Prevent display list leakage */
+    for (i = this->geom.begin(); i != this->geom.end(); ++i)
+        for (j = i->second.begin(); j != i->second.end(); ++j)
+            glDeleteLists(j->disp_list, 1);
     this->geom.clear();
 }
 
