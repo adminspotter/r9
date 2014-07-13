@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jul 2014, 14:43:09 tquirk
+ *   last updated 13 Jul 2014, 11:12:31 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -66,6 +66,8 @@
  *                     std::unordered_map.  Writing our own hash table is
  *                     nice, but unnecessary.  We've also got an XML file
  *                     parser as a private class.
+ *   12 Jul 2014 TAQ - We want to use hex numbers in our file names/paths,
+ *                     and they're XML files, so use the .xml extension.
  *
  * Things to do
  *   - The parser is a massive race condition - we're constructing display
@@ -73,6 +75,9 @@
  *     operating at the same time, and we'd get a bunch of stuff we don't
  *     expect in our list.  A mutex will probably be necessary, to lock out
  *     the regular display loop while we're parsing.
+ *   - Oh, so it turns out that using display lists is massively deprecated
+ *     or no longer supported at all, so I guess we'll have to figure out
+ *     how to use the new-style vertex stuff.
  *
  */
 
@@ -85,6 +90,7 @@
 #include <errno.h>
 
 #include <sstream>
+#include <iomanip>
 #include <stdexcept>
 
 #include "geometry.h"
@@ -149,8 +155,7 @@ void GeometryCache::FileParser::open_frame(XNS::AttributeList& attrs)
     if (this->current == geometry_st)
     {
         this->current = frame_st;
-        /* Figure out the right list ID to use here */
-        this->geom.disp_list = 0;
+        this->geom.disp_list = glGenLists(1);
         /* This would be the time to grab a mutex */
         glNewList(this->geom.disp_list, GL_COMPILE);
     }
@@ -167,7 +172,7 @@ void GeometryCache::FileParser::close_frame(void)
         /* This would be the time to drop a mutex */
         gettimeofday(&(this->geom), NULL);
         parent->geom[this->objid].push_back(this->geom);
-        ++(this-frameid);
+        ++(this->frameid);
     }
     else
         throw std::runtime_error("Bad frame close tag");
@@ -296,7 +301,7 @@ void GeometryCache::FileParser::close_point(void)
         glVertex3fv(this->pt);
     }
     else
-        throw thistd::runtime_error("Bad point close tag");
+        throw std::runtime_error("Bad point close tag");
 }
 
 void GeometryCache::FileParser::open_vertex(XNS::AttributeList& attrs)
@@ -532,7 +537,7 @@ void *GeometryCache::prune_worker(void *arg)
         {
             too_old = true;
             for (j = i->second.begin(); j != i->second.end(); ++j)
-                if (i->lastused.tv_sec >= limit.tv_sec)
+                if (j->lastused.tv_sec >= limit.tv_sec)
                 {
                     too_old = false;
                     break;
@@ -600,7 +605,7 @@ GeometryCache::GeometryCache()
 
     if ((ret = pthread_create(&(this->prune_thread),
                               NULL,
-                              geometry_prune_worker,
+                              this->prune_worker,
                               (void *)this)) != 0)
     {
         std::ostringstream s;
@@ -638,15 +643,15 @@ void GeometryCache::load(u_int64_t objectid)
      * recently than the system store.
      */
     std::ostringstream user_fname;
-    user_fname << this->cache << '/' << objectid & 0xFF << '/'
-               << objectid << '/' << objectid << ".txt";
+    user_fname << this->cache << '/' << std::hex << objectid & 0xFF << '/'
+               << objectid << ".xml";
     if (this->parse_file(user_fname.str()))
         return;
 
     /* Didn't find it in the user cache; now look in the system store */
     std::ostringstream store_fname;
-    store_fname << this->store << '/' << objectid & 0xFF << '/'
-                << objectid << '/' << objectid << ".txt";
+    store_fname << this->store << '/' << std::hex << objectid & 0xFF << '/'
+                << objectid << ".xml";
     if (this->parse_file(store_fname.str()))
         return;
 
@@ -662,10 +667,11 @@ geometry *GeometryCache::fetch(u_int64_t objid, u_int16_t frame)
     std::unordered_map<u_int64_t, std::vector<geometry> >::iterator obj;
 
     if ((obj = this->geom.find(objid)) != this->geom.end()
-        && obj->second.size() > frame)
+        && obj->second.size() >= frame)
     {
         gettimeofday(&(obj->[frame].lastused), NULL);
         return &(obj->[frame]);
     }
+    this->load(objid);
     return NULL;
 }

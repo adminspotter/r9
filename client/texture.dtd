@@ -1,0 +1,23 @@
+<!ELEMENT texture (diffuse, specular, shininess, mapfile?)>
+<!ATTLIST texture
+    version #FIXED "1"
+    identifier CDATA #REQUIRED>
+
+<!ELEMENT diffuse (rgba)>
+
+<!ELEMENT specular (rgba)>
+
+<!ELEMENT shininess EMPTY>
+<!ATTLIST shininess
+    value CDATA #REQUIRED>
+
+<!ELEMENT rgba EMPTY>
+<!ATTLIST rgba
+    r CDATA #REQUIRED
+    g CDATA #REQUIRED
+    b CDATA #REQUIRED
+    a CDATA #REQUIRED>
+
+<!ELEMENT mapfile EMPTY>
+<!ATTLIST mapfile
+    filename CDATA #REQUIRED>
