@@ -1,6 +1,6 @@
 /* perl.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jul 2014, 08:51:20 tquirk
+ *   last updated 15 Jul 2014, 11:35:44 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -20,10 +20,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the code to load the perl library, create an
- * interpreter, source in the game logic file, and execute arbitrary
- * commands in the interpreter.  This will likely be used for console
- * activity, and maybe NPC logic.
+ * This file contains the class which handles an embedded perl
+ * interpreter.  We can use this for quickly prototyping (or writing,
+ * if performance is acceptable) control scripts, or possibly also for
+ * doing fancy stuff on the server console.
+ *
+ * perlembed has improved dramatically since the first version of this
+ * file.  There is, however, a bit of magic in the perl includes,
+ * which expects the name of the interpreter to be my_perl.  There's a
+ * define before the functions which sets it to our interpreter.
+ * Undocumented magic, FTL.
  *
  * Changes
  *   25 Jul 1998 TAQ - Created the file.
@@ -39,105 +45,62 @@
  *   02 Jul 2014 TAQ - Substituted typedefs for symbol defines.  We're now
  *                     using the C++ library and logging objects, which make
  *                     things much more straightforward.
+ *   15 Jul 2014 TAQ - This is now a class.  Also, doing all the dynamic
+ *                     loading and whatnot was just silly - why not link with
+ *                     the appropriate library, and just call the functions
+ *                     directly?  Also added a couple of factory functions.
  *
  * Things to do
  *   - Figure out what we really want to do with this.
  *
  */
 
-#include <EXTERN.h>
-#include <perl.h>
+#include <sstream>
+#include <stdexcept>
 
-#include "../library.h"
+#include "perl.h"
 
-#ifndef PERL_LIBNAME
-#define PERL_LIBNAME     "libperl.so.5"
-#endif /* PERL_LIBNAME */
+/* MAGIC!!! */
+#define my_perl this->interp
 
-/* Some typedefs to make symbol-grabbing a little easier */
-typedef PerlInterpreter *perl_alloc_t(void);
-typedef void perl_construct_t(PerlInterpreter *);
-typedef void perl_parse_t(PerlInterpreter *, void (*)(void), int,
-                          char **, char **);
-typedef void perl_eval_t(char *, I32)
-
-void cleanup_perl(void);
-
-static Library *perl_lib = NULL;
-static PerlInterpreter *interp = NULL;
-static perl_eval_t *perl_eval_pv = NULL;
-
-void setup_perl(const char *fname)
+PerlLanguage::PerlLanguage()
 {
-    perl_alloc_t *alloc;
-    perl_construct_t *construct, *run;
-    perl_parse_t *parse;
-    char *args[2];
+    int argc = 3;
+    char *argv[] = { "", "-e", "0" };
 
-    args[0] = "";
-    args[1] = (char *)fname;
-
-    try
+    if ((this->interp = perl_alloc()) == NULL)
     {
-        perl_lib = new Library(PERL_LIBNAME);
-        alloc = (perl_alloc_t *)perl_lib->symbol("perl_alloc");
-        construct = (perl_construct_t *)perl_lib->symbol("perl_construct");
-        parse = (perl_parse_t *)perl_lib->symbol("perl_parse");
-        run = (perl_construct_t *)perl_lib->symbol("perl_run");
-        perl_eval_pv = (perl_eval_t *)perl_lib->symbol("perl_eval_pv");
+        std::ostringstream s;
+        s << "couldn't create perl interpreter" << std::endl;
+        throw std::runtime_error(s.str());
     }
-    catch (std::string& e)
-    {
-        /* Didn't get either the lib or symbols, so we'll keep failing. */
-        throw;
-    }
-
-    if ((interp = (*alloc)()) == NULL)
-    {
-        std::clog << syslogErr
-                  << "couldn't create perl interpreter" << std::endl;
-        cleanup_perl();
-        return;
-    }
-    (*construct)(interp);
-
-    /* We have an interpreter, so source the logic file. */
-    (*parse)(interp, NULL, 2, args, NULL);
-    /* Running perl_run actually completes all the initialization. */
-    (*run)(interp);
+    perl_construct(this->interp);
+    perl_parse(this->interp, NULL, argc, argv, NULL);
+    PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
+    perl_run(this->interp);
 
     /* Install any routines into the interpreter that need installing */
 }
 
-void execute_perl(const char *cmd)
+PerlLanguage::~PerlLanguage(void)
 {
-    if (interp == NULL || perl_eval_pv == NULL)
-	return;
-
-    /* We want the interpreter to vomit if there's an error. */
-    (*perl_eval_pv)((char *)cmd, TRUE);
+    perl_destruct(this->interp);
+    perl_free(this->interp);
+    this->interp = NULL;
 }
 
-void cleanup_perl(void)
+std::string PerlLanguage::execute(const std::string& cmd)
 {
-    void *perl_sym = NULL;
-    perl_construct_t *destruct, *free;
+    SV *val = eval_pv(cmd.c_str(), TRUE);
+    return std::string(SvPV_nolen(val));
+}
 
-    if (perl_lib != NULL)
-    {
-        if (interp != NULL)
-        {
-            /* If any errors occur in here, there will be a memory leak,
-             * but I'm not sure how to do it otherwise.
-             */
-            destruct = (perl_construct_t *)perl_lib->symbol("perl_destruct");
-            free = (perl_construct_t *)perl_lib->symbol("perl_free");
+Language *create_language(void)
+{
+    return new PerlLanguage();
+}
 
-            (*destruct)(interp);
-            (*free)(interp);
-        }
-        interp = NULL;
-        delete perl_lib;
-        perl_lib = NULL;
-    }
+void destroy_language(Language *lang)
+{
+    delete lang;
 }

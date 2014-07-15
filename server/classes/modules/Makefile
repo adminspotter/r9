@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 02 Jul 2014, 08:48:37 tquirk
+#   last updated 15 Jul 2014, 11:51:28 trinityquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -48,17 +48,17 @@
 
 -include ../../../Makefile.defs
 
-CPERLINC = -I/usr/lib/perl/5.14/CORE
+-include Makefile.perldefs
+
 CTCLINC = -I/usr/include/tcl
 CMYINC = -I/usr/local/mysql/include
-CMOREINCLUDE = $(CPERLINC) $(CTCLINC) $(CMYINC) -I/usr/include/c++/4.2.1
+CMOREINCLUDE = $(CTCLINC) $(CMYINC) -I/usr/include/c++/4.2.1
 CDEFS = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_GNU_SOURCE -D_REENTRANT
 CFLAGS = -Wall -g $(CDEFS) $(CINCLUDE) $(CMOREINCLUDE)
 
 #LIBWRAP = -lwrap
 LIBMYSQL = -L/usr/local/mysql/lib -lmysqlclient_r
 LIBPQ = -lpq
-LIBPERL = -lperl
 LIBTCL = -ltcl
 LIBSTDCPP = -lstdc++.6
 
@@ -91,14 +91,21 @@ libr9_MySQL.la : mysql.lo db.lo
 libr9_pgsql.la : pgsql.lo db.lo
 	$(CXX) $(LDFLAGS) $(LIBPQ) $< -o $@
 
+perl.lo : perl.cc
+	$(LIBTOOL) --mode=compile $(CXX) $(PERLCFLAGS) -c $<
+
 libr9_perl.la : perl.lo
-	$(LIBTOOL) --mode=link $(CX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBPERL)
+	$(LIBTOOL) --mode=link $(CXX) $(PERLCFLAGS) -o $@ $< -rpath $(LIBDIR) $(PERLLDFLAGS)
 
 libr9_tcl.la : tcl.lo
 	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBTCL)
 
 Makefile.depend : $(SRCS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) $(CXXSRCS) 2> /dev/null > Makefile.depend
+
+Makefile.perldefs :
+	echo "PERLCFLAGS = `perl -MExtUtils::Embed -e ccopts`" > $@
+	echo "PERLLDFLAGS = `perl -MExtUtils::Embed -e ldopts`" >> $@
 
 tags : TAGS
 
