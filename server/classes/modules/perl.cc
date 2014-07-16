@@ -1,6 +1,6 @@
 /* perl.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jul 2014, 11:35:44 trinityquirk
+ *   last updated 16 Jul 2014, 10:11:11 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -71,7 +71,7 @@ PerlLanguage::PerlLanguage()
     if ((this->interp = perl_alloc()) == NULL)
     {
         std::ostringstream s;
-        s << "couldn't create perl interpreter" << std::endl;
+        s << "couldn't create perl interpreter";
         throw std::runtime_error(s.str());
     }
     perl_construct(this->interp);

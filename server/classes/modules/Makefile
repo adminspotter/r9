@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 15 Jul 2014, 11:51:28 trinityquirk
+#   last updated 16 Jul 2014, 10:24:56 trinityquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -42,6 +42,8 @@
 #                     on targets which have been built.
 #   02 Jul 2014 TAQ - We're now linking libr9_console to the right libstdc++.
 #                     Perl is now C++.
+#   16 Jul 2014 TAQ - Made some changes for the perl and tcl embedded language
+#                     stuff.  There's probably a more general way to do it.
 #
 # Things to do
 #
@@ -50,11 +52,11 @@
 
 -include Makefile.perldefs
 
-CTCLINC = -I/usr/include/tcl
-CMYINC = -I/usr/local/mysql/include
-CMOREINCLUDE = $(CTCLINC) $(CMYINC) -I/usr/include/c++/4.2.1
 CDEFS = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_GNU_SOURCE -D_REENTRANT
-CFLAGS = -Wall -g $(CDEFS) $(CINCLUDE) $(CMOREINCLUDE)
+CFLAGS = -Wall -g $(CDEFS) $(CINCLUDE)
+CONCFLAGS = $(CFLAGS) -I/usr/include/c++/4.2.1
+MYCFLAGS = $(CFLAGS) -I/usr/local/mysql/include
+TCLCFLAGS = $(CFLAGS) -I/usr/include/tcl
 
 #LIBWRAP = -lwrap
 LIBMYSQL = -L/usr/local/mysql/lib -lmysqlclient_r
@@ -62,18 +64,15 @@ LIBPQ = -lpq
 LIBTCL = -ltcl
 LIBSTDCPP = -lstdc++.6
 
-HDRS = db.h console.h mysql.h pgsql.h
-CXXSRCS = db.cc mysql.cc pgsql.cc console.cc unix_console.cc inet_console.cc \
-	perl.cc
-SRCS = tcl.c
-OBJS = ${CXXSRCS:.cc=.lo} ${SRCS:.c=.lo}
+HDRS = db.h console.h unix_console.h inet_console.h mysql.h pgsql.h perl.h tcl.h
+CXXSRCS = db.cc mysql.cc pgsql.cc \
+	console.cc unix_console.cc inet_console.cc \
+	perl.cc tcl.cc
+OBJS = ${CXXSRCS:.cc=.lo}
 TARGETS = libr9_console.la libr9_MySQL.la libr9_pgsql.la libr9_perl.la \
 	libr9_tcl.la
 
-.SUFFIXES : .c .cc .lo
-
-.c.lo :
-	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -c $<
+.SUFFIXES : .cc .lo
 
 .cc.lo :
 	$(LIBTOOL) --mode=compile $(CXX) $(CFLAGS) -c $<
@@ -82,11 +81,23 @@ TARGETS = libr9_console.la libr9_MySQL.la libr9_pgsql.la libr9_perl.la \
 
 all : Makefile.depend TAGS $(TARGETS)
 
+console.lo : console.cc
+	$(LIBTOOL) --mode=compile $(CXX) $(CONCFLAGS) -c $<
+
+unix_console.lo : unix_console.cc
+	$(LIBTOOL) --mode=compile $(CXX) $(CONCFLAGS) -c $<
+
+inet_console.lo : inet_console.cc
+	$(LIBTOOL) --mode=compile $(CXX) $(CONCFLAGS) -c $<
+
 libr9_console.la : console.lo unix_console.lo inet_console.lo
-	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBWRAP) $(LIBSTDCPP)
+	$(LIBTOOL) --mode=link $(CXX) $(CONCFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBWRAP) $(LIBSTDCPP)
+
+mysql.lo : mysql.cc
+	$(LIBTOOL --mode=compile $(CXX) $(MYCFLAGS) -c $<
 
 libr9_MySQL.la : mysql.lo db.lo
-	$(LIBTOOL) --mode=link $(CXX) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBMYSQL)
+	$(LIBTOOL) --mode=link $(CXX) $(MYCFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBMYSQL)
 
 libr9_pgsql.la : pgsql.lo db.lo
 	$(CXX) $(LDFLAGS) $(LIBPQ) $< -o $@
@@ -97,11 +108,14 @@ perl.lo : perl.cc
 libr9_perl.la : perl.lo
 	$(LIBTOOL) --mode=link $(CXX) $(PERLCFLAGS) -o $@ $< -rpath $(LIBDIR) $(PERLLDFLAGS)
 
-libr9_tcl.la : tcl.lo
-	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBTCL)
+tcl.lo : tcl.cc
+	$(LIBTOOL) --mode=compile $(CXX) $(TCLCFLAGS) -I/usr/include/tcl -c $<
 
-Makefile.depend : $(SRCS)
-	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) $(CXXSRCS) 2> /dev/null > Makefile.depend
+libr9_tcl.la : tcl.lo
+	$(LIBTOOL) --mode=link $(CC) $(TCLCFLAGS) -o $@ $< -rpath $(LIBDIR) $(LIBTCL)
+
+Makefile.depend : $(CXXSRCS)
+	@$(DEPEND) -- $(CFLAGS) -- $(CXXSRCS) 2> /dev/null > Makefile.depend
 
 Makefile.perldefs :
 	echo "PERLCFLAGS = `perl -MExtUtils::Embed -e ccopts`" > $@
@@ -109,8 +123,8 @@ Makefile.perldefs :
 
 tags : TAGS
 
-TAGS : $(HDRS) $(CXXSRCS) $(SRCS)
-	@$(MAKETAGS) $(HDRS) $(CXXSRCS) $(SRCS)
+TAGS : $(HDRS) $(CXXSRCS)
+	@$(MAKETAGS) $(HDRS) $(CXXSRCS)
 
 # Only install the targets which have been built
 install :

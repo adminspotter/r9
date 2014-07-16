@@ -1,6 +1,6 @@
-/* perl.h                                                  -*- C++ -*-
+/* tcl.h                                                   -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jul 2014, 10:08:57 trinityquirk
+ *   last updated 16 Jul 2014, 10:08:30 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -20,33 +20,32 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the class for embedding perl.  Pretty simple, really.
+ * This file contains the class for embedding tcl.
  *
  * Changes
- *   15 Jul 2014 TAQ - Created the file.
+ *   16 Jul 2014 TAQ - Created the file.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_R9PERL_H__
-#define __INC_R9PERL_H__
+#ifndef __INC_R9TCL_H__
+#define __INC_R9TCL_H__
 
-#include <EXTERN.h>
-#include <perl.h>
+#include <tcl.h>
 
 #include "language.h"
 
-class PerlLanguage : public Language
+class TclLanguage : public Language
 {
   private:
-    PerlInterpreter *interp;
+    TclInterp *interp;
 
   public:
-    PerlLanguage();
-    ~PerlLanguage();
+    TclLanguage();
+    ~TclLanguage();
 
     std::string execute(const std::string&);
 };
 
-#endif /* __INC_R9PERL_H__ */
+#endif /* __INC_R9TCL_H__ */
