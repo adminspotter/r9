@@ -209,30 +209,30 @@ void *Zone::action_pool_worker(void *arg)
     std::clog << "started action pool worker" << std::endl;
     for (;;)
     {
-	/* Grab the next packet off the queue */
-	zone->action_pool->pop(&req);
+        /* Grab the next packet off the queue */
+        zone->action_pool->pop(&req);
 
-	/* Process the packet */
-	ntoh_packet(&req.buf, sizeof(packet));
+        /* Process the packet */
+        ntoh_packet(&req.buf, sizeof(packet));
 
-	/* Make sure the action exists and is valid on this server,
-	 * before trying to do anything
-	 */
-	skillid = req.buf.act.action_id;
-	if (zone->actions.find(skillid) != zone->actions.end()
-	    && zone->actions[skillid].valid == true)
-	{
-	    /* Make the action call.
-	     *
-	     * The action routine will handle checking the environment
-	     * and relevant skills of the target, and spawning of any
-	     * new needed subobjects.
-	     */
-	    if (((Control *)req.who)->slave->object->get_object_id()
-		== req.buf.act.object_id)
-		((Control *)req.who)->execute_action(req.buf.act,
-						     sizeof(action_request));
-	}
+        /* Make sure the action exists and is valid on this server,
+         * before trying to do anything
+         */
+        skillid = req.buf.act.action_id;
+        if (zone->actions.find(skillid) != zone->actions.end()
+            && zone->actions[skillid].valid == true)
+        {
+            /* Make the action call.
+             *
+             * The action routine will handle checking the environment
+             * and relevant skills of the target, and spawning of any
+             * new needed subobjects.
+             */
+            if (((Control *)req.who)->slave->object->get_object_id()
+                == req.buf.act.object_id)
+                ((Control *)req.who)->execute_action(req.buf.act,
+                                                     sizeof(action_request));
+        }
     }
     std::clog << "action pool worker ending" << std::endl;
     return NULL;
@@ -248,32 +248,32 @@ void *Zone::motion_pool_worker(void *arg)
     std::clog << "started a motion pool worker" << std::endl;
     for (;;)
     {
-	/* Grab the next object to move off the queue */
-	zone->motion_pool->pop(&req);
+        /* Grab the next object to move off the queue */
+        zone->motion_pool->pop(&req);
 
-	/* Process the movement */
-	/* Get interval since last move */
-	gettimeofday(&current, NULL);
-	interval = (current.tv_sec + (current.tv_usec * 1000000))
-	    - (req->last_updated.tv_sec
-	       + (req->last_updated.tv_usec * 1000000));
-	/* Do the actual move, scaled by the interval */
-	req->position += req->movement * interval;
-	/*zone->game_objects[req->get_object_id()].orientation
-	    += req->rotation * interval;*/
-	/* Do collisions (not yet) */
-	/* Reset last update to "now" */
-	memcpy(&req->last_updated, &current, sizeof(struct timeval));
-	/* We've moved, so users need updating */
-	zone->update_pool->push(req);
-	/* If we're still moving, queue it up */
-	if ((req->movement[0] != 0.0
-	     || req->movement[1] != 0.0
-	     || req->movement[2] != 0.0)
-	    || (req->rotation[0] != 0.0
-		|| req->rotation[1] != 0.0
-		|| req->rotation[2] != 0.0))
-	    zone->motion_pool->push(req);
+        /* Process the movement */
+        /* Get interval since last move */
+        gettimeofday(&current, NULL);
+        interval = (current.tv_sec + (current.tv_usec * 1000000))
+            - (req->last_updated.tv_sec
+               + (req->last_updated.tv_usec * 1000000));
+        /* Do the actual move, scaled by the interval */
+        req->position += req->movement * interval;
+        /*zone->game_objects[req->get_object_id()].orientation
+            += req->rotation * interval;*/
+        /* Do collisions (not yet) */
+        /* Reset last update to "now" */
+        memcpy(&req->last_updated, &current, sizeof(struct timeval));
+        /* We've moved, so users need updating */
+        zone->update_pool->push(req);
+        /* If we're still moving, queue it up */
+        if ((req->movement[0] != 0.0
+             || req->movement[1] != 0.0
+             || req->movement[2] != 0.0)
+            || (req->rotation[0] != 0.0
+                || req->rotation[1] != 0.0
+                || req->rotation[2] != 0.0))
+            zone->motion_pool->push(req);
     }
     std::clog << "motion pool worker ending" << std::endl;
     return NULL;
@@ -289,26 +289,26 @@ void *Zone::update_pool_worker(void *arg)
     std::clog << "started an update pool worker" << std::endl;
     for (;;)
     {
-	zone->update_pool->pop(&req);
+        zone->update_pool->pop(&req);
 
-	/* Process the request */
-	/* We won't bother to figure out who can see what just yet */
-	buf.buf.pos.type = TYPE_POSUPD;
-	/* We're not using a sequence number yet, but don't forget about it */
-	objid = buf.buf.pos.object_id = req->object->get_object_id();
-	/* We're not doing frame number yet, but don't forget about it */
-	buf.buf.pos.x_pos = (u_int64_t)trunc(req->position[0] * 100);
-	buf.buf.pos.y_pos = (u_int64_t)trunc(req->position[1] * 100);
-	buf.buf.pos.z_pos = (u_int64_t)trunc(req->position[2] * 100);
-	/*buf.buf.pos.x_orient = (int32_t)trunc(req->orientation[0] * 100);
-	buf.buf.pos.y_orient = (int32_t)trunc(req->orientation[1] * 100);
-	buf.buf.pos.z_orient = (int32_t)trunc(req->orientation[2] * 100);*/
-	buf.buf.pos.x_look = (int32_t)trunc(req->look[0] * 100);
-	buf.buf.pos.y_look = (int32_t)trunc(req->look[1] * 100);
-	buf.buf.pos.z_look = (int32_t)trunc(req->look[2] * 100);
-	/* Figure out who to send it to */
-	/* Push the packet onto the send queue */
-	/*zone->sending_pool->push(&buf, sizeof(packet));*/
+        /* Process the request */
+        /* We won't bother to figure out who can see what just yet */
+        buf.buf.pos.type = TYPE_POSUPD;
+        /* We're not using a sequence number yet, but don't forget about it */
+        objid = buf.buf.pos.object_id = req->object->get_object_id();
+        /* We're not doing frame number yet, but don't forget about it */
+        buf.buf.pos.x_pos = (u_int64_t)trunc(req->position[0] * 100);
+        buf.buf.pos.y_pos = (u_int64_t)trunc(req->position[1] * 100);
+        buf.buf.pos.z_pos = (u_int64_t)trunc(req->position[2] * 100);
+        /*buf.buf.pos.x_orient = (int32_t)trunc(req->orientation[0] * 100);
+        buf.buf.pos.y_orient = (int32_t)trunc(req->orientation[1] * 100);
+        buf.buf.pos.z_orient = (int32_t)trunc(req->orientation[2] * 100);*/
+        buf.buf.pos.x_look = (int32_t)trunc(req->look[0] * 100);
+        buf.buf.pos.y_look = (int32_t)trunc(req->look[1] * 100);
+        buf.buf.pos.z_look = (int32_t)trunc(req->look[2] * 100);
+        /* Figure out who to send it to */
+        /* Push the packet onto the send queue */
+        /*zone->sending_pool->push(&buf, sizeof(packet));*/
     }
     std::clog << "update pool worker ending" << std::endl;
     return NULL;
@@ -324,7 +324,7 @@ Zone::Zone(u_int64_t dim, u_int16_t steps)
 }
 
 Zone::Zone(u_int64_t xd, u_int64_t yd, u_int64_t zd,
-	   u_int16_t xs, u_int16_t ys, u_int16_t zs)
+           u_int16_t xs, u_int16_t ys, u_int16_t zs)
     : sectors(), actions(), game_objects()
 {
     this->x_dim = xd;
@@ -345,33 +345,33 @@ Zone::~Zone()
     std::clog << "deleting thread pools" << std::endl;
     if (this->action_pool != NULL)
     {
-	delete this->action_pool;
-	this->action_pool = NULL;
+        delete this->action_pool;
+        this->action_pool = NULL;
     }
     if (this->motion_pool != NULL)
     {
-	delete this->motion_pool;
-	this->motion_pool = NULL;
+        delete this->motion_pool;
+        this->motion_pool = NULL;
     }
     if (this->update_pool != NULL)
     {
-	delete this->update_pool;
-	this->update_pool = NULL;
+        delete this->update_pool;
+        this->update_pool = NULL;
     }
 
     /* Delete all the game objects. */
     std::clog << "deleting game objects" << std::endl;
     if (this->game_objects.size())
     {
-	std::map<u_int64_t, game_object_list_element>::iterator i;
+        std::map<u_int64_t, game_object_list_element>::iterator i;
 
-	for (i = this->game_objects.begin();
-	     i != this->game_objects.end();
-	     ++i)
-	    delete i->second.obj;
-	/* Maybe save the game objects' locations before deleting them? */
-	this->game_objects.erase(this->game_objects.begin(),
-				 this->game_objects.end());
+        for (i = this->game_objects.begin();
+             i != this->game_objects.end();
+             ++i)
+            delete i->second.obj;
+        /* Maybe save the game objects' locations before deleting them? */
+        this->game_objects.erase(this->game_objects.begin(),
+                                 this->game_objects.end());
     }
 
     /* Unregister all the action routines. */
@@ -420,9 +420,9 @@ void Zone::add_action_request(u_int64_t from, packet *buf, size_t len)
 
     if (this->action_pool != NULL)
     {
-	memcpy(&(pl.buf), buf, len);
-	pl.who = from;
-	this->action_pool->push(pl);
+        memcpy(&(pl.buf), buf, len);
+        pl.who = from;
+        this->action_pool->push(pl);
     }
 }
 

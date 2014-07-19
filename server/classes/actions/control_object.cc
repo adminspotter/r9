@@ -54,9 +54,9 @@
 
 /* ARGSUSED */
 void action_control_object(Motion *source,
-			   int intensity,
-			   Motion *target,
-			   Eigen::Vector3d &direction)
+                           int intensity,
+                           Motion *target,
+                           Eigen::Vector3d &direction)
 {
     /* Source will be a Control object ptr cast into a Motion ptr */
     Control *src = (Control *)source;
@@ -64,25 +64,25 @@ void action_control_object(Motion *source,
 
     if (src->slave == NULL)
     {
-	/* Figure out if the player actually has access to the target */
-	if ((access_type
+        /* Figure out if the player actually has access to the target */
+        if ((access_type
              = database->check_authorization(src->userid,
                                              target->object->get_object_id()))
-	    != ACCESS_NONE)
-	{
+            != ACCESS_NONE)
+        {
             if (target->connect(src))
                 src->slave = target;
-	}
-	/* Let the user know how things worked out */
-	src->send_ack(TYPE_ACTREQ, access_type);
+        }
+        /* Let the user know how things worked out */
+        src->send_ack(TYPE_ACTREQ, access_type);
     }
 }
 
 /* ARGSUSED */
 void action_uncontrol_object(Motion *source,
-			     int intensity,
-			     Motion *target,
-			     Eigen::Vector3d &direction)
+                             int intensity,
+                             Motion *target,
+                             Eigen::Vector3d &direction)
 {
     /* Source will be a Control object ptr cast into a Motion ptr */
     Control *src = (Control *)source;

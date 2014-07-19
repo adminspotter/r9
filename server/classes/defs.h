@@ -131,25 +131,25 @@ typedef struct access_list_tag
     listen_socket *parent;
     union
     {
-	struct
-	{
-	    union
-	    {
-		struct sockaddr_storage dgram;
-		struct
-		{
-		    int sub, sock;
-		}
-		stream;
-	    }
-	    who;
-	}
-	login;
-	struct
-	{
-	    u_int64_t who;
-	}
-	logout;
+        struct
+        {
+            union
+            {
+                struct sockaddr_storage dgram;
+                struct
+                {
+                    int sub, sock;
+                }
+                stream;
+            }
+            who;
+        }
+        login;
+        struct
+        {
+            u_int64_t who;
+        }
+        logout;
     }
     what;
 }
@@ -165,19 +165,19 @@ class action_rec
     bool valid;                   /* Is this action valid on this server? */
 
     inline action_rec()
-	{
-	    this->name = NULL;
-	    this->action = NULL;
-	    this->def = 0;
-	    this->lower = 0;
-	    this->upper = 0;
-	    this->valid = false;
-	};
+        {
+            this->name = NULL;
+            this->action = NULL;
+            this->def = 0;
+            this->lower = 0;
+            this->upper = 0;
+            this->valid = false;
+        };
     inline ~action_rec()
-	{
-	    if (this->name != NULL)
-		free(this->name);
-	};
+        {
+            if (this->name != NULL)
+                free(this->name);
+        };
 };
 typedef int attribute;
 typedef int nature;

@@ -122,43 +122,43 @@ class Sockaddr_in : public Sockaddr
     struct sockaddr_in *sin;
 
     Sockaddr_in()
-	{
+        {
             this->sin = (struct sockaddr_in *)&ss;
-	    this->sin->sin_family = AF_INET;
-	    this->sin->sin_port = htons(0);
-	    this->sin->sin_addr.s_addr = htonl(INADDR_ANY);
+            this->sin->sin_family = AF_INET;
+            this->sin->sin_port = htons(0);
+            this->sin->sin_addr.s_addr = htonl(INADDR_ANY);
             memset(this->str, 0, INET6_ADDRSTRLEN);
-	};
+        };
     Sockaddr_in(const Sockaddr& s)
         {
             const Sockaddr_in& sin = dynamic_cast<const Sockaddr_in&>(s);
             this->sin = (struct sockaddr_in *)&ss;
-	    this->sin->sin_family = sin.sin->sin_family;
-	    this->sin->sin_port = sin.sin->sin_port;
-	    this->sin->sin_addr.s_addr = sin.sin->sin_addr.s_addr;
+            this->sin->sin_family = sin.sin->sin_family;
+            this->sin->sin_port = sin.sin->sin_port;
+            this->sin->sin_addr.s_addr = sin.sin->sin_addr.s_addr;
             memcpy(this->str, sin.str, INET6_ADDRSTRLEN);
         };
     Sockaddr_in(const struct sockaddr& s)
-	{
+        {
             const struct sockaddr_in& sin
                 = reinterpret_cast<const struct sockaddr_in&>(s);
             this->sin = (struct sockaddr_in *)&ss;
-	    this->sin->sin_family = sin.sin_family;
-	    this->sin->sin_port = sin.sin_port;
-	    this->sin->sin_addr.s_addr = sin.sin_addr.s_addr;
+            this->sin->sin_family = sin.sin_family;
+            this->sin->sin_port = sin.sin_port;
+            this->sin->sin_addr.s_addr = sin.sin_addr.s_addr;
             memset(this->str, 0, INET6_ADDRSTRLEN);
-	};
+        };
     ~Sockaddr_in()
-	{
-	};
+        {
+        };
 
     bool operator==(const Sockaddr& s) const
-	{
+        {
             const Sockaddr_in *si = dynamic_cast<const Sockaddr_in *>(&s);
             if (si == NULL)
                 return false;
             return !memcmp(this->sin, si->sin, sizeof(struct sockaddr_in));
-	};
+        };
     bool operator==(const struct sockaddr *s)
         {
             const struct sockaddr_in& sin
@@ -167,20 +167,20 @@ class Sockaddr_in : public Sockaddr
         };
 
     bool operator<(const Sockaddr& s) const
-	{
+        {
             const Sockaddr_in *si = dynamic_cast<const Sockaddr_in *>(&s);
             if (si == NULL)
                 return false;
-	    return (this->sin->sin_addr.s_addr < si->sin->sin_addr.s_addr
-		    || this->sin->sin_port < si->sin->sin_port);
-	};
+            return (this->sin->sin_addr.s_addr < si->sin->sin_addr.s_addr
+                    || this->sin->sin_port < si->sin->sin_port);
+        };
     bool operator<(const struct sockaddr& s) const
-	{
+        {
             const struct sockaddr_in& sin
                 = reinterpret_cast<const struct sockaddr_in&>(s);
-	    return (this->sin->sin_addr.s_addr < sin.sin_addr.s_addr
-		    || this->sin->sin_port < sin.sin_port);
-	};
+            return (this->sin->sin_addr.s_addr < sin.sin_addr.s_addr
+                    || this->sin->sin_port < sin.sin_port);
+        };
 
     char *ntop(void)
         {
@@ -203,21 +203,21 @@ inline bool operator==(const struct in6_addr& a, const struct in6_addr& b)
 inline bool operator<(const struct in6_addr& a, const struct in6_addr& b)
 {
     return (a.s6_addr[0] < b.s6_addr[0]
-	    || a.s6_addr[1] < b.s6_addr[1]
-	    || a.s6_addr[2] < b.s6_addr[2]
-	    || a.s6_addr[3] < b.s6_addr[3]
-	    || a.s6_addr[4] < b.s6_addr[4]
-	    || a.s6_addr[5] < b.s6_addr[5]
-	    || a.s6_addr[6] < b.s6_addr[6]
-	    || a.s6_addr[7] < b.s6_addr[7]
-	    || a.s6_addr[8] < b.s6_addr[8]
-	    || a.s6_addr[9] < b.s6_addr[9]
-	    || a.s6_addr[10] < b.s6_addr[10]
-	    || a.s6_addr[11] < b.s6_addr[11]
-	    || a.s6_addr[12] < b.s6_addr[12]
-	    || a.s6_addr[13] < b.s6_addr[13]
-	    || a.s6_addr[14] < b.s6_addr[14]
-	    || a.s6_addr[15] < b.s6_addr[15]);
+            || a.s6_addr[1] < b.s6_addr[1]
+            || a.s6_addr[2] < b.s6_addr[2]
+            || a.s6_addr[3] < b.s6_addr[3]
+            || a.s6_addr[4] < b.s6_addr[4]
+            || a.s6_addr[5] < b.s6_addr[5]
+            || a.s6_addr[6] < b.s6_addr[6]
+            || a.s6_addr[7] < b.s6_addr[7]
+            || a.s6_addr[8] < b.s6_addr[8]
+            || a.s6_addr[9] < b.s6_addr[9]
+            || a.s6_addr[10] < b.s6_addr[10]
+            || a.s6_addr[11] < b.s6_addr[11]
+            || a.s6_addr[12] < b.s6_addr[12]
+            || a.s6_addr[13] < b.s6_addr[13]
+            || a.s6_addr[14] < b.s6_addr[14]
+            || a.s6_addr[15] < b.s6_addr[15]);
 }
 
 class Sockaddr_in6 : public Sockaddr
@@ -226,63 +226,63 @@ class Sockaddr_in6 : public Sockaddr
     struct sockaddr_in6 *sin6;
 
     Sockaddr_in6()
-	{
+        {
             this->sin6 = (struct sockaddr_in6 *)&ss;
-	    this->sin6->sin6_family = AF_INET;
-	    this->sin6->sin6_port = htons(0);
-	    this->sin6->sin6_flowinfo = htonl(0L);
-	    memcpy(&(this->sin6->sin6_addr.s6_addr),
+            this->sin6->sin6_family = AF_INET;
+            this->sin6->sin6_port = htons(0);
+            this->sin6->sin6_flowinfo = htonl(0L);
+            memcpy(&(this->sin6->sin6_addr.s6_addr),
                    &in6addr_any,
                     sizeof(struct in6_addr));
-	    this->sin6->sin6_scope_id = htonl(0L);
+            this->sin6->sin6_scope_id = htonl(0L);
             memset(this->str, 0, INET6_ADDRSTRLEN);
-	};
+        };
     Sockaddr_in6(const Sockaddr& s)
         {
             const Sockaddr_in6& sin6 = dynamic_cast<const Sockaddr_in6&>(s);
             this->sin6 = (struct sockaddr_in6 *)&ss;
-	    this->sin6->sin6_family = sin6.sin6->sin6_family;
-	    this->sin6->sin6_port = sin6.sin6->sin6_port;
+            this->sin6->sin6_family = sin6.sin6->sin6_family;
+            this->sin6->sin6_port = sin6.sin6->sin6_port;
             this->sin6->sin6_flowinfo = sin6.sin6->sin6_flowinfo;
-	    memcpy(&(this->sin6->sin6_addr),
+            memcpy(&(this->sin6->sin6_addr),
                    &(sin6.sin6->sin6_addr),
                    sizeof(struct in6_addr));
-	    this->sin6->sin6_scope_id = sin6.sin6->sin6_scope_id;
+            this->sin6->sin6_scope_id = sin6.sin6->sin6_scope_id;
             memcpy(this->str, sin6.str, INET6_ADDRSTRLEN);
         };
     Sockaddr_in6(const struct sockaddr& s)
-	{
+        {
             struct sockaddr_in6 *si = (struct sockaddr_in6 *)(&s);
             this->sin6 = (struct sockaddr_in6 *)&ss;
-	    this->sin6->sin6_family = si->sin6_family;
-	    this->sin6->sin6_port = si->sin6_port;
-	    this->sin6->sin6_flowinfo = si->sin6_flowinfo;
-	    memcpy(&(this->sin6->sin6_addr),
+            this->sin6->sin6_family = si->sin6_family;
+            this->sin6->sin6_port = si->sin6_port;
+            this->sin6->sin6_flowinfo = si->sin6_flowinfo;
+            memcpy(&(this->sin6->sin6_addr),
                    &(si->sin6_addr),
                    sizeof(struct in6_addr));
-	    this->sin6->sin6_scope_id = si->sin6_scope_id;
+            this->sin6->sin6_scope_id = si->sin6_scope_id;
             memset(this->str, 0, INET6_ADDRSTRLEN);
-	};
+        };
     ~Sockaddr_in6()
-	{
-	};
+        {
+        };
 
     bool operator==(const Sockaddr &s) const
-	{
+        {
             const Sockaddr_in6 *si = dynamic_cast<const Sockaddr_in6 *>(&s);
             if (si == NULL)
                 return false;
             return !memcmp(this->sin6, si->sin6, sizeof(struct sockaddr_in6));
-	};
+        };
 
     bool operator<(const Sockaddr& s) const
-	{
+        {
             const Sockaddr_in6 *si = dynamic_cast<const Sockaddr_in6 *>(&s);
             if (si == NULL)
                 return false;
-	    return (this->sin6->sin6_addr < si->sin6->sin6_addr
-		    || this->sin6->sin6_port < si->sin6->sin6_port);
-	};
+            return (this->sin6->sin6_addr < si->sin6->sin6_addr
+                    || this->sin6->sin6_port < si->sin6->sin6_port);
+        };
     bool operator<(const struct sockaddr& s) const
         {
             const struct sockaddr_in6& sin6

@@ -14,6 +14,5 @@ stdout.
 signals.cc, signals.h:  Signal-handling routines.
 
 subserver.cc, subserver.h:  The client-connection portion of the
-TCP-based server program.  Maintains an open connection to the main
-server and to each client.  TODO: whatever has not already been moved
-to classes/stream.cc needs to be moved, and these files deleted.
+TCP-based server program, which is exec'ed as a separate process.
+Maintains an open connection to the main server and to each client.

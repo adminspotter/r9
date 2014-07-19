@@ -110,13 +110,13 @@ u_int64_t MySQL::check_authentication(const std::string& user,
     u_int64_t retval = 0;
 
     snprintf(str, sizeof(str),
-	     "SELECT playerid "
-	     "FROM players "
-	     "WHERE username='%.*s' "
-	     "AND password=SHA1('%.*s') "
-	     "AND suspended=0",
-	     DB::MAX_USERNAME, user.c_str(),
-	     DB::MAX_PASSWORD, pass.c_str());
+             "SELECT playerid "
+             "FROM players "
+             "WHERE username='%.*s' "
+             "AND password=SHA1('%.*s') "
+             "AND suspended=0",
+             DB::MAX_USERNAME, user.c_str(),
+             DB::MAX_PASSWORD, pass.c_str());
     this->db_connect();
 
     if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
@@ -142,16 +142,16 @@ int MySQL::check_authorization(u_int64_t userid, u_int64_t charid)
     int retval = 0;
 
     snprintf(str, sizeof(str),
-	     "SELECT c.access_type "
-	     "FROM players AS a, characters AS b, server_access AS c, "
-	     "servers AS d "
-	     "WHERE a.playerid=%lld "
-	     "AND a.playerid=b.owner "
-	     "AND b.characterid=%lld "
-	     "AND b.characterid=c.characterid "
-	     "AND c.serverid=d.serverid "
-	     "AND d.ip='%s'",
-	     userid, charid, this->host_ip);
+             "SELECT c.access_type "
+             "FROM players AS a, characters AS b, server_access AS c, "
+             "servers AS d "
+             "WHERE a.playerid=%lld "
+             "AND a.playerid=b.owner "
+             "AND b.characterid=%lld "
+             "AND b.characterid=c.characterid "
+             "AND c.serverid=d.serverid "
+             "AND d.ip='%s'",
+             userid, charid, this->host_ip);
     this->db_connect();
 
     if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
@@ -174,11 +174,11 @@ int MySQL::get_server_skills(std::map<u_int16_t, action_rec>& actions)
     int count = 0;
 
     snprintf(str, sizeof(str),
-	     "SELECT b.skillname, c.skillid, c.defaultid, c.lower, c.upper "
-	     "FROM skills AS b, servers AS a, server_skills AS c "
-	     "WHERE a.ip='%s' "
-	     "AND a.serverid=c.serverid "
-	     "AND b.skillid=c.skillid",
+             "SELECT b.skillname, c.skillid, c.defaultid, c.lower, c.upper "
+             "FROM skills AS b, servers AS a, server_skills AS c "
+             "WHERE a.ip='%s' "
+             "AND a.serverid=c.serverid "
+             "AND b.skillid=c.skillid",
              this->host_ip);
     this->db_connect();
 
@@ -213,11 +213,11 @@ int MySQL::get_server_objects(std::map<u_int64_t,
     int count = 0;
 
     snprintf(str, sizeof(str),
-	     "SELECT b.objectid, b.pos_x, b.pos_y, b.pos_z "
-	     "FROM servers AS a, server_characters AS b "
-	     "WHERE a.ip='%s' "
+             "SELECT b.objectid, b.pos_x, b.pos_y, b.pos_z "
+             "FROM servers AS a, server_characters AS b "
+             "WHERE a.ip='%s' "
              "AND a.serverid=b.serverid",
-	     this->host_ip);
+             this->host_ip);
     this->db_connect();
 
     if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
@@ -256,18 +256,18 @@ int MySQL::get_player_server_skills(u_int64_t userid,
     int count = 0;
 
     snprintf(str, sizeof(str),
-	     "SELECT e.skillid, e.level, e.improvement, "
-	     "UNIX_TIMESTAMP(e.last_increase) "
-	     "FROM players AS a, characters AS b, servers AS c, "
-	     "server_skills AS d, character_skills AS e "
-	     "WHERE a.playerid=%lld "
-	     "AND a.playerid=b.owner "
-	     "AND b.characterid=%lld "
-	     "AND b.characterid=e.characterid "
-	     "AND c.ip='%s' "
-	     "AND c.serverid=d.serverid "
-	     "AND d.skillid=e.skillid",
-	     userid, charid, this->host_ip);
+             "SELECT e.skillid, e.level, e.improvement, "
+             "UNIX_TIMESTAMP(e.last_increase) "
+             "FROM players AS a, characters AS b, servers AS c, "
+             "server_skills AS d, character_skills AS e "
+             "WHERE a.playerid=%lld "
+             "AND a.playerid=b.owner "
+             "AND b.characterid=%lld "
+             "AND b.characterid=e.characterid "
+             "AND c.ip='%s' "
+             "AND c.serverid=d.serverid "
+             "AND d.skillid=e.skillid",
+             userid, charid, this->host_ip);
     this->db_connect();
 
     if (mysql_real_query(this->db_handle, str, strlen(str)) == 0
@@ -296,9 +296,9 @@ int MySQL::open_new_login(u_int64_t userid, u_int64_t charid)
     int retval = 0;
 
     /*snprintf(str, sizeof(str),
-	     "INSERT INTO player_logins "
-	     "(playerid, characterid, serverid, src_ip, src_port, login_time) "
-	     "VALUES (%lld,%lld,%s,%d,%d)", userid, charid);
+             "INSERT INTO player_logins "
+             "(playerid, characterid, serverid, src_ip, src_port, login_time) "
+             "VALUES (%lld,%lld,%s,%d,%d)", userid, charid);
     this->db_connect();
 
     if ((retval = mysql_real_query(this->db_handle, str, strlen(str))) == 0)
@@ -316,18 +316,18 @@ int MySQL::check_open_login(u_int64_t userid, u_int64_t charid)
     int retval = 0;
 
     snprintf(str, sizeof(str),
-	     "SELECT COUNT(d.logout_time) "
-	     "FROM players AS a, characters AS b, servers AS c, "
-	     "player_logins AS d "
-	     "WHERE a.playerid=%lld "
-	     "AND a.playerid=d.playerid "
-	     "AND a.playerid=b.owner "
-	     "AND b.characterid=%lld "
-	     "AND b.characterid=d.characterid "
-	     "AND c.ip='%s' "
-	     "AND c.serverid=d.serverid "
-	     "AND d.logout_time IS NULL",
-	     userid, charid, this->host_ip);
+             "SELECT COUNT(d.logout_time) "
+             "FROM players AS a, characters AS b, servers AS c, "
+             "player_logins AS d "
+             "WHERE a.playerid=%lld "
+             "AND a.playerid=d.playerid "
+             "AND a.playerid=b.owner "
+             "AND b.characterid=%lld "
+             "AND b.characterid=d.characterid "
+             "AND c.ip='%s' "
+             "AND c.serverid=d.serverid "
+             "AND d.logout_time IS NULL",
+             userid, charid, this->host_ip);
     this->db_connect();
 
     if (mysql_real_query(this->db_handle, str, strlen(str)) == 0

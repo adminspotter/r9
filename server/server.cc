@@ -246,7 +246,7 @@ static void setup_daemon(void)
         throw std::runtime_error(s.str());
     }
     else if (pid != 0)
-	exit(0);
+        exit(0);
 
     pid = getpid();
     setsid();
@@ -255,16 +255,16 @@ static void setup_daemon(void)
 
     /* Now write the pid file if we can. */
     if ((fd = open(config.pid_fname.c_str(),
-		   O_CREAT | O_WRONLY | O_EXCL,
-		   S_IRUSR | S_IWUSR)) != -1)
+                   O_CREAT | O_WRONLY | O_EXCL,
+                   S_IRUSR | S_IWUSR)) != -1)
     {
-	snprintf(str, sizeof(str), "%d", pid);
-	write(fd, str, strlen(str));
-	close(fd);
+        snprintf(str, sizeof(str), "%d", pid);
+        write(fd, str, strlen(str));
+        close(fd);
     }
     else
     {
-	/* Apparently another invocation is running, so we can't. */
+        /* Apparently another invocation is running, so we can't. */
         std::ostringstream s;
         s << "couldn't create lock file: " << strerror(errno)
           << " (" << errno << ")";
@@ -320,12 +320,12 @@ static void setup_sockets(void)
                 sockets.pop_back();
             }
             throw;
-	}
+        }
         freeaddrinfo(ai);
         ++created;
     }
     if (created > 0)
-	std::clog << "created " << created << " stream socket"
+        std::clog << "created " << created << " stream socket"
                   << (created == 1 ? "" : "s") << std::endl;
 
     for (i = config.dgram.begin(); i != config.dgram.end(); ++i)
@@ -341,17 +341,17 @@ static void setup_sockets(void)
         catch (std::exception& e)
         {
             while (sockets.size())
-	    {
+            {
                 delete sockets.back();
                 sockets.pop_back();
-	    }
+            }
             throw;
-	}
+        }
         freeaddrinfo(ai);
     }
     created = sockets.size() - created;
     if (created > 0)
-	std::clog << "created " << created << " dgram socket"
+        std::clog << "created " << created << " dgram socket"
                   << (created == 1 ? "" : "s") << std::endl;
 
     /* Now start them all up */

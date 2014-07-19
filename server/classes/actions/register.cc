@@ -47,19 +47,19 @@ extern "C"
 {
     void actions_register(std::map<u_int16_t, action_rec> &am)
     {
-	int i;
+        int i;
 
-	for (i = 0; i < ENTRIES(actions); ++i)
-	    am[actions[i].action_number].action = actions[i].action_routine;
+        for (i = 0; i < ENTRIES(actions); ++i)
+            am[actions[i].action_number].action = actions[i].action_routine;
     }
 
     void actions_unregister(std::map<u_int16_t, action_rec> &am)
     {
-	int i;
+        int i;
 
-	for (i = 0; i < ENTRIES(actions); ++i)
-	    if (am[actions[i].action_number].action
-		== actions[i].action_routine)
-		am.erase(actions[i].action_number);
+        for (i = 0; i < ENTRIES(actions); ++i)
+            if (am[actions[i].action_number].action
+                == actions[i].action_routine)
+                am.erase(actions[i].action_number);
     }
 }

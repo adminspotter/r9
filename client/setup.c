@@ -92,32 +92,32 @@ Widget create_settings_box(Widget parent)
     XtUnmanageChild(XtNameToWidget(settingbox, "Selection"));
     XtUnmanageChild(XtNameToWidget(settingbox, "Text"));
     settingnb = XtVaCreateManagedWidget("settingnb",
-					xmNotebookWidgetClass,
-					settingbox,
-					XmNbackPagePlacement, XmBOTTOM_RIGHT,
-					XmNorientation, XmHORIZONTAL,
-					XmNbindingType, XmNONE,
-					XmNmajorTabSpacing, 1,
-					NULL);
+                                        xmNotebookWidgetClass,
+                                        settingbox,
+                                        XmNbackPagePlacement, XmBOTTOM_RIGHT,
+                                        XmNorientation, XmHORIZONTAL,
+                                        XmNbindingType, XmNONE,
+                                        XmNmajorTabSpacing, 1,
+                                        NULL);
     XtVaSetValues(XtNameToWidget(settingnb, "PageScroller"),
-		  XmNarrowLayout, XmARROWS_SPLIT,
-		  XmNarrowOrientation, XmARROWS_HORIZONTAL,
-		  NULL);
+                  XmNarrowLayout, XmARROWS_SPLIT,
+                  XmNarrowOrientation, XmARROWS_HORIZONTAL,
+                  NULL);
     create_video_settings_form(settingnb, 1);
     create_sound_settings_form(settingnb, 2);
     create_network_settings_form(settingnb, 3);
     create_game_settings_form(settingnb, 4);
     XtVaSetValues(settingnb,
-		  XmNfirstPageNumber, 1,
-		  XmNlastPageNumber, 4,
-		  XmNcurrentPageNumber, 1,
-		  NULL);
+                  XmNfirstPageNumber, 1,
+                  XmNlastPageNumber, 4,
+                  XmNcurrentPageNumber, 1,
+                  NULL);
     XtAddCallback(XtNameToWidget(settingbox, "OK"),
-		  XmNactivateCallback, settings_apply_callback, NULL);
+                  XmNactivateCallback, settings_apply_callback, NULL);
     XtAddCallback(XtNameToWidget(settingbox, "Apply"),
-		  XmNactivateCallback, settings_apply_callback, NULL);
+                  XmNactivateCallback, settings_apply_callback, NULL);
     XtAddCallback(XtNameToWidget(settingbox, "Cancel"),
-		  XmNactivateCallback, settings_cancel_callback, NULL);
+                  XmNactivateCallback, settings_cancel_callback, NULL);
 
     /* we will call the cancel routine to set the initial state */
     settings_cancel_callback(settingbox, NULL, NULL);
@@ -129,23 +129,23 @@ static void create_video_settings_form(Widget parent, int pgnum)
     Widget settingvideo, videobutton;
 
     settingvideo = XtVaCreateManagedWidget("settingvideo",
-					   xmRowColumnWidgetClass,
-					   parent,
-					   XmNnotebookChildType, XmPAGE,
-					   XmNpageNumber, pgnum,
-					   XmNnumColumns, 2,
-					   XmNorientation, XmHORIZONTAL,
-					   XmNpacking, XmPACK_COLUMN,
-					   XmNentryVerticalAlignment,
-					   XmALIGNMENT_CENTER,
-					   XmNadjustLast, False,
-					   NULL);
+                                           xmRowColumnWidgetClass,
+                                           parent,
+                                           XmNnotebookChildType, XmPAGE,
+                                           XmNpageNumber, pgnum,
+                                           XmNnumColumns, 2,
+                                           XmNorientation, XmHORIZONTAL,
+                                           XmNpacking, XmPACK_COLUMN,
+                                           XmNentryVerticalAlignment,
+                                           XmALIGNMENT_CENTER,
+                                           XmNadjustLast, False,
+                                           NULL);
     videobutton = XtVaCreateManagedWidget("videobutton",
-					  xmPushButtonWidgetClass,
-					  parent,
-					  XmNnotebookChildType, XmMAJOR_TAB,
-					  XmNpageNumber, pgnum,
-					  NULL);
+                                          xmPushButtonWidgetClass,
+                                          parent,
+                                          XmNnotebookChildType, XmMAJOR_TAB,
+                                          XmNpageNumber, pgnum,
+                                          NULL);
 }
 
 static void create_sound_settings_form(Widget parent, int pgnum)
@@ -153,23 +153,23 @@ static void create_sound_settings_form(Widget parent, int pgnum)
     Widget settingsound, soundbutton;
 
     settingsound = XtVaCreateManagedWidget("settingsound",
-					   xmRowColumnWidgetClass,
-					   parent,
-					   XmNnotebookChildType, XmPAGE,
-					   XmNpageNumber, pgnum,
-					   XmNnumColumns, 2,
-					   XmNorientation, XmHORIZONTAL,
-					   XmNpacking, XmPACK_COLUMN,
-					   XmNentryVerticalAlignment,
-					   XmALIGNMENT_CENTER,
-					   XmNadjustLast, False,
-					   NULL);
+                                           xmRowColumnWidgetClass,
+                                           parent,
+                                           XmNnotebookChildType, XmPAGE,
+                                           XmNpageNumber, pgnum,
+                                           XmNnumColumns, 2,
+                                           XmNorientation, XmHORIZONTAL,
+                                           XmNpacking, XmPACK_COLUMN,
+                                           XmNentryVerticalAlignment,
+                                           XmALIGNMENT_CENTER,
+                                           XmNadjustLast, False,
+                                           NULL);
     soundbutton = XtVaCreateManagedWidget("soundbutton",
-					  xmPushButtonWidgetClass,
-					  parent,
-					  XmNnotebookChildType, XmMAJOR_TAB,
-					  XmNpageNumber, pgnum,
-					  NULL);
+                                          xmPushButtonWidgetClass,
+                                          parent,
+                                          XmNnotebookChildType, XmMAJOR_TAB,
+                                          XmNpageNumber, pgnum,
+                                          NULL);
 }
 
 static void create_network_settings_form(Widget parent, int pgnum)
@@ -177,55 +177,55 @@ static void create_network_settings_form(Widget parent, int pgnum)
     Widget settingnetwork, networkbutton, networklabel;
 
     settingnetwork = XtVaCreateManagedWidget("settingnetwork",
-					     xmRowColumnWidgetClass,
-					     parent,
-					     XmNnotebookChildType, XmPAGE,
-					     XmNpageNumber, pgnum,
-					     XmNnumColumns, 4,
-					     XmNorientation, XmHORIZONTAL,
-					     XmNpacking, XmPACK_COLUMN,
-					     XmNentryVerticalAlignment,
-					     XmALIGNMENT_CENTER,
-					     XmNadjustLast, False,
-					     NULL);
+                                             xmRowColumnWidgetClass,
+                                             parent,
+                                             XmNnotebookChildType, XmPAGE,
+                                             XmNpageNumber, pgnum,
+                                             XmNnumColumns, 4,
+                                             XmNorientation, XmHORIZONTAL,
+                                             XmNpacking, XmPACK_COLUMN,
+                                             XmNentryVerticalAlignment,
+                                             XmALIGNMENT_CENTER,
+                                             XmNadjustLast, False,
+                                             NULL);
     networkbutton = XtVaCreateManagedWidget("networkbutton",
-					    xmPushButtonWidgetClass,
-					    parent,
-					    XmNnotebookChildType, XmMAJOR_TAB,
-					    XmNpageNumber, pgnum,
-					    NULL);
+                                            xmPushButtonWidgetClass,
+                                            parent,
+                                            XmNnotebookChildType, XmMAJOR_TAB,
+                                            XmNpageNumber, pgnum,
+                                            NULL);
     networklabel = XtVaCreateManagedWidget("networkhostlabel",
-					   xmLabelWidgetClass,
-					   settingnetwork,
-					   NULL);
+                                           xmLabelWidgetClass,
+                                           settingnetwork,
+                                           NULL);
     networkhost = XtVaCreateManagedWidget("networkhost",
-					  xmTextFieldWidgetClass,
-					  settingnetwork,
-					  NULL);
+                                          xmTextFieldWidgetClass,
+                                          settingnetwork,
+                                          NULL);
     networklabel = XtVaCreateManagedWidget("networkportlabel",
-					   xmLabelWidgetClass,
-					   settingnetwork,
-					   NULL);
+                                           xmLabelWidgetClass,
+                                           settingnetwork,
+                                           NULL);
     networkport = XtVaCreateManagedWidget("networkport",
-					  xmTextFieldWidgetClass,
-					  settingnetwork,
-					  NULL);
+                                          xmTextFieldWidgetClass,
+                                          settingnetwork,
+                                          NULL);
     networklabel = XtVaCreateManagedWidget("networkuserlabel",
-					   xmLabelWidgetClass,
-					   settingnetwork,
-					   NULL);
+                                           xmLabelWidgetClass,
+                                           settingnetwork,
+                                           NULL);
     networkuser = XtVaCreateManagedWidget("networkuser",
-					  xmTextFieldWidgetClass,
-					  settingnetwork,
-					  NULL);
+                                          xmTextFieldWidgetClass,
+                                          settingnetwork,
+                                          NULL);
     networklabel = XtVaCreateManagedWidget("networkpasslabel",
-					   xmLabelWidgetClass,
-					   settingnetwork,
-					   NULL);
+                                           xmLabelWidgetClass,
+                                           settingnetwork,
+                                           NULL);
     networkpass = XtVaCreateManagedWidget("networkpass",
-					  xmTextFieldWidgetClass,
-					  settingnetwork,
-					  NULL);
+                                          xmTextFieldWidgetClass,
+                                          settingnetwork,
+                                          NULL);
 }
 
 static void create_game_settings_form(Widget parent, int pgnum)
@@ -233,42 +233,42 @@ static void create_game_settings_form(Widget parent, int pgnum)
     Widget settinggame, gamebutton;
 
     settinggame = XtVaCreateManagedWidget("settinggame",
-					  xmRowColumnWidgetClass,
-					  parent,
-					  XmNnotebookChildType, XmPAGE,
-					  XmNpageNumber, pgnum,
-					  XmNnumColumns, 2,
-					  XmNorientation, XmHORIZONTAL,
-					  XmNpacking, XmPACK_COLUMN,
-					  XmNentryVerticalAlignment,
-					  XmALIGNMENT_CENTER,
-					  XmNadjustLast, False,
-					  NULL);
+                                          xmRowColumnWidgetClass,
+                                          parent,
+                                          XmNnotebookChildType, XmPAGE,
+                                          XmNpageNumber, pgnum,
+                                          XmNnumColumns, 2,
+                                          XmNorientation, XmHORIZONTAL,
+                                          XmNpacking, XmPACK_COLUMN,
+                                          XmNentryVerticalAlignment,
+                                          XmALIGNMENT_CENTER,
+                                          XmNadjustLast, False,
+                                          NULL);
     gamebutton = XtVaCreateManagedWidget("gamebutton",
-					 xmPushButtonWidgetClass,
-					 parent,
-					 XmNnotebookChildType, XmMAJOR_TAB,
-					 XmNpageNumber, pgnum,
-					 NULL);
+                                         xmPushButtonWidgetClass,
+                                         parent,
+                                         XmNnotebookChildType, XmMAJOR_TAB,
+                                         XmNpageNumber, pgnum,
+                                         NULL);
 }
 
 
 /* ARGSUSED */
 void settings_show_callback(Widget w,
-			    XtPointer client_data,
-			    XtPointer call_data)
+                            XtPointer client_data,
+                            XtPointer call_data)
 {
     int page_num = (int)client_data;
 
     if (!XtIsManaged(settingbox))
-	XtManageChild(settingbox);
+        XtManageChild(settingbox);
     XtVaSetValues(settingnb, XmNcurrentPageNumber, page_num, NULL);
 }
 
 /* ARGSUSED */
 static void settings_apply_callback(Widget w,
-				    XtPointer client_data,
-				    XtPointer call_data)
+                                    XtPointer client_data,
+                                    XtPointer call_data)
 {
     char *c_ptr, errstr[256];
     u_int16_t newport;
@@ -278,37 +278,37 @@ static void settings_apply_callback(Widget w,
     XtVaGetValues(networkhost, XmNvalue, &c_ptr, NULL);
     if (inet_aton(c_ptr, &tmp_addr) != 0)
     {
-	/* It's a valid IP address */
-	if (tmp_addr.s_addr != config.server_addr.s_addr)
-	{
-	    config.server_addr.s_addr = tmp_addr.s_addr;
-	    config.modified = 1;
-	}
+        /* It's a valid IP address */
+        if (tmp_addr.s_addr != config.server_addr.s_addr)
+        {
+            config.server_addr.s_addr = tmp_addr.s_addr;
+            config.modified = 1;
+        }
     }
     else if ((he = gethostbyname(c_ptr)) != NULL)
     {
-	/* It's a valid hostname for which we get a lookup */
-	if (((struct in_addr *)(*he->h_addr_list))->s_addr
-	    != config.server_addr.s_addr)
-	{
-	    config.server_addr.s_addr
-		= ((struct in_addr *)(*he->h_addr_list))->s_addr;
-	    config.modified = 1;
-	}
+        /* It's a valid hostname for which we get a lookup */
+        if (((struct in_addr *)(*he->h_addr_list))->s_addr
+            != config.server_addr.s_addr)
+        {
+            config.server_addr.s_addr
+                = ((struct in_addr *)(*he->h_addr_list))->s_addr;
+            config.modified = 1;
+        }
     }
     else
     {
-	/* It's invalid as a hostname or IP address; throw up some kind of
-	 * error dialog here, and don't popdown the config box.  And since
-	 * we're really spiffy, we'll also turn to the network settings page
-	 * and put the keyboard focus into the networkhost box.
-	 */
-	snprintf(errstr, sizeof(errstr),
-		 "ARGH, got an invalid hostname/IP address");
-	main_post_message(errstr);
-	XtVaSetValues(settingnb, XmNcurrentPageNumber, 3, NULL);
-	/* Set keyboard focus to networkhost - this doesn't work */
-	XtSetKeyboardFocus(settingbox, networkhost);
+        /* It's invalid as a hostname or IP address; throw up some kind of
+         * error dialog here, and don't popdown the config box.  And since
+         * we're really spiffy, we'll also turn to the network settings page
+         * and put the keyboard focus into the networkhost box.
+         */
+        snprintf(errstr, sizeof(errstr),
+                 "ARGH, got an invalid hostname/IP address");
+        main_post_message(errstr);
+        XtVaSetValues(settingnb, XmNcurrentPageNumber, 3, NULL);
+        /* Set keyboard focus to networkhost - this doesn't work */
+        XtSetKeyboardFocus(settingbox, networkhost);
     }
     XtFree((void *)c_ptr);
 
@@ -317,36 +317,36 @@ static void settings_apply_callback(Widget w,
     newport = htons((u_int16_t)atoi(c_ptr));
     if (newport != config.server_port)
     {
-	config.server_port = newport;
-	config.modified = 1;
+        config.server_port = newport;
+        config.modified = 1;
     }
     XtFree((void *)c_ptr);
 
     XtVaGetValues(networkuser, XmNvalue, &c_ptr, NULL);
     if (strcmp(config.username, c_ptr))
     {
-	/*if (config.username)
-	    free(config.username);*/
-	config.username = strdup(c_ptr);
-	config.modified = 1;
+        /*if (config.username)
+            free(config.username);*/
+        config.username = strdup(c_ptr);
+        config.modified = 1;
     }
     XtFree((void *)c_ptr);
 
     XtVaGetValues(networkpass, XmNvalue, &c_ptr, NULL);
     if (strcmp(config.password, c_ptr))
     {
-	/*if (config.password)
-	    free(config.password);*/
-	config.password = strdup(c_ptr);
-	config.modified = 1;
+        /*if (config.password)
+            free(config.password);*/
+        config.password = strdup(c_ptr);
+        config.modified = 1;
     }
     XtFree((void *)c_ptr);
 }
 
 /* ARGSUSED */
 static void settings_cancel_callback(Widget w,
-				     XtPointer client_data,
-				     XtPointer call_data)
+                                     XtPointer client_data,
+                                     XtPointer call_data)
 {
     struct hostent *he;
     char c_str[64], *c_ptr;
@@ -355,11 +355,11 @@ static void settings_cancel_callback(Widget w,
      * do not need freeing
      */
     if ((he = gethostbyaddr(&(config.server_addr),
-			    sizeof(struct in_addr),
-			    AF_INET)) != NULL)
-	c_ptr = he->h_name;
+                            sizeof(struct in_addr),
+                            AF_INET)) != NULL)
+        c_ptr = he->h_name;
     else
-	c_ptr = inet_ntoa(config.server_addr);
+        c_ptr = inet_ntoa(config.server_addr);
     XtVaSetValues(networkhost, XmNvalue, c_ptr, NULL);
 
     snprintf(c_str, sizeof(c_str), "%d", ntohs(config.server_port));

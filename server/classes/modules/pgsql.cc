@@ -65,12 +65,12 @@ u_int64_t PgSQL::check_authentication(const std::string& user, const std::string
     u_int64_t retval = 0;
 
     snprintf(str, sizeof(str),
-	     "SELECT playerid "
-	     "FROM players "
-	     "WHERE username='%s' "
-	     "AND password='%s' "
-	     "AND suspended=0;",
-	     user, pass);
+             "SELECT playerid "
+             "FROM players "
+             "WHERE username='%s' "
+             "AND password='%s' "
+             "AND suspended=0;",
+             user, pass);
     this->db_connect();
 
     res = PQexec(this->db_handle, str);
@@ -135,7 +135,7 @@ void PgSQL::db_connect(void)
         std::ostringstream s;
         s << "couldn't connect to PGSQL server: "
           << PQerrorMessage(this->db_handle);
-	this->db_handle = NULL;
+        this->db_handle = NULL;
         throw std::runtime_error(s.str());
     }
 }

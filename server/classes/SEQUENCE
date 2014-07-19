@@ -13,8 +13,8 @@ On login:
 7) Add the user to the socket's sockets list
 8) Send an ack
 9) Get the control-object packet
-10*) Control-object finds the game object in question
-11*) Control-object sets the game object's control to the user's
+10) Control-object finds the game object in question
+11) Control-object sets the game object's control to the user's
 12*) Control-object removes 'invisible' from the game object's nature list
 13*) Control-object removes 'non-interactive' from the game object's nature list
 14*) Control-object commences 'standing' motion sequence

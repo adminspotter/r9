@@ -150,172 +150,172 @@ class ThreadPool
 
   public:
     ThreadPool(const char *pool_name, unsigned int pool_size)
-	: name(pool_name, 0, 8), thread_pool(), request_queue()
-	{
-	    int ret;
+        : name(pool_name, 0, 8), thread_pool(), request_queue()
+        {
+            int ret;
 
-	    /* Initialize the elements of our pool */
-	    this->thread_count = pool_size;
-	    this->clean_on_pop = false;
-	    this->exit_flag = false;
-	    this->startup_arg = NULL;
+            /* Initialize the elements of our pool */
+            this->thread_count = pool_size;
+            this->clean_on_pop = false;
+            this->exit_flag = false;
+            this->startup_arg = NULL;
 
-	    /* Initialize the mutex and condition variables */
-	    if ((ret = pthread_mutex_init(&(this->queue_lock), NULL)) != 0)
-	    {
-		std::ostringstream s;
+            /* Initialize the mutex and condition variables */
+            if ((ret = pthread_mutex_init(&(this->queue_lock), NULL)) != 0)
+            {
+                std::ostringstream s;
                 s << "couldn't init " << this->name << " queue mutex: "
                   << strerror(ret) << " (" << ret << ")";
-		throw std::runtime_error(s.str());
-	    }
-	    if ((ret = pthread_cond_init(&(this->queue_not_empty), NULL)) != 0)
-	    {
-		std::ostringstream s;
+                throw std::runtime_error(s.str());
+            }
+            if ((ret = pthread_cond_init(&(this->queue_not_empty), NULL)) != 0)
+            {
+                std::ostringstream s;
                 s << "couldn't init " << this->name << " queue not-empty cond: "
                   << strerror(ret) << " (" << ret << ")";
-		pthread_mutex_destroy(&(this->queue_lock));
-		throw std::runtime_error(s.str());
-	    }
-	    /* We've moved the starting of the threads into the start() call */
-	};
+                pthread_mutex_destroy(&(this->queue_lock));
+                throw std::runtime_error(s.str());
+            }
+            /* We've moved the starting of the threads into the start() call */
+        };
 
     ~ThreadPool()
-	{
-	    this->stop();
-	    pthread_cond_destroy(&(this->queue_not_empty));
-	    pthread_mutex_destroy(&(this->queue_lock));
-	};
+        {
+            this->stop();
+            pthread_cond_destroy(&(this->queue_not_empty));
+            pthread_mutex_destroy(&(this->queue_lock));
+        };
 
     void start(void *(*func)(void *))
-	{
-	    int ret;
-	    pthread_t thread;
+        {
+            int ret;
+            pthread_t thread;
 
-	    pthread_mutex_lock(&(this->queue_lock));
-	    this->thread_pool.reserve(this->thread_count);
-	    this->startup_func = func;
-	    /* Make sure we're ready to start */
-	    this->exit_flag = false;
-	    /* Start up the actual threads */
-	    while (this->thread_pool.size() < this->thread_count)
-	    {
-		if ((ret = pthread_create(&thread,
-					  NULL,
-					  this->startup_func,
-					  this->startup_arg)) != 0)
-		{
-		    /* Error! */
-		    std::ostringstream s;
+            pthread_mutex_lock(&(this->queue_lock));
+            this->thread_pool.reserve(this->thread_count);
+            this->startup_func = func;
+            /* Make sure we're ready to start */
+            this->exit_flag = false;
+            /* Start up the actual threads */
+            while (this->thread_pool.size() < this->thread_count)
+            {
+                if ((ret = pthread_create(&thread,
+                                          NULL,
+                                          this->startup_func,
+                                          this->startup_arg)) != 0)
+                {
+                    /* Error! */
+                    std::ostringstream s;
                     s << "couldn't start a " << this->name << " thread: "
                       << strerror(ret) << " (" << ret << ")";
-		    /* Something's messed up; stop all the threads */
-		    this->stop();
-		    throw std::runtime_error(s.str());
-		}
-		thread_pool.push_back(thread);
-	    }
-	    pthread_mutex_unlock(&(this->queue_lock));
-	};
+                    /* Something's messed up; stop all the threads */
+                    this->stop();
+                    throw std::runtime_error(s.str());
+                }
+                thread_pool.push_back(thread);
+            }
+            pthread_mutex_unlock(&(this->queue_lock));
+        };
 
     void stop(void)
-	{
-	    this->exit_flag = true;
-	    /* Wake everybody up, in case they're sleeping */
-	    pthread_cond_broadcast(&(this->queue_not_empty));
-	    /* Reap all our child threads */
-	    while (this->thread_pool.size() > 0)
-	    {
-		/* Give up our slice, so the children can die */
-		sleep(0);
-		pthread_join(this->thread_pool.back(), NULL);
-		this->thread_pool.pop_back();
-	    }
-	};
+        {
+            this->exit_flag = true;
+            /* Wake everybody up, in case they're sleeping */
+            pthread_cond_broadcast(&(this->queue_not_empty));
+            /* Reap all our child threads */
+            while (this->thread_pool.size() > 0)
+            {
+                /* Give up our slice, so the children can die */
+                sleep(0);
+                pthread_join(this->thread_pool.back(), NULL);
+                this->thread_pool.pop_back();
+            }
+        };
 
     unsigned int pool_size(void)
-	{
-	    return this->thread_pool.size();
-	};
+        {
+            return this->thread_pool.size();
+        };
 
     unsigned int queue_size(void)
-	{
-	    return this->request_queue.size();
-	};
+        {
+            return this->request_queue.size();
+        };
 
     /* Resize the pool */
     void resize(unsigned int new_count)
-	{
-	    pthread_mutex_lock(&(this->queue_lock));
-	    this->thread_count = new_count;
-	    if (this->thread_count < this->thread_pool.size())
-	    {
-		/* We gotta shrink the pool; cancel and delete the
-		 * threads at the end of the array
-		 */
-		while (this->thread_pool.size() > this->thread_count)
-		{
-		    pthread_cancel(this->thread_pool.back());
-		    /* Give up our slice, just in case it's needed */
-		    sleep(0);
-		    pthread_join(this->thread_pool.back(), NULL);
-		    this->thread_pool.pop_back();
-		}
-		pthread_mutex_unlock(&(this->queue_lock));
-	    }
-	    else if (this->thread_count > this->thread_pool.size())
-	    {
-		/* Grow the pool */
-		/* We need to unlock here, because start() grabs the lock */
-		pthread_mutex_unlock(&(this->queue_lock));
-		this->start(this->startup_func);
-	    }
-	};
+        {
+            pthread_mutex_lock(&(this->queue_lock));
+            this->thread_count = new_count;
+            if (this->thread_count < this->thread_pool.size())
+            {
+                /* We gotta shrink the pool; cancel and delete the
+                 * threads at the end of the array
+                 */
+                while (this->thread_pool.size() > this->thread_count)
+                {
+                    pthread_cancel(this->thread_pool.back());
+                    /* Give up our slice, just in case it's needed */
+                    sleep(0);
+                    pthread_join(this->thread_pool.back(), NULL);
+                    this->thread_pool.pop_back();
+                }
+                pthread_mutex_unlock(&(this->queue_lock));
+            }
+            else if (this->thread_count > this->thread_pool.size())
+            {
+                /* Grow the pool */
+                /* We need to unlock here, because start() grabs the lock */
+                pthread_mutex_unlock(&(this->queue_lock));
+                this->start(this->startup_func);
+            }
+        };
 
     void push(T& req)
-	{
-	    pthread_mutex_lock(&(this->queue_lock));
-	    request_queue.push(req);
-	    pthread_cond_signal(&(this->queue_not_empty));
-	    pthread_mutex_unlock(&(this->queue_lock));
-	};
+        {
+            pthread_mutex_lock(&(this->queue_lock));
+            request_queue.push(req);
+            pthread_cond_signal(&(this->queue_not_empty));
+            pthread_mutex_unlock(&(this->queue_lock));
+        };
 
     /* The worker threads will call into this function, and just wait
      * until it returns, so that's why we have the exit_flag processing
      * taking place here.
      */
     void pop(T *buffer)
-	{
-	    /* Just in case */
-	    if (buffer == NULL)
-		return;
+        {
+            /* Just in case */
+            if (buffer == NULL)
+                return;
 
-	    /* Lock the giant lock for all the thread pool activity */
-	    pthread_mutex_lock(&(this->queue_lock));
+            /* Lock the giant lock for all the thread pool activity */
+            pthread_mutex_lock(&(this->queue_lock));
 
-	    /* If there's nothing to do, wait until there is */
-	    while (this->request_queue.empty() && !this->exit_flag)
-		pthread_cond_wait(&(this->queue_not_empty),
-				  &(this->queue_lock));
+            /* If there's nothing to do, wait until there is */
+            while (this->request_queue.empty() && !this->exit_flag)
+                pthread_cond_wait(&(this->queue_not_empty),
+                                  &(this->queue_lock));
 
-	    /* If it's time to exit, go ahead and exit */
-	    if (this->exit_flag)
-	    {
+            /* If it's time to exit, go ahead and exit */
+            if (this->exit_flag)
+            {
                 std::clog << this->name
                           << " thread into the exit routine" << std::endl;
-		pthread_mutex_unlock(&(this->queue_lock));
-		pthread_exit(NULL);
-	    }
+                pthread_mutex_unlock(&(this->queue_lock));
+                pthread_exit(NULL);
+            }
 
-	    /* Grab what's at the head of the queue */
-	    memcpy(buffer, &(this->request_queue.front()), sizeof(T));
-	    /* If we need to clean on pop, do it */
-	    if (this->clean_on_pop)
-		memset(&(this->request_queue.front()), 0, sizeof(T));
-	    this->request_queue.pop();
+            /* Grab what's at the head of the queue */
+            memcpy(buffer, &(this->request_queue.front()), sizeof(T));
+            /* If we need to clean on pop, do it */
+            if (this->clean_on_pop)
+                memset(&(this->request_queue.front()), 0, sizeof(T));
+            this->request_queue.pop();
 
-	    /* We're done mangling the queue, so drop the giant lock */
-	    pthread_mutex_unlock(&(this->queue_lock));
-	};
+            /* We're done mangling the queue, so drop the giant lock */
+            pthread_mutex_unlock(&(this->queue_lock));
+        };
 };
 
 #endif /* __INC_THREAD_POOL_H__ */

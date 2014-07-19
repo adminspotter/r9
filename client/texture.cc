@@ -474,17 +474,17 @@ void draw_texture(u_int64_t textid)
 
     if (t != NULL)
     {
-	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, t->diffuse);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, t->specular);
-	glMaterialfv(GL_FRONT, GL_SHININESS, &t->shininess);
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, t->diffuse);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, t->specular);
+        glMaterialfv(GL_FRONT, GL_SHININESS, &t->shininess);
     }
     else
     {
-	/* Fallback texture */
-	GLfloat material_diff[] = { 0.18, 0.18, 0.18, 1.0 };
-	GLfloat material_shin[] = { 0.0 };
+        /* Fallback texture */
+        GLfloat material_diff[] = { 0.18, 0.18, 0.18, 1.0 };
+        GLfloat material_shin[] = { 0.0 };
 
-	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material_diff);
-	glMaterialfv(GL_FRONT, GL_SHININESS, material_shin);
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material_diff);
+        glMaterialfv(GL_FRONT, GL_SHININESS, material_shin);
     }
 }

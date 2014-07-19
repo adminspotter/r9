@@ -118,9 +118,9 @@ void dgram_socket::start(void)
 
     /* Start up the reaping thread */
     if ((retval = pthread_create(&this->reaper, NULL,
-				 dgram_reaper_worker, (void *)this)) != 0)
+                                 dgram_reaper_worker, (void *)this)) != 0)
     {
-	std::ostringstream s;
+        std::ostringstream s;
         s << "couldn't create reaper thread for datagram port "
           << this->sock.port_num << ": "
           << strerror(retval) << " (" << retval << ")";
@@ -152,8 +152,8 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     /* Do the receiving part */
     for (;;)
     {
-	if (main_loop_exit_flag == 1)
-	    break;
+        if (main_loop_exit_flag == 1)
+            break;
 
         pthread_testcancel();
         /* We HAVE to pass in a proper size value in fromlen */
@@ -237,34 +237,34 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
               << dgs->sock.port_num << std::endl;
     for (;;)
     {
-	sleep(listen_socket::REAP_TIMEOUT);
-	now = time(NULL);
-	for (i = dgs->users.begin(); i != dgs->users.end(); ++i)
-	{
-	    pthread_testcancel();
+        sleep(listen_socket::REAP_TIMEOUT);
+        now = time(NULL);
+        for (i = dgs->users.begin(); i != dgs->users.end(); ++i)
+        {
+            pthread_testcancel();
             dgu = dynamic_cast<dgram_user *>((*i).second);
-	    if (dgu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
-	    {
-		/* We'll consider the user link-dead */
+            if (dgu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
+            {
+                /* We'll consider the user link-dead */
                 std::clog << "removing user "
                           << dgu->control->username << " ("
                           << dgu->userid << ") from datagram port "
                           << dgs->sock.port_num << std::endl;
-		if (dgu->control->slave != NULL)
-		{
-		    /* Clean up a user who has logged out */
-		    dgu->control->slave->object->natures["invisible"] = 1;
-		    dgu->control->slave->object->natures["non-interactive"] = 1;
-		}
-		delete dgu->control;
-		dgs->socks.erase(dgu->sa);
-		dgs->users.erase((*(i--)).second->userid);
-	    }
-	    else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
-		     && dgu->pending_logout == false)
-		dgu->control->send_ping();
-	}
-	pthread_testcancel();
+                if (dgu->control->slave != NULL)
+                {
+                    /* Clean up a user who has logged out */
+                    dgu->control->slave->object->natures["invisible"] = 1;
+                    dgu->control->slave->object->natures["non-interactive"] = 1;
+                }
+                delete dgu->control;
+                dgs->socks.erase(dgu->sa);
+                dgs->users.erase((*(i--)).second->userid);
+            }
+            else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
+                     && dgu->pending_logout == false)
+                dgu->control->send_ping();
+        }
+        pthread_testcancel();
     }
     return NULL;
 }
@@ -280,29 +280,29 @@ void *dgram_socket::dgram_send_worker(void *arg)
               << dgs->sock.port_num << std::endl;
     for (;;)
     {
-	dgs->send_pool->pop(&req);
+        dgs->send_pool->pop(&req);
 
-	realsize = packet_size(&req.buf);
-	if (hton_packet(&req.buf, realsize))
-	{
-	    dgu = dynamic_cast<dgram_user *>(dgs->users[req.who]);
+        realsize = packet_size(&req.buf);
+        if (hton_packet(&req.buf, realsize))
+        {
+            dgu = dynamic_cast<dgram_user *>(dgs->users[req.who]);
             if (dgu == NULL)
                 continue;
-	    /* TODO: Encryption */
-	    if (sendto(dgs->sock.sock,
-		       (void *)&req.buf, realsize, 0,
-		       (struct sockaddr *)&(dgu->sa),
-		       sizeof(struct sockaddr_storage)) == -1)
-		std::clog << syslogErr
+            /* TODO: Encryption */
+            if (sendto(dgs->sock.sock,
+                       (void *)&req.buf, realsize, 0,
+                       (struct sockaddr *)&(dgu->sa),
+                       sizeof(struct sockaddr_storage)) == -1)
+                std::clog << syslogErr
                           << "error sending packet out datagram port "
                           << dgs->sock.port_num << ": "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
-	    else
+            else
                 std::clog << "sent a packet of type "
                           << req.buf.basic.type << " to "
                           << dgu->sa->ntop() << std::endl;
-	}
+        }
     }
     std::clog << "exiting send pool worker for datagram port "
               << dgs->sock.port_num << std::endl;

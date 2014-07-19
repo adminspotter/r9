@@ -111,34 +111,34 @@ Widget create_main_view(Widget parent)
     int ret;
 
     mainview = XtVaCreateManagedWidget("mainview",
-				       glwMDrawingAreaWidgetClass,
-				       parent,
-				       GLwNrgba, True,
-				       GLwNdoublebuffer, True,
-				       GLwNdepthSize, 1,
-				       NULL);
+                                       glwMDrawingAreaWidgetClass,
+                                       parent,
+                                       GLwNrgba, True,
+                                       GLwNdoublebuffer, True,
+                                       GLwNdepthSize, 1,
+                                       NULL);
     XtAddCallback(mainview, GLwNginitCallback, init_callback, NULL);
     XtAddCallback(mainview, GLwNresizeCallback, resize_callback, NULL);
     XtAddCallback(mainview, GLwNexposeCallback, expose_callback, NULL);
 
     /* Set up the hash table */
     if ((objects = (object **)malloc(sizeof(object *)
-				     * OBJECT_HASH_BUCKETS)) == NULL)
+                                     * OBJECT_HASH_BUCKETS)) == NULL)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Couldn't allocate object hash table");
-	main_post_message(errstr);
+        snprintf(errstr, sizeof(errstr),
+                 "Couldn't allocate object hash table");
+        main_post_message(errstr);
     }
     else
-	memset(objects, 0, sizeof(object *) * OBJECT_HASH_BUCKETS);
+        memset(objects, 0, sizeof(object *) * OBJECT_HASH_BUCKETS);
 
     /* Start up the cleanup thread */
     if ((ret = pthread_create(&prune_thread, NULL, object_prune_worker, NULL))
-	!= 0)
+        != 0)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Couldn't start texture cleanup thread: %s", strerror(ret));
-	main_post_message(errstr);
+        snprintf(errstr, sizeof(errstr),
+                 "Couldn't start texture cleanup thread: %s", strerror(ret));
+        main_post_message(errstr);
     }
 
     return mainview;
@@ -184,15 +184,15 @@ void init_callback(Widget w, XtPointer client_data, XtPointer call_data)
 void resize_callback(Widget w, XtPointer client_data, XtPointer call_data)
 {
     GLwDrawingAreaCallbackStruct *cbstruct =
-	(GLwDrawingAreaCallbackStruct *)call_data;
+        (GLwDrawingAreaCallbackStruct *)call_data;
 
     glViewport(0, 0, (GLsizei)cbstruct->width, (GLsizei)cbstruct->height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(75.0,
-		   (GLdouble)cbstruct->width / (GLdouble)cbstruct->height,
-		   0.1,
-		   100.0);
+                   (GLdouble)cbstruct->width / (GLdouble)cbstruct->height,
+                   0.1,
+                   100.0);
     glMatrixMode(GL_MODELVIEW);
 
     /* After we resize, we automatically get exposed, so we don't need to
@@ -221,41 +221,41 @@ static void draw_objects(void)
     /* Brute force, baby - ya just can't beat it */
     for (i = 0; i < OBJECT_HASH_BUCKETS; ++i)
     {
-	optr = objects[i];
-	while (optr != NULL)
-	{
-	    glPushMatrix();
-	    glTranslated(optr->position[0],
-			 optr->position[1],
-			 optr->position[2]);
-	    glRotated(optr->orientation[0], 1.0, 0.0, 0.0);
-	    glRotated(optr->orientation[1], 0.0, 1.0, 0.0);
-	    glRotated(optr->orientation[2], 0.0, 0.0, 1.0);
-	    draw_geometry(optr->geometry_id, optr->frame_number);
-	    glPopMatrix();
-	    optr = optr->next;
-	}
+        optr = objects[i];
+        while (optr != NULL)
+        {
+            glPushMatrix();
+            glTranslated(optr->position[0],
+                         optr->position[1],
+                         optr->position[2]);
+            glRotated(optr->orientation[0], 1.0, 0.0, 0.0);
+            glRotated(optr->orientation[1], 0.0, 1.0, 0.0);
+            glRotated(optr->orientation[2], 0.0, 0.0, 1.0);
+            draw_geometry(optr->geometry_id, optr->frame_number);
+            glPopMatrix();
+            optr = optr->next;
+        }
     }
 }
 
 void move_object(u_int64_t objectid, u_int16_t frame,
-		 double newx, double newy, double newz,
-		 double newox, double newoy, double newoz)
+                 double newx, double newy, double newz,
+                 double newox, double newoy, double newoz)
 {
     object *optr = find_object(objectid);
 
     if (optr == NULL)
     {
-	/* We're getting notifications for a new object; add it to the hash */
-	if ((optr = (object *)malloc(sizeof(object))) == NULL)
-	    return;
-	optr->object_id = objectid;
-	gettimeofday(&optr->lastused, NULL);
-	load_geometry(0, 0);
-	optr->geometry_id = 0;
-	optr->frame_number = frame;
-	optr->next = NULL;
-	insert_object(objectid, optr);
+        /* We're getting notifications for a new object; add it to the hash */
+        if ((optr = (object *)malloc(sizeof(object))) == NULL)
+            return;
+        optr->object_id = objectid;
+        gettimeofday(&optr->lastused, NULL);
+        load_geometry(0, 0);
+        optr->geometry_id = 0;
+        optr->frame_number = frame;
+        optr->next = NULL;
+        insert_object(objectid, optr);
     }
 
     /* Update the object's position */
@@ -283,16 +283,16 @@ static void insert_object(u_int64_t objectid, object *o)
 
     if (objects[bucket] == NULL)
     {
-	objects[bucket] = o;
-	o->next = NULL;
+        objects[bucket] = o;
+        o->next = NULL;
     }
     else
     {
-	/* Hashing collision; chain the entries */
-	while (optr->next != NULL)
-	    optr = optr->next;
-	optr->next = o;
-	o->next = NULL;
+        /* Hashing collision; chain the entries */
+        while (optr->next != NULL)
+            optr = optr->next;
+        optr->next = o;
+        o->next = NULL;
     }
 }
 
@@ -301,9 +301,9 @@ static object *find_object(u_int64_t objectid)
     object *optr = objects[hash_func(objectid)];
 
     while (optr != NULL && optr->object_id != objectid)
-	optr = optr->next;
+        optr = optr->next;
     if (optr != NULL)
-	gettimeofday(&optr->lastused, NULL);
+        gettimeofday(&optr->lastused, NULL);
     return optr;
 }
 
@@ -321,51 +321,51 @@ static void *object_prune_worker(void *notused)
 
     for (;;)
     {
-	sleep(60);
-	if (!gettimeofday(&tv, NULL))
-	{
-	    snprintf(errstr, sizeof(errstr),
-		     "Object thread couldn't get time of day: %s",
-		     strerror(errno));
-	    main_post_message(errstr);
-	    continue;
-	}
-	count = 0;
-	for (i = 0; i < OBJECT_HASH_BUCKETS; ++i)
-	{
-	    optr = prev = objects[i];
-	    while (optr != NULL)
-	    {
-		if (optr->lastused.tv_sec + 600 <= tv.tv_sec)
-		{
-		    if (optr == prev)
-		    {
-			/* The head of this bucket is getting the boot */
-			objects[i] = optr->next;
-			free(optr);
-			optr = prev = objects[i];
-		    }
-		    else
-		    {
-			/* The victim is in the middle of the chain */
-			prev->next = optr->next;
-			free(optr);
-			optr = prev->next;
-		    }
-		    ++count;
-		}
-		else
-		{
-		    prev = optr;
-		    optr = optr->next;
-		}
-	    }
-	}
-	if (count > 0)
-	{
-	    snprintf(errstr, sizeof(errstr),
-		     "Removed %d entities from object cache", count);
-	    main_post_message(errstr);
-	}
+        sleep(60);
+        if (!gettimeofday(&tv, NULL))
+        {
+            snprintf(errstr, sizeof(errstr),
+                     "Object thread couldn't get time of day: %s",
+                     strerror(errno));
+            main_post_message(errstr);
+            continue;
+        }
+        count = 0;
+        for (i = 0; i < OBJECT_HASH_BUCKETS; ++i)
+        {
+            optr = prev = objects[i];
+            while (optr != NULL)
+            {
+                if (optr->lastused.tv_sec + 600 <= tv.tv_sec)
+                {
+                    if (optr == prev)
+                    {
+                        /* The head of this bucket is getting the boot */
+                        objects[i] = optr->next;
+                        free(optr);
+                        optr = prev = objects[i];
+                    }
+                    else
+                    {
+                        /* The victim is in the middle of the chain */
+                        prev->next = optr->next;
+                        free(optr);
+                        optr = prev->next;
+                    }
+                    ++count;
+                }
+                else
+                {
+                    prev = optr;
+                    optr = optr->next;
+                }
+            }
+        }
+        if (count > 0)
+        {
+            snprintf(errstr, sizeof(errstr),
+                     "Removed %d entities from object cache", count);
+            main_post_message(errstr);
+        }
     }
 }

@@ -48,8 +48,8 @@ static Pixmap shown_pixmap, shape_mask;
 
 /* ARGSUSED */
 void about_create_callback(Widget w,
-			   XtPointer client_data,
-			   XtPointer call_data)
+                           XtPointer client_data,
+                           XtPointer call_data)
 {
     Widget aboutselbox;
     Arg args[10];
@@ -58,7 +58,7 @@ void about_create_callback(Widget w,
     XtSetArg(args[i], XmNwidth, 300);  ++i;
     XtSetArg(args[i], XmNheight, 200); ++i;
     aboutselbox = XmCreateSelectionDialog((Widget)client_data,
-					  "aboutselbox", args, i);
+                                          "aboutselbox", args, i);
     XtUnmanageChild(XtNameToWidget(aboutselbox, "Apply"));
     XtUnmanageChild(XtNameToWidget(aboutselbox, "Cancel"));
     XtUnmanageChild(XtNameToWidget(aboutselbox, "Help"));
@@ -67,64 +67,64 @@ void about_create_callback(Widget w,
     XtUnmanageChild(XtNameToWidget(aboutselbox, "Selection"));
     XtUnmanageChild(XtNameToWidget(aboutselbox, "Text"));
     aboutdraw = XtVaCreateManagedWidget("aboutdraw",
-					xmDrawingAreaWidgetClass,
-					aboutselbox,
-					XmNwidth, 150,
-					XmNheight, 100,
-					NULL);
+                                        xmDrawingAreaWidgetClass,
+                                        aboutselbox,
+                                        XmNwidth, 150,
+                                        XmNheight, 100,
+                                        NULL);
     XtAddCallback(XtNameToWidget(aboutselbox, "OK"),
-		  XmNactivateCallback, about_destroy_callback,
-		  (XtPointer)XtParent(aboutselbox));
+                  XmNactivateCallback, about_destroy_callback,
+                  (XtPointer)XtParent(aboutselbox));
     XtAppAddTimeOut(XtWidgetToApplicationContext(aboutdraw),
-		    (unsigned long)100L,
-		    about_timeout,
-		    0L);
+                    (unsigned long)100L,
+                    about_timeout,
+                    0L);
     XtManageChild(aboutselbox);
 }
 
 /* ARGSUSED */
 static void about_destroy_callback(Widget w,
-				   XtPointer client_data,
-				   XtPointer call_data)
+                                   XtPointer client_data,
+                                   XtPointer call_data)
 {
     XtRemoveTimeOut(id);
     id = 0L;
     XFreePixmap(XtDisplay(aboutdraw), shown_pixmap);
     if (shape_mask != 0L)
-	XFreePixmap(XtDisplay(aboutdraw), shape_mask);
+        XFreePixmap(XtDisplay(aboutdraw), shape_mask);
     XtDestroyWidget((Widget)client_data);
     XFreeGC(XtDisplay(aboutdraw), gc);
     gc = 0L;
 }
 
 static void about_timeout(XtPointer client_data,
-			  XtIntervalId *xid)
+                          XtIntervalId *xid)
 {
     int which_one = ((int)client_data + 1) % 12;
     char fname[256];
 
     if (gc == 0L)
     {
-	XGCValues vals;
+        XGCValues vals;
 
-	vals.function = GXcopy;
-	gc = XCreateGC(XtDisplay(aboutdraw), XtWindow(aboutdraw),
-		       GCFunction, &vals);
+        vals.function = GXcopy;
+        gc = XCreateGC(XtDisplay(aboutdraw), XtWindow(aboutdraw),
+                       GCFunction, &vals);
     }
 #ifndef PIXMAP_PATH
 #define PIXMAP_PATH "/home/trinity/src/revision9/client/pixmaps/"
 #endif
     snprintf(fname, sizeof(fname), PIXMAP_PATH "about%02d.xpm", which_one);
     XpmReadFileToPixmap(XtDisplay(aboutdraw),
-			XtWindow(aboutdraw),
-			fname,
-			&shown_pixmap,
-			&shape_mask,
-			NULL);
+                        XtWindow(aboutdraw),
+                        fname,
+                        &shown_pixmap,
+                        &shape_mask,
+                        NULL);
     XCopyArea(XtDisplay(aboutdraw), shown_pixmap, XtWindow(aboutdraw),
-	      gc, 0, 0, 150, 100, 0, 0);
+              gc, 0, 0, 150, 100, 0, 0);
     id = XtAppAddTimeOut(XtWidgetToApplicationContext(aboutdraw),
-			 (unsigned long)2500L,
-			 about_timeout,
-			 (XtPointer)which_one);
+                         (unsigned long)2500L,
+                         about_timeout,
+                         (XtPointer)which_one);
 }

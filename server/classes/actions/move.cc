@@ -38,15 +38,15 @@
 #include "../motion.h"
 
 void action_move(Motion *source,
-		 int intensity,
-		 Motion *target,
-		 Eigen::Vector3d &direction)
+                 int intensity,
+                 Motion *target,
+                 Eigen::Vector3d &direction)
 {
 }
 
 void action_rotate(Motion *source,
-		   int intensity,
-		   Motion *target,
-		   Eigen::Vector3d &direction)
+                   int intensity,
+                   Motion *target,
+                   Eigen::Vector3d &direction)
 {
 }

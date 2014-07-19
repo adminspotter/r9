@@ -143,7 +143,7 @@ void Control::send(packet *pkt)
      * send anything.
      */
     if (this->parent == NULL)
-	return;
+        return;
 
     memcpy(&(pl.buf), pkt, sizeof(packet));
     /* Set the basic params for all packets:  version and sequence number */

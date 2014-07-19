@@ -1,4 +1,4 @@
-		      Map of the server process
+                      Map of the server process
 
 To get it all straight in my head, and to make a clear map of what
 happens in the server program, this is the process flow map.  Items
@@ -7,8 +7,6 @@ with a * next to the number are not yet implemented.
 Steps with letters are performed by threads which monitor some
 activity queues, and are not "steps" per se.  They all happen
 simultaneously, and in no particular order.
-
-$Id$
 
 1) Process command-line and load configuration file.
 2) Detach from the controlling terminal.
@@ -22,17 +20,18 @@ $Id$
 6c*) Update each game object's state, and queue up any required motion.
 6d*) Pass all position updates to each user's control object.
 
-7) Set up access queue.
+7) Set up each listening socket, with associated sending and access queues.
 7a) On successful login, create the control object, add the user to
     socket userlist.
 7b) On successful logout, destroy the control object, remove the user
     from socket userlist.
+7c) Pass all action requests to the user's control object.
 
-8) Set up each listening socket, with associated sending queues.
-8a) Pass all login and logout packets to the access object.
-8c) Pass all action requests to the user's control object.
+8*) Create console sockets.
+8a) On each connection, create a new session.
+8b) Process each request on each console session.
 
-9) Destroy access queue.
+9*) Destroy each console socket, closing all admin connections.
 10) Destroy each listening socket, closing all client connections.
 11) Destroy the zone, including terminating the thread pools.
 12) Turn off logging.

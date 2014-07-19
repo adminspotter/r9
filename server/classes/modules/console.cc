@@ -107,13 +107,13 @@ void *ConsoleSession::start(void *arg)
     {
         std::string str = sess->get_line();
 
-	/* Do we need to exit? */
-	if (str == "exit")
-	{
-	    (*sess->out) << "exiting" << std::endl;
-	    done = 1;
+        /* Do we need to exit? */
+        if (str == "exit")
+        {
+            (*sess->out) << "exiting" << std::endl;
+            done = 1;
             break;
-	}
+        }
 
         sess->get_lock();
         *(sess->out) << ConsoleSession::dispatch(str) << std::endl;

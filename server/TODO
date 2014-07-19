@@ -2,44 +2,26 @@ In no particular order:
 
 1)  Get the basic protocol elements implemented:  action requests, motion
     updates.
-2)  Implement the new concept for logging in - login happens, then the
-    user uses the "control character" skill (which everybody has) to gain
-    access to the desired character.
-3)  Collision detection?  No idea where to start on that.
-4)  Work on getting server neighbors and server notification protocol
+2)  Collision detection?  No idea where to start on that.
+3)  Work on getting server neighbors and server notification protocol
     activity worked out.
-5)  Start using sectors in the zone again.  They were removed because
-    they were awfully complicated, and were just confusing some of the
-    simple stuff we were trying to do.  This is possibly required before
-    collision detection will work the way we want.
-6)  Figure out who can see what, and only send position updates on visible
+4)  Figure out who can see what, and only send position updates on visible
     objects.  Again, sectors might be required before this will happen.
-7)  Define and implement more actions/skills.
-8)  Read the geometry files, and add positional and bounding data to them.
-    Maybe use straight XML for them?  Writing SAX parsers isn't all that
-    demanding.
-9)  See about making the octrees (part of the sector) dynamic, since they
-    will only have bounding volumes in them, and things will move around
-    (of course).
-10) Figure out how we want to do landscape.  That might be a way off,
+5)  Define and implement more actions/skills.
+6)  Add positional and bounding data to the geometry files.
+7)  See about making the octrees (part of the sector) dynamic, since
+    they will only have bounding volumes in them, and things will move
+    around (of course).  The zone should also handle the octrees
+    dynamically, creating them as needed, and deleting them when
+    empty.
+8)  Figure out how we want to do landscape.  That might be a way off,
     since we'll be starting with space, but it's going to come up.
-11) Move the configuration-handling logic into the modules where the given
+9)  Move the configuration-handling logic into the modules where the given
     configuration data is used.  We might look at doing a multi-level config
     structure, and possibly an ini-style config file, with the section
     titles as the module names (zone, database, etc.), and the elements in
     those sections handled by some config parser within the module.  A
     friend function?  A separate (static?) struct?
-12) Work on getting rid of the subserver files in the top level server
-    directory, and moving whatever needs to be moved into the stream socket
-    files in the classes subdirectory.
-13) Consider whether we need the classes subdirectory at all any longer.
-    The original plan was to have a general-purpose server which could run
-    any number of subservers that handled different games, and the classes
-    subdirectory contained one such game.  However, we've abandoned the
-    multiple games idea, and are focusing on one.
-14) struct addrinfo actually contains the port we're interested in, so
+10) struct addrinfo actually contains the port we're interested in, so
     we should consider whether we need a separate port argument to the
     socket constructors.  The constructors already take an addrinfo.
-15) The sectors should be dynamic.  If they are empty, they will be
-    deleted (or not created), and once something enters the sector, it will
-    be automatically created.

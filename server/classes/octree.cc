@@ -156,100 +156,100 @@ void Octree::compute_neighbors(void)
      */
     if (this->parent != NULL)
     {
-	/* There is likely a much more general way to do this, but I'm just
-	 * going to get it working right now.  A lookup table is possible,
-	 * based on the pattern that has emerged.
-	 */
-	switch (this->parent_index)
-	{
+        /* There is likely a much more general way to do this, but I'm just
+         * going to get it working right now.  A lookup table is possible,
+         * based on the pattern that has emerged.
+         */
+        switch (this->parent_index)
+        {
 #define neighbor_test(x,y) (this->parent->neighbor[(x)] == NULL ? NULL \
     : (this->parent->neighbor[(x)]->octants[(y)] == NULL \
        ? this->parent->neighbor[(x)] \
        : this->parent->neighbor[(x)]->octants[(y)]))
 
-	  case 0:
-	    /* An interesting pattern has emerged:  the + and - direction
-	     * of any axis relates to the same-numbered octant, except for
-	     * the fact that we may be looking to an indirect sibling.
-	     * Interesting.  This is screaming lookup-table to me.
-	     */
-	    this->neighbor[0] = this->parent->octants[4];
-	    this->neighbor[1] = neighbor_test(1, 4);
-	    this->neighbor[2] = this->parent->octants[2];
-	    this->neighbor[3] = neighbor_test(3, 2);
-	    this->neighbor[4] = this->parent->octants[1];
-	    this->neighbor[5] = neighbor_test(5, 1);
-	    break;
+          case 0:
+            /* An interesting pattern has emerged:  the + and - direction
+             * of any axis relates to the same-numbered octant, except for
+             * the fact that we may be looking to an indirect sibling.
+             * Interesting.  This is screaming lookup-table to me.
+             */
+            this->neighbor[0] = this->parent->octants[4];
+            this->neighbor[1] = neighbor_test(1, 4);
+            this->neighbor[2] = this->parent->octants[2];
+            this->neighbor[3] = neighbor_test(3, 2);
+            this->neighbor[4] = this->parent->octants[1];
+            this->neighbor[5] = neighbor_test(5, 1);
+            break;
 
-	  case 1:
-	    this->neighbor[0] = this->parent->octants[5];
-	    this->neighbor[1] = neighbor_test(1, 5);
-	    this->neighbor[2] = this->parent->octants[3];
-	    this->neighbor[3] = neighbor_test(3, 3);
-	    this->neighbor[4] = neighbor_test(4, 0);
-	    this->neighbor[5] = this->parent->octants[0];
-	    break;
+          case 1:
+            this->neighbor[0] = this->parent->octants[5];
+            this->neighbor[1] = neighbor_test(1, 5);
+            this->neighbor[2] = this->parent->octants[3];
+            this->neighbor[3] = neighbor_test(3, 3);
+            this->neighbor[4] = neighbor_test(4, 0);
+            this->neighbor[5] = this->parent->octants[0];
+            break;
 
-	  case 2:
-	    this->neighbor[0] = this->parent->octants[6];
-	    this->neighbor[1] = neighbor_test(1, 6);
-	    this->neighbor[2] = neighbor_test(2, 0);
-	    this->neighbor[3] = this->parent->octants[0];
-	    this->neighbor[4] = this->parent->octants[3];
-	    this->neighbor[5] = neighbor_test(5, 3);
-	    break;
+          case 2:
+            this->neighbor[0] = this->parent->octants[6];
+            this->neighbor[1] = neighbor_test(1, 6);
+            this->neighbor[2] = neighbor_test(2, 0);
+            this->neighbor[3] = this->parent->octants[0];
+            this->neighbor[4] = this->parent->octants[3];
+            this->neighbor[5] = neighbor_test(5, 3);
+            break;
 
-	  case 3:
-	    this->neighbor[0] = this->parent->octants[7];
-	    this->neighbor[1] = neighbor_test(1, 7);
-	    this->neighbor[2] = neighbor_test(2, 1);
-	    this->neighbor[3] = this->parent->octants[1];
-	    this->neighbor[4] = neighbor_test(4, 2);
-	    this->neighbor[5] = this->parent->octants[2];
-	    break;
+          case 3:
+            this->neighbor[0] = this->parent->octants[7];
+            this->neighbor[1] = neighbor_test(1, 7);
+            this->neighbor[2] = neighbor_test(2, 1);
+            this->neighbor[3] = this->parent->octants[1];
+            this->neighbor[4] = neighbor_test(4, 2);
+            this->neighbor[5] = this->parent->octants[2];
+            break;
 
-	  case 4:
-	    this->neighbor[0] = neighbor_test(0, 0);
-	    this->neighbor[1] = this->parent->octants[0];
-	    this->neighbor[2] = this->parent->octants[6];
-	    this->neighbor[3] = neighbor_test(3, 6);
-	    this->neighbor[4] = this->parent->octants[5];
-	    this->neighbor[5] = neighbor_test(5, 5);
-	    break;
+          case 4:
+            this->neighbor[0] = neighbor_test(0, 0);
+            this->neighbor[1] = this->parent->octants[0];
+            this->neighbor[2] = this->parent->octants[6];
+            this->neighbor[3] = neighbor_test(3, 6);
+            this->neighbor[4] = this->parent->octants[5];
+            this->neighbor[5] = neighbor_test(5, 5);
+            break;
 
-	  case 5:
-	    this->neighbor[0] = neighbor_test(0, 1);
-	    this->neighbor[1] = this->parent->octants[1];
-	    this->neighbor[2] = this->parent->octants[7];
-	    this->neighbor[3] = neighbor_test(3, 7);
-	    this->neighbor[4] = neighbor_test(4, 4);
-	    this->neighbor[5] = this->parent->octants[4];
-	    break;
+          case 5:
+            this->neighbor[0] = neighbor_test(0, 1);
+            this->neighbor[1] = this->parent->octants[1];
+            this->neighbor[2] = this->parent->octants[7];
+            this->neighbor[3] = neighbor_test(3, 7);
+            this->neighbor[4] = neighbor_test(4, 4);
+            this->neighbor[5] = this->parent->octants[4];
+            break;
 
-	  case 6:
-	    this->neighbor[0] = neighbor_test(0, 2);
-	    this->neighbor[1] = this->parent->octants[2];
-	    this->neighbor[2] = neighbor_test(2, 4);
-	    this->neighbor[3] = this->parent->octants[4];
-	    this->neighbor[4] = this->parent->octants[7];
-	    this->neighbor[5] = neighbor_test(5, 7);
-	    break;
+          case 6:
+            this->neighbor[0] = neighbor_test(0, 2);
+            this->neighbor[1] = this->parent->octants[2];
+            this->neighbor[2] = neighbor_test(2, 4);
+            this->neighbor[3] = this->parent->octants[4];
+            this->neighbor[4] = this->parent->octants[7];
+            this->neighbor[5] = neighbor_test(5, 7);
+            break;
 
-	  case 7:
-	    this->neighbor[0] = neighbor_test(0, 3);
-	    this->neighbor[1] = this->parent->octants[3];
-	    this->neighbor[2] = neighbor_test(2, 5);
-	    this->neighbor[3] = this->parent->octants[5];
-	    this->neighbor[4] = neighbor_test(4, 6);
-	    this->neighbor[5] = this->parent->octants[6];
-	    break;
-	}
+          case 7:
+            this->neighbor[0] = neighbor_test(0, 3);
+            this->neighbor[1] = this->parent->octants[3];
+            this->neighbor[2] = neighbor_test(2, 5);
+            this->neighbor[3] = this->parent->octants[5];
+            this->neighbor[4] = neighbor_test(4, 6);
+            this->neighbor[5] = this->parent->octants[6];
+            break;
+        }
 #undef neighbor_test
     }
     for (i = 0; i < 8; ++i)
-	/* Recurse for each subspace */
-	if (this->octants[i] != NULL)
-	    this->octants[i]->compute_neighbors();
+        /* Recurse for each subspace */
+        if (this->octants[i] != NULL)
+            this->octants[i]->compute_neighbors();
 }
 
 Octree::Octree(Octree *parent,
@@ -310,26 +310,26 @@ void Octree::build(std::list<Motion *>& objs, int depth)
     int j;
 
     if (depth == Octree::MAX_DEPTH
-	|| (depth >= Octree::MIN_DEPTH
+        || (depth >= Octree::MIN_DEPTH
             && objs.size() <= Octree::MAX_LEAF_OBJECTS))
     {
-	/* Copy the list's elements into the node and stop recursing
-	 * along this branch of the tree.
-	 */
+        /* Copy the list's elements into the node and stop recursing
+         * along this branch of the tree.
+         */
         this->objects.insert(objs.begin(), objs.end());
     }
     else
     {
-	for (i = objs.begin(); i != objs.end(); ++i)
-	{
+        for (i = objs.begin(); i != objs.end(); ++i)
+        {
             obj_list[this->which_octant((*i)->position)].push_back(*i);
-	}
+        }
 
-	/* Recurse if required for each octant. */
-	for (j = 0; j < 8; ++j)
-	{
-	    if (!obj_list[j].empty())
-	    {
+        /* Recurse if required for each octant. */
+        for (j = 0; j < 8; ++j)
+        {
+            if (!obj_list[j].empty())
+            {
                 Eigen::Vector3d min, max;
 
                 if (j & 4)
@@ -362,10 +362,10 @@ void Octree::build(std::list<Motion *>& objs, int depth)
                     min[2] = this->min_point[2];
                     max[2] = this->center_point[2];
                 }
-		this->octants[j] = new Octree(this, min, max, j);
-		this->octants[j]->build(obj_list[j], depth + 1);
-	    }
-	}
+                this->octants[j] = new Octree(this, min, max, j);
+                this->octants[j]->build(obj_list[j], depth + 1);
+            }
+        }
     }
     /* Once we're back out of the creation recursion, calculate
      * everybody's neighbor pointers.  I don't think we can do this
@@ -374,7 +374,7 @@ void Octree::build(std::list<Motion *>& objs, int depth)
      * have been created yet, though I'll look into it.
      */
     if (depth == 0)
-	this->compute_neighbors();
+        this->compute_neighbors();
 }
 
 void Octree::insert(Motion *mot)

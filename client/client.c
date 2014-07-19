@@ -72,18 +72,18 @@ extern int thread_exit_flag;
 int main(int argc, char **argv)
 {
     toplevel = XtVaOpenApplication(&context, "Revision9",
-				   NULL, 0,
-				   &argc, argv,
-				   NULL, sessionShellWidgetClass,
-				   XtNwidth, 800,
-				   XtNheight, 600,
-				   NULL);
+                                   NULL, 0,
+                                   &argc, argv,
+                                   NULL, sessionShellWidgetClass,
+                                   XtNwidth, 800,
+                                   XtNheight, 600,
+                                   NULL);
     /* Set up some stuff for session management */
     restart_command[0] = argv[0];
     XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
     XtAddCallback(toplevel, XtNcancelCallback, save_complete_callback, NULL);
     XtAddCallback(toplevel,
-		  XtNsaveCompleteCallback, save_complete_callback, NULL);
+                  XtNsaveCompleteCallback, save_complete_callback, NULL);
     XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
 
     /* Load up the config file, or create a new one if there isn't one */
@@ -95,21 +95,21 @@ int main(int argc, char **argv)
     mainwin = XmCreateMainWindow(toplevel, "mainwin", NULL, 0);
     XtManageChild(mainwin);
     XtVaSetValues(mainwin,
-		  XmNcommandWindow, create_command_area(mainwin),
-		  XmNcommandWindowLocation, XmCOMMAND_ABOVE_WORKSPACE,
-		  XmNmenuBar, create_menu_tree(mainwin),
-		  XmNmessageWindow, create_message_area(mainwin),
-		  XmNshowSeparator, True,
-		  XmNworkWindow, create_main_view(mainwin),
-		  NULL);
+                  XmNcommandWindow, create_command_area(mainwin),
+                  XmNcommandWindowLocation, XmCOMMAND_ABOVE_WORKSPACE,
+                  XmNmenuBar, create_menu_tree(mainwin),
+                  XmNmessageWindow, create_message_area(mainwin),
+                  XmNshowSeparator, True,
+                  XmNworkWindow, create_main_view(mainwin),
+                  NULL);
     create_settings_box(mainwin);
 
     /* We want editres to work with this application */
     XtAddEventHandler(toplevel,
-		      (EventMask)0,
-		      True,
-		      _XEditResCheckMessages,
-		      NULL);
+                      (EventMask)0,
+                      True,
+                      _XEditResCheckMessages,
+                      NULL);
     /* Show the main window and enter the event loop */
     XtRealizeWidget(toplevel);
     main_post_message("Welcome to Revision 9");
@@ -129,24 +129,24 @@ static void save_callback(Widget w, XtPointer client_data, XtPointer call_data)
     XtCheckpointToken token = (XtCheckpointToken)call_data;
 
     if (token->shutdown || token->interact_style != SmInteractStyleNone)
-	XtSetSensitive(toplevel, False);
+        XtSetSensitive(toplevel, False);
     if (token->interact_style == SmInteractStyleNone)
-	token->save_success = save_state();
+        token->save_success = save_state();
     else
     {
-	if (token->interact_style == SmInteractStyleAny)
-	    token->interact_dialog_type = SmDialogNormal;
-	else /* token->interact_style == SmInteractErrors */
-	    token->interact_dialog_type = SmDialogError;
-	XtAddCallback(toplevel, XtNinteractCallback, interact_callback, NULL);
+        if (token->interact_style == SmInteractStyleAny)
+            token->interact_dialog_type = SmDialogNormal;
+        else /* token->interact_style == SmInteractErrors */
+            token->interact_dialog_type = SmDialogError;
+        XtAddCallback(toplevel, XtNinteractCallback, interact_callback, NULL);
     }
 }
 
 /* The callback for when a save is complete (or cancelled). */
 /* ARGSUSED */
 static void save_complete_callback(Widget w,
-				   XtPointer client_data,
-				   XtPointer call_data)
+                                   XtPointer client_data,
+                                   XtPointer call_data)
 {
     XtSetSensitive(toplevel, True);
 }
@@ -161,8 +161,8 @@ static void die_callback(Widget w, XtPointer client_data, XtPointer call_data)
 /* The callback when we are allowed to interact with the user during a save. */
 /* ARGSUSED */
 static void interact_callback(Widget w,
-			      XtPointer client_data,
-			      XtPointer call_data)
+                              XtPointer client_data,
+                              XtPointer call_data)
 {
 }
 
@@ -178,7 +178,7 @@ static Boolean save_state(void)
     /* Get the session ID, save it, and create a filename from it. */
     XtVaGetValues(toplevel, XtNsessionID, &restart_command[2], NULL);
     snprintf(session_fname, sizeof(session_fname),
-	     "%s/.revision9/session.%s", getenv("HOME"), restart_command[2]);
+             "%s/.revision9/session.%s", getenv("HOME"), restart_command[2]);
 
     /* The command to restart our program with a given state. */
     restart_command[1] = "-xtsessionID";
@@ -199,10 +199,10 @@ static Boolean save_state(void)
 
     /* Set the properties in the SessionShell widget. */
     XtVaSetValues(toplevel,
-		  XtNcurrentDirectory, cwd,
-		  XtNrestartCommand, restart_command,
-		  XtNdiscardCommand, discard_command,
-		  NULL);
+                  XtNcurrentDirectory, cwd,
+                  XtNrestartCommand, restart_command,
+                  XtNdiscardCommand, discard_command,
+                  NULL);
     free(cwd);
     return True;
 }

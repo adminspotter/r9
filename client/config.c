@@ -104,39 +104,39 @@ void load_settings(void)
     strncpy(fname, getenv("HOME"), sizeof(fname));
     strncat(fname, "/.revision9", sizeof(fname) - strlen(fname) - 1);
     if (make_config_dirs(fname))
-	/* There was some sort of error; just bail out now */
-	return;
+        /* There was some sort of error; just bail out now */
+        return;
     /* The directory is there.  Now is the config file? */
     strncat(fname, "/config", sizeof(fname) - strlen(fname) - 1);
     if (stat(fname, &state) == -1)
     {
-	if (errno == ENOENT)
-	{
-	    mode_t oldmask;
+        if (errno == ENOENT)
+        {
+            mode_t oldmask;
 
-	    /* The file isn't there, so let's make a new one */
-	    snprintf(errstr, sizeof(errstr),
-		     "Making a new config file %s", fname);
-	    /* Set a private mask for creation - there may be passwords
-	     * in this file.
-	     */
-	    oldmask = umask(S_IRWXG | S_IRWXO);
-	    setup_config_defaults();
-	    write_config_file(fname);
-	    umask(oldmask);
-	}
-	else
-	{
-	    snprintf(errstr, sizeof(errstr),
-		     "Error with config file %s: %s",
-		     fname, strerror(errno));
-	    main_post_message(errstr);
-	    /* Set up the defaults anyway - we need *something* to work with */
-	    setup_config_defaults();
-	}
+            /* The file isn't there, so let's make a new one */
+            snprintf(errstr, sizeof(errstr),
+                     "Making a new config file %s", fname);
+            /* Set a private mask for creation - there may be passwords
+             * in this file.
+             */
+            oldmask = umask(S_IRWXG | S_IRWXO);
+            setup_config_defaults();
+            write_config_file(fname);
+            umask(oldmask);
+        }
+        else
+        {
+            snprintf(errstr, sizeof(errstr),
+                     "Error with config file %s: %s",
+                     fname, strerror(errno));
+            main_post_message(errstr);
+            /* Set up the defaults anyway - we need *something* to work with */
+            setup_config_defaults();
+        }
     }
     else
-	read_config_file(fname);
+        read_config_file(fname);
 }
 
 void save_settings(void)
@@ -144,7 +144,7 @@ void save_settings(void)
     char fname[PATH_MAX];
 
     if (!config.modified)
-	return;
+        return;
 
     strncpy(fname, getenv("HOME"), sizeof(fname));
     strncat(fname, "/.revision9/config", sizeof(fname) - strlen(fname) - 1);
@@ -158,74 +158,74 @@ static int make_config_dirs(const char *dirname)
 
     if (stat(dirname, &state) == -1)
     {
-	if (errno == ENOENT)
-	{
-	    /* The directory doesn't exist, so make it; we'll use it for
-	     * things other than just the config file.  And there may
-	     * be passwords stored in there, so let's give it a private
-	     * mask, for at least a little security.
-	     */
-	    if (mkdir(dirname, 0700) == -1)
-	    {
-		/* We can't even create the dir.  I think we have to
-		 * give up at this point.
-		 */
-		snprintf(errstr, sizeof(errstr),
-			 "Can't make config directory %s: %s",
-			 dirname, strerror(errno));
-		main_post_message(errstr);
-		return errno;
-	    }
-	}
-	else
-	{
-	    /* It's some error that we can't deal with */
-	    snprintf(errstr, sizeof(errstr),
-		     "Error with config dir %s: %s",
-		     dirname, strerror(errno));
-	    main_post_message(errstr);
-	    return errno;
-	}
+        if (errno == ENOENT)
+        {
+            /* The directory doesn't exist, so make it; we'll use it for
+             * things other than just the config file.  And there may
+             * be passwords stored in there, so let's give it a private
+             * mask, for at least a little security.
+             */
+            if (mkdir(dirname, 0700) == -1)
+            {
+                /* We can't even create the dir.  I think we have to
+                 * give up at this point.
+                 */
+                snprintf(errstr, sizeof(errstr),
+                         "Can't make config directory %s: %s",
+                         dirname, strerror(errno));
+                main_post_message(errstr);
+                return errno;
+            }
+        }
+        else
+        {
+            /* It's some error that we can't deal with */
+            snprintf(errstr, sizeof(errstr),
+                     "Error with config dir %s: %s",
+                     dirname, strerror(errno));
+            main_post_message(errstr);
+            return errno;
+        }
     }
 
     /* Let's make sure we have a few other dirs we'll need */
     strncpy(subdirname, dirname, sizeof(subdirname));
     strncat(subdirname, "/texture",
-	    sizeof(subdirname) - strlen(dirname));
+            sizeof(subdirname) - strlen(dirname));
     if (stat(subdirname, &state) == -1 && errno == ENOENT
-	&& mkdir(subdirname, 0700) == -1)
+        && mkdir(subdirname, 0700) == -1)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Can't make config directory %s: %s",
-		 subdirname, strerror(errno));
-	main_post_message(errstr);
-	return errno;
+        snprintf(errstr, sizeof(errstr),
+                 "Can't make config directory %s: %s",
+                 subdirname, strerror(errno));
+        main_post_message(errstr);
+        return errno;
     }
 
     strncpy(subdirname, dirname, sizeof(subdirname));
     strncat(subdirname, "/geometry",
-	    sizeof(subdirname) - strlen(dirname));
+            sizeof(subdirname) - strlen(dirname));
     if (stat(subdirname, &state) == -1 && errno == ENOENT
-	&& mkdir(subdirname, 0700) == -1)
+        && mkdir(subdirname, 0700) == -1)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Can't make config directory %s: %s",
-		 subdirname, strerror(errno));
-	main_post_message(errstr);
-	return errno;
+        snprintf(errstr, sizeof(errstr),
+                 "Can't make config directory %s: %s",
+                 subdirname, strerror(errno));
+        main_post_message(errstr);
+        return errno;
     }
 
     strncpy(subdirname, dirname, sizeof(subdirname));
     strncat(subdirname, "/sound",
-	    sizeof(subdirname) - strlen(dirname));
+            sizeof(subdirname) - strlen(dirname));
     if (stat(subdirname, &state) == -1 && errno == ENOENT
-	&& mkdir(subdirname, 0700) == -1)
+        && mkdir(subdirname, 0700) == -1)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Can't make config directory %s: %s",
-		 subdirname, strerror(errno));
-	main_post_message(errstr);
-	return errno;
+        snprintf(errstr, sizeof(errstr),
+                 "Can't make config directory %s: %s",
+                 subdirname, strerror(errno));
+        main_post_message(errstr);
+        return errno;
     }
 
     return 0;
@@ -237,34 +237,34 @@ static void setup_config_defaults(void)
 
     for (i = 0; i < ENTRIES(ctable); ++i)
     {
-	void *element = &(((char *)&config)[ctable[i].offset]);
+        void *element = &(((char *)&config)[ctable[i].offset]);
 
-	switch (ctable[i].type)
-	{
-	  case CF_STRING:
-	    *((char **)element) = (char *)(ctable[i].defval);
-	    break;
+        switch (ctable[i].type)
+        {
+          case CF_STRING:
+            *((char **)element) = (char *)(ctable[i].defval);
+            break;
 
-	  case CF_INTEGER:
-	  case CF_BOOLEAN:
-	    *((int *)element) = (int)(ctable[i].defval);
-	    break;
+          case CF_INTEGER:
+          case CF_BOOLEAN:
+            *((int *)element) = (int)(ctable[i].defval);
+            break;
 
-	  case CF_FLOAT:
-	    *((float *)element) = (float)((int)(ctable[i].defval) / 100.0);
-	    break;
+          case CF_FLOAT:
+            *((float *)element) = (float)((int)(ctable[i].defval) / 100.0);
+            break;
 
-	  case CF_ADDR:
-	    inet_aton((char *)ctable[i].defval, (struct in_addr *)element);
-	    break;
+          case CF_ADDR:
+            inet_aton((char *)ctable[i].defval, (struct in_addr *)element);
+            break;
 
-	  case CF_PORT:
-	    *((short int *)element) = htons((int)(ctable[i].defval));
-	    break;
+          case CF_PORT:
+            *((short int *)element) = htons((int)(ctable[i].defval));
+            break;
 
-	  default:
-	    break;
-	}
+          default:
+            break;
+        }
     }
     config.modified = 1;
 }
@@ -276,61 +276,61 @@ void write_config_file(const char *fname)
     int i;
 
     if (!config.modified)
-	/* If nothing is changed, don't bother saving */
-	return;
+        /* If nothing is changed, don't bother saving */
+        return;
 
     if ((f = fopen(fname, "w")) == NULL)
     {
-	fprintf(stderr,
-		 "Couldn't open config file %s for writing: %s\n",
-		 fname, strerror(errno));
-	return;
+        fprintf(stderr,
+                 "Couldn't open config file %s for writing: %s\n",
+                 fname, strerror(errno));
+        return;
     }
     for (i = 0; i < ENTRIES(ctable); ++i)
     {
-	void *element = &(((char *)&config)[ctable[i].offset]);
+        void *element = &(((char *)&config)[ctable[i].offset]);
 
-	if (ctable[i].type == CF_STRING && *(char **)element == NULL)
-	    continue;
+        if (ctable[i].type == CF_STRING && *(char **)element == NULL)
+            continue;
 
-	fprintf(f, "%s\t", ctable[i].keyword);
-	switch (ctable[i].type)
-	{
-	  case CF_STRING:
-	    fprintf(f, "%s", *(char **)element);
-	    break;
+        fprintf(f, "%s\t", ctable[i].keyword);
+        switch (ctable[i].type)
+        {
+          case CF_STRING:
+            fprintf(f, "%s", *(char **)element);
+            break;
 
-	  case CF_INTEGER:
-	    fprintf(f, "%d", *((int *)element));
-	    break;
+          case CF_INTEGER:
+            fprintf(f, "%d", *((int *)element));
+            break;
 
-	  case CF_FLOAT:
-	    fprintf(f, "%f", *((float *)element));
-	    break;
+          case CF_FLOAT:
+            fprintf(f, "%f", *((float *)element));
+            break;
 
-	  case CF_BOOLEAN:
-	    fprintf(f, "%d", *((int *)element));
-	    break;
+          case CF_BOOLEAN:
+            fprintf(f, "%d", *((int *)element));
+            break;
 
-	  case CF_ADDR:
-	    /* Convert to a hostname if possible before writing */
-	    if ((he = gethostbyaddr((struct in_addr *)element,
-				    sizeof(struct in_addr),
-				    AF_INET)) != NULL)
-		fprintf(f, "%s", he->h_name);
-	    else
-		/* Convert failed; just print the IP address */
-		fprintf(f, "%s", inet_ntoa(*((struct in_addr *)element)));
-	    break;
+          case CF_ADDR:
+            /* Convert to a hostname if possible before writing */
+            if ((he = gethostbyaddr((struct in_addr *)element,
+                                    sizeof(struct in_addr),
+                                    AF_INET)) != NULL)
+                fprintf(f, "%s", he->h_name);
+            else
+                /* Convert failed; just print the IP address */
+                fprintf(f, "%s", inet_ntoa(*((struct in_addr *)element)));
+            break;
 
-	  case CF_PORT:
-	    fprintf(f, "%d", ntohs((short int)*((int *)element)));
-	    break;
+          case CF_PORT:
+            fprintf(f, "%d", ntohs((short int)*((int *)element)));
+            break;
 
-	  default:
-	    break;
-	}
-	fprintf(f, "\n");
+          default:
+            break;
+        }
+        fprintf(f, "\n");
     }
     fclose(f);
 }
@@ -343,17 +343,17 @@ void read_config_file(const char *fname)
     /* There is a config file, so let's read it */
     if ((f = fopen(fname, "r")) != NULL)
     {
-	while (fgets(str, sizeof(str), f) != NULL)
-	    parse_config_line(str);
-	fclose(f);
-	config.modified = 0;
+        while (fgets(str, sizeof(str), f) != NULL)
+            parse_config_line(str);
+        fclose(f);
+        config.modified = 0;
     }
     else
     {
-	snprintf(str, sizeof(str),
-		 "Couldn't open config file %s for reading: %s",
-		 fname, strerror(errno));
-	main_post_message(str);
+        snprintf(str, sizeof(str),
+                 "Couldn't open config file %s for reading: %s",
+                 fname, strerror(errno));
+        main_post_message(str);
     }
 }
 
@@ -365,116 +365,116 @@ static int parse_config_line(char *line)
     /* Throw away all extra white space at the beginning of the line. */
     head = line + strspn(line, " \t");
     if (*head != '#')
-	for (i = 0; i < ENTRIES(ctable); ++i)
-	    if (!strncmp(ctable[i].keyword,
-			 head,
-			 strlen(ctable[i].keyword)))
-	    {
-		/* Move past the option name and following whitespace. */
-		head += strlen(ctable[i].keyword);
-		head += strspn(head, " \t");
-		if ((tail = strrchr(head, '\n')) != NULL)
-		    *tail = '\0';
-		switch (ctable[i].type)
-		{
-		  case CF_STRING:
-		    config_string_element(head,
-					  ctable[i].keyword,
-					  ctable[i].offset,
-					  ctable[i].defval);
-		    break;
+        for (i = 0; i < ENTRIES(ctable); ++i)
+            if (!strncmp(ctable[i].keyword,
+                         head,
+                         strlen(ctable[i].keyword)))
+            {
+                /* Move past the option name and following whitespace. */
+                head += strlen(ctable[i].keyword);
+                head += strspn(head, " \t");
+                if ((tail = strrchr(head, '\n')) != NULL)
+                    *tail = '\0';
+                switch (ctable[i].type)
+                {
+                  case CF_STRING:
+                    config_string_element(head,
+                                          ctable[i].keyword,
+                                          ctable[i].offset,
+                                          ctable[i].defval);
+                    break;
 
-		  case CF_INTEGER:
-		    config_integer_element(head,
-					   ctable[i].keyword,
-					   ctable[i].offset,
-					   ctable[i].defval);
-		    break;
+                  case CF_INTEGER:
+                    config_integer_element(head,
+                                           ctable[i].keyword,
+                                           ctable[i].offset,
+                                           ctable[i].defval);
+                    break;
 
-		  case CF_BOOLEAN:
-		    config_boolean_element(head,
-					   ctable[i].keyword,
-					   ctable[i].offset,
-					   ctable[i].defval);
-		    break;
+                  case CF_BOOLEAN:
+                    config_boolean_element(head,
+                                           ctable[i].keyword,
+                                           ctable[i].offset,
+                                           ctable[i].defval);
+                    break;
 
-		  case CF_FLOAT:
-		    config_float_element(head,
-					 ctable[i].keyword,
-					 ctable[i].offset,
-					 ctable[i].defval);
-		    break;
+                  case CF_FLOAT:
+                    config_float_element(head,
+                                         ctable[i].keyword,
+                                         ctable[i].offset,
+                                         ctable[i].defval);
+                    break;
 
-		  case CF_ADDR:
-		    config_addr_element(head,
-					ctable[i].keyword,
-					ctable[i].offset,
-					ctable[i].defval);
-		    break;
+                  case CF_ADDR:
+                    config_addr_element(head,
+                                        ctable[i].keyword,
+                                        ctable[i].offset,
+                                        ctable[i].defval);
+                    break;
 
-		  case CF_PORT:
-		    config_port_element(head,
-					ctable[i].keyword,
-					ctable[i].offset,
-					ctable[i].defval);
-		    break;
+                  case CF_PORT:
+                    config_port_element(head,
+                                        ctable[i].keyword,
+                                        ctable[i].offset,
+                                        ctable[i].defval);
+                    break;
 
-		  default:
-		    break;
-		}
-		retval = 0;
-		break;
-	    }
+                  default:
+                    break;
+                }
+                retval = 0;
+                break;
+            }
     /* Silently ignore anything we don't otherwise recognize. */
     return retval;
 }
 
 static void config_string_element(const char *str,
-				  const char *item,
-				  int offset,
-				  void *defval)
+                                  const char *item,
+                                  int offset,
+                                  void *defval)
 {
     char **element = (char **)ELEMENT(offset);
     char errstr[PATH_MAX];
 
     if (str != NULL && strlen(str) > 0)
     {
-	if (*element != NULL
-	    && (defval != NULL && *element != (char *)defval))
-	    free(*element);
-	*element = strdup(str);
+        if (*element != NULL
+            && (defval != NULL && *element != (char *)defval))
+            free(*element);
+        *element = strdup(str);
     }
     else
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Null %s, using %s", item, (char *)defval);
-	main_post_message(errstr);
-	*element = (char *)defval;
+        snprintf(errstr, sizeof(errstr),
+                 "Null %s, using %s", item, (char *)defval);
+        main_post_message(errstr);
+        *element = (char *)defval;
     }
 }
 
 static void config_integer_element(const char *str,
-				   const char *item,
-				   int offset,
-				   void *defval)
+                                   const char *item,
+                                   int offset,
+                                   void *defval)
 {
     int *element = (int *)ELEMENT(offset);
     char errstr[PATH_MAX];
 
     if ((*element = atoi(str)) < 1 || *element > USHRT_MAX)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Invalid value (%d) for %s, using %d",
-		 *element, item, (int)defval);
-	main_post_message(errstr);
-	*element = (int)defval;
+        snprintf(errstr, sizeof(errstr),
+                 "Invalid value (%d) for %s, using %d",
+                 *element, item, (int)defval);
+        main_post_message(errstr);
+        *element = (int)defval;
     }
 }
 
 static void config_float_element(const char *str,
-				 const char *item,
-				 int offset,
-				 void *defval)
+                                 const char *item,
+                                 int offset,
+                                 void *defval)
 {
     float *element = (float *)ELEMENT(offset);
     float realdefval = (float)((int)defval / 100.0);
@@ -482,36 +482,36 @@ static void config_float_element(const char *str,
 
     if ((*element = atof(str)) <= 0.0)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Invalid value (%f) for %s, using %f",
-		 *element, item, realdefval);
-	main_post_message(errstr);
-	*element = realdefval;
+        snprintf(errstr, sizeof(errstr),
+                 "Invalid value (%f) for %s, using %f",
+                 *element, item, realdefval);
+        main_post_message(errstr);
+        *element = realdefval;
     }
 }
 
 static void config_boolean_element(const char *str,
-				   const char *item,
-				   int offset,
-				   void *defval)
+                                   const char *item,
+                                   int offset,
+                                   void *defval)
 {
     int *element = (int *)ELEMENT(offset);
 
     if (str == NULL
-	|| strlen(str) == 0
-	|| !strcasecmp(str, "yes")
-	|| !strcasecmp(str, "true")
-	|| !strcasecmp(str, "on")
-	|| atoi(str) > 0)
-	*element = 1;
+        || strlen(str) == 0
+        || !strcasecmp(str, "yes")
+        || !strcasecmp(str, "true")
+        || !strcasecmp(str, "on")
+        || atoi(str) > 0)
+        *element = 1;
     else
-	*element = 0;
+        *element = 0;
 }
 
 static void config_addr_element(const char *str,
-				const char *item,
-				int offset,
-				void *defval)
+                                const char *item,
+                                int offset,
+                                void *defval)
 {
     struct in_addr *element = (struct in_addr *)ELEMENT(offset);
     struct hostent *he;
@@ -520,20 +520,20 @@ static void config_addr_element(const char *str,
     /* Our default value is a string */
     if ((he = gethostbyname(str)) == NULL)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Invalid host address (%s) for %s, using %s",
-		 str, item, (char *)defval);
-	main_post_message(errstr);
-	he = gethostbyname((char *)defval);
+        snprintf(errstr, sizeof(errstr),
+                 "Invalid host address (%s) for %s, using %s",
+                 str, item, (char *)defval);
+        main_post_message(errstr);
+        he = gethostbyname((char *)defval);
     }
     memcpy(element, *(he->h_addr_list), sizeof(struct in_addr));
 }
 
 /* ARGSUSED */
 static void config_port_element(const char *str,
-				const char *item,
-				int offset,
-				void *defval)
+                                const char *item,
+                                int offset,
+                                void *defval)
 {
     short int *element = (short int *)ELEMENT(offset);
 

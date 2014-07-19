@@ -75,34 +75,34 @@ static void create_file_menu(Widget parent)
 
     filemenu = XmCreatePulldownMenu(parent, "filemenu", NULL, 0);
     filebutton = XtVaCreateManagedWidget("filebutton",
-					 xmCascadeButtonWidgetClass,
-					 parent,
-					 XmNsubMenuId, filemenu,
-					 NULL);
+                                         xmCascadeButtonWidgetClass,
+                                         parent,
+                                         XmNsubMenuId, filemenu,
+                                         NULL);
     connectbutton = XtVaCreateManagedWidget("fileconnect",
-					    xmPushButtonGadgetClass,
-					    filemenu,
-					    NULL);
+                                            xmPushButtonGadgetClass,
+                                            filemenu,
+                                            NULL);
     disconnectbutton = XtVaCreateManagedWidget("filedisconnect",
-					       xmPushButtonGadgetClass,
-					       filemenu,
-					       NULL);
+                                               xmPushButtonGadgetClass,
+                                               filemenu,
+                                               NULL);
     exitbutton = XtVaCreateManagedWidget("fileexit",
-					 xmPushButtonGadgetClass,
-					 filemenu,
-					 NULL);
+                                         xmPushButtonGadgetClass,
+                                         filemenu,
+                                         NULL);
     XtAddCallback(connectbutton,
-		  XmNactivateCallback,
-		  login_callback,
-		  (XtPointer)filemenu);
+                  XmNactivateCallback,
+                  login_callback,
+                  (XtPointer)filemenu);
     XtAddCallback(disconnectbutton,
-		  XmNactivateCallback,
-		  logout_callback,
-		  (XtPointer)filemenu);
+                  XmNactivateCallback,
+                  logout_callback,
+                  (XtPointer)filemenu);
     XtAddCallback(exitbutton,
-		  XmNactivateCallback,
-		  exit_callback,
-		  (XtPointer)filemenu);
+                  XmNactivateCallback,
+                  exit_callback,
+                  (XtPointer)filemenu);
 }
 
 static void create_edit_menu(Widget parent)
@@ -112,46 +112,46 @@ static void create_edit_menu(Widget parent)
 
     editmenu = XmCreatePulldownMenu(parent, "editmenu", NULL, 0);
     editbutton = XtVaCreateManagedWidget("editbutton",
-					 xmCascadeButtonWidgetClass,
-					 parent,
-					 XmNsubMenuId, editmenu,
-					 NULL);
+                                         xmCascadeButtonWidgetClass,
+                                         parent,
+                                         XmNsubMenuId, editmenu,
+                                         NULL);
     cutbutton = XtVaCreateManagedWidget("editcut",
-					xmPushButtonGadgetClass,
-					editmenu,
-					NULL);
+                                        xmPushButtonGadgetClass,
+                                        editmenu,
+                                        NULL);
     XtAddCallback(cutbutton,
-		  XmNactivateCallback,
-		  empty_callback,
-		  (XtPointer)editmenu);
+                  XmNactivateCallback,
+                  empty_callback,
+                  (XtPointer)editmenu);
     copybutton = XtVaCreateManagedWidget("editcopy",
-					 xmPushButtonGadgetClass,
-					 editmenu,
-					 NULL);
+                                         xmPushButtonGadgetClass,
+                                         editmenu,
+                                         NULL);
     XtAddCallback(copybutton,
-		  XmNactivateCallback,
-		  empty_callback,
-		  (XtPointer)editmenu);
+                  XmNactivateCallback,
+                  empty_callback,
+                  (XtPointer)editmenu);
     pastebutton = XtVaCreateManagedWidget("editpaste",
-					  xmPushButtonGadgetClass,
-					  editmenu,
-					  NULL);
+                                          xmPushButtonGadgetClass,
+                                          editmenu,
+                                          NULL);
     XtAddCallback(pastebutton,
-		  XmNactivateCallback,
-		  empty_callback,
-		  (XtPointer)editmenu);
+                  XmNactivateCallback,
+                  empty_callback,
+                  (XtPointer)editmenu);
     separator = XtVaCreateManagedWidget("editsep1",
-					xmSeparatorGadgetClass,
-					editmenu,
-					NULL);
+                                        xmSeparatorGadgetClass,
+                                        editmenu,
+                                        NULL);
     setupbutton = XtVaCreateManagedWidget("editsetup",
-					  xmPushButtonGadgetClass,
-					  editmenu,
-					  NULL);
+                                          xmPushButtonGadgetClass,
+                                          editmenu,
+                                          NULL);
     XtAddCallback(setupbutton,
-		  XmNactivateCallback,
-		  settings_show_callback,
-		  (XtPointer)1);
+                  XmNactivateCallback,
+                  settings_show_callback,
+                  (XtPointer)1);
 }
 
 static void create_help_menu(Widget parent)
@@ -161,25 +161,25 @@ static void create_help_menu(Widget parent)
 
     helpmenu = XmCreatePulldownMenu(parent, "helpmenu", NULL, 0);
     helpbutton = XtVaCreateManagedWidget("helpbutton",
-					 xmCascadeButtonWidgetClass,
-					 parent,
-					 XmNsubMenuId, helpmenu,
-					 NULL);
+                                         xmCascadeButtonWidgetClass,
+                                         parent,
+                                         XmNsubMenuId, helpmenu,
+                                         NULL);
     XtVaSetValues(parent, XmNmenuHelpWidget, helpbutton, NULL);
     aboutbutton = XtVaCreateManagedWidget("helpabout",
-					  xmPushButtonGadgetClass,
-					  helpmenu,
-					  NULL);
+                                          xmPushButtonGadgetClass,
+                                          helpmenu,
+                                          NULL);
     XtAddCallback(aboutbutton,
-		  XmNactivateCallback,
-		  about_create_callback,
-		  (XtPointer)helpmenu);
+                  XmNactivateCallback,
+                  about_create_callback,
+                  (XtPointer)helpmenu);
 }
 
 /* ARGSUSED */
 static void login_callback(Widget w,
-			   XtPointer client_data,
-			   XtPointer call_data)
+                           XtPointer client_data,
+                           XtPointer call_data)
 {
     start_comm();
     send_login(config.username, config.password, 1LL, 1LL);
@@ -187,8 +187,8 @@ static void login_callback(Widget w,
 
 /* ARGSUSED */
 static void logout_callback(Widget w,
-			    XtPointer client_data,
-			    XtPointer call_data)
+                            XtPointer client_data,
+                            XtPointer call_data)
 {
     send_logout(1LL, 1LL);
 }
@@ -202,8 +202,8 @@ static void exit_callback(Widget w, XtPointer client_data, XtPointer call_data)
 
 /* ARGSUSED */
 static void empty_callback(Widget w,
-			   XtPointer client_data,
-			   XtPointer call_data)
+                           XtPointer client_data,
+                           XtPointer call_data)
 {
     main_post_message("Sorry, not implemented yet");
 }

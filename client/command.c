@@ -47,13 +47,13 @@ static Widget comframe, comarea;
 Widget create_command_area(Widget parent)
 {
     comframe = XtVaCreateManagedWidget("comframe",
-				       xmFrameWidgetClass,
-				       parent,
-				       XmNshadowType, XmSHADOW_OUT,
-				       NULL);
+                                       xmFrameWidgetClass,
+                                       parent,
+                                       XmNshadowType, XmSHADOW_OUT,
+                                       NULL);
     comarea = XtVaCreateManagedWidget("comarea",
-				      xmLabelWidgetClass,
-				      comframe,
-				      NULL);
+                                      xmLabelWidgetClass,
+                                      comframe,
+                                      NULL);
     return comframe;
 }

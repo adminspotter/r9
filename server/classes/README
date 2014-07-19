@@ -15,7 +15,7 @@ updates to inform actors what objects have changed.  The zone will
 eventually record which zones are adjacent to it in each direction, so it
 can inform players when they are reaching the edges of the server's
 responsibility, and hand them off to the appropriate neighbor.  The
-constructor and start methods can throw int.
+constructor and start methods can throw std::runtime_error.
 
 Octree (octree.h, octree.cc):  General space representation within
 each portion of the zone's managed space.  The octree maintains a list
@@ -48,10 +48,6 @@ knows about attributes and natures that it has.
 Geometry (geometry.h, geometry.cc, mostly unimplemented):  This is the
 representation of the geometry of an object.
 
-Polygon (polygon.h, polygon.cc, currently unused, mostly unimplemented):
-This is a simple polygon object, which comprises the geometry of a given
-object.  This may no longer be needed.
-
 Socket objects:
 
 Sockaddr (sockaddr.h):  The base class to simplify handling of IPv4 or
@@ -64,21 +60,25 @@ Sockaddr_in6 (sockaddr.h):  Handling of IPv6 socket types, derived from
 Sockaddr.
 
 basesock (basesock.h, basesock.cc):  This is a basic listening socket,
-which includes a listening thread.  All methods can throw int.
+which includes a listening thread.  All methods can throw
+std::runtime_error.
 
 listen_socket (basesock.h, basesock.cc):  This is a virtual base class
 which contains a basesock, a user list, and a thread pool to handle
-sending data out.  The constructor and init methods can throw int.
+sending data out.  The constructor and init methods can throw
+std::runtime_error.
 
 stream_socket (stream.h, stream.cc):  This class is derived from the
-listen_socket, and implements stream (TCP) sending and receiving.  It adds
-subservers (separate processes, in order to maximize the number of allowed
-filehandles, and to further parallelize the I/O, along the same lines as
-the Apache Prefork MPM).  The start method can throw int.
+listen_socket, and implements stream (TCP) sending and receiving.  It
+adds subservers (separate processes, in order to maximize the number
+of allowed filehandles, and to further parallelize the I/O, along the
+same lines as the Apache Prefork MPM).  The constructor and start
+methods can throw std::runtime_error.
 
 dgram_socket (dgram.h, dgram.cc):  This class is derived from the
-listen_socket, and implements datagram sending and receiving, and adds a
-map of Sockaddr objects to users.  The start method can throw int.
+listen_socket, and implements datagram sending and receiving, and adds
+a map of Sockaddr objects to users.  The constructor and start methods
+can throw std::runtime_error.
 
 User list objects:
 
@@ -97,15 +97,15 @@ Support objects:
 
 Library (library.h, library.cc):  This class abstracts dynamic
 libraries - opening, finding symbols within, and closing.  All methods
-can throw std::string.
+can throw std::runtime_error.
 
 ThreadPool (thread_pool.h):  This template creates a work queue of a
 given type, and creates a pool of threads which handle items which are
 pushed onto the work queue.  For access-type applications, such as
 accepting passwords, the queue can automatically clear any element
 once it is removed from the queue.  It can resize the thread pool on
-the fly, and can start and stop the pool as needed.  The constructor,
-start, and resize methods can throw int.
+the fly, and can start and stop the pool as needed.  The constructor
+and start methods can throw std::runtime_error.
 
 Some ancillary support types:
 
@@ -127,6 +127,7 @@ object's power level in a given attribute.  Attributes are basic physical
 parameters that the object has, such as strength, stamina, agility, etc.
 Currently contained within the GameObject, mapped from a std::string.
 
-ActionLevel (defs.h, currently unused):  An integer representation of a
-game object's skill level, current advancement, and last time of leveling
-up.
+ActionLevel (defs.h, currently unused):  An integer representation of
+a game object's skill level, current advancement, and last time of
+leveling up.  The time is intended to eliminate "power leveling", by
+setting a minimum time that must elapse between levelings.

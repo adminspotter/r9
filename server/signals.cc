@@ -89,21 +89,21 @@ void setup_signals(void)
     sa.sa_flags = 0;
     if (sigaction(SIGHUP, &sa, NULL) == -1)
     {
-	std::clog << syslogErr << "couldn't set SIGHUP handler: "
+        std::clog << syslogErr << "couldn't set SIGHUP handler: "
                   << strerror(errno) << "(" << errno << ")" << std::endl;
     }
     /* SIGHUP - reread the configuration files. */
     sa.sa_handler = sigusr1_handler;
     if (sigaction(SIGUSR1, &sa, NULL) == -1)
     {
-	std::clog << syslogErr << "couldn't set SIGUSR1 handler: "
+        std::clog << syslogErr << "couldn't set SIGUSR1 handler: "
                   << strerror(errno) << "(" << errno << ")" << std::endl;
     }
     /* SIGUSR2 - recreate the zone. */
     sa.sa_handler = sigusr2_handler;
     if (sigaction(SIGUSR2, &sa, NULL) == -1)
     {
-	std::clog << syslogErr << "couldn't set SIGUSR2 handler: "
+        std::clog << syslogErr << "couldn't set SIGUSR2 handler: "
                   << strerror(errno) << "(" << errno << ")" << std::endl;
     }
     /* SIGTERM - terminate the process normally. */
@@ -112,14 +112,14 @@ void setup_signals(void)
     sa.sa_mask = ss;
     if (sigaction(SIGTERM, &sa, NULL) == -1)
     {
-	std::clog << syslogErr << "couldn't set SIGTERM handler: "
+        std::clog << syslogErr << "couldn't set SIGTERM handler: "
                   << strerror(errno) << "(" << errno << ")" << std::endl;
     }
     /* SIGSEGV - clean up and terminate the process. */
     sa.sa_handler = sigsegv_handler;
     if (sigaction(SIGSEGV, &sa, NULL) == -1)
     {
-	std::clog << syslogErr << "couldn't set SIGSEGV handler: "
+        std::clog << syslogErr << "couldn't set SIGSEGV handler: "
                   << strerror(errno) << "(" << errno << ")" << std::endl;
     }
 }
@@ -187,7 +187,7 @@ static void sigsegv_handler(int sig)
     trace_size = backtrace(stack_trace, sizeof(stack_trace));
     strings = backtrace_symbols(stack_trace, trace_size);
     for (i = 0; i < trace_size; ++i)
-	std::clog << strings[i] << std::endl;
+        std::clog << strings[i] << std::endl;
 
     /* Let's try to actually get a corefile */
     abort();

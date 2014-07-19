@@ -73,9 +73,9 @@ void InetConsole::open_socket(struct addrinfo *ai)
                                      ai->ai_protocol)) < 0)
     {
         std::ostringstream s;
-	s << "socket creation failed for console port " << port_num << ": "
+        s << "socket creation failed for console port " << port_num << ": "
           << strerror(errno) << " (" << errno << ")";
-	throw std::runtime_error(s.str());
+        throw std::runtime_error(s.str());
     }
     setsockopt(this->console_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 
@@ -97,39 +97,39 @@ void InetConsole::open_socket(struct addrinfo *ai)
     /* If root's gotta open the port, become root, if possible. */
     if (do_uid)
     {
-	if (getuid() != 0)
-	{
+        if (getuid() != 0)
+        {
             close(this->console_sock);
             std::ostringstream s;
             s << "can't open console port " << this->port_num
               << " as non-root user",
             throw std::runtime_error(s.str());
-	}
-	else
-	{
-	    seteuid(getuid());
-	    setegid(getgid());
-	}
+        }
+        else
+        {
+            seteuid(getuid());
+            setegid(getgid());
+        }
     }
     if (bind(this->console_sock,
              (struct sockaddr *)(ai->ai_addr), ai->ai_addrlen) < 0)
     {
- 	if (do_uid)
-	{
-	    seteuid(uid);
-	    setegid(gid);
-	}
-	close(this->console_sock);
+         if (do_uid)
+        {
+            seteuid(uid);
+            setegid(gid);
+        }
+        close(this->console_sock);
         std::ostringstream s;
         s << "bind failed for console port " << this->port_num << ": "
           << strerror(errno) << " (" << errno << ")";
-	throw std::runtime_error(s.str());
+        throw std::runtime_error(s.str());
     }
     /* Restore the original euid and egid of the process, if necessary. */
     if (do_uid)
     {
-	seteuid(uid);
-	setegid(gid);
+        seteuid(uid);
+        setegid(gid);
     }
 
     if (listen(this->console_sock, 5) < 0)
@@ -137,8 +137,8 @@ void InetConsole::open_socket(struct addrinfo *ai)
         std::ostringstream s;
         s << "listen failed for console port " << this->port_num << ": "
           << strerror(errno) << " (" << errno << ")";
-	close(this->console_sock);
-	throw std::runtime_error(s.str());
+        close(this->console_sock);
+        throw std::runtime_error(s.str());
     }
 }
 
@@ -194,8 +194,8 @@ int InetConsole::wrap_request(int sock)
     struct request_info req;
 
     request_init(&req,
-		 RQ_FILE, sock,
-		 RQ_DAEMON, config.log_prefix, NULL);
+                 RQ_FILE, sock,
+                 RQ_DAEMON, config.log_prefix, NULL);
     fromhost(&req);
     return hosts_access(&req);
 #else

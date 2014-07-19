@@ -139,7 +139,7 @@ static int ntoh_basic_packet(packet *ap, size_t s)
 static int hton_ack_packet(packet *ap, size_t s)
 {
     if (s < sizeof(ack_packet))
-	return 0;
+        return 0;
     ap->ack.sequence = htonll(ap->ack.sequence);
     return 1;
 }
@@ -148,7 +148,7 @@ static int hton_ack_packet(packet *ap, size_t s)
 static int ntoh_ack_packet(packet *ap, size_t s)
 {
     if (s < sizeof(ack_packet))
-	return 0;
+        return 0;
     ap->ack.sequence = ntohll(ap->ack.sequence);
     return 1;
 }
@@ -157,7 +157,7 @@ static int ntoh_ack_packet(packet *ap, size_t s)
 static int hton_login_request(packet *lr, size_t s)
 {
     if (s < sizeof(login_request))
-	return 0;
+        return 0;
     lr->log.sequence = htonll(lr->log.sequence);
     return 1;
 }
@@ -166,7 +166,7 @@ static int hton_login_request(packet *lr, size_t s)
 static int ntoh_login_request(packet *lr, size_t s)
 {
     if (s < sizeof(login_request))
-	return 0;
+        return 0;
     lr->log.sequence = ntohll(lr->log.sequence);
     return 1;
 }
@@ -175,7 +175,7 @@ static int ntoh_login_request(packet *lr, size_t s)
 static int hton_logout_request(packet *lr, size_t s)
 {
     if (s < sizeof(logout_request))
-	return 0;
+        return 0;
     lr->lgt.sequence = htonll(lr->lgt.sequence);
      return 1;
 }
@@ -184,7 +184,7 @@ static int hton_logout_request(packet *lr, size_t s)
 static int ntoh_logout_request(packet *lr, size_t s)
 {
     if (s < sizeof(logout_request))
-	return 0;
+        return 0;
     lr->lgt.sequence = ntohll(lr->lgt.sequence);
     return 1;
 }
@@ -193,7 +193,7 @@ static int ntoh_logout_request(packet *lr, size_t s)
 static int hton_action_request(packet *ar, size_t s)
 {
     if (s < sizeof(action_request))
-	return 0;
+        return 0;
     ar->act.sequence = htonll(ar->act.sequence);
     ar->act.object_id = htonll(ar->act.object_id);
     ar->act.action_id = htons(ar->act.action_id);
@@ -211,7 +211,7 @@ static int hton_action_request(packet *ar, size_t s)
 static int ntoh_action_request(packet *ar, size_t s)
 {
     if (s < sizeof(action_request))
-	return 0;
+        return 0;
     ar->act.sequence = ntohll(ar->act.sequence);
     ar->act.object_id = ntohll(ar->act.object_id);
     ar->act.action_id = ntohs(ar->act.action_id);
@@ -229,7 +229,7 @@ static int ntoh_action_request(packet *ar, size_t s)
 static int hton_position_update(packet *pu, size_t s)
 {
     if (s < sizeof(position_update))
-	return 0;
+        return 0;
     pu->pos.sequence = htonll(pu->pos.sequence);
     pu->pos.object_id = htonll(pu->pos.object_id);
     pu->pos.frame_number = htons(pu->pos.frame_number);
@@ -249,7 +249,7 @@ static int hton_position_update(packet *pu, size_t s)
 static int ntoh_position_update(packet *pu, size_t s)
 {
     if (s < sizeof(position_update))
-	return 0;
+        return 0;
     pu->pos.sequence = ntohll(pu->pos.sequence);
     pu->pos.object_id = ntohll(pu->pos.object_id);
     pu->pos.frame_number = ntohs(pu->pos.frame_number);
@@ -269,7 +269,7 @@ static int ntoh_position_update(packet *pu, size_t s)
 static int hton_server_notice(packet *sn, size_t s)
 {
     if (s < sizeof(server_notice))
-	return 0;
+        return 0;
 #if defined(USE_IPV4) || !defined(USE_IPV6)
     sn->srv.srv.s_addr = htonl(sn->srv.srv.s_addr);
     /* No need to convert ipv6 addresses - they're always in network order */
@@ -282,7 +282,7 @@ static int hton_server_notice(packet *sn, size_t s)
 static int ntoh_server_notice(packet *sn, size_t s)
 {
     if (s < sizeof(server_notice))
-	return 0;
+        return 0;
 #if defined(USE_IPV4) || !defined(USE_IPV6)
     sn->srv.srv.s_addr = ntohl(sn->srv.srv.s_addr);
     /* No need to convert ipv6 addresses - they're always in network order */

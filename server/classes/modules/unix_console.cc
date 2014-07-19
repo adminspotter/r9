@@ -58,7 +58,7 @@ void UnixConsole::open_socket(void)
     if ((this->console_sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
     {
         std::ostringstream s;
-	s << "socket creation failed for console "
+        s << "socket creation failed for console "
           << this->console_fname.c_str() << ": "
           << strerror(errno) << " (" << errno << ")";
         throw std::runtime_error(s.str());
@@ -73,20 +73,20 @@ void UnixConsole::open_socket(void)
     if (bind(this->console_sock, (struct sockaddr *)&sun, sizeof(sun)) < 0)
     {
         std::ostringstream s;
-	s << "bind failed for console "
-	  << this->console_fname.c_str() << ": "
+        s << "bind failed for console "
+          << this->console_fname.c_str() << ": "
           << strerror(errno) << " (" << errno << ")";
-	close(this->console_sock);
+        close(this->console_sock);
         throw std::runtime_error(s.str());
     }
 
     if (listen(this->console_sock, 5) < 0)
     {
         std::ostringstream s;
-	s << "listen failed for console "
+        s << "listen failed for console "
           << this->console_fname.c_str() << ": "
           << strerror(errno) << " (" << errno << ")";
-	close(this->console_sock);
+        close(this->console_sock);
         throw std::runtime_error(s.str());
     }
 }

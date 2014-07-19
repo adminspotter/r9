@@ -100,19 +100,19 @@ static struct sockaddr_in remote;
 static u_int64_t sequence = 0LL;
 
 void send_login(char *user, char *pass,
-		u_int64_t userid, u_int64_t charid)
+                u_int64_t userid, u_int64_t charid)
 {
     if (sock != -1)
     {
-	packet req;
+        packet req;
 
-	memset((void *)&(req.log), 0, sizeof(login_request));
-	req.log.type = TYPE_LOGREQ;
-	req.log.version = 1;
-	req.log.sequence = sequence++;
-	memcpy(req.log.username, user, sizeof(req.log.username));
-	memcpy(req.log.password, pass, sizeof(req.log.password));
-	send_data((unsigned char *)&req, sizeof(login_request));
+        memset((void *)&(req.log), 0, sizeof(login_request));
+        req.log.type = TYPE_LOGREQ;
+        req.log.version = 1;
+        req.log.sequence = sequence++;
+        memcpy(req.log.username, user, sizeof(req.log.username));
+        memcpy(req.log.password, pass, sizeof(req.log.password));
+        send_data((unsigned char *)&req, sizeof(login_request));
     }
 }
 
@@ -120,14 +120,14 @@ void send_action_request(u_int16_t actionid, u_int8_t power)
 {
     if (sock != -1)
     {
-	packet req;
+        packet req;
 
-	req.act.type = TYPE_ACTREQ;
-	req.act.version = 1;
-	req.act.sequence = sequence++;
-	req.act.action_id = actionid;
-	req.act.power_level = power;
-	send_data((unsigned char *)&req, sizeof(action_request));
+        req.act.type = TYPE_ACTREQ;
+        req.act.version = 1;
+        req.act.sequence = sequence++;
+        req.act.action_id = actionid;
+        req.act.power_level = power;
+        send_data((unsigned char *)&req, sizeof(action_request));
     }
 }
 
@@ -135,12 +135,12 @@ void send_logout(u_int64_t userid, u_int64_t charid)
 {
     if (sock != -1)
     {
-	packet req;
+        packet req;
 
-	req.lgt.type = TYPE_LGTREQ;
-	req.lgt.version = 1;
-	req.lgt.sequence = sequence++;
-	send_data((unsigned char *)&req, sizeof(logout_request));
+        req.lgt.type = TYPE_LGTREQ;
+        req.lgt.version = 1;
+        req.lgt.sequence = sequence++;
+        send_data((unsigned char *)&req, sizeof(logout_request));
     }
 }
 
@@ -148,13 +148,13 @@ void send_ack(u_int8_t type)
 {
     if (sock != -1)
     {
-	packet req;
+        packet req;
 
-	req.ack.type = TYPE_ACKPKT;
-	req.ack.version = 1;
-	req.ack.sequence = sequence++;
-	req.ack.request = type;
-	send_data((unsigned char *)&req, sizeof(ack_packet));
+        req.ack.type = TYPE_ACKPKT;
+        req.ack.version = 1;
+        req.ack.sequence = sequence++;
+        req.ack.request = type;
+        send_data((unsigned char *)&req, sizeof(ack_packet));
     }
 }
 
@@ -168,29 +168,29 @@ void start_comm(void)
     head = tail = 0;
     if ((send_queue = (packet *)malloc(sizeof(packet) * size)) == NULL)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Couldn't allocate send queue: %s", strerror(errno));
-	main_post_message(errstr);
-	return;
+        snprintf(errstr, sizeof(errstr),
+                 "Couldn't allocate send queue: %s", strerror(errno));
+        main_post_message(errstr);
+        return;
     }
 
     /* Init the mutex and cond variables */
     if ((ret = pthread_mutex_init(&send_queue_lock, NULL)) != 0)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Couldn't init queue mutex: %s", strerror(ret));
-	main_post_message(errstr);
-	free(send_queue);
-	return;
+        snprintf(errstr, sizeof(errstr),
+                 "Couldn't init queue mutex: %s", strerror(ret));
+        main_post_message(errstr);
+        free(send_queue);
+        return;
     }
     if ((ret = pthread_cond_init(&send_queue_not_empty, NULL)) != 0)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Couldn't init queue not-empty cond: %s", strerror(ret));
-	main_post_message(errstr);
-	pthread_mutex_destroy(&send_queue_lock);
-	free(send_queue);
-	return;
+        snprintf(errstr, sizeof(errstr),
+                 "Couldn't init queue not-empty cond: %s", strerror(ret));
+        main_post_message(errstr);
+        pthread_mutex_destroy(&send_queue_lock);
+        free(send_queue);
+        return;
     }
 
     create_socket(&config.server_addr, config.server_port);
@@ -198,32 +198,32 @@ void start_comm(void)
     /* Now start up the actual threads */
     if ((ret = pthread_create(&send_thread, NULL, send_worker, NULL)) != 0)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Couldn't start send thread: %s", strerror(ret));
-	main_post_message(errstr);
-	pthread_cond_destroy(&send_queue_not_empty);
-	pthread_mutex_destroy(&send_queue_lock);
-	free(send_queue);
-	return;
+        snprintf(errstr, sizeof(errstr),
+                 "Couldn't start send thread: %s", strerror(ret));
+        main_post_message(errstr);
+        pthread_cond_destroy(&send_queue_not_empty);
+        pthread_mutex_destroy(&send_queue_lock);
+        free(send_queue);
+        return;
     }
     if ((ret = pthread_create(&recv_thread, NULL, recv_worker, NULL)) != 0)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Couldn't start recv thread: %s", strerror(ret));
-	main_post_message(errstr);
-	pthread_cancel(send_thread);
-	pthread_join(send_thread, NULL);
-	pthread_cond_destroy(&send_queue_not_empty);
-	pthread_mutex_destroy(&send_queue_lock);
-	free(send_queue);
-	return;
+        snprintf(errstr, sizeof(errstr),
+                 "Couldn't start recv thread: %s", strerror(ret));
+        main_post_message(errstr);
+        pthread_cancel(send_thread);
+        pthread_join(send_thread, NULL);
+        pthread_cond_destroy(&send_queue_not_empty);
+        pthread_mutex_destroy(&send_queue_lock);
+        free(send_queue);
+        return;
     }
 }
 
 void cleanup_comm(void)
 {
     if (sock != -1)
-	send_logout(1LL, 1LL);
+        send_logout(1LL, 1LL);
     thread_exit_flag = 1;
     pthread_cond_broadcast(&send_queue_not_empty);
 }
@@ -236,16 +236,16 @@ void create_socket(struct in_addr *addr, u_int16_t port)
 
     if ((proto_ent = getprotobyname("udp")) == NULL)
     {
-	snprintf(errstr, sizeof(errstr), "Couldn't find protocol 'udp'");
-	main_post_message(errstr);
-	return;
+        snprintf(errstr, sizeof(errstr), "Couldn't find protocol 'udp'");
+        main_post_message(errstr);
+        return;
     }
     if ((sock = socket(PF_INET, SOCK_DGRAM, proto_ent->p_proto)) == -1)
     {
-	snprintf(errstr, sizeof(errstr),
-		 "Couldn't open socket: %s", strerror(errno));
-	main_post_message(errstr);
-	return;
+        snprintf(errstr, sizeof(errstr),
+                 "Couldn't open socket: %s", strerror(errno));
+        main_post_message(errstr);
+        return;
     }
     remote.sin_family = AF_INET;
     remote.sin_port = port;
@@ -260,21 +260,21 @@ static void send_data(unsigned char *buffer, size_t length)
 
     if ((head == 0 && tail == (size - 1)) || tail == (head - 1))
     {
-	snprintf(errstr, sizeof(errstr), "Ran out of transmit buffers");
-	main_post_message(errstr);
-	return;
+        snprintf(errstr, sizeof(errstr), "Ran out of transmit buffers");
+        main_post_message(errstr);
+        return;
     }
     if (!hton_packet((packet *)buffer, length))
     {
-	snprintf(errstr, sizeof(errstr), "Error hton'ing packet");
-	main_post_message(errstr);
-	return;
+        snprintf(errstr, sizeof(errstr), "Error hton'ing packet");
+        main_post_message(errstr);
+        return;
     }
     memcpy((void *)(&send_queue[tail]),
-	   buffer,
-	   packet_size((packet *)buffer));
+           buffer,
+           packet_size((packet *)buffer));
     if (++tail == size)
-	tail = 0;
+        tail = 0;
 
     pthread_cond_signal(&send_queue_not_empty);
     pthread_mutex_unlock(&send_queue_lock);
@@ -285,31 +285,31 @@ static void *send_worker(void *notused)
 {
     for (;;)
     {
-	pthread_mutex_lock(&send_queue_lock);
+        pthread_mutex_lock(&send_queue_lock);
 
-	while (head == tail && !thread_exit_flag)
-	    pthread_cond_wait(&send_queue_not_empty, &send_queue_lock);
+        while (head == tail && !thread_exit_flag)
+            pthread_cond_wait(&send_queue_not_empty, &send_queue_lock);
 
-	if (thread_exit_flag)
-	{
-	    pthread_mutex_unlock(&send_queue_lock);
-	    pthread_exit(NULL);
-	}
+        if (thread_exit_flag)
+        {
+            pthread_mutex_unlock(&send_queue_lock);
+            pthread_exit(NULL);
+        }
 
-	/* Should we try to send the entire queue contents here, if there's
-	 * more than just one packet?
-	 */
-	sendto(sock,
-	       (void *)(&send_queue[head]), packet_size(&send_queue[head]),
-	       0,
-	       (struct sockaddr *)&remote, sizeof(struct sockaddr_in));
-	fprintf(stderr,
-		"sent a packet of type %d to %s:%d\n",
-		send_queue[head].basic.type, inet_ntoa(remote.sin_addr),
-		ntohs(remote.sin_port));
-	if (++head == size)
-	    head = 0;
-	pthread_mutex_unlock(&send_queue_lock);
+        /* Should we try to send the entire queue contents here, if there's
+         * more than just one packet?
+         */
+        sendto(sock,
+               (void *)(&send_queue[head]), packet_size(&send_queue[head]),
+               0,
+               (struct sockaddr *)&remote, sizeof(struct sockaddr_in));
+        fprintf(stderr,
+                "sent a packet of type %d to %s:%d\n",
+                send_queue[head].basic.type, inet_ntoa(remote.sin_addr),
+                ntohs(remote.sin_port));
+        if (++head == size)
+            head = 0;
+        pthread_mutex_unlock(&send_queue_lock);
     }
 }
 
@@ -324,89 +324,89 @@ static void *recv_worker(void *notused)
 
     for (;;)
     {
-	fromlen = sizeof(struct sockaddr_in);
-	len = recvfrom(sock, (void *)&buf, sizeof(packet), 0,
-		       (struct sockaddr *)&sin, &fromlen);
-	/* Verify that the sender is who we think it should be */
-	if (memcmp(&sin, &remote, sizeof(struct sockaddr_in)))
-	{
-	    snprintf(errstr, sizeof(errstr),
-		     "Got packet from unknown sender %s",
-		     inet_ntoa(sin.sin_addr));
-	    main_post_message(errstr);
-	    continue;
-	}
+        fromlen = sizeof(struct sockaddr_in);
+        len = recvfrom(sock, (void *)&buf, sizeof(packet), 0,
+                       (struct sockaddr *)&sin, &fromlen);
+        /* Verify that the sender is who we think it should be */
+        if (memcmp(&sin, &remote, sizeof(struct sockaddr_in)))
+        {
+            snprintf(errstr, sizeof(errstr),
+                     "Got packet from unknown sender %s",
+                     inet_ntoa(sin.sin_addr));
+            main_post_message(errstr);
+            continue;
+        }
 
-	fprintf(stderr,
-		"got a packet of type %d from %s:%d\n",
-		buf.basic.type, inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
-	if (!ntoh_packet(&buf, len))
-	{
-	    snprintf(errstr, sizeof(errstr), "Error while ntoh'ing packet\n");
-	    main_post_message(errstr);
-	    continue;
-	}
-	/* We got a packet, now figure out what type it is and process it */
-	switch (buf.basic.type)
-	{
-	  case TYPE_ACKPKT:
-	    /* Acknowledgement packet */
-	    switch (buf.ack.request)
-	    {
-	      case TYPE_LOGREQ:
-		/* The response to our login request */
-		snprintf(errstr, sizeof(errstr),
-			 "Login response, type %d access", buf.ack.misc);
-		main_post_message(errstr);
-		break;
+        fprintf(stderr,
+                "got a packet of type %d from %s:%d\n",
+                buf.basic.type, inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
+        if (!ntoh_packet(&buf, len))
+        {
+            snprintf(errstr, sizeof(errstr), "Error while ntoh'ing packet\n");
+            main_post_message(errstr);
+            continue;
+        }
+        /* We got a packet, now figure out what type it is and process it */
+        switch (buf.basic.type)
+        {
+          case TYPE_ACKPKT:
+            /* Acknowledgement packet */
+            switch (buf.ack.request)
+            {
+              case TYPE_LOGREQ:
+                /* The response to our login request */
+                snprintf(errstr, sizeof(errstr),
+                         "Login response, type %d access", buf.ack.misc);
+                main_post_message(errstr);
+                break;
 
-	      case TYPE_LGTREQ:
-		/* The response to our logout request */
-		snprintf(errstr, sizeof(errstr),
-			 "Logout response, type %d access", buf.ack.misc);
-		main_post_message(errstr);
-		break;
+              case TYPE_LGTREQ:
+                /* The response to our logout request */
+                snprintf(errstr, sizeof(errstr),
+                         "Logout response, type %d access", buf.ack.misc);
+                main_post_message(errstr);
+                break;
 
-	      default:
-		snprintf(errstr, sizeof(errstr),
-			 "Got an unknown ack packet: %d", buf.ack.request);
-		main_post_message(errstr);
-		break;
-	    }
-	    break;
+              default:
+                snprintf(errstr, sizeof(errstr),
+                         "Got an unknown ack packet: %d", buf.ack.request);
+                main_post_message(errstr);
+                break;
+            }
+            break;
 
-	  case TYPE_POSUPD:
-	    /* Position update */
-	    fprintf(stderr, "Got a position update for object %lld\n",
-		    buf.pos.object_id);
-	    move_object(buf.pos.object_id,
-			buf.pos.frame_number,
-			(double)buf.pos.x_pos / 100.0,
-			(double)buf.pos.y_pos / 100.0,
-			(double)buf.pos.z_pos / 100.0,
-			(double)buf.pos.x_orient / 100.0,
-			(double)buf.pos.y_orient / 100.0,
-			(double)buf.pos.z_orient / 100.0);
-	    break;
+          case TYPE_POSUPD:
+            /* Position update */
+            fprintf(stderr, "Got a position update for object %lld\n",
+                    buf.pos.object_id);
+            move_object(buf.pos.object_id,
+                        buf.pos.frame_number,
+                        (double)buf.pos.x_pos / 100.0,
+                        (double)buf.pos.y_pos / 100.0,
+                        (double)buf.pos.z_pos / 100.0,
+                        (double)buf.pos.x_orient / 100.0,
+                        (double)buf.pos.y_orient / 100.0,
+                        (double)buf.pos.z_orient / 100.0);
+            break;
 
-	  case TYPE_SRVNOT:
-	    /* Server notification */
-	    fprintf(stderr, "Got a server notification packet, ignoring\n");
-	    break;
+          case TYPE_SRVNOT:
+            /* Server notification */
+            fprintf(stderr, "Got a server notification packet, ignoring\n");
+            break;
 
-	  case TYPE_PNGPKT:
-	    fprintf(stderr, "Got a ping packet, responding\n");
-	    send_ack(TYPE_PNGPKT);
-	    break;
+          case TYPE_PNGPKT:
+            fprintf(stderr, "Got a ping packet, responding\n");
+            send_ack(TYPE_PNGPKT);
+            break;
 
-	  case TYPE_LOGREQ:
-	  case TYPE_LGTREQ:
-	  case TYPE_ACTREQ:
-	  default:
-	    snprintf(errstr, sizeof(errstr),
-		     "Got an unexpected packet type: %d\n", buf.basic.type);
-	    main_post_message(errstr);
-	    break;
-	}
+          case TYPE_LOGREQ:
+          case TYPE_LGTREQ:
+          case TYPE_ACTREQ:
+          default:
+            snprintf(errstr, sizeof(errstr),
+                     "Got an unexpected packet type: %d\n", buf.basic.type);
+            main_post_message(errstr);
+            break;
+        }
     }
 }

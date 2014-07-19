@@ -51,21 +51,21 @@ static XtIntervalId timer = 0L;
 Widget create_message_area(Widget parent)
 {
     msgframe = XtVaCreateManagedWidget("msgframe",
-				       xmFrameWidgetClass,
-				       parent,
-				       XmNshadowType, XmSHADOW_OUT,
-				       NULL);
+                                       xmFrameWidgetClass,
+                                       parent,
+                                       XmNshadowType, XmSHADOW_OUT,
+                                       NULL);
     msglabel = XtVaCreateManagedWidget("msglabel",
-				       xmLabelWidgetClass,
-				       msgframe,
-				       NULL);
+                                       xmLabelWidgetClass,
+                                       msgframe,
+                                       NULL);
     return msgframe;
 }
 
 /* ARGSUSED */
 void main_message_post_callback(Widget w,
-				XtPointer client_data,
-				XtPointer call_data)
+                                XtPointer client_data,
+                                XtPointer call_data)
 {
     main_post_message((char *)client_data);
 }
@@ -76,20 +76,20 @@ void main_post_message(char *msg)
 
     if (timer != 0L)
     {
-	XtRemoveTimeOut(timer);
-	timer = 0L;
+        XtRemoveTimeOut(timer);
+        timer = 0L;
     }
     XtVaSetValues(msglabel, XmNlabelString, str, NULL);
     XmStringFree(str);
     timer = XtAppAddTimeOut(XtWidgetToApplicationContext(msglabel),
-			    (unsigned long)10000L,
-			    main_unpost_message_timeout,
-			    (XtPointer)NULL);
+                            (unsigned long)10000L,
+                            main_unpost_message_timeout,
+                            (XtPointer)NULL);
 }
 
 /* ARGSUSED */
 static void main_unpost_message_timeout(XtPointer client_data,
-					XtIntervalId *id)
+                                        XtIntervalId *id)
 {
     XmString str = XmStringCreateLocalized(" ");
 

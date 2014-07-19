@@ -101,7 +101,7 @@ void basesock::create_socket(struct addrinfo *ai)
           << this->port_num << ": "
           << strerror(errno) << " (" << errno << ")";
         this->sock = 0;
-	throw std::runtime_error(s.str());
+        throw std::runtime_error(s.str());
     }
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 
@@ -127,20 +127,20 @@ void basesock::create_socket(struct addrinfo *ai)
     /* If root's gotta open the port, become root, if possible. */
     if (do_uid)
     {
-	if (getuid() != 0)
-	{
+        if (getuid() != 0)
+        {
             std::ostringstream s;
-	    s << "can't open " << typestr << " port "
+            s << "can't open " << typestr << " port "
               << this->port_num << " as non-root user";
-	    close(this->sock);
+            close(this->sock);
             this->sock = 0;
-	    throw std::runtime_error(s.str());
-	}
-	else
-	{
-	    seteuid(getuid());
-	    setegid(getgid());
-	}
+            throw std::runtime_error(s.str());
+        }
+        else
+        {
+            seteuid(getuid());
+            setegid(getgid());
+        }
     }
     if (bind(this->sock,
              (struct sockaddr *)(ai->ai_addr), ai->ai_addrlen) < 0)
@@ -151,31 +151,31 @@ void basesock::create_socket(struct addrinfo *ai)
             setegid(gid);
         }
         std::ostringstream s;
-	s << "bind failed for " << typestr << " port " << this->port_num << ": "
+        s << "bind failed for " << typestr << " port " << this->port_num << ": "
           << strerror(errno) << " (" << errno << ")";
-	close(this->sock);
+        close(this->sock);
         this->sock = 0;
         throw std::runtime_error(s.str());
     }
     /* Restore the original euid and egid of the process, if necessary. */
     if (do_uid)
     {
-	seteuid(uid);
-	setegid(gid);
+        seteuid(uid);
+        setegid(gid);
     }
 
     if (ai->ai_socktype == SOCK_STREAM)
     {
-	if (listen(this->sock, basesock::LISTEN_BACKLOG) < 0)
-	{
+        if (listen(this->sock, basesock::LISTEN_BACKLOG) < 0)
+        {
             std::ostringstream s;
-	    s << "listen failed for " << typestr << " port "
+            s << "listen failed for " << typestr << " port "
               << this->port_num << ": "
               << strerror(errno) << " (" << errno << ")";
-	    close(this->sock);
+            close(this->sock);
             this->sock = 0;
             throw std::runtime_error(s.str());
-	}
+        }
     }
 
     std::clog << "created " << typestr << " socket "
@@ -285,7 +285,7 @@ listen_socket::~listen_socket()
     }
     sleep(0);
     if ((retval = pthread_join(this->reaper, NULL)) != 0)
-	std::clog << syslogErr << "error terminating reaper thread for port "
+        std::clog << syslogErr << "error terminating reaper thread for port "
                   << this->sock.port_num << ": "
                   << strerror(retval) << " (" << retval << ")" << std::endl;
 
@@ -326,13 +326,13 @@ void *listen_socket::access_pool_worker(void *arg)
     {
         ls->access_pool->pop(&req);
 
-	ntoh_packet(&(req.buf), sizeof(packet));
+        ntoh_packet(&(req.buf), sizeof(packet));
 
-	if (req.buf.basic.type == TYPE_LOGREQ)
-	    ls->login_user(req);
-	else if (req.buf.basic.type == TYPE_LGTREQ)
-	    ls->logout_user(req);
-	/* Otherwise, we don't recognize it, and will ignore it */
+        if (req.buf.basic.type == TYPE_LOGREQ)
+            ls->login_user(req);
+        else if (req.buf.basic.type == TYPE_LGTREQ)
+            ls->logout_user(req);
+        /* Otherwise, we don't recognize it, and will ignore it */
     }
     std::clog << "access pool worker ending";
     return NULL;
@@ -354,12 +354,12 @@ void listen_socket::login_user(access_list& p)
               << p.buf.log.username << " (" << userid << ")" << std::endl;
     if (userid != 0LL)
     {
-	if (this->users.find(userid) == this->users.end())
-	{
-	    Control *newcontrol = new Control(userid, NULL);
-	    newcontrol->username = username;
+        if (this->users.find(userid) == this->users.end())
+        {
+            Control *newcontrol = new Control(userid, NULL);
+            newcontrol->username = username;
 
-	    /* Add this user to the userlist */
+            /* Add this user to the userlist */
             this->do_login(userid, newcontrol, p);
             newcontrol->parent = (void *)(this->send_pool);
 
@@ -369,7 +369,7 @@ void listen_socket::login_user(access_list& p)
 
             /* Send an ack packet, to let the user know they're in */
             newcontrol->send_ack(TYPE_LOGREQ);
-	}
+        }
     }
     /* Otherwise, do nothing, and send nothing */
 }
@@ -383,9 +383,9 @@ void listen_socket::logout_user(access_list& p)
     {
         base_user *bu = found->second;
         bu->pending_logout = true;
-	std::clog << "logout request from "
+        std::clog << "logout request from "
                   << bu->control->username
                   << " (" << bu->control->userid << ")" << std::endl;
-	bu->control->send_ack(TYPE_LGTREQ);
+        bu->control->send_ack(TYPE_LGTREQ);
     }
 }
