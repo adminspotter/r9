@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2014, 16:01:51 tquirk
+ *   last updated 20 Jul 2014, 15:59:36 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -70,6 +70,9 @@
  *                     and they're XML files, so use the .xml extension.
  *   13 Jul 2014 TAQ - We were leaking lots of display lists, in both the
  *                     reaper and in the destructor.  Fixed.
+ *   20 Jul 2014 TAQ - We're now using the templated object cache, instead
+ *                     of having geometry and texture caches which are
+ *                     basically the same thing.
  *
  * Things to do
  *   - The parser is a massive race condition - we're constructing
@@ -91,14 +94,17 @@
 #include <sys/time.h>
 #include <errno.h>
 
+#include <glut.h>
+
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
 
 #include "geometry.h"
-#include "client.h"
 
-void GeometryCache::FileParser::open_geometry(XNS::AttributeList& attrs)
+GeometryCache geom_cache;
+
+void GeometryParser::open_geometry(XNS::AttributeList& attrs)
 {
     int i, count = 0;
     char *str;
@@ -116,9 +122,10 @@ void GeometryCache::FileParser::open_geometry(XNS::AttributeList& attrs)
             else if (XNS::XMLString::compareIString(attrs.getName(i),
                                                     this->identifier))
             {
+                /* We already know the objectid
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->objid = strtoll(str, NULL, 10);
-                XNS::XMLString::release(&str);
+                XNS::XMLString::release(&str);*/
             }
             else if (XNS::XMLString::compareIString(attrs.getName(i),
                                                     this->count))
@@ -138,13 +145,13 @@ void GeometryCache::FileParser::open_geometry(XNS::AttributeList& attrs)
             }
         }
         if (count > 0)
-            parent->geom[this->geom[objid].reserve(count);
+            this->geom->reserve(count);
     }
     else
         throw std::runtime_error("Bad geometry open tag");
 }
 
-void GeometryCache::FileParser::close_geometry(void)
+void GeometryParser::close_geometry(void)
 {
     if (this->current == frame_en)
         this->current = geometry_en;
@@ -152,35 +159,32 @@ void GeometryCache::FileParser::close_geometry(void)
         throw std::runtime_error("Bad geometry close tag");
 }
 
-void GeometryCache::FileParser::open_frame(XNS::AttributeList& attrs)
+void GeometryParser::open_frame(XNS::AttributeList& attrs)
 {
     if (this->current == geometry_st)
     {
         this->current = frame_st;
-        this->geom.disp_list = glGenLists(1);
+        this->geom->push_back(glGenLists(1));
         /* This would be the time to grab a mutex */
-        glNewList(this->geom.disp_list, GL_COMPILE);
+        glNewList(this->geom->back(), GL_COMPILE);
     }
     else
         throw std::runtime_error("Bad frame open tag");
 }
 
-void GeometryCache::FileParser::close_frame(void)
+void GeometryParser::close_frame(void)
 {
-    if (this->current == polylist_en || this->current == sphere)
+    if (this->current == polylist_en || this->current == sphere_st)
     {
         this->current = frame_en;
         glEndList();
         /* This would be the time to drop a mutex */
-        gettimeofday(&(this->geom), NULL);
-        parent->geom[this->objid].push_back(this->geom);
-        ++(this->frameid);
     }
     else
         throw std::runtime_error("Bad frame close tag");
 }
 
-void GeometryCache::FileParser::open_sphere(XNS::AttributeList& attrs)
+void GeometryParser::open_sphere(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
@@ -189,7 +193,7 @@ void GeometryCache::FileParser::open_sphere(XNS::AttributeList& attrs)
 
     if (this->current == frame_st)
     {
-        this->current = sphere;
+        this->current = sphere_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
             if (XNS::XMLString::compareIString(attrs.getName(i), this->texture))
@@ -222,7 +226,7 @@ void GeometryCache::FileParser::open_sphere(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad sphere tag");
 }
 
-void GeometryCache::FileParser::open_polylist(XNS::AttributeList& attrs)
+void GeometryParser::open_polylist(XNS::AttributeList& attrs)
 {
     if (this->current == frame_st)
         this->current = polylist_st;
@@ -230,7 +234,7 @@ void GeometryCache::FileParser::open_polylist(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad polylist open tag");
 }
 
-void GeometryCache::FileParser::close_polylist(void)
+void GeometryParser::close_polylist(void)
 {
     if (this->current == polygon_en)
         this->current = polylist_en;
@@ -238,9 +242,10 @@ void GeometryCache::FileParser::close_polylist(void)
         throw std::runtime_error("Bad polylist close tag");
 }
 
-void GeometryCache::FileParser::open_polygon(XNS::AttributeList& attrs)
+void GeometryParser::open_polygon(XNS::AttributeList& attrs)
 {
     int i;
+    char *str;
     u_int64_t tid;
 
     if (this->current == polylist_st || this->current == polygon_en)
@@ -271,7 +276,7 @@ void GeometryCache::FileParser::open_polygon(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad polygon open tag");
 }
 
-void GeometryCache::FileParser::close_polygon(void)
+void GeometryParser::close_polygon(void)
 {
     if (this->current == point_en)
     {
@@ -282,21 +287,21 @@ void GeometryCache::FileParser::close_polygon(void)
         throw std::runtime_error("Bad polygon close tag");
 }
 
-void GeometryCache::FileParser::open_point(XNS::AttributeList& attrs)
+void GeometryParser::open_point(XNS::AttributeList& attrs)
 {
     if (this->current == polygon_st)
     {
         this->current = point_st;
-        this->pt = { 0.0, 0.0, 0.0 };
-        this->norm = { 0.0, 0.0, 0.0 };
+        this->pt[0] = this->pt[1] = this->pt[2] = 0.0;
+        this->norm[0] = this->norm[1] = this->norm[2] = 0.0;
     }
     else
         throw std::runtime_error("Bad point open tag");
 }
 
-void GeometryCache::FileParser::close_point(void)
+void GeometryParser::close_point(void)
 {
-    if (this->current == normal)
+    if (this->current == normal_st)
     {
         this->current = point_en;
         glNormal3fv(this->norm);
@@ -306,14 +311,14 @@ void GeometryCache::FileParser::close_point(void)
         throw std::runtime_error("Bad point close tag");
 }
 
-void GeometryCache::FileParser::open_vertex(XNS::AttributeList& attrs)
+void GeometryParser::open_vertex(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
 
     if (this->current == point_st)
     {
-        this->current = vertex;
+        this->current = vertex_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
             if (XNS::XMLString::compareIString(attrs.getName(i), this->x))
@@ -349,14 +354,14 @@ void GeometryCache::FileParser::open_vertex(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad vertex tag");
 }
 
-void GeometryCache::FileParser::open_normal(XNS::AttributeList& attrs)
+void GeometryParser::open_normal(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
 
-    if (this->current == vertex)
+    if (this->current == vertex_st)
     {
-        this->current = normal;
+        this->current = normal_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
             if (XNS::XMLString::compareIString(attrs.getName(i), this->x))
@@ -392,15 +397,13 @@ void GeometryCache::FileParser::open_normal(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad normal tag");
 }
 
-GeometryCache::FileParser::FileParser(GeometryCache *parent)
+GeometryParser::GeometryParser(geometry *elem)
 {
-    this->parent = parent;
+    this->geom = elem;
     this->current = start;
-    this->objid = 0LL;
-    this->frameid = 0;
 
     /* Set our parser strings, so we don't have to keep transcoding */
-    this->geometry = XNS::XMLString::transcode("geometry");
+    this->geometry_str = XNS::XMLString::transcode("geometry");
     this->frame = XNS::XMLString::transcode("frame");
     this->sphere = XNS::XMLString::transcode("sphere");
     this->polylist = XNS::XMLString::transcode("polylist");
@@ -418,9 +421,9 @@ GeometryCache::FileParser::FileParser(GeometryCache *parent)
     this->z = XNS::XMLString::transcode("z");
 }
 
-GeometryCache::FileParser::~FileParser()
+GeometryParser::~GeometryParser()
 {
-    XNS::XMLString::release(&(this->geometry));
+    XNS::XMLString::release(&(this->geometry_str));
     XNS::XMLString::release(&(this->frame));
     XNS::XMLString::release(&(this->sphere));
     XNS::XMLString::release(&(this->polylist));
@@ -438,29 +441,10 @@ GeometryCache::FileParser::~FileParser()
     XNS::XMLString::release(&(this->z));
 }
 
-void GeometryCache::FileParser::characters(const XMLCh *chars,
-                                           const unsigned int len)
-{
-    /* This should get invoked when there are free characters.  Our
-     * DTD doesn't really allow any, but we might get whitespace
-     * here.
-     */
-    if (XNS::XMLString::isAllWhiteSpace(chars))
-        return;
-    else
-    {
-        std::ostringstream s;
-        char *str = XNS::XMLString::transcode(chars);
-        s << "Got free text \"" << str << "\" in the geometry file";
-        XNS::XMLString::release(&str);
-        throw std::runtime_error(s.str());
-    }
-}
-
-void GeometryCache::FileParser::startElement(const XMLCh *name,
+void GeometryParser::startElement(const XMLCh *name,
                                              XNS::AttributeList& attrs)
 {
-    if (XNS::XMLString::compareIString(name, this->geometry))
+    if (XNS::XMLString::compareIString(name, this->geometry_str))
         this->open_geometry(attrs);
     else if (XNS::XMLString::compareIString(name, this->frame))
         this->open_frame(attrs);
@@ -487,9 +471,9 @@ void GeometryCache::FileParser::startElement(const XMLCh *name,
     }
 }
 
-void GeometryCache::FileParser::endElement(const XMLCh *name)
+void GeometryParser::endElement(const XMLCh *name)
 {
-    if (XNS::XMLString::compareIString(name, this->geometry))
+    if (XNS::XMLString::compareIString(name, this->geometry_str))
         this->close_geometry();
     else if (XNS::XMLString::compareIString(name, this->frame))
         this->close_frame();
@@ -508,182 +492,4 @@ void GeometryCache::FileParser::endElement(const XMLCh *name)
         XNS::XMLString::release(&tag);
         throw std::runtime_error(s.str());
     }
-}
-
-const int GeometryCache::PRUNE_INTERVAL = 600;
-const int GeometryCache::PRUNE_LIFETIME = 1200;
-
-void *GeometryCache::prune_worker(void *arg)
-{
-    GeometryCache *gc = (GeometryCache *)arg;
-    struct timeval limit;
-    std::unordered_map<u_int64_t, std::vector<geometry> >::iterator i;
-    std::vector<geometry>::iterator j;
-    bool too_old;
-    int count;
-
-    for (;;)
-    {
-        sleep(GeometryCache::PRUNE_INTERVAL);
-        if (!gettimeofday(&limit, NULL))
-        {
-            std::ostringstream s;
-            s << "Geometry reaper thread couldn't get time of day: "
-              << strerror(errno) << " (" << errno << ")";
-            main_post_message(s.str());
-            continue;
-        }
-        limit.tv_sec -= GeometryCache::PRUNE_LIFETIME;
-        count = 0;
-        for (i = gc->geom.begin(); i != gc->geom.end(); ++i)
-        {
-            too_old = true;
-            for (j = i->second.begin(); j != i->second.end(); ++j)
-                if (j->lastused.tv_sec >= limit.tv_sec)
-                {
-                    too_old = false;
-                    break;
-                }
-            if (too_old)
-            {
-                /* Say no to display list leakage! */
-                for (j = i->second.begin(); j != i->second.end(); ++j)
-                    glDeleteLists(j->disp_list, 1);
-                gc->geom.erase(i--);
-                ++count;
-            }
-        }
-
-        if (count > 0)
-        {
-            std::ostringstream s;
-            s << "Removed " << count << " entities from geometry cache";
-            main_post_message(s.str());
-        }
-    }
-}
-
-/* Geometry files will be XML, and have each frame as an element in
- * the file.  So once we've got the file, we'll load all frames as one
- * operation.
- */
-bool GeometryCache::parse_file(std::string& fname)
-{
-    XNS::SAXParser *parser = NULL;
-    GeometryCache::FileParser *fp = NULL;
-
-    try
-    {
-        XNS::XMLPlatformUtils::Initialize();
-        parser = new XNS::SAXParser();
-        parser->setDoValidation(true);
-        parser->setDoNamespaces(true);
-        fp = new GeometryCache::FileParser(this);
-        parser->setDocumentHandler((XNS::DocumentHandler *)fp);
-        parser->setErrorHandler((XNS::ErrorHandler *)fp);
-        parser->parse(fname);
-    }
-    catch (std::exception& e)
-    {
-        std::ostringstream s;
-        s << "Couldn't load geometry file: " << e.what();
-        main_post_message(s);
-    }
-    if (parser != NULL)
-        delete parser;
-    if (fp != NULL)
-        delete fp;
-}
-
-GeometryCache::GeometryCache()
-    : geom(), store(GEOMETRY_PREFIX), cache()
-{
-    int ret;
-
-    this->cache = getenv("HOME");
-    this->cache += "/.revision9/geometry";
-
-    /* We might consider doing a simple file mtime comparison between
-     * everything in the cache and everything in the store, and deleting
-     * stuff from the cache which is newer in the store.
-     */
-
-    if ((ret = pthread_create(&(this->prune_thread),
-                              NULL,
-                              this->prune_worker,
-                              (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        s << "Couldn't start geometry cleanup thread: "
-          << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
-    }
-}
-
-GeometryCache::~GeometryCache()
-{
-    int ret;
-    std::unordered_map<u_int64_t, std::vector<geometry> >::iterator i;
-    std::vector<geometry>::iterator j;
-
-    if ((ret = pthread_cancel(this->prune_thread)) != 0)
-    {
-        std::ostringstream s;
-        s << "Couldn't cancel geometry prune thread: "
-          << strerror(ret) << " (" << ret << ")";
-        main_post_message(s.str());
-    }
-    sleep(0);
-    if ((ret = pthread_join(this->prune_thread, NULL)) != 0)
-    {
-        std::ostringstream s;
-        s << "Couldn't join geometry prune thread: "
-          << strerror(ret) << " (" << ret << ")";
-        main_post_message(s.str());
-    }
-
-    /* Prevent display list leakage */
-    for (i = this->geom.begin(); i != this->geom.end(); ++i)
-        for (j = i->second.begin(); j != i->second.end(); ++j)
-            glDeleteLists(j->disp_list, 1);
-    this->geom.clear();
-}
-
-void GeometryCache::load(u_int64_t objectid)
-{
-    /* Look in the user cache, since it could possibly be updated more
-     * recently than the system store.
-     */
-    std::ostringstream user_fname;
-    user_fname << this->cache << '/' << std::hex << objectid & 0xFF << '/'
-               << objectid << ".xml";
-    if (this->parse_file(user_fname.str()))
-        return;
-
-    /* Didn't find it in the user cache; now look in the system store */
-    std::ostringstream store_fname;
-    store_fname << this->store << '/' << std::hex << objectid & 0xFF << '/'
-                << objectid << ".xml";
-    if (this->parse_file(store_fname.str()))
-        return;
-
-    /* If we can't find the geometry and have to request it, we should
-     * have some sort of fallback geometry to draw in the meantime
-     * before we receive the new stuff.
-     */
-    /*send_geometry_request(objectid, frame);*/
-}
-
-geometry *GeometryCache::fetch(u_int64_t objid, u_int16_t frame)
-{
-    std::unordered_map<u_int64_t, std::vector<geometry> >::iterator obj;
-
-    if ((obj = this->geom.find(objid)) != this->geom.end()
-        && obj->second.size() >= frame)
-    {
-        gettimeofday(&(obj->[frame].lastused), NULL);
-        return &(obj->[frame]);
-    }
-    this->load(objid);
-    return NULL;
 }

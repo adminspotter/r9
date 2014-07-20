@@ -1,6 +1,6 @@
 /* texture.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2014, 10:53:41 tquirk
+ *   last updated 20 Jul 2014, 16:00:03 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -24,6 +24,7 @@
  *
  * Changes
  *   12 Jul 2014 TAQ - Created the file.
+ *   20 Jul 2014 TAQ - We're now using the templated version of the cache.
  *
  * Things to do
  *
@@ -32,82 +33,54 @@
 #ifndef __INC_R9CLIENT_TEXTURE_H__
 #define __INC_R9CLIENT_TEXTURE_H__
 
-#include <time.h>
-#include <pthread.h>
-#include <GL.h>
+#include <gl.h>
 
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <xercesc/sax/AttributeList.hpp>
 
-#include <xercesc/sax/HandlerBase.hpp>
+#include "cache.h"
 
 typedef struct texture_tag
 {
-    struct timeval lastused;
     GLfloat diffuse[4], specular[4], shininess;
     /* Some sort of texture map in here too */
 }
 texture;
 
-class TextureCache
+#define XNS XERCES_CPP_NAMESPACE
+class TextureParser : public XNS::HandlerBase
 {
   private:
-#define XNS XERCES_CPP_NAMESPACE
-    class FileParser : public XNS::HandlerBase
+    enum
     {
-      private:
-        enum
-        {
-            start, end, texture_st, texture_en, diffuse_st, diffuse_en,
-            specular_st, specular_en, shininess, rgba, mapfile,
-        }
-        current;
-        XMLCh *texture, *diffuse, *specular, *shininess, *rgba, *mapfile;
-        XMLCh *version, *identifier, *value, *r, *g, *b, *a, *filename;
-        u_int64_t texid;
-        texture tex;
-        GLfloat *rgba_ptr;
+        start, end, texture_st, texture_en, diffuse_st, diffuse_en,
+        specular_st, specular_en, shininess_st, rgba_st, mapfile_st,
+    }
+    current;
+    XMLCh *texture_str, *diffuse, *specular, *shininess, *rgba, *mapfile;
+    XMLCh *version, *identifier, *value, *r, *g, *b, *a, *filename;
+    texture tex;
+    GLfloat *rgba_ptr;
 
-        void open_texture(XNS::AttributeList&);
-        void close_texture(void);
-        void open_diffuse(XNS::AttributeList&);
-        void close_diffuse(void);
-        void open_specular(XNS::AttributeList&);
-        void close_specular(void);
-        void open_shininess(XNS::AttributeList&);
-        void open_rgba(XNS::AttributeList&);
-        void open_mapfile(XNS::AttributeList&);
-
-      public:
-        FileParser(TextureCache *);
-        ~FileParser();
-
-        void characters(const XMLCh *, const unsigned int);
-        void startElement(const XMLCh *, XNS::AttributeList&);
-        void endElement(const XMLCh *);
-    };
+    void open_texture(XNS::AttributeList&);
+    void close_texture(void);
+    void open_diffuse(XNS::AttributeList&);
+    void close_diffuse(void);
+    void open_specular(XNS::AttributeList&);
+    void close_specular(void);
+    void open_shininess(XNS::AttributeList&);
+    void open_rgba(XNS::AttributeList&);
+    void open_mapfile(XNS::AttributeList&);
 
   public:
-    const int PRUNE_INTERVAL;
-    const int PRUNE_LIFETIME;
+    TextureParser(texture *);
+    ~TextureParser();
 
-    std::unordered_map<u_int64_t, texture> tex;
-
-  private:
-    std::string store;
-    std::string cache;
-    pthread_t prune_thread;
-
-    static void *prune_worker(void *);
-    bool parse_file(std::string&);
-
-  public:
-    TextureCache();
-    ~TextureCache();
-
-    void load(u_int64_t);
-    texture *fetch(u_int64_t);
+    void startElement(const XMLCh *, XNS::AttributeList&);
+    void endElement(const XMLCh *);
 };
+
+typedef ObjectCache<texture, TextureParser> TextureCache;
+
+extern TextureCache tex_cache;
 
 #endif /* __INC_R9CLIENT_TEXTURE_H__ */

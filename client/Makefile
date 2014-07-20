@@ -1,9 +1,9 @@
 # Makefile
-#   by Trinity Quirk <trinity@ymb.net>
-#   last updated 12 Sep 2013, 14:19:17 trinity
+#   by Trinity Quirk <tquirk@ymb.net>
+#   last updated 21 Jul 2014, 18:41:27 tquirk
 #
 # Revision IX game client
-# Copyright (C) 2007  Trinity Annabelle Quirk
+# Copyright (C) 2014  Trinity Annabelle Quirk
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,18 +35,15 @@
 #
 # Things to do
 #
-# $Id: Makefile 10 2013-01-25 22:13:00Z trinity $
 
-SHELL = /bin/bash
+-include ../Makefile.defs
 
-CC = /usr/bin/gcc
 CDEBUG = -g
 # COPTIM = -O2 -fno-strength-reduce
-CINCLUDE = -I/usr/X11R6/include -I../proto -I/home/trinity/include
+CINCLUDE = -I/usr/local/include -I/usr/X11R6/include -I/home/trinity/include -I/System/Library/Frameworks/OpenGL.framework/Headers -I/System/Library/Frameworks/GLUT.framework/Headers
 CDEFS = -DDO_DEBUG
 CFLAGS = -Wall $(CDEFS) $(CDEBUG) $(COPTIM) $(CINCLUDE)
 
-LD = /usr/bin/gcc
 LDFLAGS = -L/usr/X11R6/lib -L/home/trinity/lib
 XMLIBS = -lXm
 XAWLIBS = -lXaw
@@ -54,17 +51,17 @@ GLLIBS = -lGLw -lglut -lGLU -lGL
 XLIBS = $(GLLIBS) $(XMLIBS) -lXext -lXt -lX11 -lXmu -lSM -lICE -lXpm
 LDLIBS = $(XLIBS) -lr9_proto -lm
 
-DEPEND = /usr/bin/makedepend -f-
-
-MAKETAGS = /usr/bin/etags
-
-RM = /bin/rm -f
-
-HDRS = client.h
+HDRS = client.h cache.h geometry.h texture.h
+CXXSRCS = geometry.cc texture.cc
 SRCS = client.c menu.c command.c message.c view.c config.c setup.c \
-	about.c comm.c geometry.c texture.c
-OBJS = ${SRCS:.c=.o}
+	about.c comm.c
+OBJS = ${SRCS:.c=.o} ${CXXSRCS:.cc=.o}
 TARGET = revision9
+
+.SUFFIXES : .cc .o
+
+.cc.o :
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 .PHONY : clean
 

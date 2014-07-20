@@ -1,6 +1,6 @@
 /* texture.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2014, 11:10:35 tquirk
+ *   last updated 20 Jul 2014, 16:06:47 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -62,7 +62,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <time.h>
 #include <errno.h>
 
 #include <sstream>
@@ -70,9 +69,10 @@
 #include <stdexcept>
 
 #include "texture.h"
-#include "client.h"
 
-void TextureCache::FileParser::open_texture(XNS::AttributeList& attrs)
+TextureCache tex_cache;
+
+void TextureParser::open_texture(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
@@ -99,7 +99,7 @@ void TextureCache::FileParser::open_texture(XNS::AttributeList& attrs)
                 /* We don't recognize this attribute */
                 std::ostringstream s;
                 str = XNS::XMLString::transcode(attrs.getName(i));
-                s << "Bad geometry attribute \"" << str << '"';
+                s << "Bad texture attribute \"" << str << '"';
                 XNS::XMLString::release(&str);
                 throw std::runtime_error(s.str());
             }
@@ -109,9 +109,9 @@ void TextureCache::FileParser::open_texture(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad texture open tag");
 }
 
-void TextureCache::FileParser::close_texture(void)
+void TextureParser::close_texture(void)
 {
-    if (this->current == shininess || this->current == mapfile)
+    if (this->current == shininess_st || this->current == mapfile_st)
     {
         this->current = texture_en;
         parent->tex[this->texid] = this->tex;
@@ -120,7 +120,7 @@ void TextureCache::FileParser::close_texture(void)
         throw std::runtime_error("Bad texture close tag");
 }
 
-void TextureCache::FileParser::open_diffuse(XNS::AttributeList& attrs)
+void TextureParser::open_diffuse(XNS::AttributeList& attrs)
 {
     if (this->current == texture_st)
     {
@@ -131,15 +131,15 @@ void TextureCache::FileParser::open_diffuse(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad diffuse open tag");
 }
 
-void TextureCache::FileParser::close_diffuse(void)
+void TextureParser::close_diffuse(void)
 {
-    if (this->current == rgba)
+    if (this->current == rgba_st)
         this->current = diffuse_en;
     else
         throw std::runtime_error("Bad diffuse close tag");
 }
 
-void TextureCache::FileParser::open_specular(XNS::AttributeList& attrs)
+void TextureParser::open_specular(XNS::AttributeList& attrs)
 {
     if (this->current == diffuse_en)
     {
@@ -150,22 +150,22 @@ void TextureCache::FileParser::open_specular(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad specular open tag");
 }
 
-void TextureCache::FileParser::close_specular(void)
+void TextureParser::close_specular(void)
 {
-    if (this->current == rgba)
+    if (this->current == rgba_st)
         this->current = specular_en;
     else
         throw std::runtime_error("Bad specular close tag");
 }
 
-void TextureCache::FileParser::open_shininess(XNS::AttributeList& attrs)
+void TextureParser::open_shininess(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
 
     if (this->current == specular_en)
     {
-        this->current = shininess;
+        this->current = shininess_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
             if (XNS::XMLString::compareIString(attrs.getName(i), this->value))
@@ -189,14 +189,14 @@ void TextureCache::FileParser::open_shininess(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad shininess tag");
 }
 
-void TextureCache::FileParser::open_rgba(XNS::AttributeList& attrs)
+void TextureParser::open_rgba(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
 
     if (this->current == diffuse_st || this->current == specular_st)
     {
-        this->current = rgba;
+        this->current = rgba_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
             if (XNS::XMLString::compareIString(attrs.getName(i), this->r))
@@ -238,27 +238,27 @@ void TextureCache::FileParser::open_rgba(XNS::AttributeList& attrs)
         throw std::runtime_error("Bad rgba tag");
 }
 
-void TextureCache::FileParser::open_mapfile(XNS::AttributeList& attrs)
+void TextureParser::open_mapfile(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
 
-    if (this->current == shininess)
+    if (this->current == shininess_st)
     {
-        this->current = mapfile;
+        this->current = mapfile_st;
     }
     else
         throw std::runtime_error("Bad mapfile tag");
 }
 
-TextureCache::FileParser::FileParser(TextureCache *parent)
+TextureParser::TextureParser(TextureCache *parent)
 {
     this->parent = parent;
     this->current = start;
     this->texid = 0LL;
 
     /* Set our parser strings, so we don't have to keep transcoding */
-    this->texture = XNS::XMLString::transcode("texture");
+    this->texture_str = XNS::XMLString::transcode("texture");
     this->diffuse = XNS::XMLString::transcode("diffuse");
     this->specular = XNS::XMLString::transcode("specular");
     this->shininess = XNS::XMLString::transcode("shininess");
@@ -274,9 +274,9 @@ TextureCache::FileParser::FileParser(TextureCache *parent)
     this->filename = XNS::XMLString::transcode("filename");
 }
 
-TextureCache::FileParser::~FileParser()
+TextureParser::~TextureParser()
 {
-    XNS::XMLString::release(&(this->texture));
+    XNS::XMLString::release(&(this->texture_str));
     XNS::XMLString::release(&(this->diffuse));
     XNS::XMLString::release(&(this->specular));
     XNS::XMLString::release(&(this->shininess));
@@ -292,30 +292,21 @@ TextureCache::FileParser::~FileParser()
     XNS::XMLString::release(&(this->filename));
 }
 
-void TextureCache::FileParser::characters(const XMLCh *chars,
-                                          const unsigned int len)
+void TextureParser::startElement(const XMLCh *name,
+                                 XNS::AttributeList& attrs)
 {
-    /* This should get invoked when there are free characters.  Our
-     * DTD doesn't really allow any, but we might get whitespace
-     * here.
-     */
-    if (XNS::XMLString::isAllWhiteSpace(chars))
-        return;
-    else
-    {
-        std::ostringstream s;
-        char *str = XNS::XMLString::transcode(chars);
-        s << "Got free text \"" << str << "\" in the texture file";
-        XNS::XMLString::release(&str);
-        throw std::runtime_error(s.str());
-    }
-}
-
-void TextureCache::FileParser::startElement(const XMLCh *name,
-                                            XNS::AttributeList& attrs)
-{
-    if (XNS::XMLString::compareIString(name, this->texture))
+    if (XNS::XMLString::compareIString(name, this->texture_str))
         this->open_texture(attrs);
+    else if (XNS::XMLString::compareIString(name, this->diffuse))
+        this->open_diffuse(attrs);
+    else if (XNS::XMLString::compareIString(name, this->specular))
+        this->open_specular(attrs);
+    else if (XNS::XMLString::compareIString(name, this->shininess))
+        this->open_shininess(attrs);
+    else if (XNS::XMLString::compareIString(name, this->rgba))
+        this->open_rgba(attrs);
+    else if (XNS::XMLString::compareIString(name, this->mapfile))
+        this->open_mapfile(attrs);
     else
     {
         /* We don't recognize whatever it is that we just got */
@@ -327,10 +318,14 @@ void TextureCache::FileParser::startElement(const XMLCh *name,
     }
 }
 
-void TextureCache::FileParser::endElement(const XMLCh *name)
+void TextureParser::endElement(const XMLCh *name)
 {
-    if (XNS::XMLString::compareIString(name, this->texture))
-        this->close_texture(attrs);
+    if (XNS::XMLString::compareIString(name, this->texture_str))
+        this->close_texture();
+    else if (XNS::XMLString::compareIString(name, this->diffuse))
+        this->close_diffuse();
+    else if (XNS::XMLString::compareIString(name, this->specular))
+        this->close_specular();
     else
     {
         /* We don't recognize whatever it is that we just got */
@@ -342,141 +337,15 @@ void TextureCache::FileParser::endElement(const XMLCh *name)
     }
 }
 
-const int TextureCache::PRUNE_INTERVAL = 600;
-const int TextureCache::PRUNE_LIFETIME = 1200;
-
-void *TextureCache::prune_worker(void *arg)
+void draw_texture(u_int64_t texid)
 {
-    TextureCache *tc = (TextureCache *)arg;
-    struct timeval limit;
-    std::unordered_map<u_int64_t, texture >::iterator i;
-    int count;
-
-    for (;;)
-    {
-        sleep(TextureCache::PRUNE_INTERVAL);
-        if (!gettimeofday(&limit, NULL))
-        {
-            std::ostringstream s;
-            s << "Texture reaper thread couldn't get time of day: "
-              << strerror(errno) << " (" << errno << ")";
-            main_post_message(s.str());
-            continue;
-        }
-        limit.tv_sec -= TextureCache::PRUNE_LIFETIME;
-        count = 0;
-        for (i = tc->geom.begin(); i != tc->geom.end(); ++i)
-        {
-            if (i->lastused.tv_sec >= limit.tv_sec)
-            {
-                tc->tex.erase(i--);
-                ++count;
-            }
-        }
-
-        if (count > 0)
-        {
-            std::ostringstream s;
-            s << "Removed " << count << " entities from texture cache";
-            main_post_message(s.str());
-        }
-    }
-}
-
-TextureCache::TextureCache()
-    : tex(), store(TEXTURE_PREFIX), cache()
-{
-    int ret;
-
-    this->cache = getenv("HOME");
-    this->cache += "/.revision9/texture";
-
-    /* We might consider doing a simple file mtime comparison between
-     * everything in the cache and everything in the store, and deleting
-     * stuff from the cache which is newer in the store.
-     */
-
-    if ((ret = pthread_create(&(this->prune_thread),
-                              NULL,
-                              this->prune_worker,
-                              (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        s << "Couldn't start texture cleanup thread: "
-          << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
-    }
-}
-
-TextureCache::~TextureCache()
-{
-    int ret;
-
-    if ((ret = pthread_cancel(this->prune_thread)) != 0)
-    {
-        std::ostringstream s;
-        s << "Couldn't cancel texture prune thread: "
-          << strerror(ret) << " (" << ret << ")";
-        main_post_message(s.str());
-    }
-    sleep(0);
-    if ((ret = pthread_join(this->prune_thread, NULL)) != 0)
-    {
-        std::ostringstream s;
-        s << "Couldn't join texture prune thread: "
-          << strerror(ret) << " (" << ret << ")";
-        main_post_message(s.str());
-    }
-    this->tex.clear();
-}
-
-void TextureCache::load(u_int64_t texid)
-{
-    /* Look in the user cache, since it could possibly be updated more
-     * recently than the system store.
-     */
-    std::ostringstream user_fname;
-    user_fname << this->cache << '/' << std::hex << texid & 0xFF << '/'
-               << texid << ".xml";
-    if (this->parse_file(user_fname.str()))
-        return;
-
-    /* Didn't find it in the user cache; now look in the system store */
-    std::ostringstream store_fname;
-    store_fname << this->store << '/' << std::hex << texid & 0xFF << '/'
-                << texid << ".xml";
-    if (this->parse_file(store_fname.str()))
-        return;
-
-    /* If we can't find the texture and have to request it, we should
-     * have some sort of fallback texture to use in the meantime
-     * before we receive the new stuff.
-     */
-    /*send_texture_request(texid, frame);*/
-}
-
-texture *TextureCache::fetch(u_int64_t texid)
-{
-    std::unordered_map<u_int64_t, texture>::iterator tex;
-
-    if ((tex = this->tex.find(texid)) != this->tex.end())
-    {
-        gettimeofday(&(tex->lastused), NULL);
-        return &(*tex);
-    }
-    this->load(texid);
-    return NULL;
-}
-
-void draw_texture(u_int64_t textid)
-{
-    texture *t = this->fetch(textid);
+    texture& t = tex_cache[texid];
 
     if (t != NULL)
     {
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, t->diffuse);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, t->specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, &t->shininess);
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, t.diffuse);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, t.specular);
+        glMaterialfv(GL_FRONT, GL_SHININESS, &t.shininess);
     }
     else
     {
