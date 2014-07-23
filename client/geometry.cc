@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2014, 15:59:36 tquirk
+ *   last updated 23 Jul 2014, 17:56:11 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -73,6 +73,7 @@
  *   20 Jul 2014 TAQ - We're now using the templated object cache, instead
  *                     of having geometry and texture caches which are
  *                     basically the same thing.
+ *   23 Jul 2014 TAQ - Include cleanups.
  *
  * Things to do
  *   - The parser is a massive race condition - we're constructing
@@ -85,14 +86,6 @@
  *     to figure out how to use the new-style vertex stuff.
  *
  */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <errno.h>
 
 #include <glut.h>
 

@@ -1,6 +1,6 @@
 /* texture.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2014, 16:06:47 tquirk
+ *   last updated 23 Jul 2014, 18:02:35 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -51,18 +51,17 @@
  *                     into here.  I don't think a template class would work,
  *                     or a generic-ish base class, so we'll just have two
  *                     parallel implementations for the time being.
+ *   23 Jul 2014 TAQ - We're now using the cache.h template.
  *
  * Things to do
+ *   - To properly implement a fallback texture, we may need to say
+ *     that a given element (say, id 0) in the cache is the fallback,
+ *     and that if we don't find the one we're looking for and have to
+ *     request it (or even while we're waiting to load it), we return
+ *     the id 0 element, instead of the element we're actually looking
+ *     for.
  *
  */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <errno.h>
 
 #include <sstream>
 #include <iomanip>
@@ -90,9 +89,10 @@ void TextureParser::open_texture(XNS::AttributeList& attrs)
             else if (XNS::XMLString::compareIString(attrs.getName(i),
                                                     this->identifier))
             {
+                /* We already know the objectid
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->texid = strtoll(str, NULL, 10);
-                XNS::XMLString::release(&str);
+                XNS::XMLString::release(&str);*/
             }
             else
             {
@@ -112,10 +112,7 @@ void TextureParser::open_texture(XNS::AttributeList& attrs)
 void TextureParser::close_texture(void)
 {
     if (this->current == shininess_st || this->current == mapfile_st)
-    {
         this->current = texture_en;
-        parent->tex[this->texid] = this->tex;
-    }
     else
         throw std::runtime_error("Bad texture close tag");
 }
@@ -125,7 +122,7 @@ void TextureParser::open_diffuse(XNS::AttributeList& attrs)
     if (this->current == texture_st)
     {
         this->current = diffuse_st;
-        this->rgba_ptr = this->tex.diffuse;
+        this->rgba_ptr = this->tex->diffuse;
     }
     else
         throw std::runtime_error("Bad diffuse open tag");
@@ -144,7 +141,7 @@ void TextureParser::open_specular(XNS::AttributeList& attrs)
     if (this->current == diffuse_en)
     {
         this->current = specular_st;
-        this->rgba_ptr = this->tex.specular;
+        this->rgba_ptr = this->tex->specular;
     }
     else
         throw std::runtime_error("Bad specular open tag");
@@ -171,7 +168,7 @@ void TextureParser::open_shininess(XNS::AttributeList& attrs)
             if (XNS::XMLString::compareIString(attrs.getName(i), this->value))
             {
                 str = XNS::XMLString::transcode(attrs.getValue(i));
-                this->tex.shininess = atof(str);
+                this->tex->shininess = atof(str);
                 XNS::XMLString::release(&str);
             }
             else
@@ -240,22 +237,22 @@ void TextureParser::open_rgba(XNS::AttributeList& attrs)
 
 void TextureParser::open_mapfile(XNS::AttributeList& attrs)
 {
-    int i;
-    char *str;
+    /*int i;
+    char *str;*/
 
     if (this->current == shininess_st)
     {
         this->current = mapfile_st;
+        /* TODO: figure out how to actually do a mapped image */
     }
     else
         throw std::runtime_error("Bad mapfile tag");
 }
 
-TextureParser::TextureParser(TextureCache *parent)
+TextureParser::TextureParser(texture *obj)
 {
-    this->parent = parent;
+    this->tex = obj;
     this->current = start;
-    this->texid = 0LL;
 
     /* Set our parser strings, so we don't have to keep transcoding */
     this->texture_str = XNS::XMLString::transcode("texture");
@@ -341,19 +338,14 @@ void draw_texture(u_int64_t texid)
 {
     texture& t = tex_cache[texid];
 
-    if (t != NULL)
-    {
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, t.diffuse);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, t.specular);
-        glMaterialfv(GL_FRONT, GL_SHININESS, &t.shininess);
-    }
-    else
-    {
-        /* Fallback texture */
-        GLfloat material_diff[] = { 0.18, 0.18, 0.18, 1.0 };
-        GLfloat material_shin[] = { 0.0 };
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, t.diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, t.specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, &t.shininess);
 
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material_diff);
-        glMaterialfv(GL_FRONT, GL_SHININESS, material_shin);
-    }
+    /* Fallback texture */
+    /*GLfloat material_diff[] = { 0.18, 0.18, 0.18, 1.0 };
+    GLfloat material_shin[] = { 0.0 };
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material_diff);
+    glMaterialfv(GL_FRONT, GL_SHININESS, material_shin);*/
 }

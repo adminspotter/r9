@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jul 2014, 18:30:18 tquirk
+ *   last updated 23 Jul 2014, 17:54:53 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -26,6 +26,8 @@
  *
  * Changes
  *   20 Jul 2014 TAQ - Created the file.
+ *   23 Jul 2014 TAQ - The parser is now being spawned correctly.  Also added
+ *                     a typedef for the cleanup function objects.
  *
  * Things to do
  *
@@ -34,7 +36,9 @@
 #ifndef __INC_R9CLIENT_CACHE_H__
 #define __INC_R9CLIENT_CACHE_H__
 
+#include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 
 #include <xercesc/parsers/SAXParser.hpp>
@@ -83,6 +87,7 @@ class ObjectCache
                 cleanup_func(val.obj);
             }
     };
+    typedef std::function<void(typename _oct::object_struct&)> clean_func_type;
 
     const static int PRUNE_INTERVAL = 600;
     const static int PRUNE_LIFETIME = 1200;
@@ -119,7 +124,7 @@ class ObjectCache
 
                 if (old_elems.size() > 0)
                 {
-                    std::function<void(typename _oct::object_struct&)> cleanup_func = oc_cleanup();
+                    typename _oct::clean_func_type cleanup_func = oc_cleanup();
                     for (j = old_elems.begin(); j != old_elems.end(); ++j)
                     {
                         cleanup_func((*j)->second);
@@ -132,7 +137,7 @@ class ObjectCache
                 }
             }
         };
-    bool parse_file(const std::string& fname)
+    bool parse_file(const std::string& fname, u_int64_t objid)
         {
             bool retval = true;
             XNS::SAXParser *parser = NULL;
@@ -145,7 +150,7 @@ class ObjectCache
                 parser->setValidationScheme(XNS::SAXParser::Val_Auto);
                 parser->setValidationSchemaFullChecking(true);
                 parser->setDoNamespaces(true);
-                fp = new parser_type(this);
+                fp = new parser_type(&(this->objects[objid].obj));
                 parser->setDocumentHandler((XNS::DocumentHandler *)fp);
                 parser->setErrorHandler((XNS::ErrorHandler *)fp);
                 parser->parse(fname.c_str());
@@ -219,7 +224,7 @@ class ObjectCache
                 main_post_message(s.str());
             }
 
-            std::function<void(typename _oct::object_struct&)> cleanup_func = oc_cleanup();
+            typename _oct::clean_func_type cleanup_func = oc_cleanup();
 
             for (i = this->objects.begin(); i != this->objects.end(); ++i)
                 cleanup_func(i->second);
@@ -233,14 +238,14 @@ class ObjectCache
             std::ostringstream user_fname;
             user_fname << this->cache << '/' << std::hex
                        << (objid & 0xFF) << '/' << objid << ".xml";
-            if (this->parse_file(user_fname.str()))
+            if (this->parse_file(user_fname.str(), objid))
                 return;
 
             /* Didn't find it in the user cache; now look in the system store */
             std::ostringstream store_fname;
             store_fname << this->store << '/' << std::hex
                         << (objid & 0xFF) << '/' << objid << ".xml";
-            if (this->parse_file(store_fname.str()))
+            if (this->parse_file(store_fname.str(), objid))
                 return;
 
             /* If we can't find the object and have to request it, we
@@ -253,17 +258,13 @@ class ObjectCache
         {
             typename _oct::obj_map::iterator object = this->objects.find(objid);
 
-            if (object != this->objects.end())
+            if (object == this->objects.end())
             {
-                gettimeofday(&(object->second.lastused), NULL);
-                return object->second.obj;
+                this->load(objid);
+                object = this->objects.find(objid);
             }
-            /* If threads were easier to create, it would be ideal
-             * to spin off a loading thread and return immediately,
-             * instead of blocking on the file access/parse.
-             */
-            this->load(objid);
-            return NULL;
+            gettimeofday(&(object->second.lastused), NULL);
+            return object->second.obj;
         };
     void erase(u_int64_t objid)
         {
@@ -271,7 +272,7 @@ class ObjectCache
 
             if (object != this->objects.end())
             {
-                std::function<void(typename _oct::object_struct&)> cleanup_func = oc_cleanup();
+                typename _oct::clean_func_type cleanup_func = oc_cleanup();
 
                 cleanup_func(object->second);
                 this->objects.erase(object);

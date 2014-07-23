@@ -1,6 +1,6 @@
 /* texture.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2014, 16:00:03 tquirk
+ *   last updated 23 Jul 2014, 17:51:06 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -25,6 +25,8 @@
  * Changes
  *   12 Jul 2014 TAQ - Created the file.
  *   20 Jul 2014 TAQ - We're now using the templated version of the cache.
+ *   23 Jul 2014 TAQ - The parser now has a pointer to the object, rather
+ *                     than an object that we insert into the cache.
  *
  * Things to do
  *
@@ -58,7 +60,7 @@ class TextureParser : public XNS::HandlerBase
     current;
     XMLCh *texture_str, *diffuse, *specular, *shininess, *rgba, *mapfile;
     XMLCh *version, *identifier, *value, *r, *g, *b, *a, *filename;
-    texture tex;
+    texture *tex;
     GLfloat *rgba_ptr;
 
     void open_texture(XNS::AttributeList&);
