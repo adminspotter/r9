@@ -1,6 +1,6 @@
 /* r9client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2014, 16:07:20 tquirk
+ *   last updated 23 Jul 2014, 22:49:53 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -39,6 +39,7 @@
  *   12 Sep 2013 TAQ - Added linux/limits.h include for PATH_MAX.
  *   19 Jul 2014 TAQ - Copied from client.h and stripped out all OS-specific
  *                     stuff.
+ *   23 Jul 2014 TAQ - Removed more functions which are now inside classes.
  *
  * Things to do
  *
@@ -51,23 +52,9 @@
 
 #include "../proto/proto.h"
 
-/* Some default values */
-#ifndef GEOMETRY_PREFIX
-#define GEOMETRY_PREFIX   "/usr/share/revision9/geometry"
-#endif /* GEOMETRY_PREFIX */
-#ifndef TEXTURE_PREFIX
-#define TEXTURE_PREFIX    "/usr/share/revision9/texture"
-#endif /* TEXTURE_PREFIX */
-#ifndef TX_RING_ELEMENTS
-#define TX_RING_ELEMENTS  16
-#endif /* TX_RING_ELEMENTS */
-
-void create_socket(struct in_addr *, u_int16_t);
-void start_comm(void);
-void cleanup_comm(void);
-void send_login(char *, char *, u_int64_t, u_int64_t);
-void send_action_request(u_int16_t, u_int8_t);
-void send_logout(u_int64_t, u_int64_t);
+#ifndef STORE_PREFIX
+#define STORE_PREFIX   "/usr/share/revision9/"
+#endif /* STORE_PREFIX */
 
 void main_post_message(const std::string&);
 

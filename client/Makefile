@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 21 Jul 2014, 18:41:27 tquirk
+#   last updated 26 Jul 2014, 09:30:22 tquirk
 #
 # Revision IX game client
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -52,9 +52,9 @@ XLIBS = $(GLLIBS) $(XMLIBS) -lXext -lXt -lX11 -lXmu -lSM -lICE -lXpm
 LDLIBS = $(XLIBS) -lr9_proto -lm
 
 HDRS = client.h cache.h geometry.h texture.h
-CXXSRCS = geometry.cc texture.cc
+CXXSRCS = geometry.cc texture.cc comm.cc
 SRCS = client.c menu.c command.c message.c view.c config.c setup.c \
-	about.c comm.c
+	about.c
 OBJS = ${SRCS:.c=.o} ${CXXSRCS:.cc=.o}
 TARGET = revision9
 
