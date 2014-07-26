@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 26 Jul 2014, 09:30:22 tquirk
+#   last updated 26 Jul 2014, 13:04:11 tquirk
 #
 # Revision IX game client
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -32,6 +32,7 @@
 #   30 Sep 2007 TAQ - Updated protocol lib name.
 #   15 Dec 2007 TAQ - $TARGET depends on the proto lib.
 #   12 Sep 2013 TAQ - makedepend no longer lives in /usr/X11R6/bin.
+#   26 Jul 2014 TAQ - C files are becoming C++.
 #
 # Things to do
 #
@@ -52,9 +53,8 @@ XLIBS = $(GLLIBS) $(XMLIBS) -lXext -lXt -lX11 -lXmu -lSM -lICE -lXpm
 LDLIBS = $(XLIBS) -lr9_proto -lm
 
 HDRS = client.h cache.h geometry.h texture.h
-CXXSRCS = geometry.cc texture.cc comm.cc
-SRCS = client.c menu.c command.c message.c view.c config.c setup.c \
-	about.c
+CXXSRCS = geometry.cc texture.cc comm.cc config.cc
+SRCS = client.c menu.c command.c message.c view.c setup.c about.c
 OBJS = ${SRCS:.c=.o} ${CXXSRCS:.cc=.o}
 TARGET = revision9
 
