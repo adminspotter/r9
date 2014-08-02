@@ -1,6 +1,6 @@
 /* texture.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jul 2014, 18:02:35 tquirk
+ *   last updated 29 Jul 2014, 18:23:00 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -68,8 +68,6 @@
 #include <stdexcept>
 
 #include "texture.h"
-
-TextureCache tex_cache;
 
 void TextureParser::open_texture(XNS::AttributeList& attrs)
 {
@@ -334,18 +332,18 @@ void TextureParser::endElement(const XMLCh *name)
     }
 }
 
-void draw_texture(u_int64_t texid)
+/*void draw_texture(u_int64_t texid)
 {
     texture& t = tex_cache[texid];
 
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, t.diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, t.specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, &t.shininess);
+    glMaterialfv(GL_FRONT, GL_SHININESS, &t.shininess);*/
 
-    /* Fallback texture */
+    /* Fallback texture*/
     /*GLfloat material_diff[] = { 0.18, 0.18, 0.18, 1.0 };
     GLfloat material_shin[] = { 0.0 };
 
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material_diff);
-    glMaterialfv(GL_FRONT, GL_SHININESS, material_shin);*/
-}
+    glMaterialfv(GL_FRONT, GL_SHININESS, material_shin);
+}*/

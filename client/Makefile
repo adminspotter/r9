@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 26 Jul 2014, 13:04:11 tquirk
+#   last updated 29 Jul 2014, 17:36:00 tquirk
 #
 # Revision IX game client
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -52,11 +52,9 @@ GLLIBS = -lGLw -lglut -lGLU -lGL
 XLIBS = $(GLLIBS) $(XMLIBS) -lXext -lXt -lX11 -lXmu -lSM -lICE -lXpm
 LDLIBS = $(XLIBS) -lr9_proto -lm
 
-HDRS = client.h cache.h geometry.h texture.h
+HDRS = cache.h geometry.h texture.h comm.h config.h
 CXXSRCS = geometry.cc texture.cc comm.cc config.cc
-SRCS = client.c menu.c command.c message.c view.c setup.c about.c
-OBJS = ${SRCS:.c=.o} ${CXXSRCS:.cc=.o}
-TARGET = revision9
+OBJS = ${CXXSRCS:.cc=.o}
 
 .SUFFIXES : .cc .o
 
@@ -65,13 +63,10 @@ TARGET = revision9
 
 .PHONY : clean
 
-all : Makefile.depend TAGS $(TARGET)
+all : Makefile.depend TAGS $(OBJS)
 
-$(TARGET) : $(OBJS) ../proto/libr9_proto.so
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
-
-Makefile.depend : $(SRCS)
-	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) 2> /dev/null > Makefile.depend
+Makefile.depend : $(SRCS) $(CXXSRCS)
+	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) $(CXXSRCS) 2> /dev/null > Makefile.depend
 
 tags : TAGS
 

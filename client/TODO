@@ -1,0 +1,7 @@
+In no particular order:
+
+1) Create a streambuf object that will do a main_post_message, so we
+   can use the std::clog to print to other than stderr.  This probably
+   mostly belongs in the system-specific client parts, rather than
+   the top-level client directory.
+2) Test all these new pieces we've written.

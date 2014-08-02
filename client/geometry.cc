@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jul 2014, 17:56:11 tquirk
+ *   last updated 29 Jul 2014, 18:21:09 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -94,8 +94,6 @@
 #include <stdexcept>
 
 #include "geometry.h"
-
-GeometryCache geom_cache;
 
 void GeometryParser::open_geometry(XNS::AttributeList& attrs)
 {

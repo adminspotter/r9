@@ -1,6 +1,6 @@
 /* geometry.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jul 2014, 17:53:03 tquirk
+ *   last updated 29 Jul 2014, 18:21:18 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -91,7 +91,5 @@ struct geom_cleanup
 };
 
 typedef ObjectCache<geometry, GeometryParser, geom_cleanup> GeometryCache;
-
-extern GeometryCache geom_cache;
 
 #endif /* __INC_R9CLIENT_GEOMETRY_H__ */

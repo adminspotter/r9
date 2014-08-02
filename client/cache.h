@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jul 2014, 17:54:53 tquirk
+ *   last updated 01 Aug 2014, 21:01:19 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -28,8 +28,22 @@
  *   20 Jul 2014 TAQ - Created the file.
  *   23 Jul 2014 TAQ - The parser is now being spawned correctly.  Also added
  *                     a typedef for the cleanup function objects.
+ *   26 Jul 2014 TAQ - Changed all the main_post_message over to use std::clog.
+ *   29 Jul 2014 TAQ - The constructor now takes a fallback object, which
+ *                     becomes objectid 0.  The reaper always ignores this
+ *                     default object.  We now stat the potential object
+ *                     files before we try to parse them.  The system
+ *                     store directory string wasn't being constructed
+ *                     quite correctly.
+ *   01 Aug 2014 TAQ - Added g++ type demangling, along with a type member.
  *
  * Things to do
+ *   - See if we can nab the config directory out of the config object when
+ *     we try to create our cache directory string.
+ *   - We can do the resource request in here, I think.  Another
+ *     static method, which is spawned as a new thread, which grabs
+ *     the resource from whatever server, and saves it into the user's
+ *     cache directory.  Or maybe also loads it into the memory cache.
  *
  */
 
@@ -39,10 +53,12 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <pthread.h>
 
 #include <xercesc/parsers/SAXParser.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
+#include <xercesc/sax/SAXException.hpp>
 
 #include <algorithm>
 #include <functional>
@@ -50,9 +66,14 @@
 #include <unordered_map>
 #include <vector>
 #include <typeinfo>
+#include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
+
+#ifdef __GNUG__
+#include <cxxabi.h>
+#endif
 
 #include "r9client.h"
 
@@ -93,6 +114,14 @@ class ObjectCache
     const static int PRUNE_LIFETIME = 1200;
 
     _oct::obj_map objects;
+#ifdef __GNUG__
+    std::string type;
+#define TYPESTR this->type
+#define EXT_TYPE oc->type
+#else
+#define TYPESTR typeid(obj_type).name()
+#define EXT_TYPE TYPESTR
+#endif
     std::string store, cache;
     pthread_t prune_thread;
 
@@ -109,17 +138,17 @@ class ObjectCache
                 sleep(_oct::PRUNE_INTERVAL);
                 if (!gettimeofday(&limit, NULL))
                 {
-                    std::ostringstream s;
-                    s << typeid(obj_type).name()
-                      << " reaper thread couldn't get time of day: "
-                      << strerror(errno) << " (" << errno << ")";
-                    main_post_message(s.str());
+                    std::clog << EXT_TYPE
+                              << " reaper thread couldn't get time of day: "
+                              << strerror(errno) << " (" << errno << ")"
+                              << std::endl;
                     continue;
                 }
                 limit.tv_sec -= _oct::PRUNE_LIFETIME;
                 old_elems.clear();
                 for (i = oc->objects.begin(); i != oc->objects.end(); ++i)
-                    if (i->second.lastused.tv_sec >= limit.tv_sec)
+                    if (i->first != 0LL
+                        && i->second.lastused.tv_sec >= limit.tv_sec)
                         old_elems.push_back(i);
 
                 if (old_elems.size() > 0)
@@ -130,10 +159,9 @@ class ObjectCache
                         cleanup_func((*j)->second);
                         oc->objects.erase(*j);
                     }
-                    std::ostringstream s;
-                    s << "Removed " << old_elems.size() << " entities from "
-                      << typeid(obj_type).name() << " cache";
-                    main_post_message(s.str());
+                    std::clog << "Removed " << old_elems.size()
+                              << " entities from " << EXT_TYPE
+                              << " cache" << std::endl;
                 }
             }
         };
@@ -155,12 +183,15 @@ class ObjectCache
                 parser->setErrorHandler((XNS::ErrorHandler *)fp);
                 parser->parse(fname.c_str());
             }
+            catch (XNS::SAXException& s)
+            {
+                std::clog << "Couldn't load " << TYPESTR
+                          << " data file: " << s.getMessage() << std::endl;
+            }
             catch (std::exception& e)
             {
-                std::ostringstream s;
-                s << "Couldn't load " << typeid(obj_type).name()
-                  << " data file: " << e.what();
-                main_post_message(s.str());
+                std::clog << "Couldn't load " << TYPESTR
+                          << " data file: " << e.what() << std::endl;
                 retval = false;
             }
             if (parser != NULL)
@@ -171,20 +202,34 @@ class ObjectCache
         };
 
   public:
-    ObjectCache()
-        : objects(), store(), cache()
-        {
-            int ret;
-
-#ifndef STORE_PREFIX
-#define STORE_PREFIX "/usr/share/r9/"
+    ObjectCache(const obj_type& obj)
+        : objects(),
+#ifdef __GNUG__
+          type(),
 #endif
+          store(), cache()
+        {
+            int ret = -4;
+#ifdef __GNUG__
+            char *type_name;
+
+            this->type = typeid(obj_type).name();
+            type_name = abi::__cxa_demangle(this->type.c_str(),
+                                            NULL,
+                                            NULL,
+                                            &ret);
+            if (ret == 0)
+                this->type = type_name;
+            free(type_name);
+#endif
+
             this->store = STORE_PREFIX;
-            this->store += typeid(obj_type).name();
+            this->store += '/';
+            this->store += TYPESTR;
 
             this->cache = getenv("HOME");
-            this->cache += "/.revision9/";
-            this->cache += typeid(obj_type).name();
+            this->cache += "/.r9/";
+            this->cache += TYPESTR;
 
             /* We might consider doing a simple file mtime comparison
              * between everything in the cache and everything in the
@@ -198,10 +243,12 @@ class ObjectCache
                                       (void *)this)) != 0)
             {
                 std::ostringstream s;
-                s << "Couldn't start " << typeid(obj_type).name()
+                s << "Couldn't start " << TYPESTR
                   << " reaper thread: " << strerror(ret) << " (" << ret << ")";
                 throw std::runtime_error(s.str());
             }
+
+            this->objects[0].obj = obj;
         };
     ~ObjectCache()
         {
@@ -209,20 +256,14 @@ class ObjectCache
             typename _oct::obj_map::iterator i;
 
             if ((ret = pthread_cancel(this->prune_thread)) != 0)
-            {
-                std::ostringstream s;
-                s << "Couldn't cancel " << typeid(obj_type).name()
-                  << " reaper thread: " << strerror(ret) << " (" << ret << ")";
-                main_post_message(s.str());
-            }
+                std::clog << "Couldn't cancel " << TYPESTR
+                          << " reaper thread: "
+                          << strerror(ret) << " (" << ret << ")" << std::endl;
             sleep(0);
             if ((ret = pthread_join(this->prune_thread, NULL)) != 0)
-            {
-                std::ostringstream s;
-                s << "Couldn't reap " << typeid(obj_type).name()
-                  << " reaper thread: " << strerror(ret) << " (" << ret << ")";
-                main_post_message(s.str());
-            }
+                std::clog << "Couldn't reap " << TYPESTR
+                          << " reaper thread: "
+                          << strerror(ret) << " (" << ret << ")" << std::endl;
 
             typename _oct::clean_func_type cleanup_func = oc_cleanup();
 
@@ -232,21 +273,35 @@ class ObjectCache
 
     void load(u_int64_t objid)
         {
+            struct stat st;
+
             /* Look in the user cache, since it could possibly be updated more
              * recently than the system store.
              */
             std::ostringstream user_fname;
-            user_fname << this->cache << '/' << std::hex
-                       << (objid & 0xFF) << '/' << objid << ".xml";
-            if (this->parse_file(user_fname.str(), objid))
-                return;
+            user_fname << this->cache << '/';
+            user_fname.fill('0');
+            user_fname.width(2);
+            user_fname << std::hex << std::right
+                       << (objid & 0xFF) << '/';
+            user_fname.width(8);
+            user_fname << objid << ".xml";
+            if (stat(user_fname.str().c_str(), &st) != -1)
+                if (this->parse_file(user_fname.str(), objid))
+                    return;
 
             /* Didn't find it in the user cache; now look in the system store */
             std::ostringstream store_fname;
-            store_fname << this->store << '/' << std::hex
-                        << (objid & 0xFF) << '/' << objid << ".xml";
-            if (this->parse_file(store_fname.str(), objid))
-                return;
+            store_fname << this->store << '/';
+            store_fname.fill('0');
+            store_fname.width(2);
+            store_fname << std::hex << std::right
+                        << (objid & 0xFF) << '/';
+            store_fname.width(8);
+            store_fname << objid << ".xml";
+            if (stat(store_fname.str().c_str(), &st) != -1)
+                if (this->parse_file(store_fname.str(), objid))
+                    return;
 
             /* If we can't find the object and have to request it, we
              * should have some sort of fallback to use in the
@@ -260,8 +315,9 @@ class ObjectCache
 
             if (object == this->objects.end())
             {
+                /* Maybe spawn another thread to do the load? */
                 this->load(objid);
-                object = this->objects.find(objid);
+                object = this->objects.find(0LL);
             }
             gettimeofday(&(object->second.lastused), NULL);
             return object->second.obj;

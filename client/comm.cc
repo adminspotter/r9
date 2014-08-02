@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Jul 2014, 10:12:54 tquirk
+ *   last updated 26 Jul 2014, 14:33:13 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -67,7 +67,8 @@
  *   13 Oct 2007 TAQ - Added some better debugging output.
  *   15 Dec 2007 TAQ - Worked on responding to ping packets.
  *   23 Jul 2014 TAQ - This is now a C++ file, and an actual class.
- *   26 Jul 2014 TAQ - Cleanups to compile.
+ *   26 Jul 2014 TAQ - Cleanups to compile.  Switched all the main_post_message
+ *                     over to use std::clog.
  *
  * Things to do
  *
@@ -78,6 +79,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -170,23 +172,19 @@ void *Comm::recv_worker(void *arg)
         if (memcmp(&sin, &(comm->remote), fromlen))
         {
             char addrstr[INET6_ADDRSTRLEN];
-            std::ostringstream s;
-            s << "Got packet from unknown sender ";
+            std::clog << "Got packet from unknown sender ";
             inet_ntop(sin.ss_family,
                       sin.ss_family == AF_INET
                       ? (void *)&(reinterpret_cast<struct sockaddr_in *>(&sin)->sin_addr)
                       : (void *)&(reinterpret_cast<struct sockaddr_in6 *>(&sin)->sin6_addr),
                       addrstr, INET6_ADDRSTRLEN);
-            s << addrstr;
-            main_post_message(s.str());
+            std::clog << addrstr << std::endl;
             continue;
         }
 
         if (!ntoh_packet(&buf, len))
         {
-            std::ostringstream s;
-            s << "Error while ntoh'ing packet";
-            main_post_message(s.str());
+            std::clog << "Error while ntoh'ing packet" << std::endl;
             continue;
         }
         comm->dispatch(buf);
@@ -196,8 +194,6 @@ void *Comm::recv_worker(void *arg)
 
 void Comm::dispatch(packet& buf)
 {
-    std::ostringstream s;
-
     /* We got a packet, now figure out what type it is and process it */
     switch (buf.basic.type)
     {
@@ -207,19 +203,19 @@ void Comm::dispatch(packet& buf)
         {
           case TYPE_LOGREQ:
             /* The response to our login request */
-            s << "Login response, type " << buf.ack.misc << " access";
-            main_post_message(s.str());
+            std::clog << "Login response, type " << buf.ack.misc << " access"
+                      << std::endl;
             break;
 
           case TYPE_LGTREQ:
             /* The response to our logout request */
-            s << "Logout response, type " << buf.ack.misc << " access";
-            main_post_message(s.str());
+            std::clog << "Logout response, type " << buf.ack.misc << " access"
+                      << std::endl;
             break;
 
           default:
-            s << "Got an unknown ack packet: " << buf.ack.request;
-            main_post_message(s.str());
+            std::clog << "Got an unknown ack packet: " << buf.ack.request
+                      << std::endl;
             break;
         }
         break;
@@ -248,8 +244,8 @@ void Comm::dispatch(packet& buf)
       case TYPE_LGTREQ:
       case TYPE_ACTREQ:
       default:
-        s << "Got an unexpected packet type: " << buf.basic.type;
-        main_post_message(s.str());
+        std::clog << "Got an unexpected packet type: " << buf.basic.type
+                  << std::endl;
         break;
     }
 }
@@ -325,11 +321,7 @@ void Comm::send(packet& p, size_t len)
 {
     pthread_mutex_lock(&(this->send_lock));
     if (!hton_packet(&p, len))
-    {
-        std::ostringstream s;
-        s << "Error hton'ing packet";
-        main_post_message(s.str());
-    }
+        std::clog << "Error hton'ing packet" << std::endl;
     else
     {
         this->send_queue.push(p);

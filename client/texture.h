@@ -1,6 +1,6 @@
 /* texture.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jul 2014, 17:51:06 tquirk
+ *   last updated 01 Aug 2014, 18:30:36 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -41,12 +41,11 @@
 
 #include "cache.h"
 
-typedef struct texture_tag
+struct texture
 {
     GLfloat diffuse[4], specular[4], shininess;
     /* Some sort of texture map in here too */
-}
-texture;
+};
 
 #define XNS XERCES_CPP_NAMESPACE
 class TextureParser : public XNS::HandlerBase
@@ -82,7 +81,5 @@ class TextureParser : public XNS::HandlerBase
 };
 
 typedef ObjectCache<texture, TextureParser> TextureCache;
-
-extern TextureCache tex_cache;
 
 #endif /* __INC_R9CLIENT_TEXTURE_H__ */

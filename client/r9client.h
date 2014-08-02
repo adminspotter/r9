@@ -1,6 +1,6 @@
 /* r9client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jul 2014, 22:49:53 tquirk
+ *   last updated 26 Jul 2014, 14:12:20 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -40,6 +40,7 @@
  *   19 Jul 2014 TAQ - Copied from client.h and stripped out all OS-specific
  *                     stuff.
  *   23 Jul 2014 TAQ - Removed more functions which are now inside classes.
+ *   26 Jul 2014 TAQ - Removed more stuff which moved inside classes.
  *
  * Things to do
  *
@@ -48,20 +49,11 @@
 #ifndef __INC_R9CLIENT_H__
 #define __INC_R9CLIENT_H__
 
-#include <string>
-
 #include "../proto/proto.h"
 
 #ifndef STORE_PREFIX
-#define STORE_PREFIX   "/usr/share/revision9/"
+#define STORE_PREFIX   "/usr/share/r9/"
 #endif /* STORE_PREFIX */
-
-void main_post_message(const std::string&);
-
-void load_settings(void);
-void save_settings(void);
-void read_config_file(const char *);
-void write_config_file(const char *);
 
 void draw_geometry(u_int64_t, u_int16_t);
 void draw_texture(u_int64_t);
