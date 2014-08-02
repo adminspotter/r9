@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Jul 2014, 18:21:09 tquirk
+ *   last updated 02 Aug 2014, 18:09:05 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -74,21 +74,16 @@
  *                     of having geometry and texture caches which are
  *                     basically the same thing.
  *   23 Jul 2014 TAQ - Include cleanups.
+ *   02 Aug 2014 TAQ - Removed all the pre-transcoded strings, since they
+ *                     were totally not working as expected.
  *
  * Things to do
- *   - The parser is a massive race condition - we're constructing
- *     display lists as we see the elements.  The regular display loop
- *     could be operating at the same time, and we'd get a bunch of
- *     stuff we don't expect in our list.  A mutex may be necessary,
- *     to lock out the regular display loop while we're parsing.
- *   - Oh, so it turns out that using display lists is massively
- *     deprecated or no longer supported at all, so I guess we'll have
- *     to figure out how to use the new-style vertex stuff.
  *
  */
 
 #include <glut.h>
 
+#include <cstring>
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
@@ -105,22 +100,23 @@ void GeometryParser::open_geometry(XNS::AttributeList& attrs)
         this->current = geometry_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
-            if (XNS::XMLString::compareIString(attrs.getName(i),
-                                               this->version))
+            str = XNS::XMLString::transcode(attrs.getName(i));
+            if (!strcmp(str, "version"))
             {
+                XNS::XMLString::release(&str);
                 /* We don't care about the version number yet */
             }
-            else if (XNS::XMLString::compareIString(attrs.getName(i),
-                                                    this->identifier))
+            else if (!strcmp(str, "identifier"))
             {
+                XNS::XMLString::release(&str);
                 /* We already know the objectid
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->objid = strtoll(str, NULL, 10);
                 XNS::XMLString::release(&str);*/
             }
-            else if (XNS::XMLString::compareIString(attrs.getName(i),
-                                                    this->count))
+            else if (!strcmp(str, "count"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 count = atoi(str);
                 XNS::XMLString::release(&str);
@@ -129,7 +125,6 @@ void GeometryParser::open_geometry(XNS::AttributeList& attrs)
             {
                 /* We don't recognize this attribute */
                 std::ostringstream s;
-                str = XNS::XMLString::transcode(attrs.getName(i));
                 s << "Bad geometry attribute \"" << str << '"';
                 XNS::XMLString::release(&str);
                 throw std::runtime_error(s.str());
@@ -187,15 +182,17 @@ void GeometryParser::open_sphere(XNS::AttributeList& attrs)
         this->current = sphere_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
-            if (XNS::XMLString::compareIString(attrs.getName(i), this->texture))
+            str = XNS::XMLString::transcode(attrs.getName(i));
+            if (!strcmp(str, "texture"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 tid = strtoll(str, NULL, 10);
                 XNS::XMLString::release(&str);
             }
-            else if (XNS::XMLString::compareIString(attrs.getName(i),
-                                                    this->radius))
+            else if (!strcmp(str, "radius"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 radius = atof(str);
                 XNS::XMLString::release(&str);
@@ -204,7 +201,6 @@ void GeometryParser::open_sphere(XNS::AttributeList& attrs)
             {
                 /* We don't recognize this attribute */
                 std::ostringstream s;
-                str = XNS::XMLString::transcode(attrs.getName(i));
                 s << "Bad sphere attribute \"" << str << '"';
                 XNS::XMLString::release(&str);
                 throw std::runtime_error(s.str());
@@ -244,8 +240,10 @@ void GeometryParser::open_polygon(XNS::AttributeList& attrs)
         this->current = polygon_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
-            if (XNS::XMLString::compareIString(attrs.getName(i), this->texture))
+            str = XNS::XMLString::transcode(attrs.getName(i));
+            if (!strcmp(str, "texture"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 tid = strtoll(str, NULL, 10);
                 XNS::XMLString::release(&str);
@@ -254,7 +252,6 @@ void GeometryParser::open_polygon(XNS::AttributeList& attrs)
             {
                 /* We don't recognize this attribute */
                 std::ostringstream s;
-                str = XNS::XMLString::transcode(attrs.getName(i));
                 s << "Bad polygon attribute \"" << str << '"';
                 XNS::XMLString::release(&str);
                 throw std::runtime_error(s.str());
@@ -312,20 +309,24 @@ void GeometryParser::open_vertex(XNS::AttributeList& attrs)
         this->current = vertex_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
-            if (XNS::XMLString::compareIString(attrs.getName(i), this->x))
+            str = XNS::XMLString::transcode(attrs.getName(i));
+            if (!strcmp(str, "x"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->pt[0] = atof(str);
                 XNS::XMLString::release(&str);
             }
-            else if (XNS::XMLString::compareIString(attrs.getName(i), this->y))
+            else if (!strcmp(str, "y"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->pt[1] = atof(str);
                 XNS::XMLString::release(&str);
             }
-            else if (XNS::XMLString::compareIString(attrs.getName(i), this->z))
+            else if (!strcmp(str, "z"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->pt[2] = atof(str);
                 XNS::XMLString::release(&str);
@@ -334,7 +335,6 @@ void GeometryParser::open_vertex(XNS::AttributeList& attrs)
             {
                 /* We don't recognize this attribute */
                 std::ostringstream s;
-                str = XNS::XMLString::transcode(attrs.getName(i));
                 s << "Bad vertex attribute \"" << str << '"';
                 XNS::XMLString::release(&str);
                 throw std::runtime_error(s.str());
@@ -355,20 +355,24 @@ void GeometryParser::open_normal(XNS::AttributeList& attrs)
         this->current = normal_st;
         for (i = 0; i < attrs.getLength(); ++i)
         {
-            if (XNS::XMLString::compareIString(attrs.getName(i), this->x))
+            str = XNS::XMLString::transcode(attrs.getName(i));
+            if (!strcmp(str, "x"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->norm[0] = atof(str);
                 XNS::XMLString::release(&str);
             }
-            else if (XNS::XMLString::compareIString(attrs.getName(i), this->y))
+            else if (!strcmp(str, "y"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->norm[1] = atof(str);
                 XNS::XMLString::release(&str);
             }
-            else if (XNS::XMLString::compareIString(attrs.getName(i), this->z))
+            else if (!strcmp(str, "z"))
             {
+                XNS::XMLString::release(&str);
                 str = XNS::XMLString::transcode(attrs.getValue(i));
                 this->norm[2] = atof(str);
                 XNS::XMLString::release(&str);
@@ -377,7 +381,6 @@ void GeometryParser::open_normal(XNS::AttributeList& attrs)
             {
                 /* We don't recognize this attribute */
                 std::ostringstream s;
-                str = XNS::XMLString::transcode(attrs.getName(i));
                 s << "Bad normal attribute \"" << str << '"';
                 XNS::XMLString::release(&str);
                 throw std::runtime_error(s.str());
@@ -392,95 +395,69 @@ GeometryParser::GeometryParser(geometry *elem)
 {
     this->geom = elem;
     this->current = start;
-
-    /* Set our parser strings, so we don't have to keep transcoding */
-    this->geometry_str = XNS::XMLString::transcode("geometry");
-    this->frame = XNS::XMLString::transcode("frame");
-    this->sphere = XNS::XMLString::transcode("sphere");
-    this->polylist = XNS::XMLString::transcode("polylist");
-    this->polygon = XNS::XMLString::transcode("polygon");
-    this->point = XNS::XMLString::transcode("point");
-    this->vertex = XNS::XMLString::transcode("vertex");
-    this->normal = XNS::XMLString::transcode("normal");
-    this->version = XNS::XMLString::transcode("version");
-    this->identifier = XNS::XMLString::transcode("identifier");
-    this->count = XNS::XMLString::transcode("count");
-    this->radius = XNS::XMLString::transcode("radius");
-    this->texture = XNS::XMLString::transcode("texture");
-    this->x = XNS::XMLString::transcode("x");
-    this->y = XNS::XMLString::transcode("y");
-    this->z = XNS::XMLString::transcode("z");
 }
 
 GeometryParser::~GeometryParser()
 {
-    XNS::XMLString::release(&(this->geometry_str));
-    XNS::XMLString::release(&(this->frame));
-    XNS::XMLString::release(&(this->sphere));
-    XNS::XMLString::release(&(this->polylist));
-    XNS::XMLString::release(&(this->polygon));
-    XNS::XMLString::release(&(this->point));
-    XNS::XMLString::release(&(this->vertex));
-    XNS::XMLString::release(&(this->normal));
-    XNS::XMLString::release(&(this->version));
-    XNS::XMLString::release(&(this->identifier));
-    XNS::XMLString::release(&(this->count));
-    XNS::XMLString::release(&(this->radius));
-    XNS::XMLString::release(&(this->texture));
-    XNS::XMLString::release(&(this->x));
-    XNS::XMLString::release(&(this->y));
-    XNS::XMLString::release(&(this->z));
 }
 
 void GeometryParser::startElement(const XMLCh *name,
-                                             XNS::AttributeList& attrs)
+                                  XNS::AttributeList& attrs)
 {
-    if (XNS::XMLString::compareIString(name, this->geometry_str))
+    char *str = XNS::XMLString::transcode(name);
+
+    if (!strcmp(str, "geometry"))
         this->open_geometry(attrs);
-    else if (XNS::XMLString::compareIString(name, this->frame))
+    else if (!strcmp(str, "frame"))
         this->open_frame(attrs);
-    else if (XNS::XMLString::compareIString(name, this->sphere))
+    else if (!strcmp(str, "sphere"))
         this->open_sphere(attrs);
-    else if (XNS::XMLString::compareIString(name, this->polylist))
+    else if (!strcmp(str, "polylist"))
         this->open_polylist(attrs);
-    else if (XNS::XMLString::compareIString(name, this->polygon))
+    else if (!strcmp(str, "polygon"))
         this->open_polygon(attrs);
-    else if (XNS::XMLString::compareIString(name, this->point))
+    else if (!strcmp(str, "point"))
         this->open_point(attrs);
-    else if (XNS::XMLString::compareIString(name, this->vertex))
+    else if (!strcmp(str, "vertex"))
         this->open_vertex(attrs);
-    else if (XNS::XMLString::compareIString(name, this->normal))
+    else if (!strcmp(str, "normal"))
         this->open_normal(attrs);
     else
     {
         /* We don't recognize whatever it is that we just got */
         std::ostringstream s;
-        char *tag = XNS::XMLString::transcode(name);
-        s << "Bad open tag: \"" << tag << '"';
-        XNS::XMLString::release(&tag);
+        s << "Bad open tag: \"" << str << '"';
+        XNS::XMLString::release(&str);
         throw std::runtime_error(s.str());
     }
+    XNS::XMLString::release(&str);
 }
 
 void GeometryParser::endElement(const XMLCh *name)
 {
-    if (XNS::XMLString::compareIString(name, this->geometry_str))
+    char *str = XNS::XMLString::transcode(name);
+
+    if (!strcmp(str, "geometry"))
         this->close_geometry();
-    else if (XNS::XMLString::compareIString(name, this->frame))
+    else if (!strcmp(str, "frame"))
         this->close_frame();
-    else if (XNS::XMLString::compareIString(name, this->polylist))
+    else if (!strcmp(str, "polylist"))
         this->close_polylist();
-    else if (XNS::XMLString::compareIString(name, this->polygon))
+    else if (!strcmp(str, "polygon"))
         this->close_polygon();
-    else if (XNS::XMLString::compareIString(name, this->point))
+    else if (!strcmp(str, "point"))
         this->close_point();
+    else if (!strcmp(str, "sphere")
+             || !strcmp(str, "vertex")
+             || !strcmp(str, "normal"))
+        ; /* Empty tag */
     else
     {
         /* We don't recognize whatever it is that we just got */
         std::ostringstream s;
-        char *tag = XNS::XMLString::transcode(name);
-        s << "Bad close tag: \"" << tag << '"';
-        XNS::XMLString::release(&tag);
+        s << "Bad close tag: \"" << str << '"';
+        XNS::XMLString::release(&str);
         throw std::runtime_error(s.str());
     }
+    XNS::XMLString::release(&str);
 }

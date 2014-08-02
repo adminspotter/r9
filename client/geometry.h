@@ -1,6 +1,6 @@
 /* geometry.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Jul 2014, 18:21:18 tquirk
+ *   last updated 02 Aug 2014, 11:16:49 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -26,6 +26,7 @@
  *   12 Jul 2014 TAQ - Created the file.
  *   19 Jul 2014 TAQ - Small changes to get things compiling.
  *   20 Jul 2014 TAQ - Trying out the cache template.
+ *   02 Aug 2014 TAQ - Pre-transcoded strings are not working.
  *
  * Things to do
  *
@@ -53,9 +54,6 @@ class GeometryParser : public XNS::HandlerBase
         point_st, point_en, vertex_st, normal_st,
     }
     current;
-    XMLCh *geometry_str, *frame, *sphere, *polylist, *polygon, *point;
-    XMLCh *vertex, *normal;
-    XMLCh *version, *identifier, *count, *radius, *texture, *x, *y, *z;
     geometry *geom;
     GLfloat pt[3], norm[3];
 

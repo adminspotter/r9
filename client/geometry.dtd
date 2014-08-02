@@ -1,6 +1,6 @@
 <!ELEMENT geometry (frame+)>
 <!ATTLIST geometry
-    version    #FIXED "1"
+    version    CDATA  #FIXED "1"
     identifier CDATA  #REQUIRED
     count      CDATA  #IMPLIED>
 

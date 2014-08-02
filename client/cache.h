@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2014, 21:01:19 tquirk
+ *   last updated 02 Aug 2014, 18:14:36 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -36,6 +36,9 @@
  *                     store directory string wasn't being constructed
  *                     quite correctly.
  *   01 Aug 2014 TAQ - Added g++ type demangling, along with a type member.
+ *   02 Aug 2014 TAQ - The whole type demangling thing was turning out to
+ *                     be more hassle than it was worth.  Just added the
+ *                     type name member, set by a constructor argument.
  *
  * Things to do
  *   - See if we can nab the config directory out of the config object when
@@ -70,10 +73,6 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
-
-#ifdef __GNUG__
-#include <cxxabi.h>
-#endif
 
 #include "r9client.h"
 
@@ -114,15 +113,7 @@ class ObjectCache
     const static int PRUNE_LIFETIME = 1200;
 
     _oct::obj_map objects;
-#ifdef __GNUG__
-    std::string type;
-#define TYPESTR this->type
-#define EXT_TYPE oc->type
-#else
-#define TYPESTR typeid(obj_type).name()
-#define EXT_TYPE TYPESTR
-#endif
-    std::string store, cache;
+    std::string type, store, cache;
     pthread_t prune_thread;
 
     static void *prune_worker(void *arg)
@@ -138,7 +129,7 @@ class ObjectCache
                 sleep(_oct::PRUNE_INTERVAL);
                 if (!gettimeofday(&limit, NULL))
                 {
-                    std::clog << EXT_TYPE
+                    std::clog << oc->type
                               << " reaper thread couldn't get time of day: "
                               << strerror(errno) << " (" << errno << ")"
                               << std::endl;
@@ -160,7 +151,7 @@ class ObjectCache
                         oc->objects.erase(*j);
                     }
                     std::clog << "Removed " << old_elems.size()
-                              << " entities from " << EXT_TYPE
+                              << " entities from " << oc->type
                               << " cache" << std::endl;
                 }
             }
@@ -185,12 +176,12 @@ class ObjectCache
             }
             catch (XNS::SAXException& s)
             {
-                std::clog << "Couldn't load " << TYPESTR
+                std::clog << "Couldn't load " << this->type
                           << " data file: " << s.getMessage() << std::endl;
             }
             catch (std::exception& e)
             {
-                std::clog << "Couldn't load " << TYPESTR
+                std::clog << "Couldn't load " << this->type
                           << " data file: " << e.what() << std::endl;
                 retval = false;
             }
@@ -202,34 +193,18 @@ class ObjectCache
         };
 
   public:
-    ObjectCache(const obj_type& obj)
-        : objects(),
-#ifdef __GNUG__
-          type(),
-#endif
-          store(), cache()
+    ObjectCache(const std::string type_name, const obj_type& obj)
+        : objects(), type(type_name), store(), cache()
         {
-            int ret = -4;
-#ifdef __GNUG__
-            char *type_name;
-
-            this->type = typeid(obj_type).name();
-            type_name = abi::__cxa_demangle(this->type.c_str(),
-                                            NULL,
-                                            NULL,
-                                            &ret);
-            if (ret == 0)
-                this->type = type_name;
-            free(type_name);
-#endif
+            int ret;
 
             this->store = STORE_PREFIX;
             this->store += '/';
-            this->store += TYPESTR;
+            this->store += this->type;
 
             this->cache = getenv("HOME");
             this->cache += "/.r9/";
-            this->cache += TYPESTR;
+            this->cache += this->type;
 
             /* We might consider doing a simple file mtime comparison
              * between everything in the cache and everything in the
@@ -243,7 +218,7 @@ class ObjectCache
                                       (void *)this)) != 0)
             {
                 std::ostringstream s;
-                s << "Couldn't start " << TYPESTR
+                s << "Couldn't start " << this->type
                   << " reaper thread: " << strerror(ret) << " (" << ret << ")";
                 throw std::runtime_error(s.str());
             }
@@ -256,12 +231,12 @@ class ObjectCache
             typename _oct::obj_map::iterator i;
 
             if ((ret = pthread_cancel(this->prune_thread)) != 0)
-                std::clog << "Couldn't cancel " << TYPESTR
+                std::clog << "Couldn't cancel " << this->type
                           << " reaper thread: "
                           << strerror(ret) << " (" << ret << ")" << std::endl;
             sleep(0);
             if ((ret = pthread_join(this->prune_thread, NULL)) != 0)
-                std::clog << "Couldn't reap " << TYPESTR
+                std::clog << "Couldn't reap " << this->type
                           << " reaper thread: "
                           << strerror(ret) << " (" << ret << ")" << std::endl;
 
@@ -284,7 +259,7 @@ class ObjectCache
             user_fname.width(2);
             user_fname << std::hex << std::right
                        << (objid & 0xFF) << '/';
-            user_fname.width(8);
+            user_fname.width(16);
             user_fname << objid << ".xml";
             if (stat(user_fname.str().c_str(), &st) != -1)
                 if (this->parse_file(user_fname.str(), objid))
@@ -297,7 +272,7 @@ class ObjectCache
             store_fname.width(2);
             store_fname << std::hex << std::right
                         << (objid & 0xFF) << '/';
-            store_fname.width(8);
+            store_fname.width(16);
             store_fname << objid << ".xml";
             if (stat(store_fname.str().c_str(), &st) != -1)
                 if (this->parse_file(store_fname.str(), objid))

@@ -1,6 +1,6 @@
 <!ELEMENT texture (diffuse, specular, shininess, mapfile?)>
 <!ATTLIST texture
-    version #FIXED "1"
+    version    CDATA #FIXED "1"
     identifier CDATA #REQUIRED>
 
 <!ELEMENT diffuse (rgba)>
