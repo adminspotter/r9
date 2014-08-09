@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 12:12:52 trinityquirk
+ *   last updated 09 Aug 2014, 10:53:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -36,6 +36,7 @@
  *   22 Jun 2014 TAQ - Constructor changed in the base, so we need to also.
  *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
  *   09 Jul 2014 TAQ - Exceptionified this class.  No more syslog.
+ *   09 Aug 2014 TAQ - Updated the factory arguments to be correct.
  *
  * Things to do
  *   - Implement the stubbed-out functions.
@@ -145,8 +146,8 @@ void PgSQL::db_close(void)
     PQfinish(this->db_handle);
 }
 
-extern "C" DB *create_db(const char *a, const char *b,
-                         const char *c, const char *d)
+extern "C" DB *create_db(const std::string& a, const std::string& b,
+                         const std::string& c, const std::string& d)
 {
     return new PgSQL(a, b, c, d);
 }

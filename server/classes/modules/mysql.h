@@ -1,6 +1,6 @@
 /* mysql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 11:35:48 trinityquirk
+ *   last updated 09 Aug 2014, 09:52:59 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -47,7 +47,7 @@
 class MySQL : public DB
 {
   private:
-    MYSQL *db_handle;
+    MYSQL db_handle;
 
   public:
     MySQL(const std::string&, const std::string&,
