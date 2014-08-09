@@ -1,6 +1,6 @@
 /* tcl.h                                                   -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jul 2014, 10:08:30 trinityquirk
+ *   last updated 08 Aug 2014, 17:54:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -39,7 +39,7 @@
 class TclLanguage : public Language
 {
   private:
-    TclInterp *interp;
+    Tcl_Interp *interp;
 
   public:
     TclLanguage();

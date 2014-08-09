@@ -1,6 +1,6 @@
 /* tcl.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jul 2014, 10:34:56 trinityquirk
+ *   last updated 08 Aug 2014, 18:14:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -38,8 +38,6 @@
 #include <stdexcept>
 
 #include "tcl.h"
-
-static Tcl_Interp *interp = NULL;
 
 TclLanguage::TclLanguage()
 {

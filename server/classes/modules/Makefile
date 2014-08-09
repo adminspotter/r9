@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 19 Jul 2014, 08:55:43 tquirk
+#   last updated 08 Aug 2014, 17:53:05 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -100,7 +100,7 @@ libr9_console.la : $(CON_OBJS)
 	$(LIBTOOL) --mode=link $(CXX) $(CON_CFLAGS) -o $@ $(CON_OBJS) -rpath $(LIBDIR) $(LIBWRAP) $(LIBSTDCPP)
 
 mysql.lo : mysql.cc
-	$(LIBTOOL --mode=compile $(CXX) $(MY_CFLAGS) -c $<
+	$(LIBTOOL) --mode=compile $(CXX) $(MY_CFLAGS) -c $<
 
 libr9_MySQL.la : $(MY_OBJS)
 	$(LIBTOOL) --mode=link $(CXX) $(MY_CFLAGS) -o $@ $(MY_OBJS) -rpath $(LIBDIR) $(LIBMYSQL)
