@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 07 Jul 2014, 10:04:32 trinityquirk
+#   last updated 08 Aug 2014, 18:12:12 tquirk
 #
 # Revision IX game server
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -64,9 +64,9 @@ LDPATHS =
 LDLIBS = ../../proto/libr9_proto.la -lpthread -ldl
 
 HDRS = control.h defs.h game_obj.h geometry.h motion.h library.h \
-	thread_pool.h zone.h basesock.h dgram.h stream.h
+	thread_pool.h zone.h basesock.h dgram.h stream.h octree.h
 SRCS = control.cc game_obj.cc geometry.cc zone.cc library.cc \
-	motion.cc basesock.cc dgram.cc stream.cc
+	motion.cc basesock.cc dgram.cc stream.cc octree.cc
 OBJS = ${SRCS:.cc=.lo}
 TARGET = libr9_classes.la
 

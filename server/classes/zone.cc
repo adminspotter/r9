@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2014, 14:34:16 trinityquirk
+ *   last updated 08 Aug 2014, 18:41:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -127,6 +127,8 @@
  *   09 Jul 2014 TAQ - Simplified exception handling and logging.  A lot of
  *                     the exceptions that we get, we'll just let them
  *                     continue on up the call chain.
+ *   08 Aug 2014 TAQ - Finally got our sector grid allocated without seg-
+ *                     faulting!
  *
  * Things to do
  *
@@ -141,6 +143,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <Eigen/Dense>
+
 #include "zone.h"
 #include "thread_pool.h"
 #include "../config.h"
@@ -149,29 +153,24 @@
 /* Private methods */
 void Zone::init(void)
 {
-    int i, j;
+    int i;
+    std::vector<Octree *> z_row;
+    std::vector<std::vector<Octree *> > y_row;
 
     this->load_actions(config.action_lib);
     this->create_thread_pools();
-    try
-    {
-        sectors.reserve(x_steps);
-        for (i = 0; i < x_steps; ++i)
-        {
-            sectors[i].reserve(y_steps);
-            for (j = 0; j < y_steps; ++j)
-                sectors[i][j].reserve(z_steps);
-        }
-    }
-    catch (std::length_error& e)
-    {
-        std::ostringstream s;
-        s << "couldn't reserve "
-          << this->x_steps << "x" << this->y_steps << "x" << this->z_steps
-          << " (" << this->x_steps * this->y_steps * this->z_steps
-          << ") elements in the zone: " << e.what();
-        throw std::runtime_error(s.str());
-    }
+    std::clog << syslogNotice << "creating " << this->x_steps << 'x'
+              << this->y_steps << 'x' << this->z_steps << " elements"
+              << std::endl;
+    z_row.reserve(this->z_steps);
+    for (i = 0; i < this->z_steps; ++i)
+        z_row.push_back(NULL);
+    y_row.reserve(this->y_steps);
+    for (i = 0; i < this->y_steps; ++i)
+        y_row.push_back(z_row);
+    this->sectors.reserve(x_steps);
+    for (i = 0; i < this->x_steps; ++i)
+        this->sectors.push_back(y_row);
 }
 
 void Zone::load_actions(const std::string& libname)
@@ -338,6 +337,8 @@ Zone::Zone(u_int64_t xd, u_int64_t yd, u_int64_t zd,
 
 Zone::~Zone()
 {
+    int i, j, k;
+
     /* Stop the thread pools first; deleting them should run through the
      * destructor, which will terminate all the threads and clean up
      * the queues and stuff.
@@ -358,6 +359,13 @@ Zone::~Zone()
         delete this->update_pool;
         this->update_pool = NULL;
     }
+
+    /* Clear out the octrees */
+    for (i = 0; i < this->x_steps; ++i)
+        for (j = 0; j < this->y_steps; ++j)
+            for (k = 0; k < this->z_steps; ++k)
+                if (this->sectors[i][j][k] != NULL)
+                    delete this->sectors[i][j][k];
 
     /* Delete all the game objects. */
     std::clog << "deleting game objects" << std::endl;

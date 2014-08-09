@@ -1,6 +1,6 @@
 /* octree.h                                                -*- C++ -*-
  *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 28 Jun 2014, 17:49:10 tquirk
+ *   last updated 08 Aug 2014, 18:20:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2004  Trinity Annabelle Quirk
@@ -61,6 +61,7 @@
  *   06 Jul 2006 TAQ - Added C++ tag at the top to get emacs to use the
  *                     right mode.
  *   28 Jul 2014 TAQ - Started making this into a class.
+ *   08 Aug 2014 TAQ - Small tweaks for proper linking.
  *
  * Things to do
  *
@@ -71,7 +72,7 @@
 
 #include <list>
 #include <set>
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 #include "motion.h"
 

@@ -1,6 +1,6 @@
 /* motion.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 18:22:48 tquirk
+ *   last updated 08 Aug 2014, 18:19:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -28,16 +28,18 @@
  * Changes
  *   10 May 2014 TAQ - Created the file, moving the motion-related parameters
  *                     out of game_obj.h.
+ *   08 Aug 2014 TAQ - Small tweaks to improve linking.
  *
  * Things to do
  *
- * $Id$
  */
 
 #ifndef __INC_MOTION_H__
 #define __INC_MOTION_H__
 
 #include <sys/time.h>
+
+#include <Eigen/Dense>
 
 class Motion;
 
