@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Aug 2014, 18:41:39 tquirk
+ *   last updated 10 Aug 2014, 09:07:10 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -129,6 +129,9 @@
  *                     continue on up the call chain.
  *   08 Aug 2014 TAQ - Finally got our sector grid allocated without seg-
  *                     faulting!
+ *   10 Aug 2014 TAQ - Removed logging from the thread pool worker routines,
+ *                     so we don't have to do locking to write to the log (and
+ *                     we no longer seg-fault on startup).
  *
  * Things to do
  *
@@ -142,8 +145,6 @@
 
 #include <sstream>
 #include <stdexcept>
-
-#include <Eigen/Dense>
 
 #include "zone.h"
 #include "thread_pool.h"
@@ -205,7 +206,6 @@ void *Zone::action_pool_worker(void *arg)
     packet_list req;
     u_int16_t skillid;
 
-    std::clog << "started action pool worker" << std::endl;
     for (;;)
     {
         /* Grab the next packet off the queue */
@@ -233,7 +233,6 @@ void *Zone::action_pool_worker(void *arg)
                                                      sizeof(action_request));
         }
     }
-    std::clog << "action pool worker ending" << std::endl;
     return NULL;
 }
 
@@ -244,7 +243,6 @@ void *Zone::motion_pool_worker(void *arg)
     struct timeval current;
     double interval;
 
-    std::clog << "started a motion pool worker" << std::endl;
     for (;;)
     {
         /* Grab the next object to move off the queue */
@@ -274,7 +272,6 @@ void *Zone::motion_pool_worker(void *arg)
                 || req->rotation[2] != 0.0))
             zone->motion_pool->push(req);
     }
-    std::clog << "motion pool worker ending" << std::endl;
     return NULL;
 }
 
@@ -285,7 +282,6 @@ void *Zone::update_pool_worker(void *arg)
     u_int64_t objid;
     packet_list buf;
 
-    std::clog << "started an update pool worker" << std::endl;
     for (;;)
     {
         zone->update_pool->pop(&req);
@@ -309,7 +305,6 @@ void *Zone::update_pool_worker(void *arg)
         /* Push the packet onto the send queue */
         /*zone->sending_pool->push(&buf, sizeof(packet));*/
     }
-    std::clog << "update pool worker ending" << std::endl;
     return NULL;
 }
 
