@@ -1,9 +1,9 @@
 /* octree.cc
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 28 Jun 2014, 22:44:05 tquirk
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 17 Aug 2014, 08:11:59 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,11 +22,13 @@
  *
  * The implementation of octree functions.
  *
- * When doing the actual plane-comparisons, it is necessary to figure out
- * which side of the clipping plane the point is on, not only the octant
- * number where the point is.  So we figure out the octants and bitwise-
- * and them to filter out all the other sides.  Only then do we properly
- * clip the line segments.
+ * Since this is a multi-level data structure, and each subtree can
+ * function as a distinct tree on its own, we will keep track of all
+ * the objects contained in each subtree, in every node in the
+ * subtree.  That way, any node in the tree can be queried as to what
+ * it contains, without having to start at the head, or traverse to
+ * each leaf.  This may cause some consternation when moving an object
+ * around in the tree, so we may need to revisit this at some point.
  *
  * Changes
  *   27 Jun 2000 TAQ - Created the file.
@@ -57,10 +59,10 @@
  *                     save on memory, and be non-stupid.  Testing, removal,
  *                     and a whole bunch of other operations then becomes
  *                     much simpler.  We're having to use a pointer, which
- *                     is proving to be tricky.  Freakin' STL.
+ *                     is proving to be tricky.
  *   02 Apr 2004 TAQ - We are now going to precompute the neighbors of each
  *                     node, and store them in the node.  Check out the
- *                     bitchen ascii art below.  The indices on the ascii art
+ *                     ascii art below.  The indices on the ascii art
  *                     started out wrong, but they're fixed now.
  *   03 Apr 2004 TAQ - Finished up the neighbor-finding routine.  There is
  *                     surely a much more general way to do it, but I had
@@ -77,7 +79,7 @@
  *   21 Apr 2004 TAQ - Fixed some comments.  The polygon needs to have a
  *                     normal vector, so we had to make it into a struct.
  *                     The actual list of points is now called 'points' inside
- *                     the struct; how droll.
+ *                     the struct.
  *   24 Apr 2004 TAQ - Found a couple errors which might lose the contents
  *                     of an octant which has fewer than MAX_OCTREE_POLYS
  *                     in it, by simply not creating it.
@@ -87,19 +89,26 @@
  *                     polygons in the tree, in favor of geometry objects.
  *                     We should probably only deal with bounding boxes here,
  *                     and do collisions in the zone somewhere.
+ *   15 Aug 2014 TAQ - Moved the neighbor_test from a define to an
+ *                     inline in the header.  Added depth handling in
+ *                     the constructor.  Implemented the remove
+ *                     method.
+ *   16 Aug 2014 TAQ - Cleaned the heck out of the neighbor-computing
+ *                     routine.  Fleshed out the insert and move methods.
+ *   17 Aug 2014 TAQ - Removed the move method for the time being.  It's a
+ *                     lot more complicated than I expected it to be.
  *
  * Things to do
- *   - Make the neighbor-finder BFS, not DFS as it is now.  Half the
- *   neighbors are going to end up NULL the way it stands.
- *
- *   - Work on exploiting the pattern that appeared in the neighbor-
- *   finding routine.  If it turns out to be almost as simple as I
- *   think it might be, we may not even have to keep the pointers
- *   around, because doing it on-the-fly will be fast enough.  The way
- *   the pattern looks, it just calls out for a lookup table, which
- *   will be super-fast.  As it stands right now, it's just three
- *   compares and three pointer derefs, not a tall order cycle-wise.
- *   The optimizer should be able to simplify the repetition of terms.
+ *   - Make the neighbor-finder breadth-first, not depth-first as it
+ *     is now.  Half the neighbors are going to end up NULL the way it
+ *     stands.
+ *   - Consider if the neighbors are really necessary.  If not, we can
+ *     save a bunch of computation by getting rid of all of it.
+ *   - Consider how we would do a move operation.  As things stand
+ *     right now, we need to do an remove/insert pair, which may
+ *     involve a bunch of possibly unnecessary memory deallocation and
+ *     allocation.  There are a lot of specific cases to consider, and
+ *     my first attempt was not good.
  *
  */
 
@@ -131,19 +140,18 @@ const int Octree::MAX_DEPTH = 10;
             \|         |        |                    ~   ~
              +---------+--------+                    3    5
 
-The pseudo for neighbor finding:
-
-if root
-  then return NULL
-if direction indicates a sibling
-  then return the sibling
-define temp_neighbor = neighbor(parent)
-if temp_neighbor is NULL
-  then return NULL
-if temp_neighbor is larger than us
-  then return the matching sibling
-else
-  return temp_neighbor
+Neighbor 0: if (index & 4 == 0) (parent->neighbor->octant[index - 4])
+            else (index + 4)
+Neighbor 1: if (index & 4) (parent->neighbor->octant[index + 4])
+            else (index - 4)
+Neighbor 2: if (index & 2 == 0) (parent->neighbor->octant[index - 2])
+            else (index + 2)
+Neighbor 3: if (index & 2) (parent->neighbor->octant[index + 2])
+            else (index - 2)
+Neighbor 4: if (index & 1 == 0) (parent->neighbor->octant[index - 1])
+            else (index + 1)
+Neighbor 5: if (index & 1) (parent->neighbor->octant[index + 1])
+            else (index - 1)
 
 */
 
@@ -156,95 +164,38 @@ void Octree::compute_neighbors(void)
      */
     if (this->parent != NULL)
     {
-        /* There is likely a much more general way to do this, but I'm just
-         * going to get it working right now.  A lookup table is possible,
-         * based on the pattern that has emerged.
-         */
-        switch (this->parent_index)
+        if (this->parent_index & 4)
         {
-#define neighbor_test(x,y) (this->parent->neighbor[(x)] == NULL ? NULL \
-    : (this->parent->neighbor[(x)]->octants[(y)] == NULL \
-       ? this->parent->neighbor[(x)] \
-       : this->parent->neighbor[(x)]->octants[(y)]))
-
-          case 0:
-            /* An interesting pattern has emerged:  the + and - direction
-             * of any axis relates to the same-numbered octant, except for
-             * the fact that we may be looking to an indirect sibling.
-             * Interesting.  This is screaming lookup-table to me.
-             */
-            this->neighbor[0] = this->parent->octants[4];
-            this->neighbor[1] = neighbor_test(1, 4);
-            this->neighbor[2] = this->parent->octants[2];
-            this->neighbor[3] = neighbor_test(3, 2);
-            this->neighbor[4] = this->parent->octants[1];
-            this->neighbor[5] = neighbor_test(5, 1);
-            break;
-
-          case 1:
-            this->neighbor[0] = this->parent->octants[5];
-            this->neighbor[1] = neighbor_test(1, 5);
-            this->neighbor[2] = this->parent->octants[3];
-            this->neighbor[3] = neighbor_test(3, 3);
-            this->neighbor[4] = neighbor_test(4, 0);
-            this->neighbor[5] = this->parent->octants[0];
-            break;
-
-          case 2:
-            this->neighbor[0] = this->parent->octants[6];
-            this->neighbor[1] = neighbor_test(1, 6);
-            this->neighbor[2] = neighbor_test(2, 0);
-            this->neighbor[3] = this->parent->octants[0];
-            this->neighbor[4] = this->parent->octants[3];
-            this->neighbor[5] = neighbor_test(5, 3);
-            break;
-
-          case 3:
-            this->neighbor[0] = this->parent->octants[7];
-            this->neighbor[1] = neighbor_test(1, 7);
-            this->neighbor[2] = neighbor_test(2, 1);
-            this->neighbor[3] = this->parent->octants[1];
-            this->neighbor[4] = neighbor_test(4, 2);
-            this->neighbor[5] = this->parent->octants[2];
-            break;
-
-          case 4:
-            this->neighbor[0] = neighbor_test(0, 0);
-            this->neighbor[1] = this->parent->octants[0];
-            this->neighbor[2] = this->parent->octants[6];
-            this->neighbor[3] = neighbor_test(3, 6);
-            this->neighbor[4] = this->parent->octants[5];
-            this->neighbor[5] = neighbor_test(5, 5);
-            break;
-
-          case 5:
-            this->neighbor[0] = neighbor_test(0, 1);
-            this->neighbor[1] = this->parent->octants[1];
-            this->neighbor[2] = this->parent->octants[7];
-            this->neighbor[3] = neighbor_test(3, 7);
-            this->neighbor[4] = neighbor_test(4, 4);
-            this->neighbor[5] = this->parent->octants[4];
-            break;
-
-          case 6:
-            this->neighbor[0] = neighbor_test(0, 2);
-            this->neighbor[1] = this->parent->octants[2];
-            this->neighbor[2] = neighbor_test(2, 4);
-            this->neighbor[3] = this->parent->octants[4];
-            this->neighbor[4] = this->parent->octants[7];
-            this->neighbor[5] = neighbor_test(5, 7);
-            break;
-
-          case 7:
-            this->neighbor[0] = neighbor_test(0, 3);
-            this->neighbor[1] = this->parent->octants[3];
-            this->neighbor[2] = neighbor_test(2, 5);
-            this->neighbor[3] = this->parent->octants[5];
-            this->neighbor[4] = neighbor_test(4, 6);
-            this->neighbor[5] = this->parent->octants[6];
-            break;
+            this->neighbor[0] = this->neighbor_test(0, this->parent_index - 4);
+            this->neighbor[1] = this->parent->octants[this->parent_index - 4];
         }
-#undef neighbor_test
+        else
+        {
+            this->neighbor[0] = this->parent->octants[this->parent_index + 4];
+            this->neighbor[1] = this->neighbor_test(1, this->parent_index + 4);
+        }
+
+        if (this->parent_index & 2)
+        {
+            this->neighbor[2] = this->neighbor_test(2, this->parent_index - 2);
+            this->neighbor[3] = this->parent->octants[this->parent_index - 2];
+        }
+        else
+        {
+            this->neighbor[2] = this->parent->octants[this->parent_index + 2];
+            this->neighbor[3] = this->neighbor_test(3, this->parent_index + 2);
+        }
+
+        if (this->parent_index & 1)
+        {
+            this->neighbor[4] = this->neighbor_test(4, this->parent_index - 1);
+            this->neighbor[5] = this->parent->octants[this->parent_index - 1];
+        }
+        else
+        {
+            this->neighbor[4] = this->parent->octants[this->parent_index + 1];
+            this->neighbor[5] = this->neighbor_test(5, this->parent_index + 1);
+        }
     }
     for (i = 0; i < 8; ++i)
         /* Recurse for each subspace */
@@ -263,6 +214,10 @@ Octree::Octree(Octree *parent,
     memset(this->octants, 0, sizeof(Octree *) * 8);
     memset(this->neighbor, 0, sizeof(Octree *) * 6);
     this->parent_index = index;
+    if (this->parent != NULL)
+        this->depth = this->parent->depth + 1;
+    else
+        this->depth = 0;
 }
 
 Octree::~Octree()
@@ -287,10 +242,6 @@ Octree::~Octree()
         for (i = 0; i < 6; ++i)
             if (this->neighbor[i] != NULL)
                 this->neighbor[i]->compute_neighbors();
-
-        /* Move all our objects into our parent */
-        this->parent->objects.insert(this->objects.begin(),
-                                     this->objects.end());
     }
     /* Allowing the map destructor to clear itself out will delete all
      * the things in the map... not what we want.
@@ -300,17 +251,17 @@ Octree::~Octree()
 
 bool Octree::empty(void)
 {
-    return objects.empty();
+    return this->objects.empty();
 }
 
-void Octree::build(std::list<Motion *>& objs, int depth)
+void Octree::build(std::list<Motion *>& objs)
 {
     std::list<Motion *> obj_list[8];
     std::list<Motion *>::iterator i;
     int j;
 
-    if (depth == Octree::MAX_DEPTH
-        || (depth >= Octree::MIN_DEPTH
+    if (this->depth == Octree::MAX_DEPTH
+        || (this->depth >= Octree::MIN_DEPTH
             && objs.size() <= Octree::MAX_LEAF_OBJECTS))
     {
         /* Copy the list's elements into the node and stop recursing
@@ -321,49 +272,17 @@ void Octree::build(std::list<Motion *>& objs, int depth)
     else
     {
         for (i = objs.begin(); i != objs.end(); ++i)
-        {
             obj_list[this->which_octant((*i)->position)].push_back(*i);
-        }
 
         /* Recurse if required for each octant. */
         for (j = 0; j < 8; ++j)
         {
             if (!obj_list[j].empty())
             {
-                Eigen::Vector3d min, max;
-
-                if (j & 4)
-                {
-                    min[0] = this->center_point[0];
-                    max[0] = this->max_point[0];
-                }
-                else
-                {
-                    min[0] = this->min_point[0];
-                    max[0] = this->center_point[0];
-                }
-                if (j & 2)
-                {
-                    min[1] = this->center_point[1];
-                    max[1] = this->max_point[1];
-                }
-                else
-                {
-                    min[1] = this->min_point[1];
-                    max[1] = this->center_point[1];
-                }
-                if (j & 1)
-                {
-                    min[2] = this->center_point[2];
-                    max[2] = this->max_point[2];
-                }
-                else
-                {
-                    min[2] = this->min_point[2];
-                    max[2] = this->center_point[2];
-                }
-                this->octants[j] = new Octree(this, min, max, j);
-                this->octants[j]->build(obj_list[j], depth + 1);
+                Eigen::Vector3d mn = this->octant_min(j);
+                Eigen::Vector3d mx = this->octant_max(j);
+                this->octants[j] = new Octree(this, mn, mx, j);
+                this->octants[j]->build(obj_list[j]);
             }
         }
     }
@@ -373,14 +292,42 @@ void Octree::build(std::list<Motion *>& objs, int depth)
      * octants' check, and the fact that the target octants will not
      * have been created yet, though I'll look into it.
      */
-    if (depth == 0)
+    if (this->depth == 0)
         this->compute_neighbors();
 }
 
 void Octree::insert(Motion *mot)
 {
+    this->objects.insert(mot);
+    if (this->depth < Octree::MAX_DEPTH
+        && this->objects.size() > Octree::MAX_LEAF_OBJECTS)
+    {
+        /* Classify it and insert it into the appropriate subtree */
+        int octant = this->which_octant(mot->position);
+
+        if (this->octants[octant] == NULL)
+        {
+            Eigen::Vector3d mn = this->octant_min(octant);
+            Eigen::Vector3d mx = this->octant_max(octant);
+
+            this->octants[octant] = new Octree(this, mn, mx, octant);
+            this->octants[octant]->compute_neighbors();
+        }
+        this->octants[octant]->insert(mot);
+    }
 }
 
 void Octree::remove(Motion *mot)
 {
+    if (this->objects.find(mot) != this->objects.end())
+    {
+        int octant = this->which_octant(mot->position);
+
+        if (this->octants[octant] != NULL)
+            this->octants[octant]->remove(mot);
+        this->objects.erase(mot);
+    }
+    /* If we're an empty subtree, delete ourselves */
+    if (this->objects.size() == 0 && this->depth > Octree::MIN_DEPTH)
+        delete this;
 }

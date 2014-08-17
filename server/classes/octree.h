@@ -1,9 +1,9 @@
 /* octree.h                                                -*- C++ -*-
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 08 Aug 2014, 18:20:25 tquirk
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 17 Aug 2014, 07:57:26 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the declarations for the octree class.
+ * This file contains the declaration of the octree class.
  *
  * We are not going to subdivide anything - it's more work than we may
  * ever need to do.  For the time being, we'll just classify based on
@@ -62,6 +62,11 @@
  *                     right mode.
  *   28 Jul 2014 TAQ - Started making this into a class.
  *   08 Aug 2014 TAQ - Small tweaks for proper linking.
+ *   15 Aug 2014 TAQ - We do need to keep track of how deep our tree
+ *                     is, since we do have a min and max depth.
+ *                     Moved the neighbor test define from the .cc and
+ *                     made it an inline method.
+ *   16 Aug 2014 TAQ - Added the octant_min and octant_max inline methods.
  *
  * Things to do
  *
@@ -86,6 +91,7 @@ class Octree
     Eigen::Vector3d min_point, center_point, max_point;
     Octree *parent, *octants[8], *neighbor[6];
     u_int8_t parent_index;
+    int depth;
 
     std::set<Motion *> objects;
 
@@ -95,7 +101,33 @@ class Octree
             return ((p[0] < this->center_point[0] ? 0 : 4)
                     | (p[1] < this->center_point[1] ? 0 : 2)
                     | (p[2] < this->center_point[2] ? 0 : 1));
-        }
+        };
+    inline Octree *neighbor_test(int neigh, int oct)
+        {
+            if (this->parent->neighbor[neigh] == NULL)
+                return NULL;
+            if (this->parent->neighbor[neigh]->octants[oct] == NULL)
+                return this->parent->neighbor[neigh];
+            return this->parent->neighbor[neigh]->octants[oct];
+        };
+    inline Eigen::Vector3d octant_min(int oct)
+        {
+            Eigen::Vector3d mn;
+
+            mn[0] = oct & 4 ? this->center_point[0] : this->min_point[0];
+            mn[1] = oct & 2 ? this->center_point[1] : this->min_point[1];
+            mn[2] = oct & 1 ? this->center_point[2] : this->min_point[2];
+            return mn;
+        };
+    inline Eigen::Vector3d octant_max(int oct)
+        {
+            Eigen::Vector3d mx;
+
+            mx[0] = oct & 4 ? this->max_point[0] : this->center_point[0];
+            mx[1] = oct & 2 ? this->max_point[1] : this->center_point[1];
+            mx[2] = oct & 1 ? this->max_point[2] : this->center_point[2];
+            return mx;
+        };
     void compute_neighbors(void);
 
   public:
@@ -104,7 +136,7 @@ class Octree
 
     bool empty(void);
 
-    void build(std::list<Motion *>&, int);
+    void build(std::list<Motion *>&);
     void insert(Motion *);
     void remove(Motion *);
 };
