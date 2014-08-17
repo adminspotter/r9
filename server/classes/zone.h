@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2014, 16:44:58 tquirk
+ *   last updated 17 Aug 2014, 15:50:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -117,6 +117,7 @@
  *   21 Jun 2014 TAQ - Moved the action library in here too.
  *   22 Jun 2014 TAQ - Slight changes to reflect the updated config object.
  *   06 Jul 2014 TAQ - Added stop and init methods, renamed trees to sectors.
+ *   17 Aug 2014 TAQ - Added which_sector and sector_contains inline methods.
  *
  * Things to do
  *
@@ -157,6 +158,21 @@ class Zone
     void init(void);
     void load_actions(const std::string&);
     void create_thread_pools(void);
+
+    inline Octree *sector_contains(Eigen::Vector3d& pos)
+        {
+            Eigen::Vector3i sec = this->which_sector(pos);
+            return this->sectors[sec[0]][sec[1]][sec[2]];
+        };
+    inline Eigen::Vector3i which_sector(Eigen::Vector3d& pos)
+        {
+            Eigen::Vector3i sector;
+
+            sector[0] = pos[0] / this->x_dim;
+            sector[1] = pos[1] / this->y_dim;
+            sector[2] = pos[2] / this->z_dim;
+            return sector;
+        };
 
     static void *action_pool_worker(void *);
     static void *motion_pool_worker(void *);

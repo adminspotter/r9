@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 07 Jul 2014, 10:06:15 trinityquirk
+#   last updated 17 Aug 2014, 16:09:59 tquirk
 #
 # This is the main makefile for the revision9 server.
 #
@@ -25,6 +25,8 @@
 #   29 Jun 2014 TAQ - The final part of the libtool-ification.
 #   02 Jul 2014 TAQ - Finally got the binary to link to the right stdc++ lib.
 #   04 Jul 2014 TAQ - The subserver is now a separate binary.
+#   17 Aug 2014 TAQ - We now make sure all of our subdirs are rebuilt with
+#                     the 'all' target.
 #
 # Things to do
 #
@@ -43,9 +45,9 @@ SUBSRV_OBJS = ${SUBSRV_SRCS:.cc=.o}
 TARGET = server
 SUBSRV_TARGET = subserver
 
-.PHONY : install uninstall clean
+.PHONY : install uninstall clean target
 
-all : Makefile.depend TAGS $(TARGET) $(SUBSRV_TARGET)
+all : Makefile.depend TAGS target $(SUBSRV_TARGET)
 
 ../proto/libr9_proto.la :
 	$(MAKE) -C ../proto
@@ -61,6 +63,11 @@ $(TARGET) : ../proto/libr9_proto.la classes/libr9_classes.la classes/modules/lib
 
 $(SUBSRV_TARGET) : $(SUBSRV_OBJS)
 	$(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) -o $@ $(SUBSRV_OBJS)
+
+target:
+	$(MAKE) -C ../proto
+	$(MAKE) -C classes
+	$(MAKE) $(TARGET)
 
 Makefile.depend : $(SRCS) $(HDRS)
 	@$(DEPEND) -- $(CFLAGS) -- $(SRCS) 2> /dev/null > Makefile.depend

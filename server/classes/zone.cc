@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2014, 09:07:10 tquirk
+ *   last updated 17 Aug 2014, 15:59:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -132,6 +132,8 @@
  *   10 Aug 2014 TAQ - Removed logging from the thread pool worker routines,
  *                     so we don't have to do locking to write to the log (and
  *                     we no longer seg-fault on startup).
+ *   17 Aug 2014 TAQ - Worked on the motion worker to actually move things
+ *                     around in the sectors.
  *
  * Things to do
  *
@@ -242,28 +244,39 @@ void *Zone::motion_pool_worker(void *arg)
     Motion *req;
     struct timeval current;
     double interval;
+    Octree *sector;
 
     for (;;)
     {
-        /* Grab the next object to move off the queue */
         zone->motion_pool->pop(&req);
 
-        /* Process the movement */
-        /* Get interval since last move */
         gettimeofday(&current, NULL);
         interval = (current.tv_sec + (current.tv_usec * 1000000))
             - (req->last_updated.tv_sec
                + (req->last_updated.tv_usec * 1000000));
-        /* Do the actual move, scaled by the interval */
-        req->position += req->movement * interval;
-        /*zone->game_objects[req->get_object_id()].orientation
-            += req->rotation * interval;*/
-        /* Do collisions (not yet) */
-        /* Reset last update to "now" */
         memcpy(&req->last_updated, &current, sizeof(struct timeval));
-        /* We've moved, so users need updating */
+        zone->sector_contains(req->position)->remove(req);
+        req->position += req->movement * interval;
+        /*req->orient += req->rotation * interval;*/
+        sector = zone->sector_contains(req->position);
+        if (sector == NULL)
+        {
+            Eigen::Vector3i sec = zone->which_sector(req->position);
+            Eigen::Vector3d mn, mx;
+
+            mn[0] = sec[0] * zone->x_dim;
+            mn[1] = sec[1] * zone->y_dim;
+            mn[2] = sec[2] * zone->z_dim;
+            mx[0] = mn[0] + zone->x_dim;
+            mx[1] = mn[1] + zone->y_dim;
+            mx[2] = mn[2] + zone->z_dim;
+            sector = new Octree(NULL, mn, mx, 0);
+            zone->sectors[sec[0]][sec[1]][sec[2]] = sector;
+        }
+        sector->insert(req);
+        /*zone->physics->collide(sector, req);*/
         zone->update_pool->push(req);
-        /* If we're still moving, queue it up */
+
         if ((req->movement[0] != 0.0
              || req->movement[1] != 0.0
              || req->movement[2] != 0.0)
