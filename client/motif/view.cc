@@ -1,9 +1,9 @@
-/* view.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 10 Aug 2006, 14:27:32 trinity
+/* view.cc
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 31 Aug 2014, 16:14:24 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -50,66 +50,48 @@
  *                     Fleshed out move_object routine.  Fixed draw_objects
  *                     routine, but it's currently horrifically brute-force
  *                     (i.e. we draw EVERYTHING in the hash).
+ *   30 Aug 2014 TAQ - Started removing the hash table, since we have a very
+ *                     nice new cache object that does that for us.
  *
  * Things to do
+ *   - Use our fancy cache object, instead of doing one here by hand.
  *   - Act sensibly in draw_objects, instead of brute-forcing it.
  *   - Make sure the depth buffer is being created and used.
  *   - Define a set of translations and actions, and create routines to
- *   support each one individually.
+ *     support each one individually.
  *
- * $Id: view.c 10 2013-01-25 22:13:00Z trinity $
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <time.h>
-#include <pthread.h>
-#include <errno.h>
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
 #include <GL/GLwMDrawA.h>
 #include <GL/glut.h>
 
+#include <iostream>
+
 #include "client.h"
+#include "../cache.h"
 
-#ifndef OBJECT_HASH_BUCKETS
-#define OBJECT_HASH_BUCKETS  91
-#endif
-
-typedef struct object_tag
+struct object
 {
     u_int64_t object_id;
-    struct timeval lastused;
     u_int64_t geometry_id;
     u_int16_t frame_number;
     GLdouble position[3], orientation[3];
-    struct object_tag *next;
-}
-object;
+};
 
 static void init_callback(Widget, XtPointer, XtPointer);
 static void resize_callback(Widget, XtPointer, XtPointer);
 static void expose_callback(Widget, XtPointer, XtPointer);
 static void draw_objects(void);
-static int hash_func(u_int64_t);
-static void insert_object(u_int64_t, object *);
-static object *find_object(u_int64_t);
-static void *object_prune_worker(void *);
 
 static object **objects;
 static Widget mainview;
 static GLfloat light_position[] = { 5.0, 50.0, -10.0, 1.0 };
-static pthread_t prune_thread;
 
 Widget create_main_view(Widget parent)
 {
-    char errstr[256];
-    int ret;
-
     mainview = XtVaCreateManagedWidget("mainview",
                                        glwMDrawingAreaWidgetClass,
                                        parent,
@@ -121,25 +103,8 @@ Widget create_main_view(Widget parent)
     XtAddCallback(mainview, GLwNresizeCallback, resize_callback, NULL);
     XtAddCallback(mainview, GLwNexposeCallback, expose_callback, NULL);
 
-    /* Set up the hash table */
-    if ((objects = (object **)malloc(sizeof(object *)
-                                     * OBJECT_HASH_BUCKETS)) == NULL)
-    {
-        snprintf(errstr, sizeof(errstr),
-                 "Couldn't allocate object hash table");
-        main_post_message(errstr);
-    }
-    else
-        memset(objects, 0, sizeof(object *) * OBJECT_HASH_BUCKETS);
-
+    /* Set up the object cache */
     /* Start up the cleanup thread */
-    if ((ret = pthread_create(&prune_thread, NULL, object_prune_worker, NULL))
-        != 0)
-    {
-        snprintf(errstr, sizeof(errstr),
-                 "Couldn't start texture cleanup thread: %s", strerror(ret));
-        main_post_message(errstr);
-    }
 
     return mainview;
 }
@@ -213,13 +178,12 @@ void expose_callback(Widget w, XtPointer client_data, XtPointer call_data)
     glFlush();
 }
 
-static void draw_objects(void)
+/*static void draw_objects(void)
 {
-    int i;
-    object *optr;
+    object *optr;*/
 
     /* Brute force, baby - ya just can't beat it */
-    for (i = 0; i < OBJECT_HASH_BUCKETS; ++i)
+    /*for (i = 0; i < OBJECT_HASH_BUCKETS; ++i)
     {
         optr = objects[i];
         while (optr != NULL)
@@ -233,139 +197,25 @@ static void draw_objects(void)
             glRotated(optr->orientation[2], 0.0, 0.0, 1.0);
             draw_geometry(optr->geometry_id, optr->frame_number);
             glPopMatrix();
-            optr = optr->next;
         }
     }
-}
+}*/
 
-void move_object(u_int64_t objectid, u_int16_t frame,
-                 double newx, double newy, double newz,
-                 double newox, double newoy, double newoz)
+/*void move_object(u_int64_t objectid, u_int16_t frame,
+                 Eigen::Vector3d& newpos,
+                 Eigen::Vector3d& neworient)
 {
-    object *optr = find_object(objectid);
-
-    if (optr == NULL)
-    {
-        /* We're getting notifications for a new object; add it to the hash */
-        if ((optr = (object *)malloc(sizeof(object))) == NULL)
-            return;
-        optr->object_id = objectid;
-        gettimeofday(&optr->lastused, NULL);
-        load_geometry(0, 0);
-        optr->geometry_id = 0;
-        optr->frame_number = frame;
-        optr->next = NULL;
-        insert_object(objectid, optr);
-    }
+    object *optr = ocache[objectid];*/
 
     /* Update the object's position */
-    optr->frame_number = frame;
-    optr->position[0] = newx;
-    optr->position[1] = newy;
-    optr->position[2] = newz;
-    optr->orientation[0] = newox;
-    optr->orientation[1] = newoy;
-    optr->orientation[2] = newoz;
+    /*optr->frame_number = frame;
+    optr->position[0] = newpos[0];
+    optr->position[1] = newpos[1];
+    optr->position[2] = newpos[2];
+    optr->orientation[0] = neworient[0];
+    optr->orientation[1] = neworient[1];
+    optr->orientation[2] = neworient[2];*/
 
     /* Post an expose for the screen */
-    expose_callback(mainview, NULL, NULL);
-}
-
-static int hash_func(u_int64_t objectid)
-{
-    return (objectid % OBJECT_HASH_BUCKETS);
-}
-
-static void insert_object(u_int64_t objectid, object *o)
-{
-    int bucket = hash_func(objectid);
-    object *optr = objects[bucket];
-
-    if (objects[bucket] == NULL)
-    {
-        objects[bucket] = o;
-        o->next = NULL;
-    }
-    else
-    {
-        /* Hashing collision; chain the entries */
-        while (optr->next != NULL)
-            optr = optr->next;
-        optr->next = o;
-        o->next = NULL;
-    }
-}
-
-static object *find_object(u_int64_t objectid)
-{
-    object *optr = objects[hash_func(objectid)];
-
-    while (optr != NULL && optr->object_id != objectid)
-        optr = optr->next;
-    if (optr != NULL)
-        gettimeofday(&optr->lastused, NULL);
-    return optr;
-}
-
-/* This routine will clean out any objects from the hash that haven't been
- * used in 10 minutes.  We should eventually make that into a configurable
- * option, because it's the right thing to do.
- */
-/* ARGSUSED */
-static void *object_prune_worker(void *notused)
-{
-    struct timeval tv;
-    char errstr[256];
-    int i, count;
-    object *optr, *prev;
-
-    for (;;)
-    {
-        sleep(60);
-        if (!gettimeofday(&tv, NULL))
-        {
-            snprintf(errstr, sizeof(errstr),
-                     "Object thread couldn't get time of day: %s",
-                     strerror(errno));
-            main_post_message(errstr);
-            continue;
-        }
-        count = 0;
-        for (i = 0; i < OBJECT_HASH_BUCKETS; ++i)
-        {
-            optr = prev = objects[i];
-            while (optr != NULL)
-            {
-                if (optr->lastused.tv_sec + 600 <= tv.tv_sec)
-                {
-                    if (optr == prev)
-                    {
-                        /* The head of this bucket is getting the boot */
-                        objects[i] = optr->next;
-                        free(optr);
-                        optr = prev = objects[i];
-                    }
-                    else
-                    {
-                        /* The victim is in the middle of the chain */
-                        prev->next = optr->next;
-                        free(optr);
-                        optr = prev->next;
-                    }
-                    ++count;
-                }
-                else
-                {
-                    prev = optr;
-                    optr = optr->next;
-                }
-            }
-        }
-        if (count > 0)
-        {
-            snprintf(errstr, sizeof(errstr),
-                     "Removed %d entities from object cache", count);
-            main_post_message(errstr);
-        }
-    }
-}
+    /*expose_callback(mainview, NULL, NULL);
+}*/

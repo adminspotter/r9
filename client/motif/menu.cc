@@ -1,9 +1,9 @@
-/* menu.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 29 Nov 2009, 17:02:14 trinity
+/* menu.cc
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 31 Aug 2014, 16:00:47 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,12 +29,13 @@
  *   19 Jul 2006 TAQ - Added a couple buttons.
  *   26 Jul 2006 TAQ - Renamed a bunch of stuff.
  *   17 Aug 2006 TAQ - Added a logout button and callback.
+ *   31 Aug 2014 TAQ - Now called menu.cc.  We're using the std::clog, and
+ *                     the new comm object.
  *
  * Things to do
  *   - Almost all the callbacks are hooked up to emptyCallback.  Write
  *   some actual callback routines.
  *
- * $Id: menu.c 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <X11/Xlib.h>
@@ -44,6 +45,8 @@
 #include <Xm/RowColumn.h>
 #include <Xm/PushBG.h>
 #include <Xm/SeparatoG.h>
+
+#include <iostream>
 
 #include "client.h"
 
@@ -181,8 +184,7 @@ static void login_callback(Widget w,
                            XtPointer client_data,
                            XtPointer call_data)
 {
-    start_comm();
-    send_login(config.username, config.password, 1LL, 1LL);
+    /*send_login(config.username, config.password);*/
 }
 
 /* ARGSUSED */
@@ -190,14 +192,13 @@ static void logout_callback(Widget w,
                             XtPointer client_data,
                             XtPointer call_data)
 {
-    send_logout(1LL, 1LL);
+    /*send_logout();*/
 }
 
 /* ARGSUSED */
 static void exit_callback(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XtAppSetExitFlag(XtWidgetToApplicationContext(w));
-    cleanup_comm();
 }
 
 /* ARGSUSED */
@@ -205,5 +206,5 @@ static void empty_callback(Widget w,
                            XtPointer client_data,
                            XtPointer call_data)
 {
-    main_post_message("Sorry, not implemented yet");
+    std::clog << "Sorry, not implemented yet" << std::endl;
 }

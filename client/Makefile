@@ -1,6 +1,6 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 29 Jul 2014, 17:36:00 tquirk
+#   last updated 30 Aug 2014, 09:20:30 tquirk
 #
 # Revision IX game client
 # Copyright (C) 2014  Trinity Annabelle Quirk
@@ -33,6 +33,8 @@
 #   15 Dec 2007 TAQ - $TARGET depends on the proto lib.
 #   12 Sep 2013 TAQ - makedepend no longer lives in /usr/X11R6/bin.
 #   26 Jul 2014 TAQ - C files are becoming C++.
+#   30 Aug 2014 TAQ - We're not linking anything here, so removed all the
+#                     library stuff.
 #
 # Things to do
 #
@@ -44,13 +46,6 @@ CDEBUG = -g
 CINCLUDE = -I/usr/local/include -I/usr/X11R6/include -I/home/trinity/include -I/System/Library/Frameworks/OpenGL.framework/Headers -I/System/Library/Frameworks/GLUT.framework/Headers
 CDEFS = -DDO_DEBUG
 CFLAGS = -Wall $(CDEFS) $(CDEBUG) $(COPTIM) $(CINCLUDE)
-
-LDFLAGS = -L/usr/X11R6/lib -L/home/trinity/lib
-XMLIBS = -lXm
-XAWLIBS = -lXaw
-GLLIBS = -lGLw -lglut -lGLU -lGL
-XLIBS = $(GLLIBS) $(XMLIBS) -lXext -lXt -lX11 -lXmu -lSM -lICE -lXpm
-LDLIBS = $(XLIBS) -lr9_proto -lm
 
 HDRS = cache.h geometry.h texture.h comm.h config.h
 CXXSRCS = geometry.cc texture.cc comm.cc config.cc

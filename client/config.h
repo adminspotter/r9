@@ -1,6 +1,6 @@
 /* config.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Jul 2014, 13:04:40 tquirk
+ *   last updated 31 Aug 2014, 11:01:16 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -25,6 +25,7 @@
  *
  * Changes
  *   26 Jul 2014 TAQ - Created the file.
+ *   31 Aug 2014 TAQ - We're now called ConfigData.
  *
  * Things to do
  *
@@ -36,7 +37,7 @@
 #include <vector>
 #include <string>
 
-class config_data
+class ConfigData
 {
   public:
     static const char SERVER_ADDR[];
@@ -49,8 +50,8 @@ class config_data
     u_int16_t server_port;
     std::string username, password;
 
-    config_data();
-    ~config_data();
+    ConfigData();
+    ~ConfigData();
 
     void set_defaults(void);
 
@@ -63,6 +64,6 @@ class config_data
     void parse_config_line(std::string&);
 };
 
-extern config_data config;
+extern ConfigData config;
 
 #endif /* __INC_R9CLIENT_CONFIG_H__ */

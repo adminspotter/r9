@@ -1,9 +1,9 @@
 /* command.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 26 Jul 2006, 09:44:35 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 31 Aug 2014, 08:24:52 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,22 +25,17 @@
  *
  * Changes
  *   18 Jul 2006 TAQ - Created the file.
+ *   31 Aug 2014 TAQ - We no longer need the client.h include.
  *
  * Things to do
  *
- * $Id: command.c 10 2013-01-25 22:13:00Z trinity $
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
 #include <Xm/Frame.h>
 #include <Xm/Label.h>
-
-#include "client.h"
 
 static Widget comframe, comarea;
 

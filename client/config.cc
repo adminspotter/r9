@@ -1,6 +1,6 @@
 /* config.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Jul 2014, 13:51:36 tquirk
+ *   last updated 31 Aug 2014, 11:00:54 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -36,6 +36,7 @@
  *   01 Aug 2006 TAQ - Added modified element to the config structure, to
  *                     keep track of whether we actually need to save or not.
  *   12 Sep 2013 TAQ - Added an include for USHRT_MAX.
+ *   31 Aug 2014 TAQ - We're now ConfigData, to match the rest of our classes.
  *
  * Things to do
  *
@@ -54,8 +55,8 @@
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 
-const int config_data::SERVER_PORT    = 8500;
-const char config_data::SERVER_ADDR[] = "192.168.100.2";
+const int ConfigData::SERVER_PORT    = 8500;
+const char ConfigData::SERVER_ADDR[] = "192.168.100.2";
 
 typedef void (*config_read_t)(const std::string&, const std::string&, void *);
 typedef void (*config_write_t)(std::ostream&, void *);
@@ -65,7 +66,7 @@ static void read_integer(const std::string&, const std::string&, void *);
 static void write_string(std::ostream&, void *);
 static void write_integer(std::ostream&, void *);
 
-config_data config;
+ConfigData config;
 
 /* File-global variables */
 const struct config_handlers
@@ -86,31 +87,31 @@ handlers[] =
 #undef off
 };
 
-config_data::config_data()
+ConfigData::ConfigData()
     : argv(), config_dir(), config_fname(),
-      server_addr(config_data::SERVER_ADDR), username(), password()
+      server_addr(ConfigData::SERVER_ADDR), username(), password()
 {
     this->set_defaults();
 }
 
-config_data::~config_data()
+ConfigData::~ConfigData()
 {
     this->argv.clear();
 }
 
-void config_data::set_defaults(void)
+void ConfigData::set_defaults(void)
 {
     this->config_dir   = getenv("HOME");
     this->config_dir   += "/.r9";
     this->config_fname = this->config_dir + "/config";
 
-    this->server_addr  = config_data::SERVER_ADDR;
-    this->server_port  = config_data::SERVER_PORT;
+    this->server_addr  = ConfigData::SERVER_ADDR;
+    this->server_port  = ConfigData::SERVER_PORT;
     this->username     = "";
     this->password     = "";
 }
 
-void config_data::parse_command_line(int count, char **args)
+void ConfigData::parse_command_line(int count, char **args)
 {
     int i;
     std::vector<std::string>::iterator j;
@@ -147,7 +148,7 @@ void config_data::parse_command_line(int count, char **args)
     }
 }
 
-void config_data::read_config_file(void)
+void ConfigData::read_config_file(void)
 {
     std::ifstream ifs(this->config_fname);
     std::string str;
@@ -160,7 +161,7 @@ void config_data::read_config_file(void)
     while (!ifs.eof());
 }
 
-void config_data::write_config_file(void)
+void ConfigData::write_config_file(void)
 {
     /* We want to create the file without any group or world perms */
     mode_t oldmask = umask(S_IRWXG | S_IRWXO);
@@ -184,7 +185,7 @@ void config_data::write_config_file(void)
     ofs.close();
 }
 
-void config_data::make_config_dirs(void)
+void ConfigData::make_config_dirs(void)
 {
     struct stat state;
     std::string dirname = this->config_dir;
@@ -230,7 +231,7 @@ void config_data::make_config_dirs(void)
     }
 }
 
-void config_data::parse_config_line(std::string& line)
+void ConfigData::parse_config_line(std::string& line)
 {
     int i;
     std::string::size_type found;

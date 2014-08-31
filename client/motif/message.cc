@@ -1,9 +1,9 @@
-/* message.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 12 Sep 2013, 14:20:44 trinity
+/* message.cc
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 30 Aug 2014, 17:19:32 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,29 +27,34 @@
  *   26 Jul 2006 TAQ - Renamed a bunch of stuff.  Setting the blank message
  *                     to a space, rather than an empty string, solved the
  *                     vertical resize problem.
+ *   24 Aug 2014 TAQ - We're now going to have the message box function as
+ *                     a sink for std::clog messages, via the MessageLog
+ *                     streambuf.
  *
  * Things to do
  *   - Have the message post duration configurable?
  *
- * $Id: message.c 10 2013-01-25 22:13:00Z trinity $
  */
 
-#include <stdio.h>
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
 #include <Xm/Frame.h>
 #include <Xm/Label.h>
 
-#include "client.h"
+#include <iostream>
+
+#include "msglog.h"
 
 static void main_unpost_message_timeout(XtPointer, XtIntervalId *);
 
-static Widget msgframe, msglabel;
+static Widget msglabel;
 static XtIntervalId timer = 0L;
 
 Widget create_message_area(Widget parent)
 {
+    Widget msgframe;
+
     msgframe = XtVaCreateManagedWidget("msgframe",
                                        xmFrameWidgetClass,
                                        parent,
@@ -59,20 +64,13 @@ Widget create_message_area(Widget parent)
                                        xmLabelWidgetClass,
                                        msgframe,
                                        NULL);
+    std::clog.rdbuf(new MessageLog());
     return msgframe;
 }
 
-/* ARGSUSED */
-void main_message_post_callback(Widget w,
-                                XtPointer client_data,
-                                XtPointer call_data)
+void main_post_message(const std::string& msg)
 {
-    main_post_message((char *)client_data);
-}
-
-void main_post_message(char *msg)
-{
-    XmString str = XmStringCreateLocalized(msg);
+    XmString str = XmStringCreateLocalized(const_cast<char *>(msg.c_str()));
 
     if (timer != 0L)
     {

@@ -1,9 +1,9 @@
-/* client.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 12 Sep 2013, 14:13:54 trinity
+/* client.cc
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 31 Aug 2014, 14:36:31 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -36,10 +36,15 @@
  *                     stuff just isn't going to work like we thought.
  *   01 Aug 2006 TAQ - Removed the debug.h include, since we're getting rid
  *                     of it.
+ *   24 Aug 2014 TAQ - Converted to C++, since the geometry and texture caches
+ *                     are now C++.
+ *   31 Aug 2014 TAQ - Started integrating the Comm and ConfigData
+ *                     objects.  This is going to be a bit more
+ *                     complex than I thought.
  *
  * Things to do
+ *   - Flesh out the save_state routine.
  *
- * $Id: client.c 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <stdlib.h>
@@ -53,24 +58,35 @@
 #include <Xm/MainW.h>
 #include <X11/Xmu/Editres.h>
 
+#include <vector>
+
 #include "client.h"
 
-/* File-static routines */
+#include "../config.h"
+#include "../comm.h"
+#include "../geometry.h"
+#include "../texture.h"
+
 static void save_callback(Widget, XtPointer, XtPointer);
 static void save_complete_callback(Widget, XtPointer, XtPointer);
 static void die_callback(Widget, XtPointer, XtPointer);
 static void interact_callback(Widget, XtPointer, XtPointer);
 static Boolean save_state(void);
+static void cleanup_comm(void);
 
-/* File-global variables */
-static XtAppContext context;
-static Widget toplevel, mainwin;
+static Widget toplevel;
 static String restart_command[6], discard_command[4];
 
-extern int thread_exit_flag;
+GeometryCache *geom;
+TextureCache *tex;
+/* We can be connected to more than one server at a time */
+std::vector<Comm *> comm;
 
 int main(int argc, char **argv)
 {
+    XtAppContext context;
+    Widget mainwin;
+
     toplevel = XtVaOpenApplication(&context, "Revision9",
                                    NULL, 0,
                                    &argc, argv,
@@ -78,7 +94,7 @@ int main(int argc, char **argv)
                                    XtNwidth, 800,
                                    XtNheight, 600,
                                    NULL);
-    /* Set up some stuff for session management */
+    /* Session management */
     restart_command[0] = argv[0];
     XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
     XtAddCallback(toplevel, XtNcancelCallback, save_complete_callback, NULL);
@@ -86,12 +102,10 @@ int main(int argc, char **argv)
                   XtNsaveCompleteCallback, save_complete_callback, NULL);
     XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
 
-    /* Load up the config file, or create a new one if there isn't one */
-    load_settings();
-    setup_geometry();
-    setup_texture();
+    config.parse_command_line(argc, argv);
+    geom = new GeometryCache("geometry");
+    tex = new TextureCache("texture");
 
-    /* Create the actual window and subparts thereof */
     mainwin = XmCreateMainWindow(toplevel, "mainwin", NULL, 0);
     XtManageChild(mainwin);
     XtVaSetValues(mainwin,
@@ -110,14 +124,15 @@ int main(int argc, char **argv)
                       True,
                       _XEditResCheckMessages,
                       NULL);
-    /* Show the main window and enter the event loop */
+
     XtRealizeWidget(toplevel);
-    main_post_message("Welcome to Revision 9");
+    std::clog << "Welcome to Revision 9" << std::endl;
     XtAppMainLoop(context);
 
-    cleanup_texture();
-    cleanup_geometry();
-    save_settings();
+    cleanup_comm();
+    delete tex;
+    delete geom;
+    config.write_config_file();
 
     return 0;
 }
@@ -205,4 +220,23 @@ static Boolean save_state(void)
                   NULL);
     free(cwd);
     return True;
+}
+
+/* ARGSUSED */
+static void setup_comm_callback(Widget w,
+                                XtPointer client_data,
+                                XtPointer call_data)
+{
+}
+
+void cleanup_comm(void)
+{
+    while (!comm.empty())
+    {
+        Comm *c = comm.back();
+        c->send_logout();
+        sleep(0);
+        delete c;
+        comm.pop_back();
+    }
 }

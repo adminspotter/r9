@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Aug 2014, 18:14:36 tquirk
+ *   last updated 31 Aug 2014, 14:38:39 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -39,6 +39,8 @@
  *   02 Aug 2014 TAQ - The whole type demangling thing was turning out to
  *                     be more hassle than it was worth.  Just added the
  *                     type name member, set by a constructor argument.
+ *   31 Aug 2014 TAQ - Instead of passing the default object into the
+ *                     constructor, we'll load objid 0 from the disk.
  *
  * Things to do
  *   - See if we can nab the config directory out of the config object when
@@ -193,7 +195,7 @@ class ObjectCache
         };
 
   public:
-    ObjectCache(const std::string type_name, const obj_type& obj)
+    ObjectCache(const std::string type_name)
         : objects(), type(type_name), store(), cache()
         {
             int ret;
@@ -223,7 +225,7 @@ class ObjectCache
                 throw std::runtime_error(s.str());
             }
 
-            this->objects[0].obj = obj;
+            this->load(0LL);
         };
     ~ObjectCache()
         {

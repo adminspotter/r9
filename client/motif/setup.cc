@@ -1,9 +1,9 @@
-/* setup.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 01 Aug 2006, 08:41:05 trinity
+/* setup.cc
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 31 Aug 2014, 15:55:51 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2002  Trinity Annabelle Quirk
+ * Copyright (C) 2014  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -43,13 +43,14 @@
  *   - When we type in an invalid hostname/IP, set keyboard focus to the
  *   networkhost box.  It's not currently working properly.
  *
- * $Id: setup.c 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <time.h>
@@ -61,7 +62,6 @@
 #include <Xm/SelectioB.h>
 #include <Xm/Notebook.h>
 #include <Xm/PushB.h>
-#include "client.h"
 
 #include <Xm/Label.h>
 #include <Xm/ToggleB.h>
@@ -70,7 +70,11 @@
 #include <Xm/TextF.h>
 #include <Xm/FileSB.h>
 
+#include <iostream>
+#include <string>
+
 #include "client.h"
+#include "../config.h"
 
 static void create_video_settings_form(Widget, int);
 static void create_sound_settings_form(Widget, int);
@@ -258,7 +262,7 @@ void settings_show_callback(Widget w,
                             XtPointer client_data,
                             XtPointer call_data)
 {
-    int page_num = (int)client_data;
+    uintptr_t page_num = (uintptr_t)client_data;
 
     if (!XtIsManaged(settingbox))
         XtManageChild(settingbox);
@@ -270,77 +274,51 @@ static void settings_apply_callback(Widget w,
                                     XtPointer client_data,
                                     XtPointer call_data)
 {
-    char *c_ptr, errstr[256];
+    int ret;
+    char *c_ptr;
     u_int16_t newport;
-    struct in_addr tmp_addr;
-    struct hostent *he;
+    struct addrinfo hints, *ai;
 
     XtVaGetValues(networkhost, XmNvalue, &c_ptr, NULL);
-    if (inet_aton(c_ptr, &tmp_addr) != 0)
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    if ((ret = getaddrinfo(c_ptr, NULL, &hints, &ai)) != 0)
     {
-        /* It's a valid IP address */
-        if (tmp_addr.s_addr != config.server_addr.s_addr)
-        {
-            config.server_addr.s_addr = tmp_addr.s_addr;
-            config.modified = 1;
-        }
-    }
-    else if ((he = gethostbyname(c_ptr)) != NULL)
-    {
-        /* It's a valid hostname for which we get a lookup */
-        if (((struct in_addr *)(*he->h_addr_list))->s_addr
-            != config.server_addr.s_addr)
-        {
-            config.server_addr.s_addr
-                = ((struct in_addr *)(*he->h_addr_list))->s_addr;
-            config.modified = 1;
-        }
+        /* It's a valid IP address or hostname */
+        config.server_addr = c_ptr;
     }
     else
     {
-        /* It's invalid as a hostname or IP address; throw up some kind of
-         * error dialog here, and don't popdown the config box.  And since
-         * we're really spiffy, we'll also turn to the network settings page
-         * and put the keyboard focus into the networkhost box.
+        /* It's invalid as a hostname or IP address; turn to the
+         * network settings page and put the keyboard focus into the
+         * networkhost box.  If we're trying to dismiss the box as
+         * well, we should not do it.
          */
-        snprintf(errstr, sizeof(errstr),
-                 "ARGH, got an invalid hostname/IP address");
-        main_post_message(errstr);
+        std::cout << "Invalid hostname/IP address: " << c_ptr << ": "
+                  << gai_strerror(ret) << std::endl;
         XtVaSetValues(settingnb, XmNcurrentPageNumber, 3, NULL);
         /* Set keyboard focus to networkhost - this doesn't work */
-        XtSetKeyboardFocus(settingbox, networkhost);
+        XtSetKeyboardFocus(settingbox, XtParent(networkhost));
     }
-    XtFree((void *)c_ptr);
+    freeaddrinfo(ai);
+    XtFree(c_ptr);
 
-    /* Add sanity checking */
     XtVaGetValues(networkport, XmNvalue, &c_ptr, NULL);
     newport = htons((u_int16_t)atoi(c_ptr));
     if (newport != config.server_port)
-    {
         config.server_port = newport;
-        config.modified = 1;
-    }
-    XtFree((void *)c_ptr);
+    XtFree(c_ptr);
 
     XtVaGetValues(networkuser, XmNvalue, &c_ptr, NULL);
-    if (strcmp(config.username, c_ptr))
-    {
-        /*if (config.username)
-            free(config.username);*/
-        config.username = strdup(c_ptr);
-        config.modified = 1;
-    }
-    XtFree((void *)c_ptr);
+    if (config.username != c_ptr)
+        config.username = c_ptr;
+    XtFree(c_ptr);
 
     XtVaGetValues(networkpass, XmNvalue, &c_ptr, NULL);
-    if (strcmp(config.password, c_ptr))
-    {
-        /*if (config.password)
-            free(config.password);*/
-        config.password = strdup(c_ptr);
-        config.modified = 1;
-    }
-    XtFree((void *)c_ptr);
+    if (config.password != c_ptr)
+        config.password = c_ptr;
+    XtFree(c_ptr);
 }
 
 /* ARGSUSED */
@@ -348,22 +326,11 @@ static void settings_cancel_callback(Widget w,
                                      XtPointer client_data,
                                      XtPointer call_data)
 {
-    struct hostent *he;
-    char c_str[64], *c_ptr;
+    char c_str[64];
 
-    /* The gethostbyaddr and inet_ntoa return values are static and
-     * do not need freeing
-     */
-    if ((he = gethostbyaddr(&(config.server_addr),
-                            sizeof(struct in_addr),
-                            AF_INET)) != NULL)
-        c_ptr = he->h_name;
-    else
-        c_ptr = inet_ntoa(config.server_addr);
-    XtVaSetValues(networkhost, XmNvalue, c_ptr, NULL);
-
-    snprintf(c_str, sizeof(c_str), "%d", ntohs(config.server_port));
+    XtVaSetValues(networkhost, XmNvalue, config.server_addr.c_str(), NULL);
+    snprintf(c_str, sizeof(c_str), "%d", config.server_port);
     XtVaSetValues(networkport, XmNvalue, c_str, NULL);
-    XtVaSetValues(networkuser, XmNvalue, config.username, NULL);
-    XtVaSetValues(networkpass, XmNvalue, config.password, NULL);
+    XtVaSetValues(networkuser, XmNvalue, config.username.c_str(), NULL);
+    XtVaSetValues(networkpass, XmNvalue, config.password.c_str(), NULL);
 }
