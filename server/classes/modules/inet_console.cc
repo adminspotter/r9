@@ -1,9 +1,9 @@
 /* inet_console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2014, 11:59:06 trinityquirk
+ *   last updated 10 May 2015, 14:39:41 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,12 +28,11 @@
  *   10 Jul 2014 TAQ - Missed one catch of an int, now a runtime_error.  Also
  *                     when a constructor throws an exception, memory is
  *                     automatically cleaned up.
+ *   02 May 2015 TAQ - Moved most of the hostname-grabbing into wrap_request,
+ *                     since that's the only place it's used.  Switched to
+ *                     hosts_ctl, since it does a lot more stuff automatically.
  *
  * Things to do
- *   - Figure out a clean way to get the name information in here for
- *     the request_init call in wrap_request.  Not critical at the moment
- *     since my host doesn't have an easily-available libwrap, but should
- *     be handled at some point.
  *
  */
 
@@ -42,6 +41,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #ifdef HAVE_LIBWRAP
+#include <netdb.h>
 #include <tcpd.h>
 #endif
 
@@ -148,56 +148,71 @@ void *InetConsole::listener(void *arg)
     int newsock;
     struct sockaddr_storage ss;
     socklen_t ss_len = sizeof(ss);
-    char address[INET6_ADDRSTRLEN];
     ConsoleSession *sess = NULL;
 
     while ((newsock = accept(con->console_sock,
                              reinterpret_cast<struct sockaddr *>(&ss),
                              &ss_len)) != -1)
     {
-        void *addr;
-
-        switch (ss.ss_family)
+        try
         {
-          case AF_INET:
-            addr = (void *)&(reinterpret_cast<struct sockaddr_in *>(&ss))->sin_addr;
-            break;
-          case AF_INET6:
-            addr = (void *)&(reinterpret_cast<struct sockaddr_in6 *>(&ss))->sin6_addr;
-            break;
-          default:
-            addr = NULL;
-        }
-        inet_ntop(ss.ss_family, addr, address, sizeof(address));
-
-        if (con->wrap_request(newsock))
-        {
-            try { sess = new ConsoleSession(newsock); }
-            catch (std::exception& e)
+            if (con->wrap_request(&ss))
             {
-                close(newsock);
-                continue;
+                sess = new ConsoleSession(newsock);
+                con->sessions.push_back(sess);
             }
-            con->sessions.push_back(sess);
+            else
+                close(newsock);
         }
-        else
+        catch (std::exception& e)
+        {
             close(newsock);
+            continue;
+        }
         ss_len = sizeof(ss);
     }
     pthread_exit(NULL);
     return NULL;
 }
 
-int InetConsole::wrap_request(int sock)
+int InetConsole::wrap_request(struct sockaddr_storage *ss)
 {
 #ifdef HAVE_LIBWRAP
-    struct request_info req;
+    char hostname[1024];
+    char ipaddr[INET6_ADDRSTRLEN];
+    void *addr;
+    int retval;
 
-    request_init(&req,
-                 RQ_FILE, sock,
-                 RQ_DAEMON, config.log_prefix, NULL);
-    fromhost(&req);
-    return hosts_access(&req);
+    if ((retval = getnameinfo(ss, sizeof(sockaddr_storage),
+                              hostname, sizeof(hostname),
+                              NULL, 0, 0)))
+    {
+        std::ostringstream s;
+        s << "could not get hostname: "
+          << gai_strerror(retval) << " (" << retval << ")";
+        throw std::runtime_error(s.str());
+    }
+
+    switch (ss.ss_family)
+    {
+      case AF_INET:
+        addr = (void *)&(reinterpret_cast<struct sockaddr_in *>(&ss))->sin_addr;
+        break;
+      case AF_INET6:
+        addr = (void *)&(reinterpret_cast<struct sockaddr_in6 *>(&ss))->sin6_addr;
+        break;
+      default:
+        addr = NULL;
+    }
+    if (!inet_ntop(ss.ss_family, addr, ipaddr, sizeof(ipaddr)))
+    {
+        std::ostringstream s;
+        s << "could not convert IP to printable format: "
+          << strerror(errno) << " (" << errno << ")";
+        throw std::runtime_error(s.str());
+    }
+
+    return hosts_ctl(config.log_prefix.c_str(), hostname, ipaddr, NULL);
 #else
     return 1;
 #endif

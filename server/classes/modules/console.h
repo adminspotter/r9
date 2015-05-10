@@ -1,6 +1,6 @@
 /* console.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2014, 11:46:29 tquirk
+ *   last updated 02 May 2015, 22:35:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -46,6 +46,8 @@
  *   06 Jul 2014 TAQ - A blank constructor in the Console base class was
  *                     preventing the derived classes from linking properly,
  *                     so it's gone.
+ *   02 May 2015 TAQ - The libwrap call changed slightly, so had to update
+ *                     it here.
  *
  * Things to do
  *
@@ -56,6 +58,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <netdb.h>
 #include <pthread.h>
 
@@ -139,7 +142,7 @@ class InetConsole : public Console
     /* Can throw int */
     void open_socket(struct addrinfo *);
 
-    int wrap_request(int);
+    int wrap_request(struct sockaddr_storage *);
 };
 
 #endif /* __INC_CONSOLE_H__ */
