@@ -1,7 +1,5 @@
-*.a
-*.o
-*.la
-*.lo
+*.[ao]
+*.l[ao]
 *.so
 *.dylib
 #*#
@@ -9,7 +7,27 @@
 .DS_Store
 *~
 TAGS
-Makefile.depend
 .libs/
 old/
-server/server
+server/r9d
+server/r9subserver
+
+# Automake
+Makefile
+Makefile.in
+Makefile.orig
+
+# Autoconf
+/aclocal.m4
+/autom4te.cache
+autoscan.log
+/config.*
+/configure
+/depcomp
+/install-sh
+/libtool
+/ltmain.sh
+/missing
+/stamp-h*
+.deps/
+.dirstamp
