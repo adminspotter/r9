@@ -12,4 +12,4 @@ TAGS
 Makefile.depend
 .libs/
 old/
-server
+server/server

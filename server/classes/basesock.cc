@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:01:13 tquirk
+ *   last updated 24 Jul 2015, 15:11:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -63,7 +63,7 @@
 #include "basesock.h"
 
 #include "../server.h"
-e#include "../config.h"
+#include "../config.h"
 #include "../log.h"
 
 basesock::basesock(struct addrinfo *ai, uint16_t port)

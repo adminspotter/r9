@@ -1,6 +1,6 @@
 /* log.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2014, 10:51:05 trinityquirk
+ *   last updated 24 Jul 2015, 15:12:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -32,6 +32,8 @@
  * Things to do
  *
  */
+
+#include <cstring>
 
 #include "log.h"
 

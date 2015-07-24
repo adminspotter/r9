@@ -1,6 +1,6 @@
 /* inet_console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:15:30 tquirk
+ *   last updated 24 Jul 2015, 15:09:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -47,6 +47,7 @@
 #endif
 
 #include <cstdint>
+#include <cstring>
 #include <sstream>
 #include <stdexcept>
 
