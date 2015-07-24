@@ -1,9 +1,9 @@
 /* geometry.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 11 Aug 2006, 13:35:12 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jul 2015, 13:28:42 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,10 +37,10 @@
  *                     radius, and that's it.
  *   09 Jul 2006 TAQ - Removed methods which are no longer needed.
  *   11 Aug 2006 TAQ - Removed unneeded methods.
+ *   24 Jul 2015 TAQ - Comment cleanup.
  *
  * Things to do
  *
- * $Id: geometry.cc 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include "geometry.h"

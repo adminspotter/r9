@@ -1,9 +1,9 @@
 /* game_obj.cc
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 10 May 2014, 17:21:42 tquirk
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jul 2015, 13:33:45 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -47,6 +47,7 @@
  *   29 Nov 2009 TAQ - Added set_object_id method.
  *   29 Jun 2010 TAQ - Added new members to constructor, renamed some others,
  *                     commented most of them out.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - Implement the destructor if necessary.
@@ -54,7 +55,6 @@
  *   values (not that there's likely to be a very large chance of
  *   that happening, but you never know).
  *
- * $Id: game_obj.cc 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <algorithm>
@@ -63,20 +63,20 @@
 #include "zone.h"
 
 pthread_mutex_t GameObject::max_mutex = PTHREAD_MUTEX_INITIALIZER;
-u_int64_t GameObject::max_id_value = 0LL;
+uint64_t GameObject::max_id_value = 0LL;
 
-u_int64_t GameObject::reset_max_id(void)
+uint64_t GameObject::reset_max_id(void)
 {
-    u_int64_t val;
+    uint64_t val;
 
     pthread_mutex_lock(&GameObject::max_mutex);
     val = GameObject::max_id_value;
-    GameObject::max_id_value = (u_int64_t)0;
+    GameObject::max_id_value = (uint64_t)0;
     pthread_mutex_unlock(&GameObject::max_mutex);
     return val;
 }
 
-GameObject::GameObject(Geometry *g, u_int64_t newid)
+GameObject::GameObject(Geometry *g, uint64_t newid)
 {
     this->default_geometry = this->geometry = g;
     pthread_mutex_lock(&GameObject::max_mutex);
@@ -104,7 +104,7 @@ GameObject *GameObject::clone(void) const
     return new GameObject(default_geometry);
 }
 
-u_int64_t GameObject::get_object_id(void) const
+uint64_t GameObject::get_object_id(void) const
 {
     return this->id_value;
 }

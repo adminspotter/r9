@@ -1,9 +1,9 @@
 /* subserver.h
- *   by Trinity Quirk <trinity@io.com>
- *   last updated 13 Sep 2007, 09:20:18 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jul 2015, 13:22:06 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,10 +28,10 @@
  *   11 May 1998 TAQ - Added the player info structure and some comments.
  *   15 May 2006 TAQ - Added the GPL notice.
  *   13 Sep 2007 TAQ - Added extern "C" stuff for availability in C++ code.
+ *   24 Jul 2015 TAQ - Comment cleanup.
  *
  * Things to do
  *
- * $Id: subserver.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_SUBSERVER_H__

@@ -1,6 +1,6 @@
 /* inet_console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2015, 14:39:41 tquirk
+ *   last updated 24 Jul 2015, 13:15:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -31,6 +31,7 @@
  *   02 May 2015 TAQ - Moved most of the hostname-grabbing into wrap_request,
  *                     since that's the only place it's used.  Switched to
  *                     hosts_ctl, since it does a lot more stuff automatically.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -45,12 +46,13 @@
 #include <tcpd.h>
 #endif
 
+#include <cstdint>
 #include <sstream>
 #include <stdexcept>
 
 #include "console.h"
 
-InetConsole::InetConsole(u_int16_t port, struct addrinfo *ai)
+InetConsole::InetConsole(uint16_t port, struct addrinfo *ai)
 {
     this->port_num = port;
     this->open_socket(ai);

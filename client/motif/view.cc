@@ -1,9 +1,9 @@
 /* view.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 16:14:24 tquirk
+ *   last updated 24 Jul 2015, 12:26:21 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -52,6 +52,7 @@
  *                     (i.e. we draw EVERYTHING in the hash).
  *   30 Aug 2014 TAQ - Started removing the hash table, since we have a very
  *                     nice new cache object that does that for us.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - Use our fancy cache object, instead of doing one here by hand.
@@ -62,6 +63,7 @@
  *
  */
 
+#include <stdint.h>
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
@@ -75,9 +77,9 @@
 
 struct object
 {
-    u_int64_t object_id;
-    u_int64_t geometry_id;
-    u_int16_t frame_number;
+    uint64_t object_id;
+    uint64_t geometry_id;
+    uint16_t frame_number;
     GLdouble position[3], orientation[3];
 };
 
@@ -201,7 +203,7 @@ void expose_callback(Widget w, XtPointer client_data, XtPointer call_data)
     }
 }*/
 
-/*void move_object(u_int64_t objectid, u_int16_t frame,
+/*void move_object(uint64_t objectid, uint16_t frame,
                  Eigen::Vector3d& newpos,
                  Eigen::Vector3d& neworient)
 {

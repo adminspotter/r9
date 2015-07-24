@@ -1,9 +1,9 @@
 /* motion.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 18:10:45 tquirk
+ *   last updated 24 Jul 2015, 13:29:46 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,10 +24,10 @@
  *
  * Changes
  *   10 May 2014 TAQ - Created the file.
+ *   24 Jul 2015 TAQ - Comment cleanup.
  *
  * Things to do
  *
- * $Id$
  */
 
 #include "motion.h"

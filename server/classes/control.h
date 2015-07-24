@@ -1,9 +1,9 @@
 /* control.h                                               -*- C++ -*-
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 10 May 2014, 17:28:41 tquirk
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jul 2015, 13:28:13 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -63,11 +63,11 @@
  *                     the controlling character, rather than the object that
  *                     is being controlled.  Added take_over method.  Updated
  *                     the username to be std::string instead of a char *.
+ *   24 Jul 2015 TAQ - Converted to stdint types.  Comment cleanup.
  *
  * Things to do
  *   - The send* methods seem weird here.  Do they really belong?
  *
- * $Id$
  */
 
 #ifndef __INC_CONTROL_H__
@@ -75,7 +75,7 @@
 
 #include <sys/types.h>
 
-/* The STL types */
+#include <cstdint>
 #include <map>
 #include <string>
 
@@ -86,17 +86,17 @@ class Control;
 class Control
 {
   public:
-    u_int64_t userid;
+    uint64_t userid;
     Motion *default_slave, *slave;
     void *parent;  /* This will point at the sending thread queue */
     std::string username;
-    std::map<u_int16_t, action_level> actions;
+    std::map<uint16_t, action_level> actions;
 
   private:
-    u_int64_t sequence;
+    uint64_t sequence;
 
   public:
-    Control(u_int64_t, Motion *);
+    Control(uint64_t, Motion *);
     ~Control();
 
     bool take_over(Motion *);
@@ -104,7 +104,7 @@ class Control
     void execute_action(action_request&, size_t);
     void send(packet *);
     void send_ack(int, int = 0);
-    void send_update(u_int64_t);
+    void send_update(uint64_t);
     void send_ping(void);
 };
 

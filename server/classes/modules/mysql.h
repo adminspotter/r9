@@ -1,9 +1,9 @@
 /* mysql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2014, 09:52:59 tquirk
+ *   last updated 24 Jul 2015, 13:16:48 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,6 +32,7 @@
  *                     inherit from DB.
  *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
  *   09 Jul 2014 TAQ - db_connect now returns nothing and throws exceptions.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -41,6 +42,8 @@
 #define __INC_MYSQL_H__
 
 #include <mysql.h>
+
+#include <cstdint>
 
 #include "db.h"
 
@@ -55,18 +58,18 @@ class MySQL : public DB
     ~MySQL();
 
     /* Player functions */
-    u_int64_t check_authentication(const std::string&, const std::string&);
-    int check_authorization(u_int64_t, u_int64_t);
-    int open_new_login(u_int64_t, u_int64_t);
-    int check_open_login(u_int64_t, u_int64_t);
-    int close_open_login(u_int64_t, u_int64_t);
-    int get_player_server_skills(u_int64_t, u_int64_t,
-                                 std::map<u_int16_t,
+    uint64_t check_authentication(const std::string&, const std::string&);
+    int check_authorization(uint64_t, uint64_t);
+    int open_new_login(uint64_t, uint64_t);
+    int check_open_login(uint64_t, uint64_t);
+    int close_open_login(uint64_t, uint64_t);
+    int get_player_server_skills(uint64_t, uint64_t,
+                                 std::map<uint16_t,
                                  action_level>&);
 
     /* Server functions */
-    int get_server_skills(std::map<u_int16_t, action_rec>&);
-    int get_server_objects(std::map<u_int64_t, game_object_list_element> &);
+    int get_server_skills(std::map<uint16_t, action_rec>&);
+    int get_server_objects(std::map<uint64_t, game_object_list_element> &);
 
   private:
     void db_connect(void);

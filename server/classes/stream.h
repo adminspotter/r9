@@ -1,9 +1,9 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 18:00:34 tquirk
+ *   last updated 24 Jul 2015, 13:12:01 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,6 +37,7 @@
  *   15 Jun 2014 TAQ - Moved the send worker here as well.
  *   01 Jul 2014 TAQ - Base class changed slightly with move of access pool
  *                     into the listen_socket, so login_user became do_login.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -47,6 +48,8 @@
 
 #include <sys/types.h>
 #include <sys/select.h>
+
+#include <cstdint>
 #include <vector>
 
 #include "control.h"
@@ -57,7 +60,7 @@ class stream_user : public base_user
   public:
     int subsrv, fd;
 
-    stream_user(u_int64_t, Control *);
+    stream_user(uint64_t, Control *);
 
     const stream_user& operator=(const stream_user&);
 };
@@ -85,12 +88,12 @@ class stream_socket : public listen_socket
     int pass_fd(int, int);
 
   public:
-    stream_socket(struct addrinfo *, u_int16_t);
+    stream_socket(struct addrinfo *, uint16_t);
     ~stream_socket();
 
     void start(void);
 
-    void do_login(u_int64_t, Control *, access_list&);
+    void do_login(uint64_t, Control *, access_list&);
 
     static void *stream_listen_worker(void *);
     static void *stream_reaper_worker(void *);

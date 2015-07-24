@@ -1,9 +1,9 @@
 /* console.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 May 2015, 22:35:34 tquirk
+ *   last updated 24 Jul 2015, 13:14:02 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -48,6 +48,7 @@
  *                     so it's gone.
  *   02 May 2015 TAQ - The libwrap call changed slightly, so had to update
  *                     it here.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -130,10 +131,10 @@ class UnixConsole : public Console
 class InetConsole : public Console
 {
   private:
-    u_int16_t port_num;
+    uint16_t port_num;
 
   public:
-    InetConsole(u_int16_t, struct addrinfo *);
+    InetConsole(uint16_t, struct addrinfo *);
     ~InetConsole();
 
     static void *listener(void *);

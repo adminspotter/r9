@@ -1,9 +1,9 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Aug 2014, 18:09:05 tquirk
+ *   last updated 24 Jul 2015, 12:21:13 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -76,6 +76,7 @@
  *   23 Jul 2014 TAQ - Include cleanups.
  *   02 Aug 2014 TAQ - Removed all the pre-transcoded strings, since they
  *                     were totally not working as expected.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -83,6 +84,7 @@
 
 #include <glut.h>
 
+#include <cstdint>
 #include <cstring>
 #include <sstream>
 #include <iomanip>
@@ -174,7 +176,7 @@ void GeometryParser::open_sphere(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
-    u_int64_t tid;
+    uint64_t tid;
     GLfloat radius;
 
     if (this->current == frame_st)
@@ -233,7 +235,7 @@ void GeometryParser::open_polygon(XNS::AttributeList& attrs)
 {
     int i;
     char *str;
-    u_int64_t tid;
+    uint64_t tid;
 
     if (this->current == polylist_st || this->current == polygon_en)
     {

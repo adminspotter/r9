@@ -1,9 +1,9 @@
 /* db.h                                                     -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 17:44:17 tquirk
+ *   last updated 24 Jul 2015, 13:14:34 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,6 +37,7 @@
  *                     use them in the constructors too.
  *   01 Jul 2014 TAQ - check_authentication now takes std::strings, rather
  *                     than char *s.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -74,19 +75,19 @@ class DB
     virtual ~DB();
 
     /* Player functions */
-    virtual u_int64_t check_authentication(const std::string&,
+    virtual uint64_t check_authentication(const std::string&,
                                            const std::string&) = 0;
-    virtual int check_authorization(u_int64_t, u_int64_t) = 0;
-    virtual int open_new_login(u_int64_t, u_int64_t) = 0;
-    virtual int check_open_login(u_int64_t, u_int64_t) = 0;
-    virtual int close_open_login(u_int64_t, u_int64_t) = 0;
-    virtual int get_player_server_skills(u_int64_t, u_int64_t,
-                                         std::map<u_int16_t,
+    virtual int check_authorization(uint64_t, uint64_t) = 0;
+    virtual int open_new_login(uint64_t, uint64_t) = 0;
+    virtual int check_open_login(uint64_t, uint64_t) = 0;
+    virtual int close_open_login(uint64_t, uint64_t) = 0;
+    virtual int get_player_server_skills(uint64_t, uint64_t,
+                                         std::map<uint16_t,
                                          action_level>&) = 0;
 
     /* Server functions */
-    virtual int get_server_skills(std::map<u_int16_t, action_rec>&) = 0;
-    virtual int get_server_objects(std::map<u_int64_t,
+    virtual int get_server_skills(std::map<uint16_t, action_rec>&) = 0;
+    virtual int get_server_objects(std::map<uint64_t,
                                    game_object_list_element> &) = 0;
 };
 

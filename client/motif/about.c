@@ -1,9 +1,9 @@
 /* about.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 19 Jul 2006, 14:57:33 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jul 2015, 13:31:16 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2006  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,10 +24,10 @@
  *
  * Changes
  *   19 Jul 2006 TAQ - Created the file.
+ *   24 Jul 2015 TAQ - Comment cleanup
  *
  * Things to do
  *
- * $Id: about.c 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <stdio.h>

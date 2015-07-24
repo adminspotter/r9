@@ -1,9 +1,9 @@
 /* game_obj.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jun 2014, 18:25:16 tquirk
+ *   last updated 24 Jul 2015, 13:09:36 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -70,6 +70,7 @@
  *                     in here any longer.
  *   24 Jun 2014 TAQ - Took another look at the const id member, and didn't
  *                     come up with anything.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - Scale might be a useful thing to add here.
@@ -81,7 +82,7 @@
 
 #include <pthread.h>
 
-/* The STL types */
+#include <cstdint>
 #include <string>
 #include <map>
 
@@ -94,9 +95,9 @@ class GameObject
 {
   private:
     static pthread_mutex_t max_mutex;
-    static u_int64_t max_id_value;
+    static uint64_t max_id_value;
 
-    /* const */ u_int64_t id_value;
+    /* const */ uint64_t id_value;
     Geometry *default_geometry;
   public:
     std::map<std::string, attribute> attributes;
@@ -104,14 +105,14 @@ class GameObject
     Geometry *geometry;
 
   public:
-    static u_int64_t reset_max_id(void);
+    static uint64_t reset_max_id(void);
 
-    GameObject(Geometry *, u_int64_t = 0LL);
+    GameObject(Geometry *, uint64_t = 0LL);
     ~GameObject();
 
     GameObject *clone(void) const;
 
-    u_int64_t get_object_id(void) const;
+    uint64_t get_object_id(void) const;
 };
 
 #endif /* __INC_GAME_OBJ_H__ */

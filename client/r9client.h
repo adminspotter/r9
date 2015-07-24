@@ -1,9 +1,9 @@
 /* r9client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Jul 2014, 14:12:20 tquirk
+ *   last updated 24 Jul 2015, 12:27:10 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,6 +41,7 @@
  *                     stuff.
  *   23 Jul 2014 TAQ - Removed more functions which are now inside classes.
  *   26 Jul 2014 TAQ - Removed more stuff which moved inside classes.
+ *   24 Jul 2015 TAQ - Converted to stdint types
  *
  * Things to do
  *
@@ -55,9 +56,9 @@
 #define STORE_PREFIX   "/usr/share/r9/"
 #endif /* STORE_PREFIX */
 
-void draw_geometry(u_int64_t, u_int16_t);
-void draw_texture(u_int64_t);
+void draw_geometry(uint64_t, uint16_t);
+void draw_texture(uint64_t);
 
-void move_object(u_int64_t, u_int16_t, double, double, double, double, double, double);
+void move_object(uint64_t, uint16_t, double, double, double, double, double, double);
 
 #endif /* __INC_R9CLIENT_H__ */

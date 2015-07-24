@@ -1,9 +1,9 @@
 /* byteswap.c
- *   by Trinity Quirk <trinity@ymb.net>
- *   last updated 22 Oct 2007, 23:44:31 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jul 2015, 13:24:05 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2007  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -59,12 +59,12 @@
  *   16 Sep 2007 TAQ - Updated to new changes in proto.h.
  *   22 Oct 2007 TAQ - Added a entry for ping packets.  Added stubs for doing
  *                     a basic packet, which is what the ping uses.
+ *   24 Jul 2015 TAQ - Comment cleanup.
  *
  * Things to do
  *   - Figure out if IPv6 addresses are ever converted to/from network byte
  *   ordering.  They may just be byte-for-byte, and not "ordered" at all.
  *
- * $Id: byteswap.c 10 2013-01-25 22:13:00Z trinity $
  */
 
 #include <netinet/in.h>

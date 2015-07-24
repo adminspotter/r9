@@ -1,9 +1,9 @@
 /* setup.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 15:55:51 tquirk
+ *   last updated 24 Jul 2015, 12:24:40 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,6 +38,7 @@
  *   01 Aug 2006 TAQ - Removed debugging.  We're now keeping track of the new
  *                     modified element in the config structure, and setting
  *                     it when appropriate.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - When we type in an invalid hostname/IP, set keyboard focus to the
@@ -276,7 +277,7 @@ static void settings_apply_callback(Widget w,
 {
     int ret;
     char *c_ptr;
-    u_int16_t newport;
+    uint16_t newport;
     struct addrinfo hints, *ai;
 
     XtVaGetValues(networkhost, XmNvalue, &c_ptr, NULL);
@@ -305,7 +306,7 @@ static void settings_apply_callback(Widget w,
     XtFree(c_ptr);
 
     XtVaGetValues(networkport, XmNvalue, &c_ptr, NULL);
-    newport = htons((u_int16_t)atoi(c_ptr));
+    newport = htons((uint16_t)atoi(c_ptr));
     if (newport != config.server_port)
         config.server_port = newport;
     XtFree(c_ptr);

@@ -1,9 +1,9 @@
 /* config.h                                                -*- C++ -*-
- *   by Trinity Quirk <tquick@ymb.net>
- *   last updated 11 Jul 2014, 17:22:11 tquirk
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jul 2015, 13:35:44 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -79,6 +79,7 @@
  *                     interesting parts of defaults.h into the class.
  *   23 Jun 2014 TAQ - Moved all the constant initializers into the .cc file.
  *   11 Jul 2014 TAQ - Added constants for the zone size parameters.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -87,13 +88,14 @@
 #ifndef __INC_CONFIG_H__
 #define __INC_CONFIG_H__
 
+#include <cstdint>
 #include <vector>
 #include <string>
 
 typedef struct location_struct
 {
-    u_int64_t dim[3];
-    u_int16_t steps[3];
+    uint64_t dim[3];
+    uint16_t steps[3];
 }
 location;
 

@@ -1,6 +1,24 @@
 # Makefile
 #   by Trinity Quirk <tquirk@ymb.net>
-#   last updated 17 Aug 2014, 16:09:59 tquirk
+#   last updated 24 Jul 2015, 13:26:35 tquirk
+#
+# Revision IX game server
+# Copyright (C) 2015  Trinity Annabelle Quirk
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
 #
 # This is the main makefile for the revision9 server.
 #
@@ -27,6 +45,7 @@
 #   04 Jul 2014 TAQ - The subserver is now a separate binary.
 #   17 Aug 2014 TAQ - We now make sure all of our subdirs are rebuilt with
 #                     the 'all' target.
+#   24 Jul 2015 TAQ - Comment cleanup.
 #
 # Things to do
 #

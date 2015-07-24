@@ -1,9 +1,9 @@
 /* config.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 11:01:16 tquirk
+ *   last updated 24 Jul 2015, 12:20:25 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,6 +26,7 @@
  * Changes
  *   26 Jul 2014 TAQ - Created the file.
  *   31 Aug 2014 TAQ - We're now called ConfigData.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -47,7 +48,7 @@ class ConfigData
     std::string config_dir, config_fname;
 
     std::string server_addr;
-    u_int16_t server_port;
+    uint16_t server_port;
     std::string username, password;
 
     ConfigData();

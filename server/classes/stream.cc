@@ -1,9 +1,9 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jul 2014, 13:38:40 trinityquirk
+ *   last updated 24 Jul 2015, 13:11:30 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -49,6 +49,7 @@
  *                     get the file descriptors set up correctly.
  *   05 Jul 2014 TAQ - This file didn't really need the zone_interface.
  *   09 Jul 2014 TAQ - Normalized the exception-throwing.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -76,7 +77,7 @@
 
 extern volatile int main_loop_exit_flag;
 
-stream_user::stream_user(u_int64_t u, Control *c)
+stream_user::stream_user(uint64_t u, Control *c)
     : base_user(u, c)
 {
     this->subsrv = 0;
@@ -99,7 +100,7 @@ const stream_socket::subserver& stream_socket::subserver::operator=(const stream
     return *this;
 }
 
-stream_socket::stream_socket(struct addrinfo *ai, u_int16_t port)
+stream_socket::stream_socket(struct addrinfo *ai, uint16_t port)
     : listen_socket(ai, port), subservers()
 {
     FD_ZERO(&(this->master_readfs));
@@ -326,7 +327,7 @@ void stream_socket::start(void)
     }
 }
 
-void stream_socket::do_login(u_int64_t userid, Control *con, access_list& al)
+void stream_socket::do_login(uint64_t userid, Control *con, access_list& al)
 {
     stream_user *stu = new stream_user(userid, con);
     stu->subsrv = al.what.login.who.stream.sub;
@@ -450,7 +451,7 @@ void *stream_socket::stream_listen_worker(void *arg)
 void *stream_socket::stream_reaper_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
-    std::map<u_int64_t, base_user *>::iterator i;
+    std::map<uint64_t, base_user *>::iterator i;
     stream_user *stu;
     time_t now;
 

@@ -1,9 +1,9 @@
 /* register.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 16:02:08 tquirk
+ *   last updated 24 Jul 2015, 12:28:47 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,12 +30,13 @@
  *   11 Oct 2007 TAQ - Updated to use new action record maps.
  *   10 May 2014 TAQ - Switched to the Eigen math library.  Updated calls to
  *                     use Motion objects.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
- * $Id: register.cc 10 2013-01-25 22:13:00Z trinity $
  */
 
+#include <cstdint>
 #include <map>
 
 #include "../defs.h"
@@ -45,7 +46,7 @@
 
 extern "C"
 {
-    void actions_register(std::map<u_int16_t, action_rec> &am)
+    void actions_register(std::map<uint16_t, action_rec> &am)
     {
         int i;
 
@@ -53,7 +54,7 @@ extern "C"
             am[actions[i].action_number].action = actions[i].action_routine;
     }
 
-    void actions_unregister(std::map<u_int16_t, action_rec> &am)
+    void actions_unregister(std::map<uint16_t, action_rec> &am)
     {
         int i;
 

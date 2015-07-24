@@ -1,9 +1,9 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 14:38:39 tquirk
+ *   last updated 24 Jul 2015, 12:17:37 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,6 +41,7 @@
  *                     type name member, set by a constructor argument.
  *   31 Aug 2014 TAQ - Instead of passing the default object into the
  *                     constructor, we'll load objid 0 from the disk.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - See if we can nab the config directory out of the config object when
@@ -65,6 +66,7 @@
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/sax/SAXException.hpp>
 
+#include <cstdint>
 #include <algorithm>
 #include <functional>
 #include <string>
@@ -99,7 +101,7 @@ class ObjectCache
         obj_type obj;
     }
     object_struct;
-    typedef std::unordered_map<u_int64_t, typename _oct::object_struct> obj_map;
+    typedef std::unordered_map<uint64_t, typename _oct::object_struct> obj_map;
 
     struct oc_cleanup
     {
@@ -158,7 +160,7 @@ class ObjectCache
                 }
             }
         };
-    bool parse_file(const std::string& fname, u_int64_t objid)
+    bool parse_file(const std::string& fname, uint64_t objid)
         {
             bool retval = true;
             XNS::SAXParser *parser = NULL;
@@ -248,7 +250,7 @@ class ObjectCache
                 cleanup_func(i->second);
         };
 
-    void load(u_int64_t objid)
+    void load(uint64_t objid)
         {
             struct stat st;
 
@@ -286,7 +288,7 @@ class ObjectCache
              */
             /*send_object_request(objid);*/
         };
-    obj_type& operator[](u_int64_t objid)
+    obj_type& operator[](uint64_t objid)
         {
             typename _oct::obj_map::iterator object = this->objects.find(objid);
 
@@ -299,7 +301,7 @@ class ObjectCache
             gettimeofday(&(object->second.lastused), NULL);
             return object->second.obj;
         };
-    void erase(u_int64_t objid)
+    void erase(uint64_t objid)
         {
             typename _oct::obj_map::iterator object = this->objects.find(objid);
 

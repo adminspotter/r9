@@ -1,9 +1,9 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 May 2014, 15:41:30 tquirk
+ *   last updated 24 Jul 2015, 12:14:12 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -113,17 +113,18 @@
  *   29 Jun 2010 TAQ - Added a w_orient element to the position_update
  *                     packet, in anticipation of using quaternions.
  *   10 May 2014 TAQ - Some conditional includes, to allow building on OSX.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - We want to do some crypto on this protocol.
  *   - Rethink the removal of in-band geometry and texture fetching.
  *
- * $Id: proto.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_PROTO_H__
 #define __INC_PROTO_H__
 
+#include <stdint.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #ifdef _NEED_ENDIAN_H
@@ -159,9 +160,9 @@
  */
 typedef struct basic_packet_tag
 {
-    u_int8_t type;
-    u_int8_t version;
-    u_int64_t sequence;
+    uint8_t type;
+    uint8_t version;
+    uint64_t sequence;
 } __attribute__ ((__packed__))
 basic_packet;
 
@@ -170,19 +171,19 @@ basic_packet;
  */
 typedef struct ack_packet_tag
 {
-    u_int8_t type;
-    u_int8_t version;        /* protocol version number */
-    u_int64_t sequence;      /* timestamp / sequence number */
-    u_int8_t request;        /* packet type of original request */
-    u_int8_t misc;           /* miscellaneous data */
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint64_t sequence;      /* timestamp / sequence number */
+    uint8_t request;        /* packet type of original request */
+    uint8_t misc;           /* miscellaneous data */
 } __attribute__ ((__packed__))
 ack_packet;
 
 typedef struct login_request_tag
 {
-    u_int8_t type;
-    u_int8_t version;        /* protocol version number */
-    u_int64_t sequence;      /* timestamp / sequence number */
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint64_t sequence;      /* timestamp / sequence number */
     char username[64];
     char password[64];
 } __attribute__ ((__packed__))
@@ -190,24 +191,24 @@ login_request;
 
 typedef struct logout_request_tag
 {
-    u_int8_t type;
-    u_int8_t version;        /* protocol version number */
-    u_int64_t sequence;      /* timestamp / sequence number */
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint64_t sequence;      /* timestamp / sequence number */
     /* Does this really need anything else? */
 } __attribute__ ((__packed__))
 logout_request;
 
 typedef struct action_request_tag
 {
-    u_int8_t type;
-    u_int8_t version;        /* protocol version number */
-    u_int64_t sequence;      /* timestamp / sequence number */
-    u_int64_t object_id;
-    u_int16_t action_id;
-    u_int8_t power_level;
-    u_int64_t x_pos_source, y_pos_source, z_pos_source;
-    u_int64_t dest_object_id;
-    u_int64_t x_pos_dest, y_pos_dest, z_pos_dest;
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint64_t sequence;      /* timestamp / sequence number */
+    uint64_t object_id;
+    uint16_t action_id;
+    uint8_t power_level;
+    uint64_t x_pos_source, y_pos_source, z_pos_source;
+    uint64_t dest_object_id;
+    uint64_t x_pos_dest, y_pos_dest, z_pos_dest;
 } __attribute__ ((__packed__))
 action_request;
 
@@ -222,13 +223,13 @@ action_request;
  */
 typedef struct position_update_tag
 {
-    u_int8_t type;
-    u_int8_t version;        /* protocol version number */
-    u_int64_t sequence;      /* timestamp / sequence number */
-    u_int64_t object_id;
-    u_int16_t frame_number;
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint64_t sequence;      /* timestamp / sequence number */
+    uint64_t object_id;
+    uint16_t frame_number;
     /* We may consider adding the sector vector back in here */
-    u_int64_t x_pos, y_pos, z_pos;
+    uint64_t x_pos, y_pos, z_pos;
     int32_t x_orient, y_orient, z_orient, w_orient;
     int32_t x_look, y_look, z_look;
 } __attribute__ ((__packed__))
@@ -237,9 +238,9 @@ position_update;
 /* When a server wants you to start taking updates from another server */
 typedef struct server_notice_tag
 {
-    u_int8_t type;
-    u_int8_t version;        /* protocol version number */
-    u_int64_t sequence;      /* timestamp / sequence number */
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint64_t sequence;      /* timestamp / sequence number */
 #if defined(USE_IPV4) || !defined(USE_IPV6)
     struct in_addr srv;
 #elif defined(USE_IPV6)

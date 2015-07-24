@@ -1,9 +1,9 @@
 /* basesock.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 17:52:13 tquirk
+ *   last updated 24 Jul 2015, 13:03:39 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,6 +33,7 @@
  *                     added a stop method to the listen_socket.  Rearranged
  *                     the login_user/logout_user methods and added do_login
  *                     as a pure virtual.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -44,6 +45,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
+#include <cstdint>
 #include <map>
 
 #include "control.h"
@@ -54,7 +56,7 @@ class basesock
 {
   public:
     int sock;
-    u_int16_t port_num;
+    uint16_t port_num;
 
     pthread_t listen_thread;
     void *listen_arg;
@@ -65,7 +67,7 @@ class basesock
     void create_socket(struct addrinfo *);
 
   public:
-    basesock(struct addrinfo *, u_int16_t);
+    basesock(struct addrinfo *, uint16_t);
     ~basesock();
 
     void start(void *(*)(void *));
@@ -76,16 +78,16 @@ class basesock
 
 class base_user {
   public:
-    u_int64_t userid;
+    uint64_t userid;
     Control *control;
     time_t timestamp;
     bool pending_logout;
 
-    base_user(u_int64_t, Control *);
+    base_user(uint64_t, Control *);
     virtual ~base_user();
 
   protected:
-    void init(u_int64_t, Control *);
+    void init(uint64_t, Control *);
 
   public:
     virtual bool operator<(const base_user&) const;
@@ -104,13 +106,13 @@ class listen_socket {
     pthread_t reaper;
 
   public:
-    std::map<u_int64_t, base_user *> users;
+    std::map<uint64_t, base_user *> users;
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
     basesock sock;
 
   public:
-    listen_socket(struct addrinfo *, u_int16_t);
+    listen_socket(struct addrinfo *, uint16_t);
     virtual ~listen_socket();
 
     void init(void);
@@ -123,7 +125,7 @@ class listen_socket {
     virtual void login_user(access_list&);
     virtual void logout_user(access_list&);
 
-    virtual void do_login(u_int64_t, Control *, access_list&) = 0;
+    virtual void do_login(uint64_t, Control *, access_list&) = 0;
 };
 
 #endif /* __INC_BASESOCK_H__ */

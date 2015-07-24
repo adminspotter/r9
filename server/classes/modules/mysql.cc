@@ -1,9 +1,9 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2014, 10:54:39 tquirk
+ *   last updated 24 Jul 2015, 13:16:06 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -75,6 +75,7 @@
  *                     the arguments in the prototype from const char * to
  *                     const std::string&, but didn't update the definition
  *                     here, so random characters were being prepended.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - Finish writing open_new_login and close_open_login.
@@ -111,13 +112,13 @@ MySQL::~MySQL()
 }
 
 /* Check that the user really is who he says he is */
-u_int64_t MySQL::check_authentication(const std::string& user,
+uint64_t MySQL::check_authentication(const std::string& user,
                                       const std::string& pass)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
     char str[256];
-    u_int64_t retval = 0;
+    uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
              "SELECT playerid "
@@ -144,7 +145,7 @@ u_int64_t MySQL::check_authentication(const std::string& user,
 }
 
 /* See what kind of access the user/character is allowed on this server */
-int MySQL::check_authorization(u_int64_t userid, u_int64_t charid)
+int MySQL::check_authorization(uint64_t userid, uint64_t charid)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -176,7 +177,7 @@ int MySQL::check_authorization(u_int64_t userid, u_int64_t charid)
 }
 
 /* Get the list of skills that are used on this server */
-int MySQL::get_server_skills(std::map<u_int16_t, action_rec>& actions)
+int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -197,7 +198,7 @@ int MySQL::get_server_skills(std::map<u_int16_t, action_rec>& actions)
     {
         while ((row = mysql_fetch_row(res)) != NULL)
         {
-            u_int64_t id = strtoull(row[1], NULL, 10);
+            uint64_t id = strtoull(row[1], NULL, 10);
 
             if (actions[id].name != NULL)
                 free(actions[id].name);
@@ -214,7 +215,7 @@ int MySQL::get_server_skills(std::map<u_int16_t, action_rec>& actions)
     return count;
 }
 
-int MySQL::get_server_objects(std::map<u_int64_t,
+int MySQL::get_server_objects(std::map<uint64_t,
                               game_object_list_element> &gomap)
 {
     MYSQL_RES *res;
@@ -235,7 +236,7 @@ int MySQL::get_server_objects(std::map<u_int64_t,
     {
         while ((row = mysql_fetch_row(res)) != NULL)
         {
-            u_int64_t id = strtoull(row[0], NULL, 10);
+            uint64_t id = strtoull(row[0], NULL, 10);
             game_object_list_element gole;
             Geometry *geom = new Geometry();
 
@@ -256,9 +257,9 @@ int MySQL::get_server_objects(std::map<u_int64_t,
 }
 
 /* Get the list of a player's skills which are valid on this server */
-int MySQL::get_player_server_skills(u_int64_t userid,
-                                    u_int64_t charid,
-                                    std::map<u_int16_t, action_level>& actions)
+int MySQL::get_player_server_skills(uint64_t userid,
+                                    uint64_t charid,
+                                    std::map<uint16_t, action_level>& actions)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -285,7 +286,7 @@ int MySQL::get_player_server_skills(u_int64_t userid,
     {
         while ((row = mysql_fetch_row(res)) != NULL)
         {
-            u_int64_t id = strtoull(row[0], NULL, 10);
+            uint64_t id = strtoull(row[0], NULL, 10);
 
             actions[id].level = atoi(row[1]);
             actions[id].improvement = atoi(row[2]);
@@ -298,7 +299,7 @@ int MySQL::get_player_server_skills(u_int64_t userid,
     return count;
 }
 
-int MySQL::open_new_login(u_int64_t userid, u_int64_t charid)
+int MySQL::open_new_login(uint64_t userid, uint64_t charid)
 {
     /*MYSQL_RES *res;
     MYSQL_ROW row;
@@ -318,7 +319,7 @@ int MySQL::open_new_login(u_int64_t userid, u_int64_t charid)
 }
 
 /* Returns count of open logins for the given player/char on this server */
-int MySQL::check_open_login(u_int64_t userid, u_int64_t charid)
+int MySQL::check_open_login(uint64_t userid, uint64_t charid)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -351,7 +352,7 @@ int MySQL::check_open_login(u_int64_t userid, u_int64_t charid)
     return retval;
 }
 
-int MySQL::close_open_login(u_int64_t userid, u_int64_t charid)
+int MySQL::close_open_login(uint64_t userid, uint64_t charid)
 {
     return 0;
 }

@@ -1,9 +1,9 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2014, 10:53:00 tquirk
+ *   last updated 24 Jul 2015, 13:17:30 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,6 +37,7 @@
  *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
  *   09 Jul 2014 TAQ - Exceptionified this class.  No more syslog.
  *   09 Aug 2014 TAQ - Updated the factory arguments to be correct.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - Implement the stubbed-out functions.
@@ -59,11 +60,11 @@ PgSQL::PgSQL(const std::string& host, const std::string& user,
 {
 }
 
-u_int64_t PgSQL::check_authentication(const std::string& user, const std::string& pass)
+uint64_t PgSQL::check_authentication(const std::string& user, const std::string& pass)
 {
     PGresult *res;
     char str[256];
-    u_int64_t retval = 0;
+    uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
              "SELECT playerid "
@@ -85,39 +86,39 @@ u_int64_t PgSQL::check_authentication(const std::string& user, const std::string
     return retval;
 }
 
-int PgSQL::check_authorization(u_int64_t userid, u_int64_t charid)
+int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
 {
     return 0;
 }
 
-int PgSQL::get_server_skills(std::map<u_int16_t, action_rec>& actions)
+int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
 {
     return 0;
 }
 
-int PgSQL::get_server_objects(std::map<u_int64_t, game_object_list_element> &gomap)
+int PgSQL::get_server_objects(std::map<uint64_t, game_object_list_element> &gomap)
 {
     return 0;
 }
 
-int PgSQL::get_player_server_skills(u_int64_t userid,
-                                    u_int64_t charid,
-                                    std::map<u_int16_t, action_level>& actions)
+int PgSQL::get_player_server_skills(uint64_t userid,
+                                    uint64_t charid,
+                                    std::map<uint16_t, action_level>& actions)
 {
     return 0;
 }
 
-int PgSQL::open_new_login(u_int64_t userid, u_int64_t charid)
+int PgSQL::open_new_login(uint64_t userid, uint64_t charid)
 {
     return 0;
 }
 
-int PgSQL::check_open_login(u_int64_t userid, u_int64_t charid)
+int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
 {
     return 0;
 }
 
-int PgSQL::close_open_login(u_int64_t userid, u_int64_t charid)
+int PgSQL::close_open_login(uint64_t userid, uint64_t charid)
 {
     return 0;
 }

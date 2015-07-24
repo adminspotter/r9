@@ -1,9 +1,9 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2014, 17:58:28 tquirk
+ *   last updated 24 Jul 2015, 13:08:03 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,6 +37,7 @@
  *                     a class hierarchy.
  *   17 Jun 2014 TAQ - The socks member now uses a pointer as a key, and
  *                     takes the comparator argument.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - Consider whether the socks and users maps should become unordered
@@ -47,6 +48,7 @@
 #ifndef __INC_DGRAM_H__
 #define __INC_DGRAM_H__
 
+#include <cstdint>
 #include <map>
 
 #include "control.h"
@@ -58,7 +60,7 @@ class dgram_user : public base_user
   public:
     Sockaddr *sa;
 
-    dgram_user(u_int64_t, Control *);
+    dgram_user(uint64_t, Control *);
 
     const dgram_user& operator=(const dgram_user&);
 };
@@ -69,12 +71,12 @@ class dgram_socket : public listen_socket
     std::map<Sockaddr *, dgram_user *, less_sockaddr> socks;
 
   public:
-    dgram_socket(struct addrinfo *, u_int16_t);
+    dgram_socket(struct addrinfo *, uint16_t);
     ~dgram_socket();
 
     void start(void);
 
-    void do_login(u_int64_t, Control *, access_list&);
+    void do_login(uint64_t, Control *, access_list&);
 
     static void *dgram_listen_worker(void *);
     static void *dgram_reaper_worker(void *);

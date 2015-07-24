@@ -1,9 +1,9 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Aug 2014, 15:59:37 tquirk
+ *   last updated 24 Jul 2015, 13:12:46 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -134,6 +134,7 @@
  *                     we no longer seg-fault on startup).
  *   17 Aug 2014 TAQ - Worked on the motion worker to actually move things
  *                     around in the sectors.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -206,7 +207,7 @@ void *Zone::action_pool_worker(void *arg)
 {
     Zone *zone = (Zone *)arg;
     packet_list req;
-    u_int16_t skillid;
+    uint16_t skillid;
 
     for (;;)
     {
@@ -292,7 +293,7 @@ void *Zone::update_pool_worker(void *arg)
 {
     Zone *zone = (Zone *)arg;
     Motion *req;
-    u_int64_t objid;
+    uint64_t objid;
     packet_list buf;
 
     for (;;)
@@ -305,9 +306,9 @@ void *Zone::update_pool_worker(void *arg)
         /* We're not using a sequence number yet, but don't forget about it */
         objid = buf.buf.pos.object_id = req->object->get_object_id();
         /* We're not doing frame number yet, but don't forget about it */
-        buf.buf.pos.x_pos = (u_int64_t)trunc(req->position[0] * 100);
-        buf.buf.pos.y_pos = (u_int64_t)trunc(req->position[1] * 100);
-        buf.buf.pos.z_pos = (u_int64_t)trunc(req->position[2] * 100);
+        buf.buf.pos.x_pos = (uint64_t)trunc(req->position[0] * 100);
+        buf.buf.pos.y_pos = (uint64_t)trunc(req->position[1] * 100);
+        buf.buf.pos.z_pos = (uint64_t)trunc(req->position[2] * 100);
         /*buf.buf.pos.x_orient = (int32_t)trunc(req->orientation[0] * 100);
         buf.buf.pos.y_orient = (int32_t)trunc(req->orientation[1] * 100);
         buf.buf.pos.z_orient = (int32_t)trunc(req->orientation[2] * 100);*/
@@ -322,7 +323,7 @@ void *Zone::update_pool_worker(void *arg)
 }
 
 /* Public methods */
-Zone::Zone(u_int64_t dim, u_int16_t steps)
+Zone::Zone(uint64_t dim, uint16_t steps)
     : sectors(), actions(), game_objects()
 {
     this->x_dim = this->y_dim = this->z_dim = dim;
@@ -330,8 +331,8 @@ Zone::Zone(u_int64_t dim, u_int16_t steps)
     this->init();
 }
 
-Zone::Zone(u_int64_t xd, u_int64_t yd, u_int64_t zd,
-           u_int16_t xs, u_int16_t ys, u_int16_t zs)
+Zone::Zone(uint64_t xd, uint64_t yd, uint64_t zd,
+           uint16_t xs, uint16_t ys, uint16_t zs)
     : sectors(), actions(), game_objects()
 {
     this->x_dim = xd;
@@ -379,7 +380,7 @@ Zone::~Zone()
     std::clog << "deleting game objects" << std::endl;
     if (this->game_objects.size())
     {
-        std::map<u_int64_t, game_object_list_element>::iterator i;
+        std::map<uint64_t, game_object_list_element>::iterator i;
 
         for (i = this->game_objects.begin();
              i != this->game_objects.end();
@@ -430,7 +431,7 @@ void Zone::stop(void)
     this->update_pool->stop();
 }
 
-void Zone::add_action_request(u_int64_t from, packet *buf, size_t len)
+void Zone::add_action_request(uint64_t from, packet *buf, size_t len)
 {
     packet_list pl;
 
@@ -448,7 +449,7 @@ void Zone::execute_action(Control *con, action_request& req, size_t len)
      * the skill in question, and has scaled the power level of the
      * request to its skill level.
      */
-    std::map<u_int16_t, action_rec>::iterator i
+    std::map<uint16_t, action_rec>::iterator i
         = this->actions.find(req.action_id);
     Eigen::Vector3d vec;
 
@@ -464,8 +465,8 @@ void Zone::execute_action(Control *con, action_request& req, size_t len)
             i = this->actions.find(req.action_id);
         }
 
-        req.power_level = std::max<u_int8_t>(req.power_level, i->second.lower);
-        req.power_level = std::min<u_int8_t>(req.power_level, i->second.upper);
+        req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
+        req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
 
         (*(i->second.action))(con->slave,
                               req.power_level,

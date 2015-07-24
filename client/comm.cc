@@ -1,9 +1,9 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Jul 2014, 14:33:13 tquirk
+ *   last updated 24 Jul 2015, 12:19:52 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -69,6 +69,7 @@
  *   23 Jul 2014 TAQ - This is now a C++ file, and an actual class.
  *   26 Jul 2014 TAQ - Cleanups to compile.  Switched all the main_post_message
  *                     over to use std::clog.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -79,6 +80,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
+#include <cstdint>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -87,7 +89,7 @@
 #include "comm.h"
 #include "../proto/proto.h"
 
-void Comm::create_socket(struct addrinfo *ai, u_int16_t port)
+void Comm::create_socket(struct addrinfo *ai, uint16_t port)
 {
     if ((this->sock = socket(ai->ai_family,
                              ai->ai_socktype,
@@ -250,7 +252,7 @@ void Comm::dispatch(packet& buf)
     }
 }
 
-Comm::Comm(struct addrinfo *ai, u_int16_t port)
+Comm::Comm(struct addrinfo *ai, uint16_t port)
     : send_queue()
 {
     int ret;
@@ -345,9 +347,9 @@ void Comm::send_login(const std::string& user, const std::string& pass)
     memset((void *)&req, 0, sizeof(login_request));
 }
 
-void Comm::send_action_request(u_int16_t actionid,
-                               u_int64_t target,
-                               u_int8_t power)
+void Comm::send_action_request(uint16_t actionid,
+                               uint64_t target,
+                               uint8_t power)
 {
     packet req;
 
@@ -370,7 +372,7 @@ void Comm::send_logout(void)
     this->send(req, sizeof(logout_request));
 }
 
-void Comm::send_ack(u_int8_t type)
+void Comm::send_ack(uint8_t type)
 {
     packet req;
 

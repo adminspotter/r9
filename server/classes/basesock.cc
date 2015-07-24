@@ -1,9 +1,9 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2014, 14:24:57 trinityquirk
+ *   last updated 24 Jul 2015, 13:01:13 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -43,6 +43,7 @@
  *                     throw exceptions out of a destructor?
  *   10 Jul 2014 TAQ - Turns out that it is NOT valid to throw exceptions
  *                     from a destructor, so we just eat the errors.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -62,10 +63,10 @@
 #include "basesock.h"
 
 #include "../server.h"
-#include "../config.h"
+e#include "../config.h"
 #include "../log.h"
 
-basesock::basesock(struct addrinfo *ai, u_int16_t port)
+basesock::basesock(struct addrinfo *ai, uint16_t port)
 {
     this->port_num = port;
     this->listen_arg = NULL;
@@ -227,7 +228,7 @@ void basesock::stop(void)
     }
 }
 
-base_user::base_user(u_int64_t u, Control *c)
+base_user::base_user(uint64_t u, Control *c)
 {
     this->init(u, c);
 }
@@ -236,7 +237,7 @@ base_user::~base_user()
 {
 }
 
-void base_user::init(u_int64_t u, Control *c)
+void base_user::init(uint64_t u, Control *c)
 {
     this->userid = u;
     this->control = c;
@@ -263,7 +264,7 @@ const base_user& base_user::operator=(const base_user& u)
     return *this;
 }
 
-listen_socket::listen_socket(struct addrinfo *ai, u_int16_t port)
+listen_socket::listen_socket(struct addrinfo *ai, uint16_t port)
     : users(), sock(ai, port)
 {
     this->init();
@@ -272,7 +273,7 @@ listen_socket::listen_socket(struct addrinfo *ai, u_int16_t port)
 listen_socket::~listen_socket()
 {
     int retval;
-    std::map<u_int64_t, base_user *>::iterator i;
+    std::map<uint64_t, base_user *>::iterator i;
 
     try { this->stop(); }
     catch (std::exception& e) { /* Do nothing */ }
@@ -340,7 +341,7 @@ void *listen_socket::access_pool_worker(void *arg)
 
 void listen_socket::login_user(access_list& p)
 {
-    u_int64_t userid = 0LL;
+    uint64_t userid = 0LL;
     std::string username(p.buf.log.username, sizeof(p.buf.log.username));
     std::string password(p.buf.log.password, sizeof(p.buf.log.password));
 
@@ -376,7 +377,7 @@ void listen_socket::login_user(access_list& p)
 
 void listen_socket::logout_user(access_list& p)
 {
-    std::map<u_int64_t, base_user *>::iterator found;
+    std::map<uint64_t, base_user *>::iterator found;
 
     /* Most of this function is now handled by the reaper threads */
     if ((found = this->users.find(p.what.logout.who)) != this->users.end())

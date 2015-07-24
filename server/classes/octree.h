@@ -1,9 +1,9 @@
 /* octree.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Aug 2014, 07:57:26 tquirk
+ *   last updated 24 Jul 2015, 13:10:46 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -67,6 +67,7 @@
  *                     Moved the neighbor test define from the .cc and
  *                     made it an inline method.
  *   16 Aug 2014 TAQ - Added the octant_min and octant_max inline methods.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -75,6 +76,7 @@
 #ifndef __INC_OCTREE_H__
 #define __INC_OCTREE_H__
 
+#include <cstdint>
 #include <list>
 #include <set>
 #include <Eigen/Dense>
@@ -90,7 +92,7 @@ class Octree
 
     Eigen::Vector3d min_point, center_point, max_point;
     Octree *parent, *octants[8], *neighbor[6];
-    u_int8_t parent_index;
+    uint8_t parent_index;
     int depth;
 
     std::set<Motion *> objects;
@@ -131,7 +133,7 @@ class Octree
     void compute_neighbors(void);
 
   public:
-    Octree(Octree *, Eigen::Vector3d&, Eigen::Vector3d&, u_int8_t);
+    Octree(Octree *, Eigen::Vector3d&, Eigen::Vector3d&, uint8_t);
     ~Octree();
 
     bool empty(void);

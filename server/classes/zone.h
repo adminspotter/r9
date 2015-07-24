@@ -1,9 +1,9 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Aug 2014, 15:50:02 tquirk
+ *   last updated 24 Jul 2015, 13:13:21 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -118,6 +118,7 @@
  *   22 Jun 2014 TAQ - Slight changes to reflect the updated config object.
  *   06 Jul 2014 TAQ - Added stop and init methods, renamed trees to sectors.
  *   17 Aug 2014 TAQ - Added which_sector and sector_contains inline methods.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -126,6 +127,7 @@
 #ifndef __INC_ZONE_H__
 #define __INC_ZONE_H__
 
+#include <cstdint>
 #include <vector>
 #include <map>
 
@@ -140,16 +142,16 @@
 class Zone
 {
   private:
-    u_int16_t x_steps, y_steps, z_steps;
-    u_int64_t x_dim, y_dim, z_dim;
+    uint16_t x_steps, y_steps, z_steps;
+    uint64_t x_dim, y_dim, z_dim;
 
     std::vector< std::vector< std::vector<Octree *> > > sectors;
 
     Library *action_lib;
 
   public:
-    std::map<u_int16_t, action_rec> actions;
-    std::map<u_int64_t, game_object_list_element> game_objects;
+    std::map<uint16_t, action_rec> actions;
+    std::map<uint64_t, game_object_list_element> game_objects;
     ThreadPool<packet_list> *action_pool;   /* Takes action requests      */
     ThreadPool<Motion *> *motion_pool;      /* Processes motion/collision */
     ThreadPool<Motion *> *update_pool;      /* Prepares motion updates    */
@@ -179,15 +181,15 @@ class Zone
     static void *update_pool_worker(void *);
 
   public:
-    Zone(u_int64_t, u_int16_t);
-    Zone(u_int64_t, u_int64_t, u_int64_t, u_int16_t, u_int16_t, u_int16_t);
+    Zone(uint64_t, uint16_t);
+    Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t);
     ~Zone();
 
     void start(void);
     void stop(void);
 
     /* Interface to the action pool */
-    void add_action_request(u_int64_t, packet *, size_t);
+    void add_action_request(uint64_t, packet *, size_t);
 
     void execute_action(Control *, action_request&, size_t);
 };

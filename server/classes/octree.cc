@@ -1,9 +1,9 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Aug 2014, 08:11:59 tquirk
+ *   last updated 24 Jul 2015, 13:10:15 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -97,6 +97,7 @@
  *                     routine.  Fleshed out the insert and move methods.
  *   17 Aug 2014 TAQ - Removed the move method for the time being.  It's a
  *                     lot more complicated than I expected it to be.
+ *   24 Jul 2015 TAQ - Converted to stdint types.
  *
  * Things to do
  *   - Make the neighbor-finder breadth-first, not depth-first as it
@@ -206,7 +207,7 @@ void Octree::compute_neighbors(void)
 Octree::Octree(Octree *parent,
                Eigen::Vector3d& min,
                Eigen::Vector3d& max,
-               u_int8_t index)
+               uint8_t index)
     : min_point(min), center_point((max - min) * 0.5), max_point(max),
       objects()
 {

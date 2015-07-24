@@ -1,9 +1,9 @@
 /* signals.h
- *   by Trinity Quirk <trinity@io.com>
- *   last updated 15 May 2006, 11:15:32 trinity
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 24 Jul 2015, 13:21:20 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2004  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,10 +28,10 @@
  *   10 May 1998 TAQ - Added CVS ID string.
  *   16 Apr 2000 TAQ - Reset the CVS ID string.
  *   15 May 2006 TAQ - Added the GPL notice.
+ *   24 Jul 2015 TAQ - Comment cleanup.
  *
  * Things to do
  *
- * $Id: signals.h 10 2013-01-25 22:13:00Z trinity $
  */
 
 #ifndef __INC_SIGNALS_H__

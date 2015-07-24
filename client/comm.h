@@ -1,9 +1,9 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Jul 2014, 09:49:59 tquirk
+ *   last updated 24 Jul 2015, 12:19:11 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,6 +24,7 @@
  *
  * Changes
  *   23 Jul 2014 TAQ - Created the file.
+ *   24 Jul 2014 TAQ - Converted to stdint types.
  *
  * Things to do
  *
@@ -38,6 +39,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
+#include <cstdint>
 #include <queue>
 
 class Comm
@@ -51,10 +53,10 @@ class Comm
     pthread_cond_t send_queue_not_empty;
     std::queue<packet> send_queue;
 
-    static u_int64_t sequence;
+    static uint64_t sequence;
     static volatile bool thread_exit_flag;
 
-    void create_socket(struct addrinfo *, u_int16_t);
+    void create_socket(struct addrinfo *, uint16_t);
 
     static void *send_worker(void *);
     static void *recv_worker(void *);
@@ -62,15 +64,15 @@ class Comm
     void dispatch(packet&);
 
   public:
-    Comm(struct addrinfo *, u_int16_t);
+    Comm(struct addrinfo *, uint16_t);
     ~Comm();
 
     void send(packet&, size_t);
 
     void send_login(const std::string&, const std::string&);
-    void send_action_request(u_int16_t, u_int64_t, u_int8_t);
+    void send_action_request(uint16_t, uint64_t, uint8_t);
     void send_logout(void);
-    void send_ack(u_int8_t);
+    void send_ack(uint8_t);
 };
 
 #endif /* __INC_R9CLIENT_COMM_H__ */
