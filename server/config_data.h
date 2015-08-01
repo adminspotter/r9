@@ -1,6 +1,6 @@
-/* config.h                                                -*- C++ -*-
+/* config_data.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:35:44 tquirk
+ *   last updated 01 Aug 2015, 09:12:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -80,13 +80,15 @@
  *   23 Jun 2014 TAQ - Moved all the constant initializers into the .cc file.
  *   11 Jul 2014 TAQ - Added constants for the zone size parameters.
  *   24 Jul 2015 TAQ - Converted to stdint types.
+ *   01 Aug 2015 TAQ - Renamed to config_data.h, so as not to conflict with
+ *                     autoconf's config.h.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_CONFIG_H__
-#define __INC_CONFIG_H__
+#ifndef __INC_CONFIG_DATA_H__
+#define __INC_CONFIG_DATA_H__
 
 #include <cstdint>
 #include <vector>
@@ -152,4 +154,4 @@ extern config_data config;
 void setup_configuration(int, char **);
 void cleanup_configuration(void);
 
-#endif /*__INC_CONFIG_H__*/
+#endif /*__INC_CONFIG_DATA_H__*/

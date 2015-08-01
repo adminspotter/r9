@@ -285,7 +285,7 @@ then
 fi
 
 # Checks for header files.
-AC_CHECK_HEADERS([arpa/inet.h byteswap.h endian.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h byteswap.h endian.h execinfo.h fcntl.h grp.h limits.h netdb.h netinet/in.h pwd.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -303,7 +303,7 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 AC_FUNC_FORK
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([dup2 getcwd gethostname gettimeofday htonll memset mkdir ntohll select socket strdup strerror strtoull])
+AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday htonll memset mkdir ntohll select socket strdup strerror strtoull])
 
 AC_CONFIG_FILES([Makefile
                  client/Makefile

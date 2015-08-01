@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:14:12 tquirk
+ *   last updated 01 Aug 2015, 08:51:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -114,6 +114,9 @@
  *                     packet, in anticipation of using quaternions.
  *   10 May 2014 TAQ - Some conditional includes, to allow building on OSX.
  *   24 Jul 2015 TAQ - Converted to stdint types.
+ *   01 Aug 2015 TAQ - Moved a bunch of unnecessary includes and defines
+ *                     out of here and into byteswap.c.  Updates on
+ *                     server_notice.
  *
  * Things to do
  *   - We want to do some crypto on this protocol.
@@ -124,21 +127,19 @@
 #ifndef __INC_PROTO_H__
 #define __INC_PROTO_H__
 
-#include <stdint.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#ifdef _NEED_ENDIAN_H
-#include <endian.h>
-#include <byteswap.h>
-#endif /* _NEED_ENDIAN_H */
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
 
-#if __BYTE_ORDER == __BIG_ENDIAN
-#define ntohll(x) (x)
-#define htonll(x) (x)
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
-#define ntohll(x) __bswap_64(x)
-#define htonll(x) __bswap_64(x)
-#endif
+#if HAVE_STDINT_H
+#include <stdint.h>
+#endif /* HAVE_STDINT_H */
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif /* HAVE_NETINET_IN_H */
 
 /* Some defines for packet types. */
 #define TYPE_ACKPKT 0        /* Acknowledgement packet */
@@ -241,13 +242,15 @@ typedef struct server_notice_tag
     uint8_t type;
     uint8_t version;        /* protocol version number */
     uint64_t sequence;      /* timestamp / sequence number */
-#if defined(USE_IPV4) || !defined(USE_IPV6)
-    struct in_addr srv;
-#elif defined(USE_IPV6)
-    struct in6_addr srv;
-#endif
+    uint8_t ipproto;        /* 4 or 6 */
+    union srv_tag
+    {
+        struct in_addr v4;
+        struct in6_addr v6;
+    }
+    srv;
     in_port_t port;
-    /* Need to say *where* the neighbor is */
+    uint8_t direction;      /* where the neighbor is */
 } __attribute__ ((__packed__))
 server_notice;
 

@@ -1,9 +1,9 @@
 /* signals.cc
  *   by Trinity Quirk <tquirk@io.com>
- *   last updated 21 Jun 2014, 17:42:44 tquirk
+ *   last updated 01 Aug 2015, 09:48:27 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -46,6 +46,8 @@
  *   04 Jul 2007 TAQ - Hopefully this thing will spit out a stack trace
  *                     when a SEGV happens.
  *   21 Jun 2014 TAQ - C++-ification begins!  Starting with the syslog.
+ *   01 Aug 2015 TAQ - autoconf'ification, and config.h has moved to
+ *                     config_data.h to not conflict with autoconf's config.h.
  *
  * Things to do
  *   - See if we can make the sigsegv handler dump core.
@@ -53,16 +55,26 @@
  *
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <stdio.h>
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif /* HAVE_STDLIB_H */
+#if HAVE_STRING_H
 #include <string.h>
+#endif /* HAVE_STRING_H */
 #include <signal.h>
 #include <errno.h>
+#if HAVE_EXECINFO_H
 #include <execinfo.h>
+#endif /* HAVE_EXECINFO_H */
 
 #include "signals.h"
 #include "server.h"
-#include "config.h"
+#include "config_data.h"
 #include "log.h"
 
 /* Function prototypes */
@@ -179,6 +191,7 @@ static void sigsegv_handler(int sig)
 
     std::clog << syslogInfo << "received SIGSEGV, detonating" << std::endl;
 
+#if HAVE_BACKTRACE
     /* Generate a stack dump.  This seems like it might be dangerous in
      * a signal handler (for SIGSEGV, even) because it appears that quite
      * a bit of memory will be allocated.  We'll go with it, and if it
@@ -188,6 +201,7 @@ static void sigsegv_handler(int sig)
     strings = backtrace_symbols(stack_trace, trace_size);
     for (i = 0; i < trace_size; ++i)
         std::clog << strings[i] << std::endl;
+#endif /* HAVE_BACKTRACE */
 
     /* Let's try to actually get a corefile */
     abort();

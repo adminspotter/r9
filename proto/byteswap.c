@@ -1,6 +1,6 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:24:05 tquirk
+ *   last updated 01 Aug 2015, 08:53:58 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -60,14 +60,40 @@
  *   22 Oct 2007 TAQ - Added a entry for ping packets.  Added stubs for doing
  *                     a basic packet, which is what the ping uses.
  *   24 Jul 2015 TAQ - Comment cleanup.
+ *   01 Aug 2015 TAQ - Moved a bunch of stuff out of proto.h into here.
+ *                     Cleaned up server_notice packet handling.
  *
  * Things to do
- *   - Figure out if IPv6 addresses are ever converted to/from network byte
- *   ordering.  They may just be byte-for-byte, and not "ordered" at all.
  *
  */
 
-#include <netinet/in.h>
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
+#if HAVE_ENDIAN_H
+#include <endian.h>
+#endif /* HAVE_ENDIAN_H */
+#if HAVE_BYTESWAP_H
+#include <byteswap.h>
+#endif /* HAVE_BYTESWAP_H */
+
+/* For some reason, Macs have htonll/ntohll as preprocessor
+ * definitions, but configure doesn't find them. */
+#if !(HAVE_HTONLL) && !defined(htonll)
+#if __BYTE_ORDER == __BIG_ENDIAN
+#define htonll(x) (x)
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#define htonll(x) __bswap_64(x)
+#endif /* __BYTE_ORDER */
+#endif /* HAVE_HTONLL */
+#if !(HAVE_NTOHLL) && !defined(ntohll)
+#if __BYTE_ORDER == __BIG_ENDIAN
+#define ntohll(x) (x)
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#define ntohll(x) __bswap_64(x)
+#endif /* __BYTE_ORDER */
+#endif /* HAVE_NTOHLL */
 
 #include "proto.h"
 
@@ -270,10 +296,9 @@ static int hton_server_notice(packet *sn, size_t s)
 {
     if (s < sizeof(server_notice))
         return 0;
-#if defined(USE_IPV4) || !defined(USE_IPV6)
-    sn->srv.srv.s_addr = htonl(sn->srv.srv.s_addr);
+    if (sn->srv.ipproto == 4)
+        sn->srv.srv.v4.s_addr = htonl(sn->srv.srv.v4.s_addr);
     /* No need to convert ipv6 addresses - they're always in network order */
-#endif
     sn->srv.port = htons(sn->srv.port);
     return 1;
 }
@@ -283,10 +308,9 @@ static int ntoh_server_notice(packet *sn, size_t s)
 {
     if (s < sizeof(server_notice))
         return 0;
-#if defined(USE_IPV4) || !defined(USE_IPV6)
-    sn->srv.srv.s_addr = ntohl(sn->srv.srv.s_addr);
+    if (sn->srv.ipproto == 4)
+        sn->srv.srv.v4.s_addr = ntohl(sn->srv.srv.v4.s_addr);
     /* No need to convert ipv6 addresses - they're always in network order */
-#endif
     sn->srv.port = ntohs(sn->srv.port);
     return 1;
 }

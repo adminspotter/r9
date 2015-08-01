@@ -1,9 +1,9 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2014, 10:48:35 trinityquirk
+ *   last updated 01 Aug 2015, 09:20:57 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -128,22 +128,42 @@
  *   05 Jul 2014 TAQ - Moved the remainder of zone_interface in here.
  *   09 Jul 2014 TAQ - Normalized exception handling and logging of errors.
  *   11 Jul 2014 TAQ - Fixed closing of the std::clog handle.
+ *   01 Aug 2015 TAQ - Updated for autoconf stuff.  Renamed config to
+ *                     config_data to not conflict with autoconf's config.h.
  *
  * Things to do
- *   - Figure out if we can use a pthread_cond_t without having to have a
- *     mutex around.
  *
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <stdio.h>
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif /* HAVE_STDLIB_H */
+#if HAVE_STRING_H
 #include <string.h>
+#endif /* HAVE_STRING_H */
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif /* HAVE_SYS_SOCKET_H */
+#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif /* HAVE_SYS_STAT_H */
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
+#if HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <errno.h>
 #include <pthread.h>
 
@@ -154,7 +174,7 @@
 #include "log.h"
 #include "server.h"
 #include "signals.h"
-#include "config.h"
+#include "config_data.h"
 
 #include "classes/library.h"
 #include "classes/basesock.h"

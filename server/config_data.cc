@@ -1,9 +1,9 @@
-/* config.cc
+/* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2014, 17:23:38 tquirk
+ *   last updated 01 Aug 2015, 09:46:56 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -182,6 +182,8 @@
  *   24 Jun 2014 TAQ - Small tweaks to get things functioning.
  *   11 Jul 2014 TAQ - Added initializer values for the zone size params.
  *                     Reworked the config table and all the parsing routines.
+ *   01 Aug 2015 TAQ - Renamed to config_data.cc, so as not to confuse things
+ *                     with the autoconf config.h.
  *
  * Things to do
  *   - Consider how we might move module-specific configuration items
@@ -197,23 +199,41 @@
  *
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <stdio.h>
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif /* HAVE_STDLIB_H */
+#if HAVE_STRING_H
 #include <string.h>
+#endif /* HAVE_STRING_H */
+#if HAVE_UNISTD_H
 #include <unistd.h>
-#ifdef __APPLE__
+#endif /* HAVE_UNISTD_H */
+#if HAVE_SYS_SYSLIMITS_H
 #include <sys/syslimits.h>
 #endif
+#if HAVE_PWD_H
 #include <pwd.h>
+#endif /* HAVE_PWD_H */
+#if HAVE_GRP_H
 #include <grp.h>
+#endif /* HAVE_GRP_H */
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
+#if HAVE_SYSLOG_H
 #include <syslog.h>
+#endif /* HAVE_SYSLOG_H */
 #include <errno.h>
 
 #include <fstream>
 #include <sstream>
 
-#include "config.h"
+#include "config_data.h"
 #include "server.h"
 #include "log.h"
 
