@@ -8,9 +8,11 @@
 *~
 TAGS
 .libs/
+test/
 old/
 server/r9d
 server/r9subserver
+client/motif/r9client
 
 # Automake
 Makefile
@@ -19,14 +21,18 @@ Makefile.orig
 
 # Autoconf
 /aclocal.m4
+/ar-lib
 /autom4te.cache
 autoscan.log
+/compile
 /config.*
 /configure
 /depcomp
 /install-sh
 /libtool
 /ltmain.sh
+/m4/libtool.m4
+/m4/lt*.m4
 /missing
 /stamp-h*
 .deps/

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+AC_INIT([Revision9], [0.1], [], [r9], [])
 AC_CONFIG_SRCDIR([client/cache.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -15,6 +15,7 @@ AC_GNU_SOURCE
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
+AM_PROG_AR
 
 AC_LANG(C++)
 
@@ -22,8 +23,9 @@ AC_LANG(C++)
 LT_INIT([pic-only])
 LT_LANG([C++])
 
-# Check for c++11 support
+# Check for c++11 language support
 #AX_CXX_COMPILE_STDCXX_11
+# TODO:  alter macro above to test C++11 library support
 
 # Arguments
 AC_ARG_ENABLE(editres, AS_HELP_STRING([--enable-editres], [Enable Editres support]), [], [enable_editres="yes"])
@@ -283,7 +285,7 @@ then
 fi
 
 # Checks for header files.
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h byteswap.h endian.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -301,7 +303,7 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 AC_FUNC_FORK
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([dup2 getcwd gethostname gettimeofday memset mkdir select socket strdup strerror strtoull])
+AC_CHECK_FUNCS([dup2 getcwd gethostname gettimeofday htonll memset mkdir ntohll select socket strdup strerror strtoull])
 
 AC_CONFIG_FILES([Makefile
                  client/Makefile
