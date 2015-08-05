@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:11:30 tquirk
+ *   last updated 05 Aug 2015, 15:28:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -50,6 +50,7 @@
  *   05 Jul 2014 TAQ - This file didn't really need the zone_interface.
  *   09 Jul 2014 TAQ - Normalized the exception-throwing.
  *   24 Jul 2015 TAQ - Converted to stdint types.
+ *   05 Aug 2015 TAQ - config.h moved to config_data.h.
  *
  * Things to do
  *
@@ -72,7 +73,7 @@
 #include "stream.h"
 #include "game_obj.h"
 
-#include "../config.h"
+#include "../config_data.h"
 #include "../log.h"
 
 extern volatile int main_loop_exit_flag;

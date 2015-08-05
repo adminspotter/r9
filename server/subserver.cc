@@ -1,9 +1,9 @@
 /* subserver.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Jul 2014, 17:07:34 tquirk
+ *   last updated 05 Aug 2015, 15:38:25 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -112,6 +112,7 @@
  *                     master listening thread and us.
  *   21 Jun 2014 TAQ - The C++-ification has begun, starting with syslog.
  *   04 Jul 2014 TAQ - We're now a completely separate binary.
+ *   05 Aug 2015 TAQ - subserver.h is completely irrelevant anymore.
  *
  * Things to do
  *   - Finish up the sending and recieving code.
@@ -136,7 +137,6 @@
 #include <algorithm>
 #include <set>
 
-#include "subserver.h"
 #include "log.h"
 
 #define CONTROLLEN   (sizeof(struct cmsghdr) + sizeof(int))

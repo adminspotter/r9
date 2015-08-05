@@ -1,6 +1,6 @@
-/* config.h                                                -*- C++ -*-
+/* configdata.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:20:25 tquirk
+ *   last updated 05 Aug 2015, 14:38:46 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -27,13 +27,15 @@
  *   26 Jul 2014 TAQ - Created the file.
  *   31 Aug 2014 TAQ - We're now called ConfigData.
  *   24 Jul 2015 TAQ - Converted to stdint types.
+ *   05 Aug 2015 TAQ - Renamed to configdata.h to eliminate conflict with
+ *                     autoconf's config.h.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_R9CLIENT_CONFIG_H__
-#define __INC_R9CLIENT_CONFIG_H__
+#ifndef __INC_R9CLIENT_CONFIGDATA_H__
+#define __INC_R9CLIENT_CONFIGDATA_H__
 
 #include <vector>
 #include <string>
@@ -67,4 +69,4 @@ class ConfigData
 
 extern ConfigData config;
 
-#endif /* __INC_R9CLIENT_CONFIG_H__ */
+#endif /* __INC_R9CLIENT_CONFIGDATA_H__ */

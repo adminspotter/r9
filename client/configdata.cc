@@ -1,9 +1,9 @@
-/* config.cc
+/* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 11:00:54 tquirk
+ *   last updated 05 Aug 2015, 14:10:48 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -51,7 +51,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "config.h"
+#include "configdata.h"
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 

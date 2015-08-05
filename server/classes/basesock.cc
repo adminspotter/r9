@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 15:11:37 tquirk
+ *   last updated 05 Aug 2015, 15:28:05 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -44,6 +44,7 @@
  *   10 Jul 2014 TAQ - Turns out that it is NOT valid to throw exceptions
  *                     from a destructor, so we just eat the errors.
  *   24 Jul 2015 TAQ - Converted to stdint types.
+ *   05 Aug 2015 TAQ - config.h moved to config_data.h.
  *
  * Things to do
  *
@@ -63,7 +64,7 @@
 #include "basesock.h"
 
 #include "../server.h"
-#include "../config.h"
+#include "../config_data.h"
 #include "../log.h"
 
 basesock::basesock(struct addrinfo *ai, uint16_t port)

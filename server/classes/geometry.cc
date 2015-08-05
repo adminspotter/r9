@@ -1,6 +1,6 @@
 /* geometry.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:28:42 tquirk
+ *   last updated 05 Aug 2015, 15:26:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -38,13 +38,14 @@
  *   09 Jul 2006 TAQ - Removed methods which are no longer needed.
  *   11 Aug 2006 TAQ - Removed unneeded methods.
  *   24 Jul 2015 TAQ - Comment cleanup.
+ *   05 Aug 2015 TAQ - config.h moved to config_data.h.
  *
  * Things to do
  *
  */
 
 #include "geometry.h"
-#include "../config.h"
+#include "../config_data.h"
 
 Geometry::Geometry()
 {

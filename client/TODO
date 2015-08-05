@@ -1,14 +1,10 @@
 In no particular order:
 
-1) Create a streambuf object that will do a main_post_message, so we
-   can use the std::clog to print to other than stderr.  This probably
-   mostly belongs in the system-specific client parts, rather than
-   the top-level client directory.
-2) Test all these new pieces we've written.
-3) Look into replacing the Xerces SAX parsers with something less
+*  Test all these new pieces we've written.
+*  Look into replacing the Xerces SAX parsers with something less
    heavy, perhaps based on Expat.  See also
    http://www.xml.com/pub/a/1999/09/expat/reference.html
-4) The cache objects currently contain a fallback object, which is
+*  The cache objects currently contain a fallback object, which is
    returned in the case that the cache does not currently have the
    object in question.  Decide on the best way to load them in.  We
    might try having a separate thread that only loads things from disk
@@ -16,14 +12,14 @@ In no particular order:
    probably copy the display list ID from the fallback into the new
    element as it is first requested, and then a new display list is
    inserted in place of the fallback as the new object is loaded.
-5) The various parsers for the cache objects are massive race
+*  The various parsers for the cache objects are massive race
    conditions.  Since we construct the display lists as we receive the
    elements, and the regular display loop could be operating at the
    same time, so objects which are being drawn on the screen could end
    up mistakenly inside the new display lists.  We may need to have a
    mutex of some sort to lock out the regular display while we're
    parsing.
-6) Using display lists is deprecated anyway.  We'll need to convert
+*  Using display lists is deprecated anyway.  We'll need to convert
    things over to the new vertex buffer objects at some point.  Based
    on limited reading, that should actually solve the race condition
    problem as well, without needing a mutex.

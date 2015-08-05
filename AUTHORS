@@ -1,0 +1,22 @@
+R9 was born out out two groups that were talking about making games,
+starting around 1997.  They didn't know about each other, and their
+two visions weren't quite compatible with each other, but the engine
+was flexible enough to move from one to the other without a huge
+amount of rework.
+
+The start of the server was meant to be a multi-game server, with each
+game controlled by its own loaded library.  Ringleaders for that
+discussion were Richard Finn, Damon Courtney, and Andy Doerr.
+
+In 1999 or 2000, a different group started talking about more of an
+MMO-type game.  The existing server program (then just called
+"server") was flexible enough to handle the transition, and just
+started moving in the new direction.  David Pitre was the source of
+the name, as the ideas for game mechanics were based on his ninth
+revision of game rules that he'd been working on.  Additional
+conspirators were Reverend Phil and Shane Brauner.
+
+Current contributors, in alphabetical order:
+
+Trinity Quirk <tquirk@ymb.net> - Engine design, pretty much everything
+                                 up to now.

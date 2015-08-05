@@ -222,6 +222,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* Enable editres support */
+#undef WANT_EDITRES
+
 /* Define to 1 if on MINIX. */
 #undef _MINIX
 

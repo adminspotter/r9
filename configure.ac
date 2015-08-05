@@ -15,7 +15,7 @@ AC_GNU_SOURCE
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
-AM_PROG_AR
+m4_ifset(AM_PROG_AR, [AM_PROG_AR], [])
 
 AC_LANG(C++)
 
@@ -140,13 +140,18 @@ then
       [CLIENT_LDLIBS="$ac_cv_search_XpmReadFileToPixmap $CLIENT_LDLIBS"],
       [AC_MSG_ERROR([libXpm not valid, can not build client program.])])
   CLIENT_LDLIBS="-lSM -lICE $CLIENT_LDLIBS"
+
   if test "$enable_editres" == "yes"
   then
     AC_SEARCH_LIBS([_XEditResCheckMessages], [Xmu],
-        [CLIENT_LDLIBS="$ac_cv_search__XEditResCheckMessages $CLIENT_LDLIBS"],
+        [
+            CLIENT_LDLIBS="$ac_cv_search__XEditResCheckMessages $CLIENT_LDLIBS"
+            AC_DEFINE(WANT_EDITRES, [1], [Enable editres support])
+        ],
         [AC_MSG_ERROR([libXmu not valid, can not enable editres support.])],
         [$CLIENT_LDLIBS])
   fi
+
   AC_SEARCH_LIBS([XmCreateMainWindow], [Xm],
       [CLIENT_LDLIBS="$ac_cv_search_XmCreateMainWindow -lXext -lXt -lX11 $CLIENT_LDLIBS"],
       [AC_MSG_ERROR([libXm not valid, can not build client program.])],

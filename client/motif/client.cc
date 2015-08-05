@@ -1,9 +1,9 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 14:36:31 tquirk
+ *   last updated 05 Aug 2015, 16:46:16 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,6 +41,7 @@
  *   31 Aug 2014 TAQ - Started integrating the Comm and ConfigData
  *                     objects.  This is going to be a bit more
  *                     complex than I thought.
+ *   05 Aug 2015 TAQ - A bit of autoconf-ification.
  *
  * Things to do
  *   - Flesh out the save_state routine.
@@ -56,13 +57,15 @@
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 #include <Xm/MainW.h>
+#if WANT_EDITRES
 #include <X11/Xmu/Editres.h>
+#endif /* WANT_EDITRES */
 
 #include <vector>
 
 #include "client.h"
 
-#include "../config.h"
+#include "../configdata.h"
 #include "../comm.h"
 #include "../geometry.h"
 #include "../texture.h"
@@ -118,12 +121,14 @@ int main(int argc, char **argv)
                   NULL);
     create_settings_box(mainwin);
 
+#if WANT_EDITRES
     /* We want editres to work with this application */
     XtAddEventHandler(toplevel,
                       (EventMask)0,
                       True,
                       _XEditResCheckMessages,
                       NULL);
+#endif /* WANT_EDITRES */
 
     XtRealizeWidget(toplevel);
     std::clog << "Welcome to Revision 9" << std::endl;

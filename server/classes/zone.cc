@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:12:46 tquirk
+ *   last updated 05 Aug 2015, 15:27:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -135,6 +135,7 @@
  *   17 Aug 2014 TAQ - Worked on the motion worker to actually move things
  *                     around in the sectors.
  *   24 Jul 2015 TAQ - Converted to stdint types.
+ *   05 Aug 2015 TAQ - config.h moved to config_data.h.
  *
  * Things to do
  *
@@ -151,7 +152,7 @@
 
 #include "zone.h"
 #include "thread_pool.h"
-#include "../config.h"
+#include "../config_data.h"
 #include "../log.h"
 
 /* Private methods */
