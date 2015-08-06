@@ -24,17 +24,6 @@
  * just interface, so the real meat is within the derived,
  * DBMS-specific classes.
  *
- * Changes
- *   25 May 2014 TAQ - Created the file.
- *   31 May 2014 TAQ - No more conditional compiles!  The get_host_address
- *                     method now uses the new-style getaddrinfo, and
- *                     just saves the stringified IP.
- *   07 Jun 2014 TAQ - Some minor casting stuff in order to get this to
- *                     compile.  Also, get_host_address now throws exceptions
- *                     instead of trying to return things.
- *   09 Jul 2014 TAQ - Switched everything over to just throwing exceptions.
- *                     No syslogging here - let our callers handle that.
- *
  * Things to do
  *
  */

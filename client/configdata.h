@@ -23,13 +23,6 @@
  * This file contains the class declaration for loading and saving the
  * client configuration.
  *
- * Changes
- *   26 Jul 2014 TAQ - Created the file.
- *   31 Aug 2014 TAQ - We're now called ConfigData.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *   05 Aug 2015 TAQ - Renamed to configdata.h to eliminate conflict with
- *                     autoconf's config.h.
- *
  * Things to do
  *
  */

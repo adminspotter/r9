@@ -22,38 +22,6 @@
  *
  * This file contains the implementation of the datagram socket object.
  *
- * Changes
- *   08 Sep 2007 TAQ - Created the file from the ashes of udpserver.c.
- *   09 Sep 2007 TAQ - A few minor cleanups, moved some initialization out
- *                     of listen() to the constructor.  Added operator
- *                     members to the dgram_user.
- *   13 Sep 2007 TAQ - Removed server.h include.  Used basesock's static
- *                     create_socket instead of C version.
- *   16 Sep 2007 TAQ - Added some processing of input packets.
- *   17 Sep 2007 TAQ - Added another index to convert sockaddr_in to
- *                     an entry in the user list.
- *   23 Sep 2007 TAQ - Constructor and push() methods of ThreadPool changed.
- *   02 Dec 2007 TAQ - Added reaping of logged out users, via the new
- *                     pending_logout member of the user structure.
- *   15 Dec 2007 TAQ - Trying to debug why pinging doesn't seem to work
- *                     correctly.  Updated copy constructor of dgram_user
- *                     to include all members.
- *   16 Dec 2007 TAQ - Renamed reaper to dgram_reaper_worker.  Minor syntax
- *                     cleanups.
- *   19 Sep 2013 TAQ - Return NULL at the end of the worker routine to quiet
- *                     gcc.
- *   11 May 2014 TAQ - We've moved the motion- and position-related parameters
- *                     out of the GameObject and into the Motion object, so
- *                     some pointers point at different things.
- *   14 Jun 2014 TAQ - Lots of restructuring of base classes.
- *   15 Jun 2014 TAQ - Moved the send worker in here.  Sockaddr is now a class
- *                     hierarchy, and the behaviour has changed slightly.
- *   21 Jun 2014 TAQ - Changed syslog to new stream log.
- *   01 Jul 2014 TAQ - Moved the access pool into this.
- *   05 Jul 2014 TAQ - The zone_interface stuff has moved into server.h.
- *   09 Jul 2014 TAQ - Normalized exception handling and logging.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *   - We might need to have a mutex on the socket, since we'll probably
  *     be trying to read from and write to it at the same time.

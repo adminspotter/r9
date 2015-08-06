@@ -23,13 +23,6 @@
  * This file contains global function prototypes and variable
  * declarations for the signal handling functions.
  *
- * Changes
- *   11 Apr 1998 TAQ - Created the file.
- *   10 May 1998 TAQ - Added CVS ID string.
- *   16 Apr 2000 TAQ - Reset the CVS ID string.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   24 Jul 2015 TAQ - Comment cleanup.
- *
  * Things to do
  *
  */

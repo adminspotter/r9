@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:19:52 tquirk
+ *   last updated 05 Aug 2015, 14:14:41 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -42,42 +42,21 @@
  * least we'll have to come up with a good deadlock prevention
  * strategy.
  *
- * Changes
- *   30 Jan 1999 TAQ - Created the file.
- *   22 May 1999 TAQ - Instead of constantly allocating and freeing memory
- *                     to hold our send buffers, we have a ring buffer
- *                     with constant-sized elements.
- *   18 Jul 2006 TAQ - Made the send structure hold a packet instead of a
- *                     generic character buffer.  Added GPL notice.
- *   26 Jul 2006 TAQ - Renamed some of the routines.  Fleshed out the
- *                     receive routine, and actually make some calls out of
- *                     it now.  As it stands, this program should actually
- *                     work with the limited feature set I have written; now
- *                     I just need to get the server working enough.
- *   30 Jul 2006 TAQ - Got the server working enough to send things to us,
- *                     and we're not getting them.  We need to do separate
- *                     threads for comm handling.  Made the sending queue
- *                     dynamically resizeable, because statically sized queues
- *                     are like putting a gun to your head.
- *   04 Aug 2006 TAQ - Some of the prototypes for geometry and texture updates
- *                     changed.
- *   09 Aug 2006 TAQ - Removed references to geometry and texture packets,
- *                     since we're no longer handling those in-band.
- *   10 Aug 2006 TAQ - Added some who-is-it checking on receipt of a packet.
- *   13 Oct 2007 TAQ - Added some better debugging output.
- *   15 Dec 2007 TAQ - Worked on responding to ping packets.
- *   23 Jul 2014 TAQ - This is now a C++ file, and an actual class.
- *   26 Jul 2014 TAQ - Cleanups to compile.  Switched all the main_post_message
- *                     over to use std::clog.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */
 
+#include <config.h>
+
+#if HAVE_STRING_H
 #include <string.h>
+#endif /* HAVE_STRING_H */
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif /* HAVE_ARPA_INET_H */
 #include <errno.h>
 
 #include <cstdint>

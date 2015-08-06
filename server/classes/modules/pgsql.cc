@@ -24,21 +24,6 @@
  * our user database files using PostgreSQL.  This is not likely to
  * be the final database system that we will use, but it's supported.
  *
- * Changes
- *   25 May 1998 TAQ - Created the file.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   29 Sep 2007 TAQ - Renamed the file.  Started fleshing some stuff out,
- *                     and using the current functions (the libpq funcs
- *                     have changed a bit since 1998).
- *   13 Sep 2013 TAQ - Just wanted this to compile, so updated the function
- *                     prototypes, and changed the filename to pgsql.cc.
- *   31 May 2014 TAQ - We're now a subclass of DB.
- *   22 Jun 2014 TAQ - Constructor changed in the base, so we need to also.
- *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
- *   09 Jul 2014 TAQ - Exceptionified this class.  No more syslog.
- *   09 Aug 2014 TAQ - Updated the factory arguments to be correct.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *   - Implement the stubbed-out functions.
  *

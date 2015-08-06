@@ -27,17 +27,6 @@
  *
  * The intensity and direction arguments will never be used.
  *
- * Changes
- *   14 Aug 2006 TAQ - Created the file.
- *   29 Sep 2007 TAQ - Fleshed things out.  This should be basically complete
- *                     for now.
- *   25 Oct 2007 TAQ - Database call now takes a userid, not a username.
- *                     Added action_uncontrol_object, to drop control of an
- *                     object.
- *   10 May 2014 TAQ - Switched to Eigen math library.
- *   28 Jun 2014 TAQ - Include fixups.
- *   05 Jul 2014 TAQ - The zone_interface is moved into server.h.
- *
  * Things to do
  *   - Need to make more database calls - we need to figure out where the
  *     object is, and then we need to create it if it doesn't already exist,

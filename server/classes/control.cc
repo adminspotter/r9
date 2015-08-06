@@ -30,58 +30,6 @@
  * done in the update threads, where a single update packet can be put
  * together and sent to a whole bunch of users.
  *
- * Changes
- *   02 May 2000 TAQ - Created the file.
- *   15 May 2000 TAQ - Added default_slave, since there could be a way
- *                     that people could trade brains or something.
- *   11 Jun 2000 TAQ - ParseCommand now takes a buffer and a length.
- *   21 Jun 2000 TAQ - Moved all implementation into this file.  We
- *                     will decide about inlining of functions later.
- *                     Got rid of the command source stuff, since it
- *                     doesn't quite get the job done with respect to
- *                     UDP sockets.
- *   21 Oct 2000 TAQ - Made it possible to initialize a control object
- *                     with no slave game object.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   27 Jun 2006 TAQ - We made the slave pointer public, so we can get
- *                     rid of the get/set routines.  I think now we'll just
- *                     check slave's value, and if it's NULL, we'll fall back
- *                     on default_slave.
- *   05 Jul 2006 TAQ - Added struct sockaddr_in member, so we init it in the
- *                     constructor.
- *   27 Jul 2006 TAQ - Changed the parametered constructor into a blank
- *                     constructor.
- *   02 Aug 2006 TAQ - Removed the which_inbound member.
- *   11 Aug 2006 TAQ - The remote member changed to a class.
- *   16 Aug 2006 TAQ - Added init for the userid member.  ParseCommand is now
- *                     called execute_action, and takes an action_request
- *                     packet instead of a char *.
- *   05 Sep 2007 TAQ - Removed references to remote member.
- *   06 Sep 2007 TAQ - Added the send method.
- *   08 Sep 2007 TAQ - Added the send_ack and send_update methods.  Added
- *                     sequence member.  Finished up the send method.  On
- *                     destruction, we unlink the slave objects from us.
- *                     Cleaned up the execute_action method.
- *   18 Sep 2007 TAQ - Debugging to find a crash.
- *   23 Sep 2007 TAQ - The ThreadPool interface changed, so updated the
- *                     sending funcs to no longer pass lengths.
- *   29 Sep 2007 TAQ - Added the why misc-value argument to send_ack.
- *   11 Oct 2007 TAQ - Reworked execute_action.
- *   13 Oct 2007 TAQ - Moved checking of the zone's action routine list
- *                     into the action pool worker.  Removed debugging output.
- *   22 Oct 2007 TAQ - Added send_ping method.
- *   10 May 2014 TAQ - The action level map now exists within the control
- *                     object.  Also, the motion-related stuff is moved out
- *                     of the game object and into a new motion object.
- *                     Added take_over method, for some checked slave setting.
- *                     Switched to the Eigen math library.  Moved the bulk of
- *                     execute_action into the same-named function within
- *                     the zone - we know what *we* can do, but zone needs
- *                     to do checking, and check its own tables.
- *   05 Jul 2014 TAQ - The zone_interface is gone, moved into server.cc and
- *                     server.h.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

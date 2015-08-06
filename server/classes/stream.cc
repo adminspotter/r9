@@ -22,36 +22,6 @@
  *
  * This file contains the implementation of the stream server socket.
  *
- * Changes
- *   09 Sep 2007 TAQ - Created the file from the ashes of tcpserver.c.
- *   13 Sep 2007 TAQ - Removed server.h include.  Used basesock's static
- *                     create_socket instead of C version.
- *   23 Sep 2007 TAQ - The constructor of ThreadPool changed.
- *   16 Dec 2007 TAQ - Added timestamp and pending_logout members to
- *                     assignment operator for stream_user.  Added thread
- *                     routine to reap link-dead and logged-out users.
- *   22 Nov 2009 TAQ - Fixed typo (subserv != subsrv) in stream_reaper_worker.
- *                     Redeclared stream_reaper_worker as extern, so it
- *                     can be a friend to stream_socket.
- *   19 Sep 2013 TAQ - Return NULL at the end of the worker routine to quiet
- *                     gcc.
- *   11 May 2014 TAQ - We've moved the motion- and position-related parameters
- *                     out of the GameObject and into the Motion object, so
- *                     some pointers point at different things.
- *   14 Jun 2014 TAQ - Restructured the base classes and the relationship of
- *                     the derived types to the actual socket.
- *   15 Jun 2014 TAQ - Moved the send worker into the class as well.
- *   21 Jun 2014 TAQ - Converted syslog to use the logger stream.
- *   01 Jul 2014 TAQ - Base class got an access pool, and virtuals changed
- *                     a little bit.
- *   04 Jul 2014 TAQ - Instead of moving subserver here, we separated it out
- *                     into a completely separate binary and exec it once we
- *                     get the file descriptors set up correctly.
- *   05 Jul 2014 TAQ - This file didn't really need the zone_interface.
- *   09 Jul 2014 TAQ - Normalized the exception-throwing.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *   05 Aug 2015 TAQ - config.h moved to config_data.h.
- *
  * Things to do
  *
  */

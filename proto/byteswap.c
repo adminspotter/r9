@@ -23,46 +23,6 @@
  * These are the routines which do the network byte order conversion
  * before sending and after receiving.
  *
- * Changes
- *   14 Oct 2000 TAQ - Created the file.
- *   16 Oct 2000 TAQ - Added packet-size parameter and packet-size sanity
- *                     checking to all the functions which might need it.
- *                     All functions now return success/failure, indicating
- *                     whether or not an entire packet was found, or if the
- *                     data was corrupt or not.  We don't want seg-faults
- *                     or worse to occur just because we're reformatting
- *                     some data.
- *   17 Oct 2000 TAQ - Added logout request functions.  Fixed "open-ended"
- *                     arrays by just making them HUGE.  A stupid solution,
- *                     but it's a stupid problem.  Added up and forward
- *                     vectors to the position update structure.
- *   21 Oct 2000 TAQ - Added look vector to position updates.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   20 Jun 2006 TAQ - Added ARGSUSED tags to all, since the size param
- *                     is not always being used.  Position update
- *                     packet will only contain updates for one object,
- *                     so we can get rid of the count and size mumbo jumbo.
- *                     Fixed up the geometry update structure so that it
- *                     only has 100 triangles, and also will send a 32x32
- *                     RGBA texture.  Also added sizes to the jumptable, to
- *                     potentially speed up the send-out.
- *   06 Jul 2006 TAQ - Positions are now u_int64_t.
- *   26 Jul 2006 TAQ - Added normals to the geometry update routines.  Updated
- *                     the server notice packet processing based on the new
- *                     structure, with IPv4 and IPv6 addressing support.
- *                     Split the texture update out into its own packet type,
- *                     since things were getting pretty ugly within the
- *                     geometry update packet.
- *   09 Aug 2006 TAQ - Removed the geometry and texture request and update
- *                     packets, since we're going to do that OOB with a
- *                     webserver.
- *   16 Sep 2007 TAQ - Updated to new changes in proto.h.
- *   22 Oct 2007 TAQ - Added a entry for ping packets.  Added stubs for doing
- *                     a basic packet, which is what the ping uses.
- *   24 Jul 2015 TAQ - Comment cleanup.
- *   01 Aug 2015 TAQ - Moved a bunch of stuff out of proto.h into here.
- *                     Cleaned up server_notice packet handling.
- *
  * Things to do
  *
  */

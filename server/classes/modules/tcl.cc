@@ -22,14 +22,6 @@
  *
  * This files contains the class to embed tcl within our server program.
  *
- * Changes
- *   25 Jul 1998 TAQ - Created the file.
- *   05 Sep 1998 TAQ - Minor text change.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   13 Aug 2006 TAQ - Small compiler error fixes.
- *   12 Jun 2007 TAQ - A few minor tweaks.
- *   16 Jul 2014 TAQ - This is now a C++ class, a descendent of Language.
- *
  * Things to do
  *
  */

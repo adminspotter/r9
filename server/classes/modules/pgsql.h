@@ -22,14 +22,6 @@
  *
  * This file contains the derived PostgreSQL database class.
  *
- * Changes
- *   31 May 2014 TAQ - Created the file.
- *   22 Jun 2014 TAQ - Constructor changed in the base, so we will too.
- *   01 Jul 2014 TAQ - Added primary function prototypes.  They're pure
- *                     virtual, but we still have to declare them.
- *   09 Jul 2014 TAQ - db_connect now returns nothing, and throws exceptions.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

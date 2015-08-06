@@ -22,16 +22,6 @@
  *
  * This file contains the un/registration functions for our action list.
  *
- * Changes
- *   14 Aug 2006 TAQ - Created the file.
- *   16 Aug 2006 TAQ - A quick cast to get rid of a signed/unsigned comparison
- *                     complaint by the compiler.  Added extern "C" linkage.
- *   05 Sep 2007 TAQ - Fixed a compiler complaint.
- *   11 Oct 2007 TAQ - Updated to use new action record maps.
- *   10 May 2014 TAQ - Switched to the Eigen math library.  Updated calls to
- *                     use Motion objects.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

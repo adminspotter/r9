@@ -22,18 +22,6 @@
  *
  * This file contains the derived MySQL database class.
  *
- * Changes
- *   25 May 2014 TAQ - Created the file.
- *   31 May 2014 TAQ - Removed all IP-related stuff to the DB class, and all
- *                     we need now is a string.  Also added the db_handle
- *                     member and db_connect method.
- *   22 Jun 2014 TAQ - Constructor changed in the base, so we're changing too.
- *   24 Jun 2014 TAQ - Changed include.  Added prototypes for virtuals we
- *                     inherit from DB.
- *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
- *   09 Jul 2014 TAQ - db_connect now returns nothing and throws exceptions.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

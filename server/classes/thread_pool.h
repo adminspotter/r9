@@ -53,64 +53,6 @@
  *   resize(int size)
  *       resizes the thread pool to have <size> threads
  *
- * Changes
- *   01 Jul 2006 TAQ - Created the file.
- *   04 Jul 2006 TAQ - Added pop method, to encapsulate mutex handling.
- *                     Added name member, so our log entries mean something.
- *                     The thread_pool member is now a pointer, as it should
- *                     have been in the first place.  We now throw int
- *                     exceptions, which contain errno values, out of the
- *                     constructor.
- *   06 Jul 2006 TAQ - Added the C++ tag at the top to get emacs to use the
- *                     right mode.
- *   12 Jul 2006 TAQ - Fixed a couple syntax errors.
- *   27 Jul 2006 TAQ - Added a crapload of syslog debugging output, since
- *                     we're running into some real big problems here.  Turns
- *                     out that if we sleep on entry to our worker routine,
- *                     the seg-faults we're seeing go away - some sort of
- *                     race condition?
- *   30 Jul 2006 TAQ - Removed some debugging syslog output.  We seem to be
- *                     working pretty well now.  Moved the allocations before
- *                     the mutex initialization, to attempt to combat the
- *                     apparent race condition we're seeing.  Moved the startup
- *                     into its own start() routine, which completely removes
- *                     any chance of that race condition.
- *   16 Aug 2006 TAQ - Added clean_on_pop member, and a conditional to do a
- *                     memset to 0 of the last item popped from the queue.
- *                     Basically it's for cleaning up passwords from memory
- *                     when we're done with them.
- *   12 Jun 2007 TAQ - Minor tweaks.
- *   21 Jun 2007 TAQ - Added a wrapper function to the start so that we can
- *                     set thread cancel reactions the way we want.  Added the
- *                     resize method.  Added pool_size and queue_size
- *                     accessor functions, for reporting purposes.
- *   22 Jun 2007 TAQ - Added a 0-length sleep to the destructor before
- *                     killing each thread, so that we'll give up our slice
- *                     and give the children a chance to get on the CPU.
- *                     That way, they'll actually die in the correct way.
- *                     Every place we cancel a thread, we now do a zero
- *                     sleep, in case it's important.
- *   05 Sep 2007 TAQ - Added an exit_flag member, since we can't depend on
- *                     main_loop_exit_flag to be set when we really need
- *                     child threads to exit.  Added a stop() method.  Added
- *                     a startup_arg, so that we could actually pass something
- *                     into the worker function.
- *   06 Sep 2007 TAQ - Removed startup_wrapper, since it was redundant, and
- *                     got in the way of making startup_arg available.
- *   08 Sep 2007 TAQ - Added string.h and unistd.h includes, which were
- *                     strangely absent.
- *   17 Sep 2007 TAQ - Removed a pthread_cancel, which does not return if
- *                     the thread in question has already exited.
- *   23 Sep 2007 TAQ - STLized the thread_pool (vector) and the request_
- *                     queue (queue).  Lots of complexity went away.  The
- *                     constructor only takes two args now, name and pool
- *                     size.
- *   22 Nov 2009 TAQ - Added const to constructor's string argument to get
- *                     rid of a compiler warning.
- *   21 Jun 2014 TAQ - Updated syslog to use the stream-based log.
- *   09 Jul 2014 TAQ - Simplified the exception handling and logging.  Also
- *                     changed the name member to a std::string.
- *
  * Things to do
  *   - Might we need a way to gun a stuck thread?
  *

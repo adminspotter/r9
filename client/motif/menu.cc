@@ -23,15 +23,6 @@
  * This file contains routines to create the main menu tree and handle
  * callbacks to each of the menu items.
  *
- * Changes
- *   26 Sep 1998 TAQ - Created the file.
- *   18 Jul 2006 TAQ - Added GPL notice.  Changed name of menu.h to client.h.
- *   19 Jul 2006 TAQ - Added a couple buttons.
- *   26 Jul 2006 TAQ - Renamed a bunch of stuff.
- *   17 Aug 2006 TAQ - Added a logout button and callback.
- *   31 Aug 2014 TAQ - Now called menu.cc.  We're using the std::clog, and
- *                     the new comm object.
- *
  * Things to do
  *   - Almost all the callbacks are hooked up to emptyCallback.  Write
  *   some actual callback routines.

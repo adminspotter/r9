@@ -1,0 +1,949 @@
+1998-03-25 - TAQ
+	Created server/server.cc.
+
+1998-03-28 - TAQ
+	Created server/config_data.cc.
+	server/server.cc - Monkeyed with the socket-creation routine.  Moved the config stuff into config.c.
+
+1998-03-29 - TAQ
+	server/config_data.cc - Modified the NUM_ELEMENTS macro.  Added UseLinger.  Fleshed out the Server[UG]ID and ServerPort routines.  ServerRoot is no longer saved, just used and thrown away.  Same with Server[UG]ID.  Error checking in config_server_port.
+	server/server.cc - Added the options lines to setup_sockets.
+
+1998-04-04 - TAQ
+	Created server/subserver.cc.
+
+1998-04-11 - TAQ
+	Created server/config_data.h, server/server.h, server/signals.cc, server/signals.h.
+	server/config_data.cc - Moved the chunk allocation stuff into a header file.  Added a few variables and a header file.
+	server/server.cc - Moved the signal-handling to another file.  Moved all external function prototypes into their respective header files.
+
+1998-04-12 - TAQ
+	server/config_data.cc - Reset use_* variables in cleanup_configuration.
+	server/server.cc - Moved the socket variables into config.[ch].
+	server/signals.cc - Wrote some basic signal handlers.
+
+1998-04-17 - TAQ
+	server/config_data.h - Added the prototype for cleanup_sockets into this file.
+	server/server.cc - Made cleanup_sockets a global function.
+
+1998-05-10 - TAQ
+	server/server.cc - Minor changes, more includes, variable name changes to make this file compilable.
+	server/subserver.cc - It turns out that we can probably get away with just one file, and have each different interpreter have its own startup and cleanup routine.  Fleshed this file out a whole lot.  Most of the dynamic-loading stuff is now here.
+
+1998-05-11 - TAQ
+	server/subserver.cc - The connection loop now uses socketpair to create our communication channel.  Our I/O with the main server is through STDIN_FILENO.
+
+1998-05-25 - TAQ
+	Created server/classes/modules/pgsql.cc, server/classes/modules/perl.cc, server/classes/modules/tcl.cc.
+	server/subserver.cc - Monkeyed with the funcptrs.
+
+1998-09-05 - TAQ
+	server/classes/modules/tcl.cc - Minor text change.
+
+1998-09-20 - TAQ
+	server/classes/modules/perl.cc - Added a whole lot to this file.  It will likely be a good long while before this actually does even close to what it needs to do.  The documentation is pretty obscure on what's really going on.
+
+1998-09-24 -  TAQ
+	server/subserver.cc - Got rid of the extra stuff in recv_fd.  The entirety of subserver_main_loop is gone.
+
+1998-09-26 - TAQ
+	Created client/motif/client.cc, client/motif/client.h, client/motif/menu.cc, client/r9client.h.
+
+1998-10-21 - TAQ
+	server/config_data.cc - Added some load-balancing config options.  Changed the linger option to actually take an argument.
+	server/config_data.h - Added limits.h include TOTAL_MAX define.
+
+1998-10-24 - TAQ
+	server/subserver.cc - The subserver loop now actually does something, though it won't accept any new connections yet.  Also attempted to open a syslog connection.
+
+1998-11-01 - TAQ
+	server/subserver.cc - We now keep track of each connection as it comes in.  Unfortunately the connections aren't making it this far (something with inetd and hosts.allow I'm guessing).
+
+1999-01-30 - TAQ
+	Created client/comm.cc.
+	client/motif/client.cc - Added some session management.  This stuff is crazy.
+
+1999-02-13 - TAQ
+	server/config_data.cc - Improved the parsing of the config files.  We now ignore leading whitespace, and ignore any amount and kind of whitespace between the option identifier and the option data.  Moved all the config data into a struct.
+
+1999-02-14 - TAQ
+	server/config_data.h - Added config_data structure.
+	server/server.cc - Moved calls around main since we actually want to read the config first - we need to get the name of the lock file we want to use before we try to create the lock file.  It's not going to be a compiled-in option any more.
+
+1999-02-20 - TAQ
+	Created server/classes/modules/mysql.cc.
+	server/config_data.cc - Fixed improper initialization/reinitialization of the config struct.
+	server/server.cc - We now remove our pidfile when we terminate.
+	server/server.h - Added the cleanup_sockets prototype.
+
+1999-02-23 - TAQ
+	server/classes/modules/mysql.cc - Wrote the db_connect routine.  The suspended field is now an enum instead of an integer.  We might save a few bytes that way.
+	server/config_data.cc, server/config_data.h - Added database configuration options.
+
+1999-05-22 - TAQ
+	client/comm.cc - Instead of constantly allocating and freeing memory to hold our send buffers, we have a ring buffer with constant-sized elements.
+
+1999-05-30 - TAQ
+	server/config_data.cc - Tweaked process_config_file a bit; we now explicitly ignore comments.  Added a log action for unrecognized command-line options.
+
+1999-10-06 - TAQ
+	server/config_data.cc - Added stream/datagram selection in the config.
+	server/server.cc - Based on a new config option, we now support both stream (tcp) and datagram (udp) socket creation.
+
+2000-04-04 - TAQ
+	Created server/classes/zone.h.
+
+2000-04-25 - TAQ
+	server/server.cc - Fixed the one-interface-only problem - bind to IP address 0.
+
+2000-05-02 - TAQ
+	Created server/classes/control.cc, server/classes/control.h, server/classes/game_obj.h.
+
+2000-05-04 - TAQ
+	server/classes/game_obj.h - Minor tweaking; some of this is still pretty black-box as yet.
+
+2000-05-05 - TAQ
+	server/server.cc - The UDP sockets weren't even being bound.  Found the constant INADDR_ANY instead of 0 for the bind call.  Stevens to the rescue again.
+
+2000-05-15 - TAQ
+	server/classes/control.cc, server/classes/control.h - Added default_slave, since there could be a way that people could trade brains or something.
+
+2000-06-06 - TAQ
+	server/config_data.cc - Added NumBuffers for number of receive buffers.
+
+2000-06-10 - TAQ
+	server/classes/game_obj.h - Added GO_id_t, the type that is used for the game objects' system ID values; currently an unsigned long long.  Also added the static member max_id_value and member function ResetMaxID, and the normal private member id_value.
+
+2000-06-11 - TAQ
+	Created server/classes/zone.cc.
+	server/classes/control.cc, server/classes/control.h - ParseCommand now takes a buffer and a length.
+	server/classes/game_obj.h - Moved some things around.
+	server/classes/zone.h - Lots of changes, fleshing out.
+
+2000-06-12 - TAQ
+	server/classes/game_obj.h - Added GetObjectID.
+	server/classes/zone.cc - Lots of fleshing out.  Just need to do the sector stuff and we're mostly done.
+	server/classes/zone.h - Solidified lots of stuff.  Getting close to a finalish form.
+
+2000-06-16 - TAQ
+	Created server/classes/octree.h.
+
+2000-06-21 - TAQ
+	Created server/classes/game_obj.cc.
+	server/classes/control.cc, server/classes/control.h - Moved all implementation out of control.h, into control.cc.  We will decide about inlining of functions later.  Got rid of the command source stuff, since it doesn't quite get the job done with respect to UDP sockets.
+	server/classes/game_obj.h - Changed a few of the return values.  We don't really need return values for much of this.
+	server/classes/octree.h - Added the parent pointer.
+
+2000-06-23 - TAQ
+	server/classes/game_obj.cc, server/classes/game_obj.h - Moved static member initializers into the .cc file.
+
+2000-06-27 - TAQ
+	Created proto/proto.h, server/classes/octree.cc.
+
+2000-06-29 - TAQ
+	server/classes/octree.cc - Finished up build_octree.  Now called octree.cc.  Completed classify_polygon.
+	server/classes/octree.h - Added parent_index, which is the index of our node in our parent.
+	server/classes/zone.cc - LoadWorld will do the sector creation for us.
+	server/config_data.cc, server/config_data.h - Added (Min|Max)OctreeDepth.
+
+2000-07-01 - TAQ
+	server/classes/octree.cc - Reworked classify_polygon so that it's much faster and lighter on memory; it bails out as soon as it sees a point that isn't in the previously-seen octant.
+
+2000-07-02 - TAQ
+	server/classes/octree.cc - No longer check against depth at the beginning of build_octree; found a more general solution.
+
+2000-07-10 - TAQ
+	server/classes/octree.h - Removed some of the function prototypes.  This will be an opaque interface, I think.
+	server/classes/zone.cc - Implemented (create|delete)_sector_grid.
+	server/classes/zone.h - Adjusted sector_grid declaration.  AddObject no longer returns a GO_id_t.
+
+2000-07-11 - TAQ
+	server/classes/game_obj.cc - Minor changes so that it compiles.  The mutex is no longer a pointer.
+	server/classes/octree.cc - Finished up all the splitting.  Now do testing.  It compiles, but who knows if it works.
+
+2000-07-12 - TAQ
+	server/classes/octree.cc - The splitter didn't work properly.  Lots of changes so that it seems to work correctly now.
+	server/classes/zone.cc - Got a good implementation of the sector_grid.
+	server/classes/zone.h - The sector_grid is implemented as a vector of vectors of vectors of Sector pointers.  This should give us the indexing ability that we want and handle memory allocation for us too.  It will also handle dynamic resizing if necessary (do we want to implement that?).
+	server/config_data.cc, server/config_data.h - Added MaxOctreePolys.  Changed octree parameters to depend on defined constants instead of hardcoded ones.
+
+2000-07-13 - TAQ
+	server/classes/octree.cc - All the debugging is commented out, as is the iostream.h include.  Everything looks like it's working as expected.
+	server/config_data.cc, server/config_data.h - Reformatted configuration structure.  Added log_prefix option.
+	server/server.cc - Permission tweak on creation of pidfile.  Made log prefix a configuration option.
+
+2000-07-24 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - Implemented sector_to_world and world_to_sector.  The dimension variables are now doubles.
+
+2000-07-26 - TAQ
+	server/config_data.cc - All the boolean options now support actual boolean values, thanks to parse_bool.  Added use of defined constants as compiled-in defaults instead of hard coded values.  Error reporting on config_server_root.  Default values in most of the DB functions.  When these routines are run, we have neither opened the syslog or detached from the controlling terminal yet, so we now print all errors and warnings to stderr.
+	server/config_data.h - Added lots of default defines.
+
+2000-07-27 - TAQ
+	server/classes/game_obj.cc - Preliminary ExecuteAction routine.
+	server/classes/zone.cc, server/classes/zone.h - Added a zone object pointer.
+	server/config_data.cc - Fixed cleanup so that it'll free all allocated memory.  Small setup tweak, which may have problems on reinitialization.  Moved cleanup_configuration above process_config_file.
+	server/server.cc - Tiny string tweaks in setup_daemon.  Use default log prefix and pid filename in case of null values in the config struct.  Moved finding of the protocol number out of the socket creation loop - we only need to do it once.
+
+2000-08-13 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - Minor tweak to delete_sector_grid which might free a bit of memory.  Added sectorize_polygons and (yz|xz|xy)_clip private methods.  Implemented LoadWorld.
+
+2000-08-20 - TAQ
+	server/classes/game_obj.cc, server/classes/game_obj.h - Removed the min template function, since STL already has it.  Tweaked ExecuteAction method.
+	server/classes/zone.cc, server/classes/zone.h - Removed (yz|xz|xy)_clip for a single clip method which takes an int of which element we're clipping.
+
+2000-08-21 - TAQ
+	server/classes/octree.cc - Needed some help with the double-scaled vector.
+
+2000-08-24 - TAQ
+	server/config_data.cc - Fixed a typo in config_use_reuse.  Added setup_config_defaults routine to set default values, so we don't have to do bunches of checks when we actually try to use the values.
+	server/config_data.h - Added LOG_PREFIX define.
+	server/server.cc - Removed checking of config values, since we're now guaranteed that they'll be set - config routines handle that for us.
+
+2000-08-27 - TAQ
+	server/config_data.cc - When parsing the file, the input string is now PATH_MAX long, instead of 256 bytes.  Freeing static strings generates seg-faults, so we now check all config strings against the compiled-in defaults.  We now break out of the inner file processing loop once we process the command we found.
+	server/server.cc - Terminate if we find that a normal user is trying to bind to a privileged port.  Now cleanup the pid file when we error out of setup_sockets.
+
+2000-09-19 - TAQ
+	server/server.cc - Since there was so much shared code between the stream and datagram socket creation, it's now *actually* shared.
+
+2000-09-29 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - Added (setup|cleanup)_zone functions with C linkage.  Added sanity checking on Add, Get, and Del methods for zone controls, game objects, action routines, and libraries.  Added load_lib_path function to actually load the zone control and action routine libraries.
+	server/config_data.cc, server/config_data.h - Added [xyz]_dim, [xyz]_steps, and zone_fname processing.  Added (action|control)_(lib_dir|register_func) and libpath processing.
+	server/server.cc - Added zone creation/deletion calls.
+
+2000-10-02 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - Added some (open|get|close)_library methods that take const char * instead of string.
+	server/config_data.cc, server/config_data.h - Added lib_suffix processing.
+
+2000-10-03 - TAQ
+	server/classes/zone.cc - Removed extern "C" from the definitions of (setup|cleanup)_zone.  They're only apparently needed on the declarations.
+
+2000-10-14 - TAQ
+	Created proto/byteswap.c.
+	proto/proto.h - Defines and hton/ntoh prototypes.  Also added packet union for simplifying packet operations.  Got rid of login_response since it can be mapped to a generic ACK packet.
+	server/server.cc, server/server.h - Added complete_(startup|cleanup) for the signal handlers.  setup_log now takes no arguments, to make it just like the rest of the routines which read straight out of the config structure.
+	server/signals.cc - Added USR1 and USR2 handlers.  Converted to use sigaction, since there's much more control available.  Changed the meaning of HUP to "restart everything", where USR1 rereads the config and USR2 regenerates the zone.
+
+2000-10-16 - TAQ
+	proto/byteswap.c, proto/proto.h - Added packet-size parameter and packet-size sanity checking to all the functions which might need it.  All functions now return success/failure, indicating whether or not an entire packet was found, or if the data was corrupt or not.  We don't want seg-faults or worse to occur just because we're reformatting some data.
+
+2000-10-17 - TAQ
+	proto/byteswap.c, proto/proto.h - Added logout request functions.  Fixed "open-ended" arrays by just making them HUGE.  A naive solution for a naive problem - the packet union is now approximately 2.5MB in size.  Added up and forward vectors to the position update structure.
+
+2000-10-21 - TAQ
+	proto/byteswap.c, proto/proto.h - Added look vector to the position update.  Rearranged login request.
+	server/classes/control.cc - Made it possible to initialize a control object with no slave game object.
+
+2000-10-27 - TAQ
+	server/classes/octree.cc - Reworked this to use floating-point numbers and the Math3d library.  Generalized the clip_along_<foo>_plane routines to take a couple more arguments and be a single clip routine.
+
+2000-10-28 - TAQ
+	Created server/classes/defs.h.
+	server/classes/game_obj.h - Removed point.h include since we're using Math3d now.  Moved typedefs into defs.h.
+	server/classes/octree.cc - clip is no longer static, since we use it in the zone object.
+	server/classes/zone.cc - Converted to use M3d instead of point.  Fixed the poly-clipping routines to be more efficient.  Set a very simple funcptr type for Action, which will need to be refined once we figure out what the action routines actually need.  Made the ZoneControl into a simple function typedef.  Fixed a problem with error string variables in load_lib_path.
+	server/classes/zone.h - Reworked world_to_sector, sector_to_world and which_sector.  Removed clip, since we're now using the same routine as in the octree files.  Moved typedefs to defs.h.
+	server/config_data.cc, server/config_data.h - Added action and control unregistration function names and options for the zone file and un/register function.
+
+2000-10-29 - TAQ
+	server/classes/zone.cc - Added NULL-checking for the dlsym in load_lib_path.
+	server/server.cc, server/server.h - Added load_zone and unload_zone, since we're now going to make the zone class and whatnot into a dynamic lib for easy changes.  When setup_sockets errors out, we now call cleanup_log and cleanup_configuration in all cases.
+	server/signals.cc - Removed zone.h include, and changed startup/cleanup zone to un/load_zone.
+
+2000-11-04 - TAQ
+	server/config_data.cc, server/config_data.h - Added console option processing.  There will be no default values for those options; if they aren't configured explicitly, they won't be used at all.
+
+2000-11-13 - TAQ
+	server/server.cc - When we need root privs to bind ports < 1025, we grab them at the last possible chance, and drop them at the earliest possible chance.
+
+2001-07-13 - TAQ
+	proto/proto.h - Changed most of the vector elements to be signed, since they're potentially directions.  We'll need to use signed vector elements EVERYWHERE.
+
+2002-01-29 - TAQ
+	server/config_data.cc, server/config_data.h - Moved the line-by-line processing of the config files into its own routine, since the console driver will need to be able to configure things as well.  Also added some routines for the console to be able to access our static routines.  Altered user and group routines to use getpwnam and getgrnam instead of doing it the long way.  Adde log facility config options.
+	server/server.cc - We now have the logging facility as a config option.
+
+2002-02-11 - TAQ
+	Created server/classes/geometry.h.
+	server/classes/defs.h - The geometry is now a vector of polygons with some color information.
+
+2002-02-14 - TAQ
+	server/classes/zone.cc - Fixed some config changes with the library names and paths.
+	server/config_data.cc, server/config_data.h - Fixed the confusion surrounding the Zone-related config options.
+	server/server.cc - The name of the element in the config structure for the library directory changed, so we had to change it in here.
+
+2002-02-19 - TAQ
+	Created server/classes/geometry.cc.
+	server/classes/geometry.h - Added addPoly and delPoly.
+
+2002-02-20 - TAQ
+	server/classes/defs.h - Moved geometry into a separate file.
+	server/classes/geometry.h - Changed delPoly to delPolys.
+
+2002-03-15 - TAQ
+	server/classes/geometry.cc, server/classes/geometry.h - Started messing with bounding volumes.
+
+2002-04-09 - TAQ
+	server/classes/geometry.cc, server/classes/geometry.h - Removed addPolys routine.
+
+2002-06-24 - TAQ
+	server/classes/game_obj.h - We no longer really care anything about our geometry; it will all be handled by the geometry object.  We'll just need to know our position, and what frame we're on.
+	server/classes/geometry.cc, server/classes/geometry.h - Converted to using RAPID.
+
+2002-06-30 - TAQ
+	server/classes/defs.h - Added the sequence_element, which keeps track of sequences of frames for object movement.
+	server/classes/geometry.cc, server/classes/geometry.h - Started adding frame sequences.
+	server/config_data.cc, server/config_data.h - Added frame sequence and polygon limit config options.
+
+2003-08-02 - TAQ
+	server/classes/geometry.cc, server/classes/geometry.h - Worked a little more with the frame sequences.  Also fixed a couple problems with the RAPID passthrough functions.
+	server/classes/zone.cc - Had to cast away const in the destructor.
+	server/signals.cc - Improperly ordered arguments in print statements of setup_signals.
+
+2004-03-17 - TAQ
+	proto/proto.h - Scaled the almost-open-ended arrays in the geometry packets to fit in 64K.  Some of the numbers are a little weird, but it's properly sized now.
+
+2004-03-30 - TAQ
+	server/classes/defs.h - The octree now contains *pointers* to polys, instead of the actual polys themselves.  This will save memory and also make things really easy to change.  Also, we're using poly pointers instead of refs in the contents deque.
+	server/classes/octree.cc, server/classes/octree.h - Storing the *clipped* polys in the tree was foolish, when I should instead be storing a reference of some sort to the *whole* poly.  It'll save on memory.  Testing, removal, and a whole bunch of other operations then becomes much simpler.  We're having to use a pointer, which is proving to be tricky.
+
+2004-04-02 - TAQ
+	server/classes/defs.h - Added the neighbor array of pointers to the octree node structure.  We're going to precompute the neighbors because it could get expensive doing them on the fly.
+	server/classes/octree.cc - We are now going to precompute the neighbors of each node, and store them in the node.
+
+2004-04-03 - TAQ
+	server/classes/octree.cc, server/classes/octree.h - Finished up the neighbor-finding routine.  There is surely a much more general way to do it, but I had to get the numbers down first, to see if there are any patterns I can see.  After a quick segfault problem, it seems to be working just fine.  Also added the octree_delete routine, an easy tail-recursion.
+
+2004-04-06 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - sectorize_polygons now takes lists of polygon pointers.  A whole bunch of vars and stuff needed to change because of this as well.
+
+2004-04-10 - TAQ
+	server/classes/defs.h - Added a min and max point for the octree.
+	server/classes/octree.cc - Changed some of the commented regions to be ifdef'ed to DEBUG, and some others to change based on REVISION9SERVER.  We now set a min and max point in each octant, so we can more easily tell just how much area we cover (should be needed for an inorder tree walk).
+
+2004-04-21 - TAQ
+	server/classes/defs.h - The polygon got too complicated, and has become its own class, in its own file.
+	server/classes/octree.cc - The polygon needs to have a normal vector, so we had to make it into a struct.  The actual list of points is now called 'points' inside the struct.
+
+2004-04-24 - TAQ
+	server/classes/octree.cc - Found a couple errors which might lose the contents of an octant which has fewer than MAX_OCTREE_POLYS in it, by simply not creating it.
+
+2005-12-09 - TAQ
+	server/server.cc - Moved some error handling around in setup_sockets and unload_zone.  Also made main use complete_cleanup instead of calling each by hand.
+
+2006-04-04 - TAQ
+	Added std:: and Math3d:: namespaces to all source files.
+	server/classes/zone.cc - The polygon object is also now an object instead of a typedef of a vector, so a few things have changed.
+
+2006-05-10 - TAQ
+	server/classes/octree.cc - Altered MAX_OCTREE_POLYS for collider testing.
+
+2006-05-15 - TAQ
+	Added GPL notice to all source files.
+
+2006-06-08 - TAQ
+	server/server.cc - Added thread setup/cleanup calls.
+
+2006-06-14 - TAQ
+	server/config_data.cc, server/config_data.h - Added thread config options.
+	server/server.cc - Fixed up most of the thread handling.
+
+2006-06-20 - TAQ
+	proto/byteswap.c, proto/proto.h - Added ARGSUSED tags to all, since the size param is not always being used.  Position update packet will only contain updates for one object, so we can get rid of the count and size mumbo jumbo.  Fixed up the geometry update structure so that it only has 100 triangles, and also will send a 32x32 RGBA texture.  Removed the sector references from the position packets, since that'll just be internal server stuff.  Also added sizes to the jumptable, to potentially speed up the send-out.
+
+2006-06-27 - TAQ
+	server/classes/control.cc, server/classes/control.h - We made the slave pointer public, so we can get rid of the get/set routines.  I think now we'll just check slave's value, and if it's NULL, we'll fall back on default_slave.
+	server/classes/geometry.cc, server/classes/geometry.h - For the time being, we're going to keep this class extremely basic - we'll just be a sphere of some radius, and that's it.
+
+2006-07-01 - TAQ
+	Created server/classes/thread_pool.h.
+	server/classes/defs.h - Fleshed out the action_level (changed name from the bicapitalized ActionLevel) to include level, improvement points, and last-level-increase timestamp; we're going to only allow levelling only after a certain time, or after a user has logged out for a certain time since his previous levelling.  The index element of the action_level is the index into the action table; basically, which action it is.
+	server/classes/game_obj.cc, server/classes/game_obj.h - Made a lot of the attributes public, since it'll just be easier in the long run.  Actions are now going to be indexed by number, since it's likely that we'll have a simple lookup table (since it's fast) to do the dispatching.  Removed sector pointer, since we can be in more than one at a time.
+	server/classes/zone.h - Commented out all the library stuff, since we're going to get things working without a lot of the frills, most of which we won't need until later anyway.  Actions are now indexed by ints.
+
+2006-07-04 - TAQ
+	server/classes/game_obj.cc - Quick syntax fix.  Missed deleting one of the methods which was superseded by making an attribute public.  Also changed the action routine call, since the zone now makes the action list public.
+	server/classes/thread_pool.h - Added pop method, to encapsulate mutex handling.  Added name member, so our log entries mean something.  The thread_pool member is now a pointer, as it should have been in the first place.  We now throw int exceptions, which contain errno values, out of the constructor.
+	server/classes/zone.cc, server/classes/zone.h - Some fixes for our removal/commenting of funcs.  Cleanup from changes to the nature type.  Made several members public, and removed associated getters and setters.  Added thread pools.
+	server/server.cc - Thread pools moved into the zone.
+
+2006-07-05 - TAQ
+	server/classes/control.cc, server/classes/control.h - Added struct sockaddr_in member, so we init it in the constructor.
+
+2006-07-06 - TAQ
+	proto/byteswap.c, proto/proto.h - Positions are now u_int64_t.
+	server/classes/zone.cc, server/classes/zone.h - Commented the zone controls for now.  Changed dimension elements to be u_int64_t.
+	server/config_data.cc, server/config_data.h - Changed the dimensions to u_int64_t, and the default dimension to 100 (was 100.0).  Reduced minimum thread count to 1.
+
+2006-07-09 - TAQ
+	server/classes/geometry.cc, server/classes/geometry.h - Made some members public, for simplicity.  Removed methods which are no longer needed.
+
+2006-07-12 - TAQ
+	proto/proto.h - Changed the up and forward vectors in the position update to an orientation, which will be angular.
+	server/classes/control.h - Added which_inbound member, which records which of the main sockets this particular control is using.
+	server/classes/defs.h - Added a couple args to the action routine.
+	server/classes/game_obj.cc, server/classes/game_obj.h - Added directional/angular motion vectors and last-updated timestamp.  Removed the ExecuteAction routine, since that is now handled in the action thread pool worker routine.  Added look vector, so we can look in a different direction than we are facing.  Probably won't be used anytime soon, but it's there now.
+	server/classes/zone.cc, server/classes/zone.h - Commented all the sector stuff out, since the octrees don't currently understand spheres, which is what the game objects are now.  Fleshed out pool worker routines.  Added position and orientation of the individual game objects.
+
+2006-07-17 - TAQ
+	server/classes/zone.cc - When putting the numbers into a position update packet, we multiply the floating point numbers by 100, and truncate the decimal portion.  Centimeter resolution should be good enough.
+
+2006-07-18 - TAQ
+	Created client/motif/command.c, client/motif/message.cc, client/motif/view.cc.
+	client/comm.cc - Made the send structure hold a packet instead of a generic character buffer.
+	client/motif/client.cc - Made this actually do something.
+	client/motif/client.h - Changed it to client.h, and included all the routines that need to be available everywhere.
+	client/motif/menu.cc - Changed name of menu.h to client.h.
+	client/r9client.h - Changed it to client.h, and included all the routines that need to be available everywhere.
+
+2006-07-19 - TAQ
+	Created client/motif/about.c, client/motif/setup.cc.
+	client/motif/client.h - Added socket creation prototype.  Added about creation callback.
+	client/motif/menu.cc - Added a couple buttons.
+	client/r9client.h - Added socket creation prototype.  Added about creation callback.
+
+2006-07-20 - TAQ
+	client/motif/setup.cc - Hooked up the couple config settings to a structure.  Started working on the config file.
+	client/motif/view.cc - Changed to be a GLwMDrawingArea, which is a GL drawing surface.
+
+2006-07-21 - TAQ
+	client/motif/view.cc - We now draw some stuff in this widget, and double- buffering working.  Started working on lighting and shading, but it's not doing anything.
+
+2006-07-23 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - Removed the proto.h include, since it's in the zone header file (and has also moved around a bit).
+
+2006-07-24 - TAQ
+	client/motif/view.cc - Still trying to get the lighting/shading to work.
+
+2006-07-25 - TAQ
+	client/motif/view.cc - Finally got the lighting/shading to work - it appears that freeing the XVisualInfo that we got out of the widget was actually freeing some internal state of the widget, and it then couldn't draw anything properly.  I also moved the only call to GLwDrawingAreaMakeCurrent to occur right after the call to glXCreateContext.  We also no longer have the context in a file-global variable; it goes out of scope at the end of the init callback, and we never look back.
+
+2006-07-26 - TAQ
+	Renamed a lot of client routines and variables.
+	client/comm.cc - Fleshed out the receive routine, and actually make some calls out of it now.  As it stands, this program should actually work with the limited feature set I have written; now I just need to get the server working enough.
+	client/motif/message.cc - Setting the blank message to a space, rather than an empty string, solved the vertical resize problem.
+	client/motif/setup.cc - Instead of printing error messages to stderr, we now pass them to main_post_message.  Debugging is still going to stderr though.  We're now getting the correct IP address out of gethostbyname, and after a bit of work, it's being transferred to the config structure correctly as well.
+	client/motif/view.cc - Added lists of objects (spheres) and textures (colors) and functions to manage them.
+	proto/byteswap.c, proto/proto.h - Added normals to the geometry update, dropped number of triangles to 50 (since each triangle is now double the size).  Added support for IPv6 addresses to the server notice packet.  Added support for a simple color to the texture update subpacket.  Split texture updates out of geometry updates; they were just getting way too complicated together.  Added an extern "C" protection around the prototypes, since when they link into the classes library, they link with C++ linkage, and then won't subsequently link into any C code.
+	server/classes/zone.h - Added access and geometry thread pools.  Added extern C routines to add to access, action, and geometry request queues.
+	server/config_data.cc - Added access_threads and geom_threads.
+
+2006-07-27 - TAQ
+	server/classes/control.cc, server/classes/control.h - Made the constructor without arguments, since the GameObject requires a command object to create.  Also made the default slave public, since we'll have to set it after creation.
+	server/classes/thread_pool.h - Added a ton of syslog debugging output, since we're running into some real big problems here.  Turns out that if we sleep on entry to our worker routine, the seg-faults we're seeing go away - some sort of race condition?
+	server/classes/zone.cc - We're segfaulting somewhere in the update_pool_worker routine.  From current testing, it seems to be a possible race condition between something in the thread creation (perhaps the queue), and the new thread(s) trying to access it.  If we sleep on entry into the threads' worker routines, there are no problems.
+	server/signals.cc - Tried to get SEGV handler to dump core.  No dice.
+
+2006-07-29 - TAQ
+	client/motif/client.cc - Made the application context non-static for the comm stuff.
+	client/motif/view.cc - Added frame number to the object struct.
+	proto/proto.h - Added some stuff to the geometry packet.  Got rid of the defs for the server IP version; now we'll just use the actual version number.  Also simplified the server notice union.
+
+2006-07-30 - TAQ
+	client/comm.cc - Got the server working enough to send things to us, and we're not getting them.  We need to do separate threads for comm handling.  Made the sending queue dynamically resizeable, because statically sized queues are like putting a gun to your head.
+	client/motif/client.cc - Made the application context static again; the receiving stuff just isn't going to work like we thought.
+	server/classes/thread_pool.h - Removed some debugging syslog output.  We seem to be working pretty well now.  Moved the allocations before the mutex initialization, to attempt to combat the apparent race condition we're seeing.  Moved the startup into its own start() routine, which completely removes any chance of that race condition.
+	server/classes/zone.cc - Changed the thread pool startup a bit - now we make an explicit call to start() to get the routines going; that should hopefully take care of the apparent race condition we're seeing.
+	server/config_data.cc, server/config_data.h - Since we had that nice structure, I modified it a little and made it the complete controller of the config process.  We no longer have config functions for each element, but only for each type.  Removed the console related stuff for the time being.
+
+2006-07-31 - TAQ
+	Created client/configdata.cc.  These void pointers are some crazy stuff.
+	client/motif/setup.cc - Moved all the file-handling stuff into config.c.  Also moved the config structure there.
+
+2006-08-01 - TAQ
+	client/configdata.cc - Added modified element to the config structure, to keep track of whether we actually need to save or not.
+	client/motif/setup.cc - Removed debugging.  We're now keeping track of the new modified element in the config structure, and setting it when appropriate.
+	server/config_data.cc - Figured out how to get rid of those different-sized pointer/int errors in the bigint stuff - we double cast.  It's weird, but I think the compiler understands it.
+	server/server.cc - Added prototypes for a couple calls into zone.cc.
+
+2006-08-02 - TAQ
+	server/server.cc - Moved the zone prototypes into a header in the classes dir.
+
+2006-08-03 - TAQ
+	Created client/geometry.cc, client/texture.cc.
+	client/motif/client.h - Reworked the geometry and texture management protos.  Added some default value defines.
+	client/motif/view.cc - Moved geometry management into geometry.c, and texture management into texture.c.
+	client/r9client.h - Reworked the geometry and texture management protos.  Added some default value defines.
+	proto/proto.h - Added geometry and texture requests.
+
+2006-08-04 - TAQ
+	client/comm.cc - Some of the prototypes for geometry and texture updates changed.
+	client/geometry.cc - Wrote the hash table - man, those things are really simple to implement.  Wrote geometry file reading and writing.
+	client/motif/client.h - Added draw_texture prototype.  A couple other geo/tex prototypes changed.
+	client/r9client.h - Added draw_texture prototype.  A couple other geo/tex prototypes changed.
+	client/texture.cc - Wrote the hash table.
+	proto/proto.h - Added specular color and specularity to the texture update.
+
+2006-08-05 - TAQ
+	client/geometry.cc - Added the timestamp, which is set during the find_geometry routine.  Makes some amount of sense that if we're finding a geometry, we're going to use it.  Or something like that.  Added the pruning thread.
+	client/texture.cc - Added time lastused timestamp to the struct, which is set during the call to find_texture.  Started work on the hash pruning thread.  Removed the delete_texture routine, since it was redundant with the pruning thread.
+
+2006-08-09 - TAQ
+	client/comm.cc - Removed references to geometry and texture packets, since we're no longer handling those in-band.
+	client/geometry.cc - Completed update_geometry.  Now notify users of entries removed from hash table.  We no longer save geometry files here, since they're no longer part of the protocol.  Removed the data element in the geometry structure.
+	client/motif/client.h - The geometry and texture update routines have changed.
+	client/r9client.h - The geometry and texture update routines have changed.
+	client/texture.cc - Fallback texture is now 18% gray.  Now notify user of entries removed from the hash table.
+	proto/byteswap.c, proto/proto.h - Removed the geometry and texture request and update packets, since we're going to do that OOB with a webserver.
+	server/classes/zone.cc, server/classes/zone.h - Removed geometry pool, since we'll no longer be handling geometry and texture requests.
+
+2006-08-10 - TAQ
+	client/comm.cc - Added some who-is-it checking on receipt of a packet.
+	client/motif/client.h - Added draw_geometry prototype.
+	client/motif/view.cc - Added object hash table in here, since object and geometry are NOT the same thing.  Added cleanup thread.  Fleshed out move_object routine.  Fixed draw_objects routine, but it's currently horrifically brute-force (i.e. we draw EVERYTHING in the hash).
+	client/r9client.h - Added draw_geometry prototype.
+
+2006-08-11 - TAQ
+	Created server/classes/sockaddr.h.
+	server/classes/control.cc, server/classes/control.h - Replaced the struct sockaddr_in with our new wrapper class, Sockaddr_in.
+	server/classes/defs.h - Moved some stuff from zone.h.
+	server/classes/geometry.cc, server/classes/geometry.h - Removed unneeded methods.
+	server/classes/modules/mysql.cc - Made the login checker a little cleaner.  The suspended field is a tinyint, which should be like a byte.
+	server/classes/zone.cc - Deleted all the superfluous stuff, since it's probably going to be drastically different by the time we need to use it.  Moved the pool workers and support routines into their own files, since they really don't belong here.
+	server/classes/zone.h - Added map of control objects, keyed by a struct sockaddr_in, so we can find them easily.  Hopefully proxies won't mess this idea up.  Actually *deleted* all the now-superfluous stuff, since it may well change drastically by the time we need it.  Removed character-string args from the constructors.
+
+2006-08-12 - TAQ
+	server/classes/defs.h - Got rid of the GO_id_t typedef.
+	server/classes/game_obj.cc, server/classes/game_obj.h, server/classes/zone.cc, server/classes/zone.h - We're using a u_int64_t for game object IDs now.
+
+2006-08-13 - TAQ
+	server/config_data.cc, server/config_data.h - Added DBType option.  Removed all the unused stuff.
+	server/server.cc, server/server.h - Removed load and unload zone - they're not used, and they refer to a bunch of config options that have been removed for the time being.
+	server/signals.cc - Removed the load/unload_zone calls, since those functions no longer exist.  The SIGUSR2 handler now does nothing, but can be implemented later.
+
+2006-08-14 - TAQ
+	Created server/classes/actions/control_object.cc, server/classes/actions/move.cc, server/classes/actions/register.cc, server/classes/actions/register.h.
+
+2006-08-16 - TAQ
+	server/classes/actions/register.cc - A quick cast to get rid of a signed/unsigned comparison complaint by the compiler.  Added extern "C" linkage.
+	server/classes/control.cc, server/classes/control.h - Added init for the userid member.  ParseCommand is now called execute_action, and takes an action_request packet instead of a char *.
+	server/classes/defs.h - Changed the login_list to be a packet_list, since we're going to use it for the sending queue as well.
+	server/classes/game_obj.cc, server/classes/game_obj.h - Added the can_see method, to determine if this object can see another given object, for purposes of sending motion updates.
+	server/classes/thread_pool.h - Added clean_on_pop member, and a conditional to do a memset to 0 of the last item popped from the queue.  Basically it's for cleaning up passwords from memory when we're done with them.
+	server/classes/zone.h - The login_list type is now called packet_list.  The sending and action pools now take packet_lists.
+	server/subserver.cc - The exit flag is now volatile.
+
+2006-08-17 - TAQ
+	client/motif/menu.cc - Added a logout button and callback.
+	server/classes/modules/mysql.cc - We now use mysql_init instead of allocating by hand, since it just wasn't working the old way.  Also fixed the table name in check_authentication.
+	server/config_data.cc, server/config_data.h - Added ActionLib.
+	server/server.cc - setup_zone now returns an error code; a nonzero return indicates that we've got no zone to use, so we bailout in that case.
+
+2007-06-11 - TAQ
+	server/classes/modules/mysql.cc - Removed save_last_login function.  Added check_character_access and check_authorization.  Stubbed out get_server_skills and get_player_server_skills.
+
+2007-06-12 - TAQ
+	server/classes/modules/mysql.cc - Fleshed out get_server_skills and get_player_server_skills a bit.
+
+2007-06-13 - TAQ
+	server/classes/modules/mysql.cc - Removed check_character_access as redundant to check_authorization.  Added get_host_address func and call it whenever we need to verify the local server.
+
+2007-06-14 - TAQ
+	server/classes/modules/mysql.cc - Added open_new_login, check_open_login, and close_open_login routines.
+
+2007-06-21 - TAQ
+	server/classes/thread_pool.h - Added a wrapper function to the start so that we can set thread cancel reactions the way we want.  Added the resize method.  Added pool_size and queue_size accessor functions, for reporting purposes.
+
+2007-06-22 - TAQ
+	server/classes/control.h - Added username member.
+	server/classes/sockaddr.h - Turns out I missed the sin_family member of the struct and it was causing lots of problems when it was set to random numbers from not being initialized.
+	server/classes/thread_pool.h - Added a 0-length sleep to the destructor before killing each thread, so that we'll give up our slice and give the children a chance to get on the CPU.  That way, they'll actually die in the correct way.  Every place we cancel a thread, we now do a zero sleep, in case it's important.
+
+2007-06-24 - TAQ
+	server/classes/sockaddr.h - Changed it to be just sockaddr.h, and added some conditional compilation for IPV4 and IPV6.
+
+2007-06-30 - TAQ
+	server/classes/control.h - Changed Sockaddr to reflect name update.
+	server/classes/defs.h - Updated to reflect Sockaddr naming changes.
+	server/classes/sockaddr.h - Quick fix of the IPV6 address assignment routine.  Fixed IN_ADDR_ANY to be the correct INADDR_ANY.
+	server/classes/zone.cc, server/classes/zone.h - Updated Sockaddr to reflect naming changes.
+
+2007-07-04 - TAQ
+	server/signals.cc - Hopefully this thing will spit out a stack trace when a SEGV happens.
+
+2007-07-21 - TAQ
+	server/config_data.cc, server/config_data.h - Moved default values to defaults.h.  Removed OPEN_MAX check, since it is settable per-process, and should be grabbed by the process by getrlimit.
+
+2007-08-21 - TAQ
+	server/config_data.cc, server/config_data.h - Added NumUsers.
+
+2007-08-23 - TAQ
+	server/classes/modules/mysql.cc - Commented references to server_port, since we've changed the way our listening ports are allocated.
+	server/config_data.cc, server/config_data.h - Made the server ports open-ended; added DgramPort and StreamPort keywords and handling for them.  Removed UseDatagram and UseStream, since they're no longer meaningful.
+	server/server.cc, server/server.h - Moved main_loop_exit_flag and set_exit_flag in here, since connect.c is no longer worth keeping around.  Removed setup_sockets, since that's now handled in the tcp and udp subserver files.
+
+2007-08-24 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - Commented all references to the players map, and the access and sending thread pools, since they're going to be moving out of here.
+
+2007-08-30 - TAQ
+	server/server.cc, server/server.h - Finished up the thread starting and stopping for the socket listening stuff.
+
+2007-09-04 - TAQ
+	server/server.h - Added create_socket prototype.
+
+2007-09-05 - TAQ
+	server/classes/actions/register.cc - Fixed a compiler complaint.
+	server/classes/control.cc - Removed references to remote member.
+	server/classes/control.h - Removed sockaddr.h include and Sockaddr member.
+	server/classes/defs.h - Removed the sockaddr.h include.  Changed the Sockaddr object in the packet_list structure to a Control *.  Removed GameObject declaration.
+	server/classes/thread_pool.h - Added an exit_flag member, since we can't depend on main_loop_exit_flag to be set when we really need child threads to exit.  Added a stop() method.  Added a startup_arg, so that we could actually pass something into the worker function.
+	server/classes/zone.cc, server/classes/zone.h - Removed the access pool, since we've got that sorted out elsewhere.  Removed players map, since we're letting the Control objects handle all that.  Removed the sending pool, since each socket thread will handle that.  Removed sockaddr.h include.
+	server/subserver.cc - Figured out how we want to pass data between the master listening thread and us.
+
+2007-09-06 - TAQ
+	server/classes/control.cc, server/classes/control.h - Added the send method.
+	server/classes/defs.h - Changed who element of packet_list to void *.  Removed Control declaration.
+	server/classes/thread_pool.h - Removed startup_wrapper, since it was redundant, and got in the way of making startup_arg available.
+
+2007-09-08 - TAQ
+	Created server/classes/dgram.cc and server/classes/dgram.h from the ashes of udpserver.c.
+	proto/proto.h - Made all the sequence sizes match, at 64 bits.
+	server/classes/control.cc - Added the send_ack and send_update methods.  Added sequence member.  Finished up the send method.  On destruction, we unlink the slave objects from us.  Cleaned up the execute_action method.
+	server/classes/control.h - Added private sequence number, used in sending packets.
+	server/classes/defs.h - Change the who element of packet list to u_int64_t.
+	server/classes/thread_pool.h - Added string.h and unistd.h includes, which were strangely absent.
+
+2007-09-09 - TAQ
+	Created server/classes/stream.cc and server/classes/stream.h from the ashes of tcpserver.c.
+	server/classes/dgram.cc - A few minor cleanups, moved some initialization out of listen() to the constructor.  Added operator members to the dgram_user.
+	server/classes/dgram.h - Renamed dgram_user_list to dgram_user.  Added operator methods to the dgram_user.
+
+2007-09-10 - TAQ
+	server/classes/defs.h - Added ugly, ugly access_list struct.
+
+2007-09-12 - TAQ
+	Created server/classes/basesock.h.
+	server/classes/defs.h - Added basesock.h include.  Changed void *parent in access struct to a basesock *.
+	server/classes/stream.h - Added the socket include and derived this class publicly from socket.
+
+2007-09-13 - TAQ
+	Created server/classes/basesock.cc from ../sockets.c.  Moved blank constructor and destructor in here.
+	server/classes/basesock.h - Added create_socket static method.  Moved blank constructor and destructor into basesock.cc.
+	server/classes/dgram.cc, server/classes/dgram.h - Removed server.h include.  Used basesock's static create_socket instead of C version.  Made port and sock public for the send_pool_workers.
+	server/classes/stream.cc, server/classes/stream.h - Removed server.h include.  Used basesock's static create_socket instead of C version.  Made port member public for the send_pool_workers.
+	server/server.cc - Used proper name for start_*_socket.
+	server/server.h - Removed create_socket prototype, since it's being done elsewhere now.
+
+2007-09-16 - TAQ
+	proto/byteswap.c - Updated to new changes in proto.h.
+	server/classes/dgram.cc - Added some processing of input packets.
+	server/classes/dgram.h - Added timestamp member to user class.
+
+2007-09-17 - TAQ
+	server/classes/dgram.cc - Added another index to convert sockaddr_in to an entry in the user list.
+	server/classes/thread_pool.h - Removed a pthread_cancel, which does not return if the thread in question has already exited.
+	server/config_data.cc - Fixed memory funk in socket config.
+
+2007-09-18 - TAQ
+	server/classes/control.cc - Debugging to find a crash.
+
+2007-09-23 - TAQ
+	proto/proto.h - Added the __packed__ attribute to the structs, since they're being sent and processed with a bunch of 0-padding.
+	server/classes/control.cc, server/classes/control.h - The ThreadPool interface changed, so updated the sending funcs to no longer pass lengths.
+	server/classes/dgram.cc, server/classes/stream.cc - Constructor and push() methods of ThreadPool changed.
+	server/classes/thread_pool.h - STLized the thread_pool (vector) and the request_queue (queue).  Lots of complexity went away.  The constructor only takes two args now, name and pool size.
+	server/config_data.cc, server/config_data.h - Removed num_users and num_buffers and jumptable elements.  Removed UseDatagram and UseStream jumptable elements.
+
+2007-09-24 - TAQ
+	proto/proto.h - Added a ping type, which will use the basic packet struct.
+
+2007-09-29 - TAQ
+	server/classes/actions/control_object.cc - Fleshed things out.  This should be basically complete for now.
+	server/classes/control.cc, server/classes/control.h - Added the 'why' misc-value argument to send_ack.
+	server/classes/modules/mysql.cc - Tweaked prototype of check_authorization, since an action request actually works on objectids, rather than character names.  Minor other cleanups.
+	server/classes/modules/pgsql.cc - Started fleshing some stuff out, and using the current functions (the libpq funcs have changed a bit since 1998).
+
+2007-10-07 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - Moved thread handling into the zone - added create_thread_pools and start methods.  Added some exception handling to the constructors, since the thread pools require it.
+
+2007-10-11 - TAQ
+	server/classes/actions/register.cc - Updated to use new action record maps.
+	server/classes/actions/register.h - Updated action_routine element of list.
+	server/classes/control.cc - Reworked execute_action.
+	server/classes/defs.h - Totally reworked action into class action_rec.
+	server/classes/game_obj.h - Updated action_list to use correct u_int16_t id size.
+	server/classes/modules/mysql.cc - Removed commented ports from all calls, since they are not terribly meaningful anymore.  Fleshed out get_server_skills.  Added some field-length limits to the string arguments to snprintf.  This really is a C++ file now, so we're changing the name.
+	server/classes/zone.h - Changed action_routines map a bit to include a valid flag among other things, and also an explicit index size (not "int") to match the field in the proto struct.
+
+2007-10-13 - TAQ
+	server/classes/control.cc - Moved checking of the zone's action routine list into the action pool worker.
+	server/classes/game_obj.h - Renamed the <foo>_list members to just <foo>s.
+	server/classes/zone.cc, server/classes/zone.h - Renamed action_routines to simply actions.
+
+2007-10-14 - TAQ
+	server/classes/zone.cc, server/classes/zone.h - Changed unsigned short steps arguments to u_int16_t.
+	server/config_data.cc, server/config_data.h - Added [xyz]_dim and [xyz]_steps.  Added config_int16_element.  Renamed config_bigint_element to config_int64_element and CF_BIGINT to CF_INT64.
+	server/server.cc - Used correct index for starting datagram sockets.  Cleaned up debugging output in setup_sockets.
+
+2007-10-20 - TAQ
+	server/config_data.cc, server/config_data.h - Added ZoneSize and SpawnPoint config elements.  Added CF_LOC config type.  Removed [XYZ]Dim and [XYZ]Steps elements.
+
+2007-10-22 - TAQ
+	proto/byteswap.c - Added a entry for ping packets.  Added stubs for doing a basic packet, which is what the ping uses.
+	server/classes/control.cc, server/classes/control.h - Added send_ping method.
+	server/classes/dgram.h - Added a private reaper thread member.
+
+2007-10-25 - TAQ
+	server/classes/actions/control_object.cc - Database call now takes a userid, not a username.  Added action_uncontrol_object, to drop control of an object.
+
+2007-12-02 - TAQ
+	server/classes/dgram.cc - Added reaping of logged out users, via the new pending_logout member of the user structure.
+	server/classes/dgram.h, server/classes/stream.h - Added pending_logout member to user classes.
+
+2007-12-15 - TAQ
+	client/comm.cc - Worked on responding to ping packets.
+	server/classes/dgram.cc - Trying to debug why pinging doesn't seem to work correctly.  Updated copy constructor of dgram_user to include all members.
+
+2007-12-16 - TAQ
+	server/classes/dgram.cc - Renamed reaper to dgram_reaper_worker.  Minor syntax cleanups.
+	server/classes/stream.cc, server/classes/stream.h - Added timestamp and pending_logout members to assignment operator for stream_user.  Added thread routine to reap link-dead and logged-out users.
+
+2009-10-10 - TAQ
+	server/classes/actions/move.cc - Added action_rotate stub.
+
+2009-10-20 - TAQ
+	server/classes/actions/register.h - Added rotate action.
+
+2009-11-22 - TAQ
+	server/classes/actions/register.h - Added const to the action_name element of the action_routines_list struct.
+	server/classes/basesock.cc - Fixed const char warnings in create_socket.
+	server/classes/defs.h - Added stdlib.h include to cover the free(3) call in the action_rec destructor.
+	server/classes/modules/mysql.cc - Changed the casting of in_addr_t to unsigned long, despite the fact that it will not work properly on a 64-bit machine.
+	server/classes/stream.cc, server/classes/stream.h - Fixed typo (subserv != subsrv) in stream_reaper_worker.  Redeclared stream_reaper_worker as extern, so it can be a friend to stream_socket.
+	server/classes/thread_pool.h - Added const to constructor's string argument to get rid of a compiler warning.
+
+2009-11-24 - TAQ
+	server/classes/modules/mysql.cc - Fixed get_host_address's call to gethostbyname_r.
+
+2009-11-29 - TAQ
+	server/classes/actions/register.h - Added uncontrol object action.
+	server/classes/game_obj.cc, server/classes/game_obj.h - Added set_object_id method.
+
+2010-06-29 - TAQ
+	proto/proto.h - Added a w_orient element to the position_update packet, in anticipation of using quaternions.
+2010-06-29 - TAQ
+	server/classes/defs.h - Changed the orientation in the game_object_list_element type to be a quaternion, in anticipation of using quats for orientations.  Added look to the same struct.
+	server/classes/game_obj.cc - Added new members to constructor, renamed some others, commented most of them out.
+	server/classes/game_obj.h - Added quaternion for orientation.
+
+2013-09-13 - TAQ
+	server/classes/modules/pgsql.cc - Just wanted this to compile, so updated the function prototypes, and changed the filename to pgsql.cc.
+
+2013-09-19 - TAQ
+	server/classes/dgram.cc, server/classes/stream.cc - Return NULL at the end of the worker routines to quiet gcc.
+	server/config_data.cc, server/config_data.h - Added the console directives: ConFilename, ConPort, ConHistFile, and ConHistLen.
+	server/server.cc - Added console setup/cleanup calls.
+
+2014-05-10 - TAQ
+	Switched source to use Eigen math library.
+	Created server/classes/motion.cc, server/classes/motion.h, moving the motion-related parameters out of game_obj.h.
+	proto/proto.h - Some conditional includes, to allow building on OSX.
+	server/classes/actions/move.cc, server/classes/actions/register.cc, server/classes/actions/register.h - Action routines now take Motion, rather than GameObject.
+	server/classes/control.cc, server/classes/control.h - The action level map now exists within the control object.  Also, the motion-related stuff is moved out of the game object and into a new motion object.  Added take_over method, for some checked slave setting.  Moved the bulk of execute_action into the same-named function within the zone - we know what *we* can do, but zone needs to do checking, and check its own tables.  Updated the username to be std::string instead of a char *.
+	server/classes/game_obj.h - Moved the motion- and control-related stuff into motion.h/cc and control.h/cc respectively.  Added clone.  Removed can_see, since it's not meaningful in here any longer.
+	server/classes/zone.h - The separation between the Control object's execute_action and this class was not very good, so we now also have a method called execute_action, which does most of the checking.
+
+2014-05-11 - TAQ
+	server/classes/dgram.cc, server/classes/stream.cc - We've moved the motion- and position-related parameters out of the GameObject and into the Motion object, so some pointers point at different things.
+	server/classes/zone.cc - Added the execute_action method, to separate the Control's part of executing actions from the zone's.
+
+2014-05-20 - TAQ
+	server/config_data.cc - For some reason, the int16 and int64 stuff was all commented out.
+
+2014-05-25 - TAQ
+	Created server/classes/modules/console.cc and server/classes/modules/console.h.  Having the console(s) handled by some C stuff, in weird ways, is just silly.  We can handle things much more extensibly with some open-ended C++ objects.
+	Created server/classes/modules/db.cc, server/classes/modules/db.h, server/classes/modules/mysql.h.
+	server/classes/modules/mysql.cc - This is now a subclass of the new DB object.  Moved get_host_address into the DB class.
+
+2014-05-31 - TAQ
+	Created server/classes/modules/inet_console.cc, server/classes/modules/pgsql.h, server/classes/modules/unix_console.cc.
+	server/classes/modules/console.cc - Added some more utility functions, copied from console.c.
+	server/classes/modules/console.h - Fleshed out InetConsole and UnixConsole classes.
+	server/classes/modules/db.cc, server/classes/modules/db.h - Added the host_ip member, which will just contain the string of our IP.  In fact, we only need the string, so removed all the conditional compile IPv4/IPv6 structures.  Strings are now protected because we need to access them in derived classes.
+	server/classes/modules/mysql.cc, server/classes/modules/mysql.h - The stringified version of our IP is now an instance member, so we don't have to compute it when we need it.  Also added the db_handle member and db_connect method.
+	server/classes/modules/pgsql.cc - We're now a subclass of DB.
+
+2014-06-07 - TAQ
+	server/classes/modules/console.cc, server/classes/modules/console.h - Removed a couple remnants of a previous bad idea.  Created the new ConsoleSession, which solves the file descriptor leaking problem.
+	server/classes/modules/db.cc, server/classes/modules/db.h - Some minor casting stuff in order to get this to compile.  Also, get_host_address now throws exceptions instead of trying to return things.  Added the virtual keyword on most of the methods.
+
+2014-06-08 - TAQ
+	server/classes/modules/console.h - Cleaned up the unix and inet consoles, and the console sessions.
+
+2014-06-14 - TAQ
+	server/classes/basesock.cc, server/classes/basesock.h - Moved the guts of the new socket into here, so this can be used wherever we need a listening socket.  Added the base_user and listen_socket base classes.
+	server/classes/dgram.cc, server/classes/dgram.h, server/classes/stream.cc, server/classes/stream.h - Lots of restructuring of base classes.  Now a has-a relationship, rather than is-a.
+
+2014-06-15 - TAQ
+	server/classes/dgram.cc, server/classes/dgram.h, server/classes/stream.cc, server/classes/stream.h - Moved the send worker into the classes.  Sockaddr is now a class hierarchy, and the behaviour has changed slightly.
+	server/classes/sockaddr.h - We want to support both IPv4 and IPv6 simultaneously, so out with the conditional compiles, and in with the base and derived classes.
+
+2014-06-17 - TAQ
+	server/classes/dgram.h - The socks member now uses a pointer as a key, and takes the comparator argument.
+	server/classes/sockaddr.h - Finally got everything working and building.  The less_sockaddr compare functor was the key.
+	server/classes/zone.cc, server/classes/zone.h - Moved the thread pool routines inside the class as static methods.
+
+2014-06-18 - TAQ
+	Created server/classes/library.cc, server/classes/library.h.
+
+2014-06-20 - TAQ
+	server/classes/actions/register.h - Added typedefs for simple(r) usage.
+	server/classes/library.h - We'll use chars instead of strings.  Just simpler.
+	server/classes/modules/db.h - Added typedefs for dynamic loading.
+
+2014-06-21 - TAQ
+	Created server/log.cc, server/log.h.
+	Converted all existing syslog calls to use the new stream log.
+	server/classes/actions/register.h - Moved the register/unregister typedefs into ../defs.h, which is just a more sensible location.  Made a typedef for the action prototype to clean up the actions array definition.
+	server/classes/defs.h - Moved some library-related typedefs in here.
+	server/classes/library.cc - Instead of returning NULL on failures, we'll now throw strings, and leave it to our caller to log or whatever.
+	server/classes/zone.cc, server/classes/zone.h - Moved the action library handling into this class.
+
+2014-06-22 - TAQ
+	server/classes/library.cc, server/classes/library.h - Constructor now takes strings instead of char pointers.  Also got rid of the magic lib name behaviour, instead just taking the raw name we get passed.
+	server/classes/modules/db.h, server/classes/modules/mysql.cc, server/classes/modules/mysql.h, server/classes/modules/pgsql.cc, server/classes/modules/pgsql.h - We're now using strings in the config, so we'll use them in the constructors too.
+	server/config_data.cc, server/config_data.h - Got rid of the console history stuff, since it never really worked like I expected.  Changed the struct to a class, since doing default values is just going to be simpler than the current weirdness.  Moved the interesting parts of defaults.h into the class.
+
+2014-06-23 - TAQ
+	server/config_data.cc, server/config_data.h - Moved all the constant initializers into the .cc file.
+
+2014-06-24 - TAQ
+	server/classes/modules/mysql.cc - Updated logging to use std::clog.
+
+2014-06-27 - TAQ
+	server/classes/modules/console.cc - We now log to std::clog.  Trying out the GNU stdio_filebuf from libstdc++, in order to use streams on our session sockets.
+	server/log.cc - Handled a possible format string vulnerability.
+
+2014-06-28 - TAQ
+	server/classes/defs.h - Removed some old octree-related stuff, since it's now moving into the class.
+	server/classes/octree.cc - Made this into a proper class.  Got rid of individual polygons in the tree, in favor of geometry objects.  We should probably only deal with bounding boxes here, and do collisions in the zone somewhere.
+
+2014-07-01 - TAQ
+	server/classes/basesock.cc, server/classes/basesock.h, server/classes/dgram.cc, server/classes/stream.cc, server/classes/stream.h - The access pools really belong in the sockets.  Also added a stop method to the listen_socket.  Rearranged the login_user/logout_user methods and added do_login as a pure virtual.
+	server/classes/modules/db.h, server/classes/modules/mysql.cc, server/classes/modules/mysql.h, server/classes/modules/pgsql.cc, server/classes/modules/pgsql.h - check_authentication now takes std::strings, rather than char *s.
+
+2014-07-02 - TAQ
+	server/classes/modules/perl.cc - Substituted typedefs for symbol defines.  We're now using the C++ library and logging objects, which make things much more straightforward.
+	server/server.cc - We weren't catching some possible socket exceptions on delete, and were also never starting up the sockets once they were created.
+
+2014-07-04 - TAQ
+	server/classes/stream.cc - Instead of moving subserver here, we separated it out into a completely separate binary and exec it once we get the file descriptors set up correctly.
+	server/subserver.cc - We're now a completely separate binary.
+
+2014-07-06 - TAQ
+	server/classes/modules/console.cc, server/classes/modules/console.h - A blank constructor in the Console base class was preventing the derived classes from linking properly, so it's gone.
+	server/classes/zone.cc, server/classes/zone.h - We now reserve space in the sectors (formerly trees) vectors for all the octrees we may need.  Also moved some of the initialization into the init method, since it was shared by more than one routine.  Added the stop method to stop the thread pools.
+
+2014-07-09 - TAQ
+	Converted almost all logging within the classes tree to standard exceptions.
+	server/classes/thread_pool.h - Changed the name member to a std::string.
+
+2014-07-10 - TAQ
+	server/classes/basesock.cc - Turns out that it is NOT valid to throw exceptions from a destructor, so we just eat the errors.
+	server/classes/library.cc - Handle any exceptions in the destructor.
+	server/classes/modules/inet_console.cc - Missed one catch of an int, now a runtime_error.  Also when a constructor throws an exception, memory is automatically cleaned up.
+	server/classes/modules/unix_console.cc - If constructors throw exceptions, no need to cleanup.
+
+2014-07-11 - TAQ
+	client/geometry.cc - This is now a C++ file, and will be based on a std::unordered_map.  Writing our own hash table is nice, but unnecessary.  We've also got an XML file parser as a private class.
+	server/config_data.cc, server/config_data.h - Added initializer values for the zone size params.  Reworked the config table and all the parsing routines.
+	server/log.cc, server/log.h - Added the close method.
+	server/server.cc - Fixed closing of the std::clog handle.
+
+2014-07-12 - TAQ
+	Created client/geometry.h, client/texture.h.
+	client/geometry.cc - We want to use hex numbers in our file names/paths, and they're XML files, so use the .xml extension.
+	client/texture.cc - Moved over to C++, and copied most of texture.cc into here.  I don't think a template class would work, or a generic-ish base class, so we'll just have two parallel implementations for the time being.
+
+2014-07-13 - TAQ
+	client/geometry.cc - We were leaking lots of display lists, in both the reaper and in the destructor.  Fixed.
+
+2014-07-15 - TAQ
+	Created server/classes/modules/language.h, server/classes/modules/perl.h.
+	server/classes/modules/perl.cc - This is now a class.  Also, doing all the dynamic loading and whatnot was just silly - why not link with the appropriate library, and just call the functions directly?  Also added a couple of factory functions.
+
+2014-07-16 - TAQ
+	Created server/classes/modules/tcl.h.
+	server/classes/modules/tcl.cc - This is now a C++ class, a descendent of Language.
+
+2014-07-19 - TAQ
+	client/r9client.h - Copied from client.h and stripped out all OS-specific stuff.  As things move inside classes, this file should become more empty, eventually disappearing altogether.
+
+2014-07-20 - TAQ
+	Created client/cache.h.
+	client/geometry.cc, client/geometry.h - We're now using the templated object cache, instead of having geometry and texture caches which are basically the same thing.
+	client/texture.h - We're now using the templated version of the cache.
+
+2014-07-23 - TAQ
+	Created client/comm.h.
+	client/cache.h - The parser is now being spawned correctly.  Also added a typedef for the cleanup function objects.
+	client/comm.cc - This is now a C++ file, and an actual class.
+	client/texture.cc - We're now using the cache.h template.
+	client/texture.h - The parser now has a pointer to the object, rather than an object that we insert into the cache.
+
+2014-07-26 - TAQ
+	Created client/configdata.h.
+	client/cache.h - Changed all the main_post_message over to use std::clog.
+	client/comm.cc - Cleanups to compile.  Switched all the main_post_message over to use std::clog.
+
+2014-07-28 - TAQ
+	server/classes/octree.h - Started making this into a class.
+
+2014-07-29 - TAQ
+	client/cache.h - The constructor now takes a fallback object, which becomes objectid 0.  The reaper always ignores this default object.  We now stat the potential object files before we try to parse them.  The system store directory string wasn't being constructed quite correctly.
+
+2014-08-01 - TAQ
+	client/cache.h - Added g++ type demangling, along with a type member.
+
+2014-08-02 - TAQ
+	client/cache.h - The whole type demangling thing was turning out to be more hassle than it was worth.  Just added the type name member, set by a constructor argument.
+	client/geometry.cc, client/geometry.h, client/texture.cc, client/texture.h - Removed all the pre-transcoded strings, since they were totally not working as expected.
+
+2014-08-08 - TAQ
+	server/classes/zone.cc - Finally got our sector grid allocated without seg-faulting!
+
+2014-08-09 - TAQ
+	server/classes/modules/mysql.cc, server/classes/modules/pgsql.cc - Updated the factory arguments to be correct.
+
+2014-08-10 - TAQ
+	server/classes/zone.cc - Removed logging from the thread pool worker routines, so we don't have to do locking to write to the log (and we no longer seg-fault on startup).
+
+2014-08-15 - TAQ
+	server/classes/octree.cc, server/classes/octree.h - Moved the neighbor_test from a define to an inline in the header.  Added depth handling in the constructor.  Implemented the remove method.
+
+2014-08-16 - TAQ
+	server/classes/octree.cc, server/classes/octree.h - Cleaned the heck out of the neighbor-computing routine.  Fleshed out the insert and move methods.  Added the octant_min and octant_max inline methods.
+
+2014-08-17 - TAQ
+	server/classes/octree.cc - Removed the move method for the time being.  It's a lot more complicated than I expected it to be.
+	server/classes/zone.cc - Worked on the motion worker to actually move things around in the sectors.
+	server/classes/zone.h - Added which_sector and sector_contains inline methods.
+
+2014-08-24 - TAQ
+	Created client/motif/msglog.cc, client/motif/msglog.h.
+	client/motif/client.cc, client/motif/client.h - Removed a bunch of stuff that was made unnecessary by the C++-ification of the geometry/texture caches.
+	client/motif/message.cc - We're now going to have the message box function as a sink for std::clog messages, via the MessageLog streambuf.
+
+2014-08-30 - TAQ
+	client/motif/client.h - Removed things that no longer needed to exist.
+	client/motif/view.cc - Started removing the hash table, since we have a very nice new cache object that does that for us.
+
+2014-08-31 - TAQ
+	client/cache.h - Instead of passing the default object into the constructor, we'll load objid 0 from the disk.
+	client/configdata.cc, client/configdata.h - We're now ConfigData, to match the rest of our classes.
+	client/motif/client.cc - Started integrating the Comm and ConfigData objects.  This is going to be a bit more complex than I thought.
+	client/motif/client.h - We need to split things into two halves, since the X stuff will not apparently coexist in the same files as stuff that uses Eigen.
+	client/motif/command.c - We no longer need the client.h include.
+	client/motif/menu.cc - Now called menu.cc.  We're using the std::clog, and the new comm object.
+
+2015-05-02 - TAQ
+	server/classes/modules/console.h - The libwrap call changed slightly, so had to update it here.
+	server/classes/modules/inet_console.cc - Moved most of the hostname-grabbing into wrap_request, since that's the only place it's used.  Switched to hosts_ctl, since it does a lot more stuff automatically.
+
+2015-07-24 - TAQ
+	Converted all source to use stdint types.
+
+2015-08-01 - TAQ
+	Autoconf conversion begins.
+	proto/byteswap.c, proto/proto.h - Moved a bunch of stuff out of proto.h into byteswap.c.  Cleaned up server_notice packet handling.

@@ -23,24 +23,6 @@
  * This file contains the un/registration function prototypes and the table
  * of actions that we support.
  *
- * Changes
- *   14 Aug 2006 TAQ - Created the file.
- *   11 Oct 2007 TAQ - Updated action_routine element of list.
- *   20 Oct 2009 TAQ - Added rotate action.
- *   22 Nov 2009 TAQ - Added const to the action_name element of the
- *                     action_routines_list struct.
- *   29 Nov 2009 TAQ - Added uncontrol object action.
- *   10 May 2014 TAQ - Switched to the Eigen math library.  Also updated
- *                     action routines to take Motion objects instead of
- *                     GameObjects.
- *   20 Jun 2014 TAQ - Added typedefs for simple(r) usage.
- *   21 Jun 2014 TAQ - Moved the register/unregister typedefs into ../defs.h,
- *                     which is just a more sensible location.  Made a typedef
- *                     for the action prototype to clean up the actions array
- *                     definition.
- *   28 Jun 2014 TAQ - Cleanups on include paths in Makefiles, so local
- *                     includes now need full relative path.
- *
  * Things to do
  *
  */

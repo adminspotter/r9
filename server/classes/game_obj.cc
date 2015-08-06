@@ -22,33 +22,6 @@
  *
  * This file contains the implementation of the GameObject class.
  *
- * Changes
- *   21 Jun 2000 TAQ - Created the file.
- *   23 Jun 2000 TAQ - Moved the static member initializers in here.
- *   11 Jul 2000 TAQ - Minor changes so that it compiles.  The mutex is
- *                     no longer a pointer.
- *   27 Jul 2000 TAQ - Preliminary ExecuteAction routine.
- *   20 Aug 2000 TAQ - Removed the min template function, since STL
- *                     already has it.  Tweaked ExecuteAction method.
- *   04 Apr 2006 TAQ - Added std:: namespace specifier to STL objects.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   01 Jul 2006 TAQ - Got rid of the getters and setters.  It'll just be
- *                     simpler this way.
- *   04 Jul 2006 TAQ - Quick syntax fix.  Missed deleting one of the methods
- *                     which was superseded by making an attribute public.
- *                     Also changed the action routine call, since the zone
- *                     now makes the action list public.
- *   12 Jul 2006 TAQ - Removed ExecuteAction method - it's handled in the
- *                     worker routine for the action thread pool.
- *   12 Aug 2006 TAQ - We're using a u_int64_t for the object id now.
- *   16 Aug 2006 TAQ - Added the can_see method, to determine if this object
- *                     can see another given object, for purposes of sending
- *                     motion updates.
- *   29 Nov 2009 TAQ - Added set_object_id method.
- *   29 Jun 2010 TAQ - Added new members to constructor, renamed some others,
- *                     commented most of them out.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *   - Implement the destructor if necessary.
  *   - Decide on a method to make sure we don't repeat object ID

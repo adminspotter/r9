@@ -24,28 +24,6 @@
  * thread handling.  This is directly instantiable, and only needs a
  * requirement-specific listening routine to be fully usable.
  *
- * Changes
- *   13 Sep 2007 TAQ - Created the file from ../sockets.c.  Moved blank
- *                     constructor and destructor in here.
- *   13 Oct 2007 TAQ - Cleaned up some debugging info.
- *   22 Nov 2009 TAQ - Fixed const char warnings in create_socket.
- *   14 Jun 2014 TAQ - Moved the guts of the new socket into here, so this
- *                     can be used wherever we need a listening socket.
- *                     Added the base_user and listen_socket base classes.
- *   21 Jun 2014 TAQ - Converted syslog to new style stream log.
- *   01 Jul 2014 TAQ - Moved the access thread pool into the listen_socket.
- *                     Added a stop method as well.
- *   05 Jul 2014 TAQ - The zone_interface has gone away, moved to server.h.
- *   09 Jul 2014 TAQ - We're now throwing std::runtime_error instead of a
- *                     bunch of random stuff (int, std::string, etc.).  There
- *                     are a couple of instances of exception-worthy errors
- *                     within the listen_socket destructor - is it valid to
- *                     throw exceptions out of a destructor?
- *   10 Jul 2014 TAQ - Turns out that it is NOT valid to throw exceptions
- *                     from a destructor, so we just eat the errors.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *   05 Aug 2015 TAQ - config.h moved to config_data.h.
- *
  * Things to do
  *
  */

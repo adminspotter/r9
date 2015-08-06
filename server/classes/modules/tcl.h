@@ -22,9 +22,6 @@
  *
  * This file contains the class for embedding tcl.
  *
- * Changes
- *   16 Jul 2014 TAQ - Created the file.
- *
  * Things to do
  *
  */

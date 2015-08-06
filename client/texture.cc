@@ -38,24 +38,6 @@
  * the user's cache, then if we don't find what we need, we'll look in the
  * store.  If we *still* don't find it, we'll send out a server request.
  *
- * Changes
- *   03 Aug 2006 TAQ - Created the file.
- *   04 Aug 2006 TAQ - Wrote the hash table.
- *   05 Aug 2006 TAQ - Added time lastused timestamp to the struct, which is
- *                     set during the call to find_texture.  Started work on
- *                     the hash pruning thread.  Removed the delete_texture
- *                     routine, since it was redundant with the pruning thread.
- *   09 Aug 2006 TAQ - Fallback texture is now 18% gray.  Now notify user
- *                     of entries removed from the hash table.
- *   12 Jul 2014 TAQ - Moved over to C++, and copied most of texture.cc
- *                     into here.  I don't think a template class would work,
- *                     or a generic-ish base class, so we'll just have two
- *                     parallel implementations for the time being.
- *   23 Jul 2014 TAQ - We're now using the cache.h template.
- *   02 Aug 2014 TAQ - Having pre-transcoded strings around wasn't working
- *                     as hoped, so we'll just go back to transcoding them
- *                     as they appear.
- *
  * Things to do
  *
  */

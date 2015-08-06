@@ -22,15 +22,6 @@
  *
  * This file contains the message bar for the Revision 9 client.
  *
- * Changes
- *   18 Jul 2006 TAQ - Created the file.
- *   26 Jul 2006 TAQ - Renamed a bunch of stuff.  Setting the blank message
- *                     to a space, rather than an empty string, solved the
- *                     vertical resize problem.
- *   24 Aug 2014 TAQ - We're now going to have the message box function as
- *                     a sink for std::clog messages, via the MessageLog
- *                     streambuf.
- *
  * Things to do
  *   - Have the message post duration configurable?
  *

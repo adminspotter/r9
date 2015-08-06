@@ -23,25 +23,6 @@
  * This file contains the base console class implementation, along
  * with the console session thread class.
  *
- * Changes
- *   25 May 2014 TAQ - Created the file.  Having the console(s) handled by
- *                     some C stuff, in weird ways, is just silly.  We can
- *                     handle things much more extensibly with some open-
- *                     ended C++ objects.
- *   31 May 2014 TAQ - Added some more utility functions, copied from
- *                     console.c.
- *   07 Jun 2014 TAQ - Removed a couple remnants of a previous bad idea.
- *                     Created the new ConsoleSession, which solves the
- *                     file descriptor leaking problem.
- *   27 Jun 2014 TAQ - We now log to std::clog.  Trying out the GNU
- *                     stdio_filebuf from libstdc++, in order to use streams
- *                     on our session sockets.
- *   06 Jul 2014 TAQ - A blank constructor in the Console base class was
- *                     preventing the derived classes from linking properly,
- *                     so it's gone.
- *   09 Jul 2014 TAQ - We're now doing no syslogging, and only throwing
- *                     standard exceptions.
- *
  * Things to do
  *   - See if we can use the basesock, rather than mostly reimplementing it.
  *

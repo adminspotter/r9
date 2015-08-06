@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:19:11 tquirk
+ *   last updated 05 Aug 2015, 15:08:03 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -22,10 +22,6 @@
  *
  * This file contains the class declaration for server communication.
  *
- * Changes
- *   23 Jul 2014 TAQ - Created the file.
- *   24 Jul 2014 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */
@@ -33,10 +29,20 @@
 #ifndef __INC_R9CLIENT_COMM_H__
 #define __INC_R9CLIENT_COMM_H__
 
+#include <config.h>
+
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif /* HAVE_SYS_SOCKET_H */
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif /* HAVE_NETINET_IN_H */
 #include <pthread.h>
 
 #include <cstdint>

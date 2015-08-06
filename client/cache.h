@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:17:37 tquirk
+ *   last updated 05 Aug 2015, 15:08:18 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -24,25 +24,6 @@
  * arbitrary types of objects.  It was created from the geometry and
  * texture caches.
  *
- * Changes
- *   20 Jul 2014 TAQ - Created the file.
- *   23 Jul 2014 TAQ - The parser is now being spawned correctly.  Also added
- *                     a typedef for the cleanup function objects.
- *   26 Jul 2014 TAQ - Changed all the main_post_message over to use std::clog.
- *   29 Jul 2014 TAQ - The constructor now takes a fallback object, which
- *                     becomes objectid 0.  The reaper always ignores this
- *                     default object.  We now stat the potential object
- *                     files before we try to parse them.  The system
- *                     store directory string wasn't being constructed
- *                     quite correctly.
- *   01 Aug 2014 TAQ - Added g++ type demangling, along with a type member.
- *   02 Aug 2014 TAQ - The whole type demangling thing was turning out to
- *                     be more hassle than it was worth.  Just added the
- *                     type name member, set by a constructor argument.
- *   31 Aug 2014 TAQ - Instead of passing the default object into the
- *                     constructor, we'll load objid 0 from the disk.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *   - See if we can nab the config directory out of the config object when
  *     we try to create our cache directory string.
@@ -56,10 +37,18 @@
 #ifndef __INC_R9CLIENT_CACHE_H__
 #define __INC_R9CLIENT_CACHE_H__
 
+#include <config.h>
+
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <time.h>
+#if HAVE_SYS/TIME_H
 #include <sys/time.h>
+#endif /* HAVE_SYS/TIME_H */
+#if HAVE_SYS/STAT_H
 #include <sys/stat.h>
+#endif /* HAVE_SYS/STAT_H */
 #include <pthread.h>
 
 #include <xercesc/parsers/SAXParser.hpp>

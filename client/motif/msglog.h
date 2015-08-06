@@ -23,9 +23,6 @@
  * This file contains a stream buffer to enable std::clog to work with
  * syslog, instead of a regular file.
  *
- * Changes
- *   24 Aug 2014 TAQ - Created the file.
- *
  * Things to do
  *
  */

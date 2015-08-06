@@ -23,9 +23,6 @@
  * This file contains the base class for embedded language.  We'll derive
  * classes for each language.
  *
- * Changes
- *   15 Jul 2014 TAQ - Created the file.
- *
  * Things to do
  *
  */

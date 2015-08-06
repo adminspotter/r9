@@ -22,23 +22,6 @@
  *
  * This file contains the datagram socket object.
  *
- * Changes
- *   08 Sep 2007 TAQ - Created the file from the ashes of udpserver.c.
- *   09 Sep 2007 TAQ - Renamed dgram_user_list to dgram_user.  Added
- *                     operator methods to the dgram_user.
- *   13 Sep 2007 TAQ - Made port and sock public for the send_pool_workers.
- *   16 Sep 2007 TAQ - Added timestamp member to user class.
- *   22 Oct 2007 TAQ - Added a private reaper thread member.
- *   02 Dec 2007 TAQ - Added pending_logout member to user class.
- *   14 Jun 2014 TAQ - Quite a bit of restructuring.  The basesock is now
- *                     a has-a, rather than an is-a relationship, and the
- *                     base classes have changed.
- *   15 Jun 2014 TAQ - Moved send worker into the class.  Sockaddr is now
- *                     a class hierarchy.
- *   17 Jun 2014 TAQ - The socks member now uses a pointer as a key, and
- *                     takes the comparator argument.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *   - Consider whether the socks and users maps should become unordered
  *     maps instead.

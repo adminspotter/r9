@@ -22,11 +22,6 @@
  *
  * This file contains the unix file console.
  *
- * Changes
- *   31 May 2014 TAQ - Created the file.
- *   09 Jul 2014 TAQ - Changed all the logging to use exceptions.
- *   10 Jul 2014 TAQ - If constructors throw exceptions, no need to cleanup.
- *
  * Things to do
  *
  */

@@ -23,21 +23,6 @@
  * This file contains a wrapper around the struct sockaddr family, so that we
  * can use them in a more straightforward manner.
  *
- * Changes
- *   11 Aug 2006 TAQ - Created the file.
- *   22 Jun 2007 TAQ - Turns out I missed the sin_family member of the struct
- *                     and it was causing lots of problems when it was set
- *                     to random numbers from not being initialized.
- *   24 Jun 2007 TAQ - Changed it to be just sockaddr.h, and added some
- *                     conditional compilation for IPV4 and IPV6.
- *   30 Jun 2007 TAQ - Quick fix of the IPV6 address assignment routine.
- *                     Fixed IN_ADDR_ANY to be the correct INADDR_ANY.
- *   15 Jun 2014 TAQ - We want to support both IPv4 and IPv6 simultaneously,
- *                     so out with the conditional compiles, and in with the
- *                     base and derived classes.
- *   17 Jun 2014 TAQ - Finally got everything working and building.  The
- *                     less_sockaddr compare functor was the key.
- *
  * Things to do
  *
  */

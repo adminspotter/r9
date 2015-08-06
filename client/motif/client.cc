@@ -23,26 +23,6 @@
  * This file contains the main window and session management for a Revision9
  * client.
  *
- * Changes
- *   26 Sep 1998 TAQ - Created the file.
- *   30 Jan 1999 TAQ - Added some session management.  This stuff is crazy.
- *   22 May 1999 TAQ - Modified some comments.
- *   18 Jul 2006 TAQ - Added GPL notice.  Made this actually do something.
- *   26 Jul 2006 TAQ - Renamed a bunch of routines.  Removed a bunch of stuff
- *                     we were saving for no real reason.
- *   29 Jul 2006 TAQ - Made the application context non-static for the comm
- *                     stuff.
- *   30 Jul 2006 TAQ - Made the application context static again; the receiving
- *                     stuff just isn't going to work like we thought.
- *   01 Aug 2006 TAQ - Removed the debug.h include, since we're getting rid
- *                     of it.
- *   24 Aug 2014 TAQ - Converted to C++, since the geometry and texture caches
- *                     are now C++.
- *   31 Aug 2014 TAQ - Started integrating the Comm and ConfigData
- *                     objects.  This is going to be a bit more
- *                     complex than I thought.
- *   05 Aug 2015 TAQ - A bit of autoconf-ification.
- *
  * Things to do
  *   - Flesh out the save_state routine.
  *

@@ -23,27 +23,6 @@
  * This file contains the publically-available function prototypes
  * and structures for the client program.
  *
- * Changes
- *   26 Sep 1998 TAQ - Created the file.
- *   18 Jul 2006 TAQ - Changed it to client.h, and included all the routines
- *                     that need to be available everywhere.  Added GPL notice.
- *   19 Jul 2006 TAQ - Added socket creation prototype.  Added about creation
- *                     callback.
- *   30 Jul 2006 TAQ - Comm prototypes changed a bit.
- *   03 Aug 2006 TAQ - Reworked the geometry and texture management protos.
- *                     Added some default value defines.
- *   04 Aug 2006 TAQ - Added draw_texture prototype.  A couple other geo/tex
- *                     prototypes changed.
- *   09 Aug 2006 TAQ - The geometry and texture update routines have changed.
- *   10 Aug 2006 TAQ - Added draw_geometry prototype.
- *   12 Sep 2013 TAQ - Added linux/limits.h include for PATH_MAX.
- *   24 Aug 2014 TAQ - Removed a bunch of stuff that was made unnecessary
- *                     by the C++-ification of the geometry/texture caches.
- *   30 Aug 2014 TAQ - Removed things that no longer needed to exist.
- *   31 Aug 2014 TAQ - We need to split things into two halves, since the X
- *                     stuff will not apparently coexist in the same files
- *                     as stuff that uses Eigen.
- *
  * Things to do
  *
  */

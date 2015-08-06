@@ -47,37 +47,6 @@
  * look in the store.  If we *still* don't find it, we'll send out a
  * server request.
  *
- * Changes
- *   03 Aug 2006 TAQ - Created the file.
- *   04 Aug 2006 TAQ - Wrote the hash table - man, those things are really
- *                     simple to implement.  Wrote geometry file reading
- *                     and writing.
- *   05 Aug 2006 TAQ - Added the timestamp, which is set during the
- *                     find_geometry routine.  Makes some amount of sense
- *                     that if we're finding a geometry, we're going to
- *                     use it.  Or something like that.  Added the pruning
- *                     thread.
- *   09 Aug 2006 TAQ - Completed update_geometry.  Now notify users of
- *                     entries removed from hash table.  We no longer save
- *                     geometry files here, since they're no longer part of
- *                     the protocol.  Removed the data element in the
- *                     geometry structure.
- *   11 Jul 2014 TAQ - This is now a C++ file, and will be based on a
- *                     std::unordered_map.  Writing our own hash table is
- *                     nice, but unnecessary.  We've also got an XML file
- *                     parser as a private class.
- *   12 Jul 2014 TAQ - We want to use hex numbers in our file names/paths,
- *                     and they're XML files, so use the .xml extension.
- *   13 Jul 2014 TAQ - We were leaking lots of display lists, in both the
- *                     reaper and in the destructor.  Fixed.
- *   20 Jul 2014 TAQ - We're now using the templated object cache, instead
- *                     of having geometry and texture caches which are
- *                     basically the same thing.
- *   23 Jul 2014 TAQ - Include cleanups.
- *   02 Aug 2014 TAQ - Removed all the pre-transcoded strings, since they
- *                     were totally not working as expected.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

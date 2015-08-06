@@ -22,10 +22,6 @@
  *
  * This file contains the "about" dialog box for the Revision 9 client.
  *
- * Changes
- *   19 Jul 2006 TAQ - Created the file.
- *   24 Jul 2015 TAQ - Comment cleanup
- *
  * Things to do
  *
  */

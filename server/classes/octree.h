@@ -41,34 +41,6 @@
  * http://www.cg.tuwien.ac.at/research/vr/lodestar/tech/octree/
  * http://www.altdev.co/2011/08/01/loose-octrees-for-frustum-culling-part-1/
  *
- * Changes
- *   16 Jun 2000 TAQ - Created the file.
- *   21 Jun 2000 TAQ - Added the parent pointer.
- *   26 Jun 2000 TAQ - Created the point.h include file, so we don't need
- *                     to think about that any more in here.
- *   29 Jun 2000 TAQ - Added parent_index, which is the index of our node
- *                     in our parent.
- *   10 Jul 2000 TAQ - Removed some of the function prototypes.  This will
- *                     be an opaque interface, I think.
- *   27 Oct 2000 TAQ - Reworked the octrees to use the Math3d library.
- *                     Moved typedefs to defs.h.
- *   30 Mar 2004 TAQ - We're now passing around polygon pointers instead
- *                     of references.
- *   03 Apr 2004 TAQ - Added the octree_delete prototype.
- *   10 Apr 2004 TAQ - Changed some comments.
- *   04 Apr 2006 TAQ - Added namespace specifiers for std:: and Math3d::
- *                     objects.
- *   06 Jul 2006 TAQ - Added C++ tag at the top to get emacs to use the
- *                     right mode.
- *   28 Jul 2014 TAQ - Started making this into a class.
- *   08 Aug 2014 TAQ - Small tweaks for proper linking.
- *   15 Aug 2014 TAQ - We do need to keep track of how deep our tree
- *                     is, since we do have a min and max depth.
- *                     Moved the neighbor test define from the .cc and
- *                     made it an inline method.
- *   16 Aug 2014 TAQ - Added the octant_min and octant_max inline methods.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

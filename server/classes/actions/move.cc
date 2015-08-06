@@ -22,12 +22,6 @@
  *
  * This file contains the action routine to move a given game object.
  *
- * Changes
- *   14 Aug 2006 TAQ - Created the file.
- *   10 Oct 2009 TAQ - Added action_rotate stub.
- *   10 May 2014 TAQ - Action routines now take Motion, rather than GameObject.
- *   28 Jun 2014 TAQ - Include fixups.
- *
  * Things to do
  *   - Implement these functions, obviously.
  *

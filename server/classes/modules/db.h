@@ -24,21 +24,6 @@
  * methods will be pure virtual, since they don't really mean anything
  * without a specific database context.
  *
- * Changes
- *   25 May 2014 TAQ - Created the file.
- *   31 May 2014 TAQ - Added the host_ip member, which will just contain
- *                     the string of our IP.  In fact, we only need the
- *                     string, so removed all the conditional compile
- *                     IPv4/IPv6 structures.  Strings are now protected
- *                     because we need to access them in derived classes.
- *   07 Jun 2014 TAQ - Added the virtual keyword on most of the methods.
- *   20 Jun 2014 TAQ - Added typedefs for dynamic loading.
- *   22 Jun 2014 TAQ - We're now using strings in the config, so we'll
- *                     use them in the constructors too.
- *   01 Jul 2014 TAQ - check_authentication now takes std::strings, rather
- *                     than char *s.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

@@ -30,20 +30,18 @@
  * To add a new configuration value, the only thing that needs to be updated
  * is the ctable variable.  Nice.
  *
- * Changes
- *   31 Jul 2006 TAQ - Created the file.  These void pointers are some
- *                     crazy stuff.
- *   01 Aug 2006 TAQ - Added modified element to the config structure, to
- *                     keep track of whether we actually need to save or not.
- *   12 Sep 2013 TAQ - Added an include for USHRT_MAX.
- *   31 Aug 2014 TAQ - We're now ConfigData, to match the rest of our classes.
- *
  * Things to do
  *
  */
 
+#include <config.h>
+
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif /* HAVE_STDLIB_H */
+#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif /* HAVE_SYS_STAT_H */
 #include <errno.h>
 
 #include <iostream>

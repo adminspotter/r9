@@ -25,11 +25,6 @@
  *
  * See also:  http://stackoverflow.com/questions/2638654/redirect-c-stdclog-to-syslog-on-unix
  *
- * Changes
- *   21 Jun 2014 TAQ - Created the file.
- *   23 Jun 2014 TAQ - Small tweaks to get things compiling correctly.
- *   11 Jul 2014 TAQ - Added a close method.
- *
  * Things to do
  *
  */

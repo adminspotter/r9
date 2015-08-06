@@ -31,25 +31,6 @@
  * could be some bad drama.  We've got a static pthread_mutex in the
  * console session, with some protected get/drop lock functions.
  *
- * Changes
- *   25 May 2014 TAQ - Created the file.  Having the console(s) handled by
- *                     some C stuff, in weird ways, is just silly.  We can
- *                     handle things much more extensibly with some open-
- *                     ended C++ objects.
- *   31 May 2014 TAQ - Fleshed out InetConsole and UnixConsole classes.
- *   07 Jun 2014 TAQ - Worked on a cleaner arrangement, so we can cancel
- *                     everything without leaking open descriptors.
- *   08 Jun 2014 TAQ - Cleaned up the unix and inet consoles, and the console
- *                     sessions.
- *   27 Jun 2014 TAQ - Some slight changes to allow stream-based handling
- *                     of the session sockets.
- *   06 Jul 2014 TAQ - A blank constructor in the Console base class was
- *                     preventing the derived classes from linking properly,
- *                     so it's gone.
- *   02 May 2015 TAQ - The libwrap call changed slightly, so had to update
- *                     it here.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

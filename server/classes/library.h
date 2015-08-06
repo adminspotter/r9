@@ -22,13 +22,6 @@
  *
  * This file contains the interface for the dynamic library class.
  *
- * Changes
- *   18 Jun 2014 TAQ - Created the file.
- *   20 Jun 2014 TAQ - We'll use chars instead of strings.  Just simpler.
- *   22 Jun 2014 TAQ - Config object changed, so we've got a bunch of
- *                     strings hanging around.  It'll be easier to use
- *                     strings to construct.
- *
  * Things to do
  *
  */

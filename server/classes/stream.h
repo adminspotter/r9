@@ -22,23 +22,6 @@
  *
  * This file contains the stream socket object.
  *
- * Changes
- *   09 Sep 2007 TAQ - Created the file from the ashes of tcpserver.c.
- *   12 Sep 2007 TAQ - Added the socket include and derived this class
- *                     publicly from socket.
- *   13 Sep 2007 TAQ - Made port member public for the send_pool_workers.
- *   02 Dec 2007 TAQ - Added pending_logout member to stream_user.
- *   16 Dec 2007 TAQ - Added timestamp field to stream_user.  Added reaper
- *                     member to stream_socket.
- *   22 Nov 2009 TAQ - Added the stream_reaper_worker to be a friend of the
- *                     stream_socket class.
- *   14 Jun 2014 TAQ - Totally reworked the basesock, and this needed a lot
- *                     of work as well.
- *   15 Jun 2014 TAQ - Moved the send worker here as well.
- *   01 Jul 2014 TAQ - Base class changed slightly with move of access pool
- *                     into the listen_socket, so login_user became do_login.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

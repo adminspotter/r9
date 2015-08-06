@@ -22,61 +22,6 @@
  *
  * This file contains the MySQL routines to do the common database tasks.
  *
- * Changes
- *   20 Feb 1999 TAQ - Created the file.
- *   23 Feb 1999 TAQ - Wrote the db_connect routine.  The suspended
- *                     field is now an enum instead of an integer.
- *                     We might save a few bytes that way.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   11 Aug 2006 TAQ - Made the login checker a little cleaner.  The suspended
- *                     field is a tinyint, which should be like a byte.
- *   17 Aug 2006 TAQ - We now use mysql_init instead of allocating by hand,
- *                     since it just wasn't working the old way.  Also fixed
- *                     the table name in check_authentication.
- *   11 Jun 2007 TAQ - Removed save_last_login function.  Added some comments
- *                     on which database functions we might need.  Added
- *                     check_character_access and check_authorization.
- *                     Stubbed out get_server_skills and
- *                     get_player_server_skills.
- *   12 Jun 2007 TAQ - Fleshed out get_server_skills and
- *                     get_player_server_skills a bit.
- *   13 Jun 2007 TAQ - Removed check_character_access as redundant to
- *                     check_authorization.  Added get_host_address func
- *                     and call it whenever we need to verify the local
- *                     server.
- *   14 Jun 2007 TAQ - Added open_new_login, check_open_login, and
- *                     close_open_login routines.
- *   23 Aug 2007 TAQ - Commented references to server_port, since we've
- *                     changed the way our listening ports are allocated.
- *   09 Sep 2007 TAQ - Commented some stuff out for a clean compile.
- *   29 Sep 2007 TAQ - Tweaked prototype of check_authorization, since
- *                     an action request actually works on objectids,
- *                     rather than character names.  Minor other cleanups.
- *   11 Oct 2007 TAQ - Removed commented ports from all calls, since they
- *                     are not terribly meaningful anymore.  Fleshed out
- *                     get_server_skills.  Added some field-length limits
- *                     to the string arguments to snprintf.  This really
- *                     is a C++ file now, so we're changing the name.
- *   22 Nov 2009 TAQ - Changed the casting of in_addr_t to unsigned long,
- *                     despite the fact that it will not work properly
- *                     on a 64-bit machine.
- *   24 Nov 2009 TAQ - Fixed get_host_address's call to gethostbyname_r.
- *   10 May 2014 TAQ - Repaired some comments.
- *   25 May 2014 TAQ - This is now a subclass of the new DB object.  Moved
- *                     get_host_address into the DB class.
- *   31 May 2014 TAQ - The stringified version of our IP is now an instance
- *                     member, so we don't have to compute it when we need it.
- *   22 Jun 2014 TAQ - Constructor changed in the base, so we're changing too.
- *   24 Jun 2014 TAQ - Updated logging to use std::clog.  Small tweaks to
- *                     get things to compile properly.
- *   01 Jul 2014 TAQ - check_authentication now takes std::string&.
- *   09 Jul 2014 TAQ - We're now fully exception-happy.
- *   09 Aug 2014 TAQ - Debugging on the factory routine - we had changed
- *                     the arguments in the prototype from const char * to
- *                     const std::string&, but didn't update the definition
- *                     here, so random characters were being prepended.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *   - Finish writing open_new_login and close_open_login.
  *

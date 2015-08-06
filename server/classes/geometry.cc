@@ -22,24 +22,6 @@
  *
  * This file contains the geometry class implementation.
  *
- * Changes
- *   19 Feb 2002 TAQ - Created the file.
- *   15 Mar 2002 TAQ - Started messing with bounding volumes.
- *   09 Apr 2002 TAQ - Removed addPolys routine.
- *   24 Jun 2002 TAQ - Converted to using RAPID.
- *   30 Jun 2002 TAQ - Started adding frame sequences.
- *   02 Aug 2003 TAQ - Worked a little more with the frame sequences.  Also
- *                     fixed a couple problems with the RAPID passthrough
- *                     functions.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   27 Jun 2006 TAQ - For the time being, we're going to keep this class
- *                     extremely basic - we'll just be a sphere of some
- *                     radius, and that's it.
- *   09 Jul 2006 TAQ - Removed methods which are no longer needed.
- *   11 Aug 2006 TAQ - Removed unneeded methods.
- *   24 Jul 2015 TAQ - Comment cleanup.
- *   05 Aug 2015 TAQ - config.h moved to config_data.h.
- *
  * Things to do
  *
  */

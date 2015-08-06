@@ -22,10 +22,6 @@
  *
  * This file contains the motion class for the Revision IX system.
  *
- * Changes
- *   10 May 2014 TAQ - Created the file.
- *   24 Jul 2015 TAQ - Comment cleanup.
- *
  * Things to do
  *
  */

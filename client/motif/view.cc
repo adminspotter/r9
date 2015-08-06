@@ -23,37 +23,6 @@
  * This file contains the code to generate and manage the main view window
  * for the Revision 9 client program.
  *
- * Changes
- *   18 Jul 2006 TAQ - Created the file.
- *   20 Jul 2006 TAQ - Changed to be a GLwMDrawingArea, which is a GL drawing
- *                     surface.
- *   21 Jul 2006 TAQ - We now draw some stuff in this widget, and double-
- *                     buffering working.  Started working on lighting and
- *                     shading, but it's not doing anything.
- *   24 Jul 2006 TAQ - Still trying to get the lighting/shading to work.
- *   25 Jul 2006 TAQ - Finally got the lighting/shading to work - it appears
- *                     that freeing the XVisualInfo that we got out of the
- *                     widget was actually freeing some internal state of
- *                     the widget, and it then couldn't draw anything
- *                     properly.  I also moved the only call to
- *                     GLwDrawingAreaMakeCurrent to occur right after the call
- *                     to glXCreateContext.  We also no longer have the context
- *                     in a file-global variable; it goes out of scope at the
- *                     end of the init callback, and we never look back.
- *   26 Jul 2006 TAQ - Renamed some stuff.  Added lists of objects (spheres)
- *                     and textures (colors) and functions to manage them.
- *   29 Jul 2006 TAQ - Added frame number to the object struct.
- *   03 Aug 2006 TAQ - Moved geometry management into geometry.c, and texture
- *                     management into texture.c.
- *   10 Aug 2006 TAQ - Added object hash table in here, since object and
- *                     geometry are NOT the same thing.  Added cleanup thread.
- *                     Fleshed out move_object routine.  Fixed draw_objects
- *                     routine, but it's currently horrifically brute-force
- *                     (i.e. we draw EVERYTHING in the hash).
- *   30 Aug 2014 TAQ - Started removing the hash table, since we have a very
- *                     nice new cache object that does that for us.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *   - Use our fancy cache object, instead of doing one here by hand.
  *   - Act sensibly in draw_objects, instead of brute-forcing it.

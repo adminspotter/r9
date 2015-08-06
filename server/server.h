@@ -22,30 +22,6 @@
  *
  * This file contains some prototypes for the server program.
  *
- * Changes
- *   11 Apr 1998 TAQ - Created the file.
- *   17 Apr 1998 TAQ - Added the SERVER_ROOT and SERVER_CONFIG defines.
- *   10 May 1998 TAQ - Added CVS ID string.
- *   24 May 1998 TAQ - Removed the ENTRIES macro, since it won't work with
- *                     dynamically-allocated blocks; sizeof only works
- *                     with automatic blocks.
- *   14 Feb 1999 TAQ - Removed some meaningless defines.
- *   20 Feb 1999 TAQ - Added the cleanup_sockets prototype.
- *   16 Apr 2000 TAQ - Reset the CVS id string.
- *   27 Jul 2000 TAQ - Removed SERVER_CONF_FILE define since it was unused.
- *   14 Oct 2000 TAQ - Added complete_(startup|cleanup).
- *   29 Oct 2000 TAQ - Added load_zone and unload_zone prototypes.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   13 Aug 2006 TAQ - Removed the load/unload_zone prototypes.
- *   23 Aug 2007 TAQ - Removed cleanup_sockets prototype.  Added
- *                     set_exit_flag prototype.
- *   24 Aug 2007 TAQ - Removed EXPANSION define.
- *   30 Aug 2007 TAQ - Added start_(stream|dgram)_server prototypes.
- *   04 Sep 2007 TAQ - Added create_socket prototype.
- *   13 Sep 2007 TAQ - Removed create_socket prototype, since it's being
- *                     done elsewhere now.
- *   23 Jun 2014 TAQ - Removed nonexistent prototypes.
- *
  * Things to do
  *
  */

@@ -1,9 +1,9 @@
 /* texture.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Aug 2014, 10:55:40 tquirk
+ *   last updated 05 Aug 2015, 15:09:47 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,14 +22,6 @@
  *
  * This file contains the texture cache class declaration.
  *
- * Changes
- *   12 Jul 2014 TAQ - Created the file.
- *   20 Jul 2014 TAQ - We're now using the templated version of the cache.
- *   23 Jul 2014 TAQ - The parser now has a pointer to the object, rather
- *                     than an object that we insert into the cache.
- *   02 Aug 2014 TAQ - Having pre-transcoded strings lying around doesn't
- *                     seem to work at all.
- *
  * Things to do
  *
  */
@@ -37,9 +29,13 @@
 #ifndef __INC_R9CLIENT_TEXTURE_H__
 #define __INC_R9CLIENT_TEXTURE_H__
 
+#include <config.h>
+
 #include <gl.h>
 
+#if HAVE_XERCESC_SAX_ATTRIBUTELIST_HPP
 #include <xercesc/sax/AttributeList.hpp>
+#endif /* HAVE_XERCESC_SAX_ATTRIBUTELIST_HPP */
 
 #include "cache.h"
 

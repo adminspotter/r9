@@ -73,47 +73,6 @@
  * simply pass the socket number along with the data to be passed, in
  * both directions, for user identification.
  *
- * Changes
- *   04 Apr 1998 TAQ - Created the file.
- *   11 Apr 1998 TAQ - Modified some comments.  This file is going to
- *                     be very difficult to write.  Each different
- *                     interpreter type (planned interpreters include
- *                     tcl, perl, lisp, C, C++, and maybe even python)
- *                     will probably end up in its own file.
- *   12 Apr 1998 TAQ - Contemplated the design of this a bit more.
- *   17 Apr 1998 TAQ - More contemplation.  We're going to work to get
- *                     this bad boy to compile.
- *   10 May 1998 TAQ - Added CVS ID string.  It turns out that we can
- *                     probably get away with just one file, and have
- *                     each different interpreter have its own startup
- *                     and cleanup routine.  Fleshed this file out a
- *                     whole lot.  Most of the dynamic-loading stuff
- *                     is now here.
- *   11 May 1998 TAQ - The connection loop now uses socketpair to create
- *                     our communication channel.  Our I/O with the
- *                     main server is through STDIN_FILENO.
- *   25 May 1998 TAQ - Monkeyed with the funcptrs.  Changed some
- *                     comments in light of new information.
- *   24 Sep 1998 TAQ - Got rid of the extra crap in recv_fd.  The
- *                     entirety of subserver_main_loop is gone.
- *   20 Oct 1998 TAQ - Tweaked recv_fd to eliminate a compile warning.
- *   24 Oct 1998 TAQ - The subserver loop now actually does something,
- *                     though it won't accept any new connections yet.
- *                     Also attempted to open a syslog connection.
- *   01 Nov 1998 TAQ - We now keep track of each connection as it comes
- *                     in.  Unfortunately the connections aren't making
- *                     it this far (something with inetd and hosts.allow
- *                     I'm guessing).
- *   16 Jan 1999 TAQ - Changed some comments.
- *   16 Apr 2000 TAQ - Reset the CVS ID string.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   16 Aug 2006 TAQ - The exit flag is now volatile.  Misc tiny tweaks.
- *   05 Sep 2007 TAQ - Figured out how we want to pass data between the
- *                     master listening thread and us.
- *   21 Jun 2014 TAQ - The C++-ification has begun, starting with syslog.
- *   04 Jul 2014 TAQ - We're now a completely separate binary.
- *   05 Aug 2015 TAQ - subserver.h is completely irrelevant anymore.
- *
  * Things to do
  *   - Finish up the sending and recieving code.
  *   - We can send things to the master, but we'll never receive anything

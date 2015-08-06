@@ -25,11 +25,6 @@
  * present a bit cleaner interface, than having to modify *each*
  * object every time there is a position change.
  *
- * Changes
- *   10 May 2014 TAQ - Created the file, moving the motion-related parameters
- *                     out of game_obj.h.
- *   08 Aug 2014 TAQ - Small tweaks to improve linking.
- *
  * Things to do
  *
  */

@@ -22,19 +22,6 @@
  *
  * This file contains a basic listening socket, with a listener thread.
  *
- * Changes
- *   12 Sep 2007 TAQ - Created the file.
- *   13 Sep 2007 TAQ - Added create_socket static method.  Moved blank
- *                     constructor and destructor into basesock.cc.
- *   14 Jun 2014 TAQ - This is now much more of a base socket, which will
- *                     be directly usable everyplace we need a listener.
- *                     Added the base_user and listen_socket base classes.
- *   01 Jul 2014 TAQ - The access pools really belong in the sockets.  Also
- *                     added a stop method to the listen_socket.  Rearranged
- *                     the login_user/logout_user methods and added do_login
- *                     as a pure virtual.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

@@ -22,17 +22,6 @@
  *
  * This file contains the dynamic library loading class.
  *
- * Changes
- *   18 Jun 2014 TAQ - Created the file.
- *   21 Jun 2014 TAQ - Instead of returning NULL on failures, we'll now throw
- *                     strings, and leave it to our caller to log or whatever.
- *                     Updated syslog to use new stream log.
- *   22 Jun 2014 TAQ - Constructor now takes strings instead of char pointers.
- *                     Also got rid of the magic lib name behaviour, instead
- *                     just taking the raw name we get passed.
- *   09 Jul 2014 TAQ - Normalized exceptions with the rest of the codebase.
- *   10 Jul 2014 TAQ - Handle any exceptions in the destructor.
- *
  * Things to do
  *
  */

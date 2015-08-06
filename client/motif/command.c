@@ -23,10 +23,6 @@
  * This file contains the command area creation and management routines
  * for the Revision 9 client program.
  *
- * Changes
- *   18 Jul 2006 TAQ - Created the file.
- *   31 Aug 2014 TAQ - We no longer need the client.h include.
- *
  * Things to do
  *
  */

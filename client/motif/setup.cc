@@ -22,24 +22,6 @@
  *
  * This file contains the configuration box for the Revision9 game client.
  *
- * Changes
- *   19 Jul 2006 TAQ - Created the file.
- *   20 Jul 2006 TAQ - Hooked up the couple config settings to a structure.
- *                     Started working on the config file.
- *   26 Jul 2006 TAQ - Renamed a bunch of routines.  Instead of printing
- *                     error messages to stderr, we now pass them to
- *                     main_post_message.  Debugging is still going to
- *                     stderr though.  We're now getting the correct IP
- *                     address out of gethostbyname, and after a bit of work,
- *                     it's being transferred to the config structure
- *                     correctly as well.
- *   31 Jul 2006 TAQ - Moved all the file-handling stuff into config.c.  Also
- *                     moved the config structure there.
- *   01 Aug 2006 TAQ - Removed debugging.  We're now keeping track of the new
- *                     modified element in the config structure, and setting
- *                     it when appropriate.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *   - When we type in an invalid hostname/IP, set keyboard focus to the
  *   networkhost box.  It's not currently working properly.

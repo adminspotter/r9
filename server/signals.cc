@@ -22,33 +22,6 @@
  *
  * This file contains the signal handlers and registration functions.
  *
- * Changes
- *   11 Apr 1998 TAQ - Created the file.
- *   12 Apr 1998 TAQ - Wrote some basic signal handlers.
- *   10 May 1998 TAQ - Added CVS ID string.
- *   24 Sep 1998 TAQ - Modified some comments.
- *   16 Apr 2000 TAQ - Reset the CVS string.
- *   14 Oct 2000 TAQ - Added USR1 and USR2 handlers.  Converted to use
- *                     sigaction, since there's much more control available.
- *                     Changed the meaning of HUP to "restart everything",
- *                     where USR1 rereads the config and USR2 regenerates
- *                     the zone.
- *   29 Oct 2000 TAQ - Removed zone.h include, and changed startup/cleanup
- *                     zone to un/load_zone.
- *   02 Aug 2003 TAQ - Improperly ordered arguments in print statements of
- *                     setup_signals.
- *   15 May 2006 TAQ - Added the GPL notice.
- *   14 Jun 2006 TAQ - Added stdlib.h include.
- *   27 Jul 2006 TAQ - Tried to get SEGV handler to dump core.  No dice.
- *   13 Aug 2006 TAQ - Removed the load/unload_zone calls, since those
- *                     functions no longer exist.  The SIGUSR2 handler now
- *                     does nothing, but can be implemented later.
- *   04 Jul 2007 TAQ - Hopefully this thing will spit out a stack trace
- *                     when a SEGV happens.
- *   21 Jun 2014 TAQ - C++-ification begins!  Starting with the syslog.
- *   01 Aug 2015 TAQ - autoconf'ification, and config.h has moved to
- *                     config_data.h to not conflict with autoconf's config.h.
- *
  * Things to do
  *   - See if we can make the sigsegv handler dump core.
  *   - Catch everything else that may need to be caught.

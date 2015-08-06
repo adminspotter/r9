@@ -23,9 +23,6 @@
  * This file contains the implementation to send things to the message
  * pane via a streambuf object within the std::clog stream.
  *
- * Changes
- *   24 Aug 2014 TAQ - Created the file.
- *
  * Things to do
  *
  */

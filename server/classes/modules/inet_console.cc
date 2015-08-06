@@ -22,17 +22,6 @@
  *
  * This file contains the inet port console.
  *
- * Changes
- *   31 May 2014 TAQ - Created the file.
- *   09 Jul 2014 TAQ - De-syslogged, and we only throw runtime_errors now.
- *   10 Jul 2014 TAQ - Missed one catch of an int, now a runtime_error.  Also
- *                     when a constructor throws an exception, memory is
- *                     automatically cleaned up.
- *   02 May 2015 TAQ - Moved most of the hostname-grabbing into wrap_request,
- *                     since that's the only place it's used.  Switched to
- *                     hosts_ctl, since it does a lot more stuff automatically.
- *   24 Jul 2015 TAQ - Converted to stdint types.
- *
  * Things to do
  *
  */

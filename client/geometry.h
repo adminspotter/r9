@@ -1,9 +1,9 @@
 /* geometry.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Aug 2014, 11:16:49 tquirk
+ *   last updated 05 Aug 2015, 15:07:31 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,12 +22,6 @@
  *
  * This file contains the geometry cache class declaration.
  *
- * Changes
- *   12 Jul 2014 TAQ - Created the file.
- *   19 Jul 2014 TAQ - Small changes to get things compiling.
- *   20 Jul 2014 TAQ - Trying out the cache template.
- *   02 Aug 2014 TAQ - Pre-transcoded strings are not working.
- *
  * Things to do
  *
  */
@@ -35,9 +29,13 @@
 #ifndef __INC_R9CLIENT_GEOMETRY_H__
 #define __INC_R9CLIENT_GEOMETRY_H__
 
+#include <config.h>
+
 #include <gl.h>
 
+#if HAVE_XERCESC_SAX_ATTRIBUTELIST_HPP
 #include <xercesc/sax/AttributeList.hpp>
+#endif /* HAVE_XERCESC_SAX_ATTRIBUTELIST_HPP */
 
 #include "cache.h"
 

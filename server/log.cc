@@ -23,12 +23,6 @@
  * This file contains the implementation of a streambuf to allow use of
  * std::clog to log to syslog, instead of the regular stdout.
  *
- * Changes
- *   21 Jun 2014 TAQ - Created the file.
- *   23 Jun 2014 TAQ - Small tweaks to get things compiling properly.
- *   27 Jun 2014 TAQ - Handled a possible format string vulnerability.
- *   11 Jul 2014 TAQ - Added the close method.
- *
  * Things to do
  *
  */
