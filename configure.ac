@@ -184,7 +184,8 @@ XMLPlatformUtils::Terminate();
   if test "x$use_bundled_xerces" == "xyes"
   then
     AC_MSG_NOTICE([using bundled xerces])
-    subdirs="xercesc $subdirs"
+    subdirs="xerces-c $subdirs"
+    AC_CONFIG_SUBDIRS([xerces-c])
     ABSOLUTE_SRCDIR=$(pwd)
     CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I${ABSOLUTE_SRCDIR}/xerces-c"
     CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/xerces-c"
@@ -294,6 +295,7 @@ XMLPlatformUtils::Terminate();
   then
     AC_MSG_NOTICE([using bundled GLw])
     subdirs="glw $subdirs"
+    AC_CONFIG_SUBDIRS([glw])
     ABSOLUTE_SRCDIR=$(pwd)
     CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I${ABSOLUTE_SRCDIR}/glw"
     CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/glw"
