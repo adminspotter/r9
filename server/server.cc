@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2015, 09:20:57 tquirk
+ *   last updated 09 Aug 2015, 16:56:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -317,7 +317,7 @@ static void setup_zone(void)
                     config.size.steps[1], config.size.steps[2]);
 
     /* Load up the database lib before we start the access thread pool */
-    db_lib = new Library("libr9_" + config.db_type + ".dylib");
+    db_lib = new Library("libr9_" + config.db_type + LT_MODULE_EXT);
     create_db = (create_db_t *)db_lib->symbol("create_db");
     database = (*create_db)(config.db_host, config.db_user,
                             config.db_pass, config.db_name);

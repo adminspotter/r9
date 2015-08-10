@@ -1,9 +1,9 @@
 /* tcl.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Aug 2014, 18:14:44 tquirk
+ *   last updated 10 Aug 2015, 07:44:25 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,7 +29,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "tcl.h"
+#include "r9tcl.h"
 
 TclLanguage::TclLanguage()
 {

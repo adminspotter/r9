@@ -1,9 +1,9 @@
 /* perl.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jul 2014, 10:11:11 trinityquirk
+ *   last updated 10 Aug 2015, 07:44:07 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -39,7 +39,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "perl.h"
+#include "r9perl.h"
 
 /* MAGIC!!! */
 #define my_perl this->interp

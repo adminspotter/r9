@@ -15,131 +15,226 @@ AC_GNU_SOURCE
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
-m4_ifset(AM_PROG_AR, [AM_PROG_AR], [])
+m4_define_default(AM_PROG_AR, [])
+AM_PROG_AR
 
 AC_LANG(C++)
 
 # Libtool init
 LT_INIT([pic-only])
 LT_LANG([C++])
+LT_SYS_MODULE_EXT
 
 # Check for c++11 language support
 #AX_CXX_COMPILE_STDCXX_11
-# TODO:  alter macro above to test C++11 library support
+# TODO:  alter macro above to test C++11 *library* support, for the
+# various config file readers
+
+# Find the compiled-in g++ extension include dir
+if test "x$CXX" == "xg++"
+then
+  AC_MSG_CHECKING([g++ extension include directory])
+  ax_gxx_include_dir=$(g++ --version 2>&1 | sed -ne '/Configured with/{s/^.*with-gxx-include-dir=//;s/ .*//;p;}')
+  if test -s "$ax_gxx_include_dir"
+  then
+    GXX_EXT_CXXFLAGS="-I$ax_gxx_include_dir"
+    AC_MSG_RESULT([$ax_gxx_include_dir])
+    AC_SUBST(GXX_EXT_CXXFLAGS)
+  else
+    AC_MSG_RESULT([none found])
+  fi
+else
+  AC_MSG_NOTICE([g++ not configured, skipping extension test])
+fi
+
 
 # Arguments
-AC_ARG_ENABLE(editres, AS_HELP_STRING([--enable-editres], [Enable Editres support]), [], [enable_editres="yes"])
+AC_ARG_ENABLE([editres],
+              AS_HELP_STRING([--enable-editres], [Enable Editres support]),
+              [],
+              [enable_editres="yes"])
 
-AC_ARG_WITH(tcl, AS_HELP_STRING([--with-tcl], [Build the Tcl server module]))
-AC_ARG_WITH(perl, AS_HELP_STRING([--with-perl], [Build the Perl server module]))
-AC_ARG_WITH(mysql, AS_HELP_STRING([--with-mysql], [Build the MySQL server module]))
-AC_ARG_WITH(pgsql, AS_HELP_STRING([--with-pgsql], [Build the PostgreSQL server module]))
-AC_ARG_WITH(client, AS_HELP_STRING([--with-client], [Build the client program]))
+AC_ARG_WITH([tcl],
+            AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
+            [],
+            [with_tcl="no"])
+AC_ARG_WITH([perl],
+            AS_HELP_STRING([--with-perl], [Build the Perl server module]),
+            [],
+            [with_perl="no"])
+AC_ARG_WITH([mysql],
+            AS_HELP_STRING([--with-mysql], [Build the MySQL server module]),
+            [],
+            [with_mysql="no"])
+AC_ARG_WITH([pgsql],
+            AS_HELP_STRING([--with-pgsql], [Build the PostgreSQL server module]),
+            [],
+            [with_pgsql="no"])
+AC_ARG_WITH([client],
+            AS_HELP_STRING([--with-client], [Build the client program]),
+            [],
+            [with_client="no"])
 
-AC_ARG_WITH(xerces,
+AC_ARG_WITH([xerces],
             AS_HELP_STRING([--with-xerces=<path>],
                            [Build using the system libxerces-c (default 'bundled')]),
             [
               if test "x$with_xerces_includes" == "x"
               then
-                with_xerces_includes="${with_xerces}/${includedir}"
+                with_xerces_includes="${with_xerces}/include"
               fi
               if test "x$with_xerces_libraries" == "x"
               then
-                with_xerces_libraries="${with_xerces}/${libdir}"
+                with_xerces_libraries="${with_xerces}/lib"
               fi
             ],
             [with_xerces="bundled"])
-AC_ARG_WITH(xerces-includes,
+AC_ARG_WITH([xerces-includes],
             AS_HELP_STRING([--with-xerces-includes=<path>],
                            [Use libxerces-c includes at <path>]))
-AC_ARG_WITH(xerces-libraries,
+AC_ARG_WITH([xerces-libraries],
             AS_HELP_STRING([--with-xerces-libraries=<path>],
                            [Use libxerces-c libraries at <path>]))
 
-AC_ARG_WITH(GLw,
+AC_ARG_WITH([GLw],
             AS_HELP_STRING([--with-GLw=<path>],
                            [Build using the system libGLw (default 'bundled')]),
             [
               if test "x$with_GLw_includes" == "x"
               then
-                with_GLw_includes="${with_GLw}/${includedir}"
+                with_GLw_includes="${with_GLw}/include"
               fi
               if test "x$with_GLw_libraries" == "x"
               then
-                with_GLw_libraries="${with_GLw}/${libdir}"
+                with_GLw_libraries="${with_GLw}/lib"
               fi
             ],
             [with_GLw="bundled"])
-AC_ARG_WITH(GLw-includes,
+AC_ARG_WITH([GLw-includes],
             AS_HELP_STRING([--with-GLw-includes=<path>],
                            [Use libGLw includes at <path>]))
-AC_ARG_WITH(GLw-libraries,
+AC_ARG_WITH([GLw-libraries],
             AS_HELP_STRING([--with-GLw-libraries=<path>],
                            [Use libGLw libraries at <path>]))
 
-AC_ARG_WITH(eigen,
+AC_ARG_WITH([eigen],
             AS_HELP_STRING([--with-eigen=<path>],
                            [Build using system Eigen installation at <path> (default 'bundled')]),
             [],
             [with_eigen="bundled"])
 
-# Check for libraries
-
 # Client program
 if test "$with_client" == "yes"
 then
-  AC_MSG_NOTICE([Building with client enabled])
+  AC_MSG_NOTICE([building with client enabled])
 
   CLIENT_CXXFLAGS_SAVE="$CXXFLAGS"
   CLIENT_LDFLAGS_SAVE="$LDFLAGS"
   CLIENT_LIBS_SAVE="$LIBS"
-  CLIENT_CXXFLAGS=""
+  CLIENT_CXXFLAGS="$CXXFLAGS"
   CLIENT_LDLIBS=""
 
-  AC_PATH_X
-
-  # TODO:  get a good non-main function for libm
-  AC_SEARCH_LIBS([main], [m],
-      [CLIENT_LDLIBS="$ac_cv_search_main $CLIENT_LDLIBS"],
+  AC_SEARCH_LIBS([sqrt], [m],
+      [
+          if test "x$ac_cv_search_sqrt" == "xnone required"
+          then
+            AC_MSG_NOTICE([libm not needed, skipping])
+          else
+            CLIENT_LDLIBS="$ac_cv_search_sqrt $CLIENT_LDLIBS"
+          fi
+      ],
       [AC_MSG_ERROR([libm not valid, can not build client program.])])
 
-  if test "$with_xerces" != "bundled"
+  AC_MSG_NOTICE([checking for xerces])
+  case $with_xerces in
+    bundled)
+      use_bundled_xerces="yes"
+      ;;
+    *)
+      # Try to use the specified libxerces-c
+      XERCES_CXXFLAGS_SAVE="$CXXFLAGS"
+      CXXFLAGS="$CLIENT_CXXFLAGS -I$with_xerces_includes"
+      AC_CHECK_HEADERS([xercesc/sax/AttributeList.hpp],
+          [],
+          [use_bundled_xerces="yes"])
+      CXXFLAGS="$XERCES_CXXFLAGS_SAVE"
+      AX_SEARCH_LIBS_PROG([XMLPlatformUtils::Initialize], [xerces-c],
+          [],
+          [use_bundled_xerces="yes"],
+          [-L$with_xerces_libraries],
+          [AC_LANG_PROGRAM(
+            [
+#include <xercesc/util/PlatformUtils.hpp>
+#ifdef XERCES_CPP_NAMESPACE_USE
+XERCES_CPP_NAMESPACE_USE
+#endif
+            ],
+            [
+try
+{
+   XMLPlatformUtils::Initialize();
+}
+catch (...)
+{
+   // ...
+}
+XMLPlatformUtils::Terminate();
+            ])])
+  esac
+  if test "x$use_bundled_xerces" == "xyes"
   then
-    # We should use the system libxerces-c
-    XERCES_CXXFLAGS_SAVE="$CXXFLAGS"
-    CXXFLAGS="-I$with_xerces_includes"
-    AC_CHECK_HEADERS([xercesc/sax/AttributeList.hpp],
-        [
-            CLIENT_CXXFLAGS="$XERCES_CXXFLAGS_SAVE -I$with_xerces_includes"
-        ],
-        [
-            use_bundled_xerces="yes"
-            CXXFLAGS="$XERCES_CXXFLAGS_SAVE"
-        ])
-    XERCES_LDFLAGS_SAVE="$LDFLAGS"
-    LDFLAGS="$LDFLAGS -L$with_xerces_libraries"
-    AC_SEARCH_LIBS([XMLPlatformUtils::Initialize], [xerces-c],
-        [
-            CLIENT_LDFLAGS="$XERCES_LDFLAGS_SAVE -L$with_xerces_libraries"
-            CLIENT_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize $CLIENT_LDLIBS"
-        ],
-        [
-            use_bundled_xerces="yes"
-            LDFLAGS="$XERCES_LDFLAGS_SAVE"
-        ])
-    if test "x$use_bundled_xerces" == "xyes"
-    then
-      AC_MSG_NOTICE([no valid libxerces-c installation found, enabling bundled copy.])
-      with_xerces="bundled"
-      subdirs="xercesc $subdirs"
-    fi
+    AC_MSG_NOTICE([using bundled xerces])
+    subdirs="xercesc $subdirs"
+    ABSOLUTE_SRCDIR=$(pwd)
+    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I${ABSOLUTE_SRCDIR}/xerces-c"
+    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/xerces-c"
+    CLIENT_LDLIBS="-lxerces-c $CLIENT_LDLIBS"
+  else
+    AC_MSG_NOTICE([includes $with_xerces_includes, libs $with_xerces_libraries])
+    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I$with_xerces_includes"
+    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$with_xerces_libraries"
+    CLIENT_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize $CLIENT_LDLIBS"
+  fi
+
+  AC_PATH_X
+  if test "x$x_includes" != "x"
+  then
+    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I$x_includes"
+  fi
+  if test "x$x_libraries" != "x"
+  then
+    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$x_libraries"
   fi
 
   AC_SEARCH_LIBS([XpmReadFileToPixmap], [Xpm],
       [CLIENT_LDLIBS="$ac_cv_search_XpmReadFileToPixmap $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libXpm not valid, can not build client program.])])
-  CLIENT_LDLIBS="-lSM -lICE $CLIENT_LDLIBS"
+      [AC_MSG_ERROR([libXpm not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
+  AC_SEARCH_LIBS([IceOpenConnection], [ICE],
+      [CLIENT_LDLIBS="$ac_cv_search_IceOpenConnection $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([libICE not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
+  AC_SEARCH_LIBS([SmcOpenConnection], [SM],
+      [CLIENT_LDLIBS="$ac_cv_search_SmcOpenConnection $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([libSM not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
+  AC_SEARCH_LIBS([XCreateWindow], [X11],
+      [CLIENT_LDLIBS="$ac_cv_search_XCreateWindow $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([libX11 not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
+  AC_SEARCH_LIBS([XtCreateWidget], [Xt],
+      [CLIENT_LDLIBS="$ac_cv_search_XtCreateWidget $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([libXt not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
+  AC_SEARCH_LIBS([XextAddDisplay], [Xext],
+      [CLIENT_LDLIBS="$ac_cv_search_XextAddDisplay $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([libXext not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
 
   if test "$enable_editres" == "yes"
   then
@@ -149,36 +244,70 @@ then
             AC_DEFINE(WANT_EDITRES, [1], [Enable editres support])
         ],
         [AC_MSG_ERROR([libXmu not valid, can not enable editres support.])],
-        [$CLIENT_LDLIBS])
+        [$CLIENT_LDFLAGS])
   fi
 
   AC_SEARCH_LIBS([XmCreateMainWindow], [Xm],
-      [CLIENT_LDLIBS="$ac_cv_search_XmCreateMainWindow -lXext -lXt -lX11 $CLIENT_LDLIBS"],
+      [CLIENT_LDLIBS="$ac_cv_search_XmCreateMainWindow $CLIENT_LDLIBS"],
       [AC_MSG_ERROR([libXm not valid, can not build client program.])],
-      [-lXext -lXt -lX11 $CLIENT_LDLIBS])
+      [$CLIENT_LDFLAGS])
+
   AC_SEARCH_LIBS([glNewList], [GL],
       [CLIENT_LDLIBS="$ac_cv_search_glNewList $CLIENT_LDLIBS"],
       [AC_MSG_ERROR([libGL not valid, can not build client program.])],
-      [$CLIENT_LDLIBS])
+      [$CLIENT_LDFLAGS])
+
+  AC_SEARCH_LIBS([gluSphere], [GLU],
+      [CLIENT_LDLIBS="$ac_cv_search_gluSphere $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([libGLU not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
   AC_SEARCH_LIBS([glutSolidSphere], [glut],
       [CLIENT_LDLIBS="$ac_cv_search_glutSolidSphere $CLIENT_LDLIBS"],
       [AC_MSG_ERROR([libglut not valid, can not build client program.])],
-      [$CLIENT_LDLIBS])
-  if test "$with_libGLw" == "yes"
+      [$CLIENT_LDFLAGS])
+
+  AC_MSG_NOTICE([checking for GLw])
+  case $with_GLw in
+    bundled)
+      use_bundled_GLw="yes"
+      ;;
+    *)
+      # Try to use the specified libGLw
+      GLW_CXXFLAGS_SAVE="$CXXFLAGS"
+      CXXFLAGS="$CLIENT_CXXFLAGS -I$with_GLw_includes"
+      AC_CHECK_HEADERS([GL/GLwMDrawA.h],
+          [],
+          [use_bundled_GLw="yes"],
+          [
+              #include <X11/Xlib.h>
+              #include <X11/StringDefs.h>
+              #include <X11/Intrinsic.h>
+          ])
+      CXXFLAGS="$GLW_CXXFLAGS_SAVE"
+      AC_SEARCH_LIBS([GLwDrawingAreaMakeCurrent], [GLw],
+          [],
+          [use_bundled_GLw="yes"],
+          [$CLIENT_LDFLAGS -L$with_GLw_libraries])
+  esac
+  if test "$use_bundled_GLw" == "yes"
   then
-    # We should use the system libGLw
-    AC_CHECK_HEADERS([GLwMDrawA.h],
-        [],
-        [use_bundled_libGLw="yes"])
-    AC_SEARCH_LIBS([GLwDrawingAreaMakeCurrent], [GLw],
-        [CLIENT_LDLIBS="$ac_cv_search_GLwDrawingAreaMakeCurrent $CLIENT_LDLIBS"],
-        [use_bundled_libGLw="yes"],
-        [$CLIENT_LDLIBS])
-    if test "$use_bundled_libGLw" == "yes"
-    then
-      AC_MSG_NOTICE([no valid libGLw installation found, using bundled copy.])
-    fi
+    AC_MSG_NOTICE([using bundled GLw])
+    subdirs="glw $subdirs"
+    ABSOLUTE_SRCDIR=$(pwd)
+    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I${ABSOLUTE_SRCDIR}/glw"
+    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/glw"
+    CLIENT_LDLIBS="-lGLw $CLIENT_LDLIBS"
+  else
+    AC_MSG_NOTICE([includes $with_GLw_includes, libraries$with_GLw_libraries])
+    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I$with_GLw_includes"
+    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$with_GLw_libraries"
+    CLIENT_LDLIBS="$ac_cv_search_GLwDrawingAreaMakeCurrent $CLIENT_LDLIBS"
   fi
+
+  AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
+  AC_MSG_NOTICE([using CLIENT_LDFLAGS=$CLIENT_LDFLAGS])
+  AC_MSG_NOTICE([using CLIENT_LDLIBS=$CLIENT_LDLIBS])
 
   LIBS="$CLIENT_LIBS_SAVE"
   LDFLAGS="$CLIENT_LDFLAGS_SAVE"
@@ -290,7 +419,7 @@ then
 fi
 
 # Checks for header files.
-AC_CHECK_HEADERS([arpa/inet.h byteswap.h endian.h execinfo.h fcntl.h grp.h limits.h netdb.h netinet/in.h pwd.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h byteswap.h endian.h execinfo.h ext/stdio_filebuf.h fcntl.h grp.h limits.h netdb.h netinet/in.h pwd.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

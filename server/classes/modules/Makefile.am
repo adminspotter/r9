@@ -16,6 +16,7 @@ lib_LTLIBRARIES = $(modules_libs)
 
 libr9_console_la_SOURCES = console.cc unix_console.cc inet_console.cc \
 	console.h
+libr9_console_la_CXXFLAGS = $(GXX_EXT_CXXFLAGS)
 
 libr9_MySQL_la_SOURCES = db.cc mysql.cc db.h
 libr9_MySQL_la_LDFLAGS = $(MYSQL_LDLIBS)
