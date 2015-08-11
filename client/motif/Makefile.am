@@ -15,8 +15,8 @@ bin_PROGRAMS = r9client
 
 r9client_SOURCES = about.c command.c client.cc menu.cc message.cc \
 	msglog.cc setup.cc view.cc client.h msglog.h
-r9client_CXXFLAGS = $(LIBGLW_CFLAGS) $(CLIENT_CXXFLAGS)
-r9client_CFLAGS = $(LIBGLW_CFLAGS) $(CLIENT_CXXFLAGS)
+AM_CXXFLAGS = $(CLIENT_CXXFLAGS)
+AM_CFLAGS = $(CLIENT_CXXFLAGS)
 r9client_LDFLAGS = $(CLIENT_LDFLAGS)
 r9client_LDADD = ../libr9_client.a $(XERCES_LDADD) $(LIBGLW_LDADD) \
 	../../proto/libr9_proto.la $(CLIENT_LDLIBS)

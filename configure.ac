@@ -158,11 +158,15 @@ then
           [],
           [use_bundled_xerces="yes"])
       CXXFLAGS="$XERCES_CXXFLAGS_SAVE"
-      AX_SEARCH_LIBS_PROG([XMLPlatformUtils::Initialize], [xerces-c],
-          [],
-          [use_bundled_xerces="yes"],
-          [-L$with_xerces_libraries],
-          [AC_LANG_PROGRAM(
+
+      # This is an inline of a hacked version of AC_SEARCH_LIBS
+      AS_VAR_PUSHDEF([ac_Search], [ac_cv_search_XMLPlatformUtils__Initialize])
+      AC_CACHE_CHECK(
+        [for library containing XMLPlatformUtils::Initialize],
+        [ac_Search],
+        [
+          ac_func_search_save_LIBS=$LIBS
+          AC_LANG_CONFTEST([AC_LANG_PROGRAM(
             [
 #include <xercesc/util/PlatformUtils.hpp>
 #ifdef XERCES_CPP_NAMESPACE_USE
@@ -180,6 +184,28 @@ catch (...)
 }
 XMLPlatformUtils::Terminate();
             ])])
+          for ac_lib in '' xerces-c
+          do
+            if test -z "$ac_lib"
+            then
+              ac_res="none required"
+            else
+              ac_res=-l$ac_lib
+              LIBS="-l$ac_lib -L$with_xerces_libraries $ac_func_search_save_LIBS"
+            fi
+            AC_LINK_IFELSE([], [AS_VAR_SET([ac_Search], [$ac_res])])
+            AS_VAR_SET_IF([ac_Search], [break])
+          done
+          AS_VAR_SET_IF([ac_Search], , [AS_VAR_SET([ac_Search], [no])])
+          rm conftest.$ac_ext
+          LIBS=$ac_func_search_save_LIBS
+        ])
+      ac_res=AS_VAR_GET([ac_Search])
+      AS_IF(
+        [test "$ac_res" != no],
+        [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"]
+        [use_bundled_xerces="yes"])
+      AS_VAR_POPDEF([ac_Search])
   esac
   if test "x$use_bundled_xerces" == "xyes"
   then
