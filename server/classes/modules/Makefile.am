@@ -24,9 +24,9 @@ libr9_MySQL_la_LDFLAGS = $(MYSQL_LDLIBS)
 libr9_pgsql_la_SOURCES = db.cc pgsql.cc db.h
 libr9_pgsql_la_LDFLAGS = $(PGSQL_LDLIBS)
 
-libr9_perl_la_SOURCES = perl.cc perl.h language.h
+libr9_perl_la_SOURCES = perl.cc r9perl.h language.h
 libr9_perl_la_CXXFLAGS = $(PERL_CFLAGS)
 libr9_perl_la_LDFLAGS = $(PERL_LDFLAGS)
 
-libr9_tcl_la_SOURCES = tcl.cc tcl.h language.h
+libr9_tcl_la_SOURCES = tcl.cc r9tcl.h language.h
 libr9_tcl_la_LDFLAGS = $(TCL_LDLIBS)

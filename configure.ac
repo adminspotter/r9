@@ -15,7 +15,7 @@ AC_GNU_SOURCE
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
-m4_define_default(AM_PROG_AR, [])
+#m4_define_default(AM_PROG_AR, [])
 AM_PROG_AR
 
 AC_LANG(C++)
@@ -258,8 +258,8 @@ XMLPlatformUtils::Terminate();
       [AC_MSG_ERROR([libGL not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
-  AC_SEARCH_LIBS([gluSphere], [GLU],
-      [CLIENT_LDLIBS="$ac_cv_search_gluSphere $CLIENT_LDLIBS"],
+  AC_SEARCH_LIBS([gluPerspective], [GLU],
+      [CLIENT_LDLIBS="$ac_cv_search_gluPerspective $CLIENT_LDLIBS"],
       [AC_MSG_ERROR([libGLU not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
@@ -295,6 +295,7 @@ XMLPlatformUtils::Terminate();
   then
     AC_MSG_NOTICE([using bundled GLw])
     subdirs="glw $subdirs"
+    ac_configure_args="$ac_configure_args --with-motif"
     AC_CONFIG_SUBDIRS([glw])
     ABSOLUTE_SRCDIR=$(pwd)
     CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I${ABSOLUTE_SRCDIR}/glw"

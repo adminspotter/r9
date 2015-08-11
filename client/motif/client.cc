@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 16:46:16 tquirk
+ *   last updated 10 Aug 2015, 19:09:23 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -27,6 +27,8 @@
  *   - Flesh out the save_state routine.
  *
  */
+
+#include <config.h>
 
 #include <stdlib.h>
 #include <limits.h>

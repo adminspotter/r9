@@ -1,6 +1,6 @@
 /* texture.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:09:47 tquirk
+ *   last updated 10 Aug 2015, 22:39:55 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -31,7 +31,7 @@
 
 #include <config.h>
 
-#include <gl.h>
+#include <GL/gl.h>
 
 #if HAVE_XERCESC_SAX_ATTRIBUTELIST_HPP
 #include <xercesc/sax/AttributeList.hpp>
@@ -76,6 +76,6 @@ class TextureParser : public XNS::HandlerBase
     void endElement(const XMLCh *);
 };
 
-typedef ObjectCache<texture, TextureParser> TextureCache;
+typedef ParsedCache<texture, TextureParser> TextureCache;
 
 #endif /* __INC_R9CLIENT_TEXTURE_H__ */

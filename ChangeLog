@@ -947,3 +947,6 @@
 2015-08-01 - TAQ
 	Autoconf conversion begins.
 	proto/byteswap.c, proto/proto.h - Moved a bunch of stuff out of proto.h into byteswap.c.  Cleaned up server_notice packet handling.
+
+2015-08-10 - TAQ
+	client/cache.h - We need a basic object cache without a parser hooked to it, for the general object cache (a geometry, hooked to a texture, with a specific ID value).  So we now have the BasicCache, and the derived ParsedCache, which still functions as before.

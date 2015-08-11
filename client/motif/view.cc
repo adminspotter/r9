@@ -1,6 +1,6 @@
 /* view.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:26:21 tquirk
+ *   last updated 10 Aug 2015, 22:49:16 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,7 +36,7 @@
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
-#include <GL/GLwMDrawA.h>
+#include <GLwMDrawA.h>
 #include <GL/glut.h>
 
 #include <iostream>

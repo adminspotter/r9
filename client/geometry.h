@@ -1,6 +1,6 @@
 /* geometry.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:07:31 tquirk
+ *   last updated 10 Aug 2015, 22:39:38 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -31,7 +31,7 @@
 
 #include <config.h>
 
-#include <gl.h>
+#include <GL/gl.h>
 
 #if HAVE_XERCESC_SAX_ATTRIBUTELIST_HPP
 #include <xercesc/sax/AttributeList.hpp>
@@ -86,6 +86,6 @@ struct geom_cleanup
         }
 };
 
-typedef ObjectCache<geometry, GeometryParser, geom_cleanup> GeometryCache;
+typedef ParsedCache<geometry, GeometryParser, geom_cleanup> GeometryCache;
 
 #endif /* __INC_R9CLIENT_GEOMETRY_H__ */

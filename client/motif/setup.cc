@@ -1,6 +1,6 @@
 /* setup.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:24:40 tquirk
+ *   last updated 10 Aug 2015, 19:10:03 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -57,7 +57,7 @@
 #include <string>
 
 #include "client.h"
-#include "../config.h"
+#include "../configdata.h"
 
 static void create_video_settings_form(Widget, int);
 static void create_sound_settings_form(Widget, int);

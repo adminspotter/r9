@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:08:18 tquirk
+ *   last updated 10 Aug 2015, 22:45:58 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -43,12 +43,12 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <time.h>
-#if HAVE_SYS/TIME_H
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif /* HAVE_SYS/TIME_H */
-#if HAVE_SYS/STAT_H
+#endif /* HAVE_SYS_TIME_H */
+#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif /* HAVE_SYS/STAT_H */
+#endif /* HAVE_SYS_STAT_H */
 #include <pthread.h>
 
 #include <xercesc/parsers/SAXParser.hpp>
@@ -69,8 +69,6 @@
 
 #include "r9client.h"
 
-#define XNS XERCES_CPP_NAMESPACE
-
 template <typename T>
 struct noop_cleanup
 {
@@ -78,77 +76,153 @@ struct noop_cleanup
 };
 
 template <typename obj_type,
-          typename parser_type,
           typename cleanup = noop_cleanup<obj_type> >
-class ObjectCache
+class BasicCache
 {
-  private:
-    typedef ObjectCache<obj_type, parser_type, cleanup> _oct;
+  protected:
+    typedef BasicCache<obj_type, cleanup> _bct;
     typedef struct object_timeval_tag
     {
         struct timeval lastused;
         obj_type obj;
     }
     object_struct;
-    typedef std::unordered_map<uint64_t, typename _oct::object_struct> obj_map;
+    typedef std::unordered_map<uint64_t, typename _bct::object_struct> obj_map;
 
-    struct oc_cleanup
+    struct bc_cleanup
     {
-        void operator()(typename _oct::object_struct& val)
+        void operator()(typename _bct::object_struct& val)
             {
                 std::function<void(obj_type&)> cleanup_func = cleanup();
                 cleanup_func(val.obj);
             }
     };
-    typedef std::function<void(typename _oct::object_struct&)> clean_func_type;
+    typedef std::function<void(typename _bct::object_struct&)> clean_func_type;
 
     const static int PRUNE_INTERVAL = 600;
     const static int PRUNE_LIFETIME = 1200;
 
-    _oct::obj_map objects;
-    std::string type, store, cache;
+    _bct::obj_map objects;
+    std::string type;
     pthread_t prune_thread;
 
     static void *prune_worker(void *arg)
         {
-            _oct *oc = (_oct *)arg;
+            _bct *bc = (_bct *)arg;
             struct timeval limit;
-            typename _oct::obj_map::iterator i;
-            std::vector<typename _oct::obj_map::iterator> old_elems;
-            typename std::vector<typename _oct::obj_map::iterator>::iterator j;
+            typename _bct::obj_map::iterator i;
+            std::vector<typename _bct::obj_map::iterator> old_elems;
+            typename std::vector<typename _bct::obj_map::iterator>::iterator j;
 
             for (;;)
             {
-                sleep(_oct::PRUNE_INTERVAL);
+                sleep(_bct::PRUNE_INTERVAL);
                 if (!gettimeofday(&limit, NULL))
                 {
-                    std::clog << oc->type
+                    std::clog << bc->type
                               << " reaper thread couldn't get time of day: "
                               << strerror(errno) << " (" << errno << ")"
                               << std::endl;
                     continue;
                 }
-                limit.tv_sec -= _oct::PRUNE_LIFETIME;
+                limit.tv_sec -= _bct::PRUNE_LIFETIME;
                 old_elems.clear();
-                for (i = oc->objects.begin(); i != oc->objects.end(); ++i)
+                for (i = bc->objects.begin(); i != bc->objects.end(); ++i)
                     if (i->first != 0LL
                         && i->second.lastused.tv_sec >= limit.tv_sec)
                         old_elems.push_back(i);
 
                 if (old_elems.size() > 0)
                 {
-                    typename _oct::clean_func_type cleanup_func = oc_cleanup();
+                    typename _bct::clean_func_type cleanup_func = bc_cleanup();
                     for (j = old_elems.begin(); j != old_elems.end(); ++j)
                     {
                         cleanup_func((*j)->second);
-                        oc->objects.erase(*j);
+                        bc->objects.erase(*j);
                     }
                     std::clog << "Removed " << old_elems.size()
-                              << " entities from " << oc->type
+                              << " entities from " << bc->type
                               << " cache" << std::endl;
                 }
             }
         };
+
+  public:
+    BasicCache(const std::string type_name)
+        : objects(), type(type_name)
+        {
+            int ret;
+
+            if ((ret = pthread_create(&(this->prune_thread),
+                                      NULL,
+                                      this->prune_worker,
+                                      (void *)this)) != 0)
+            {
+                std::ostringstream s;
+                s << "Couldn't start " << this->type
+                  << " reaper thread: " << strerror(ret) << " (" << ret << ")";
+                throw std::runtime_error(s.str());
+            }
+        };
+    ~BasicCache()
+        {
+            int ret;
+            typename _bct::obj_map::iterator i;
+
+            if ((ret = pthread_cancel(this->prune_thread)) != 0)
+                std::clog << "Couldn't cancel " << this->type
+                          << " reaper thread: "
+                          << strerror(ret) << " (" << ret << ")" << std::endl;
+            sleep(0);
+            if ((ret = pthread_join(this->prune_thread, NULL)) != 0)
+                std::clog << "Couldn't reap " << this->type
+                          << " reaper thread: "
+                          << strerror(ret) << " (" << ret << ")" << std::endl;
+
+            typename _bct::clean_func_type cleanup_func = bc_cleanup();
+
+            for (i = this->objects.begin(); i != this->objects.end(); ++i)
+                cleanup_func(i->second);
+        };
+    obj_type& operator[](uint64_t objid)
+        {
+            typename _bct::obj_map::iterator object = this->objects.find(objid);
+
+            if (object == this->objects.end())
+            {
+                /* Maybe spawn another thread to do the load? */
+                this->load(objid);
+                object = this->objects.find(0LL);
+            }
+            gettimeofday(&(object->second.lastused), NULL);
+            return object->second.obj;
+        };
+    void erase(uint64_t objid)
+        {
+            typename _bct::obj_map::iterator object = this->objects.find(objid);
+
+            if (object != this->objects.end())
+            {
+                typename _bct::clean_func_type cleanup_func = bc_cleanup();
+
+                cleanup_func(object->second);
+                this->objects.erase(object);
+            }
+        };
+};
+
+#define XNS XERCES_CPP_NAMESPACE
+
+template <typename obj_type,
+          typename parser_type,
+          typename cleanup = noop_cleanup<obj_type> >
+class ParsedCache : public BasicCache<obj_type, cleanup>
+{
+  private:
+    typedef ParsedCache<obj_type, parser_type, cleanup> _pct;
+
+    std::string store, cache;
+
     bool parse_file(const std::string& fname, uint64_t objid)
         {
             bool retval = true;
@@ -186,11 +260,9 @@ class ObjectCache
         };
 
   public:
-    ObjectCache(const std::string type_name)
-        : objects(), type(type_name), store(), cache()
+    ParsedCache(const std::string type_name)
+        : BasicCache<obj_type, cleanup>(type_name), store(), cache()
         {
-            int ret;
-
             this->store = STORE_PREFIX;
             this->store += '/';
             this->store += this->type;
@@ -205,40 +277,8 @@ class ObjectCache
              * newer in the store.
              */
 
-            if ((ret = pthread_create(&(this->prune_thread),
-                                      NULL,
-                                      this->prune_worker,
-                                      (void *)this)) != 0)
-            {
-                std::ostringstream s;
-                s << "Couldn't start " << this->type
-                  << " reaper thread: " << strerror(ret) << " (" << ret << ")";
-                throw std::runtime_error(s.str());
-            }
-
             this->load(0LL);
         };
-    ~ObjectCache()
-        {
-            int ret;
-            typename _oct::obj_map::iterator i;
-
-            if ((ret = pthread_cancel(this->prune_thread)) != 0)
-                std::clog << "Couldn't cancel " << this->type
-                          << " reaper thread: "
-                          << strerror(ret) << " (" << ret << ")" << std::endl;
-            sleep(0);
-            if ((ret = pthread_join(this->prune_thread, NULL)) != 0)
-                std::clog << "Couldn't reap " << this->type
-                          << " reaper thread: "
-                          << strerror(ret) << " (" << ret << ")" << std::endl;
-
-            typename _oct::clean_func_type cleanup_func = oc_cleanup();
-
-            for (i = this->objects.begin(); i != this->objects.end(); ++i)
-                cleanup_func(i->second);
-        };
-
     void load(uint64_t objid)
         {
             struct stat st;
@@ -276,31 +316,6 @@ class ObjectCache
              * meantime before we receive the new stuff.
              */
             /*send_object_request(objid);*/
-        };
-    obj_type& operator[](uint64_t objid)
-        {
-            typename _oct::obj_map::iterator object = this->objects.find(objid);
-
-            if (object == this->objects.end())
-            {
-                /* Maybe spawn another thread to do the load? */
-                this->load(objid);
-                object = this->objects.find(0LL);
-            }
-            gettimeofday(&(object->second.lastused), NULL);
-            return object->second.obj;
-        };
-    void erase(uint64_t objid)
-        {
-            typename _oct::obj_map::iterator object = this->objects.find(objid);
-
-            if (object != this->objects.end())
-            {
-                typename _oct::clean_func_type cleanup_func = oc_cleanup();
-
-                cleanup_func(object->second);
-                this->objects.erase(object);
-            }
         };
 };
 
