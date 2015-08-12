@@ -1,4 +1,4 @@
-SUBDIRS = motif
+SUBDIRS = . motif
 
 if WANT_BUNDLED_XERCES
   XERCES_CXXFLAGS = -I@srcdir@/../xerces-c/src
