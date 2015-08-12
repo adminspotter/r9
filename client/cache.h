@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 22:45:58 tquirk
+ *   last updated 12 Aug 2015, 16:14:31 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -86,23 +86,23 @@ class BasicCache
         struct timeval lastused;
         obj_type obj;
     }
-    object_struct;
-    typedef std::unordered_map<uint64_t, typename _bct::object_struct> obj_map;
+    _bcos_t;
+    typedef std::unordered_map<uint64_t, typename _bct::_bcos_t> _bcom_t;
 
     struct bc_cleanup
     {
-        void operator()(typename _bct::object_struct& val)
+        void operator()(typename _bct::_bcos_t& val)
             {
                 std::function<void(obj_type&)> cleanup_func = cleanup();
                 cleanup_func(val.obj);
             }
     };
-    typedef std::function<void(typename _bct::object_struct&)> clean_func_type;
+    typedef std::function<void(typename _bct::_bcos_t&)> clean_func_type;
 
     const static int PRUNE_INTERVAL = 600;
     const static int PRUNE_LIFETIME = 1200;
 
-    _bct::obj_map objects;
+    _bct::_bcom_t _bc_map;
     std::string type;
     pthread_t prune_thread;
 
@@ -110,9 +110,9 @@ class BasicCache
         {
             _bct *bc = (_bct *)arg;
             struct timeval limit;
-            typename _bct::obj_map::iterator i;
-            std::vector<typename _bct::obj_map::iterator> old_elems;
-            typename std::vector<typename _bct::obj_map::iterator>::iterator j;
+            typename _bct::_bcom_t::iterator i;
+            std::vector<typename _bct::_bcom_t::iterator> old_elems;
+            typename std::vector<typename _bct::_bcom_t::iterator>::iterator j;
 
             for (;;)
             {
@@ -127,7 +127,7 @@ class BasicCache
                 }
                 limit.tv_sec -= _bct::PRUNE_LIFETIME;
                 old_elems.clear();
-                for (i = bc->objects.begin(); i != bc->objects.end(); ++i)
+                for (i = bc->_bc_map.begin(); i != bc->_bc_map.end(); ++i)
                     if (i->first != 0LL
                         && i->second.lastused.tv_sec >= limit.tv_sec)
                         old_elems.push_back(i);
@@ -138,7 +138,7 @@ class BasicCache
                     for (j = old_elems.begin(); j != old_elems.end(); ++j)
                     {
                         cleanup_func((*j)->second);
-                        bc->objects.erase(*j);
+                        bc->_bc_map.erase(*j);
                     }
                     std::clog << "Removed " << old_elems.size()
                               << " entities from " << bc->type
@@ -149,7 +149,7 @@ class BasicCache
 
   public:
     BasicCache(const std::string type_name)
-        : objects(), type(type_name)
+        : _bc_map(), type(type_name)
         {
             int ret;
 
@@ -167,7 +167,7 @@ class BasicCache
     ~BasicCache()
         {
             int ret;
-            typename _bct::obj_map::iterator i;
+            typename _bct::_bcom_t::iterator i;
 
             if ((ret = pthread_cancel(this->prune_thread)) != 0)
                 std::clog << "Couldn't cancel " << this->type
@@ -181,33 +181,39 @@ class BasicCache
 
             typename _bct::clean_func_type cleanup_func = bc_cleanup();
 
-            for (i = this->objects.begin(); i != this->objects.end(); ++i)
+            for (i = this->_bc_map.begin(); i != this->_bc_map.end(); ++i)
                 cleanup_func(i->second);
         };
-    obj_type& operator[](uint64_t objid)
+    virtual obj_type& operator[](uint64_t objid)
         {
-            typename _bct::obj_map::iterator object = this->objects.find(objid);
+            typename _bct::_bcom_t::iterator object = this->_bc_map.find(objid);
 
-            if (object == this->objects.end())
+            if (object == this->_bc_map.end())
             {
-                /* Maybe spawn another thread to do the load? */
-                this->load(objid);
-                object = this->objects.find(0LL);
+                std::ostringstream s;
+                s << this->type << ' ' << objid << " not found";
+                throw std::runtime_error(s.str());
             }
             gettimeofday(&(object->second.lastused), NULL);
             return object->second.obj;
         };
     void erase(uint64_t objid)
         {
-            typename _bct::obj_map::iterator object = this->objects.find(objid);
+            typename _bct::_bcom_t::iterator object = this->_bc_map.find(objid);
 
-            if (object != this->objects.end())
+            if (object != this->_bc_map.end())
             {
                 typename _bct::clean_func_type cleanup_func = bc_cleanup();
 
                 cleanup_func(object->second);
-                this->objects.erase(object);
+                this->_bc_map.erase(object);
             }
+        };
+    void each(std::function<void(obj_type&)> func)
+        {
+            std::for_each(this->_bc_map.begin(),
+                          this->_bc_map.end(),
+                          [] (typename _bct::_bcos_t& v) { func(v.obj); } );
         };
 };
 
@@ -220,6 +226,13 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
 {
   private:
     typedef ParsedCache<obj_type, parser_type, cleanup> _pct;
+    typedef struct object_timeval_tag
+    {
+        struct timeval lastused;
+        obj_type obj;
+    }
+    _pcos_t;
+    typedef std::unordered_map<uint64_t, typename _pct::_pcos_t> _pcom_t;
 
     std::string store, cache;
 
@@ -236,7 +249,7 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
                 parser->setValidationScheme(XNS::SAXParser::Val_Auto);
                 parser->setValidationSchemaFullChecking(true);
                 parser->setDoNamespaces(true);
-                fp = new parser_type(&(this->objects[objid].obj));
+                fp = new parser_type(&(this->_bc_map[objid].obj));
                 parser->setDocumentHandler((XNS::DocumentHandler *)fp);
                 parser->setErrorHandler((XNS::ErrorHandler *)fp);
                 parser->parse(fname.c_str());
@@ -316,6 +329,19 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
              * meantime before we receive the new stuff.
              */
             /*send_object_request(objid);*/
+        };
+    virtual obj_type& operator[](uint64_t objid)
+        {
+            typename _pct::_pcom_t::iterator object = this->_bc_map.find(objid);
+
+            if (object == this->_bc_map.end())
+            {
+                /* Maybe spawn another thread to do the load? */
+                this->load(objid);
+                object = this->_bc_map.find(0LL);
+            }
+            gettimeofday(&(object->second.lastused), NULL);
+            return object->second.obj;
         };
 };
 
