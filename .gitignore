@@ -22,7 +22,7 @@ Makefile.orig
 # Autoconf
 /aclocal.m4
 /ar-lib
-/autom4te.cache
+autom4te.cache
 autoscan.log
 /compile
 /config.*
