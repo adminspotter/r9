@@ -7,6 +7,7 @@
 .DS_Store
 *~
 TAGS
+.gear/
 .libs/
 test/
 old/
@@ -20,20 +21,20 @@ Makefile.in
 Makefile.orig
 
 # Autoconf
-/aclocal.m4
-/ar-lib
+aclocal.m4
+ar-lib
 autom4te.cache
 autoscan.log
-/compile
-/config.*
-/configure
-/depcomp
-/install-sh
-/libtool
-/ltmain.sh
-/m4/libtool.m4
-/m4/lt*.m4
-/missing
+compile
+config.*
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+m4/libtool.m4
+m4/lt*.m4
+missing
 /stamp-h*
 .deps/
 .dirstamp

@@ -21,14 +21,13 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = glw.pc
+ACLOCAL_AMFLAGS = -I m4
 
 GLW_LIBRARY_VERSION=1:0:0
 lib_LTLIBRARIES = libGLw.la
 libGLw_la_SOURCES = GLwDrawA.c
-libGLw_la_CFLAGS = $(GLW_CLFAGS)
-libGLw_la_LIBADD = $(GLW_LIBS)
+libGLw_la_CFLAGS = $(CFLAGS)
+libGLw_la_LIBADD = $(LIBS)
 libGLw_la_LDFLAGS = -version-info $(GLW_LIBRARY_VERSION) -no-undefined
 if ENABLE_MOTIF
 libGLw_la_SOURCES += GLwMDrawA.c

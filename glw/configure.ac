@@ -24,6 +24,7 @@ dnl Process this file with autoconf to create configure.
 AC_PREREQ([2.59])
 AC_INIT([glw], [8.0.0],
     [https://bugs.freedesktop.org/enter_bug.cgi?product=Mesa])
+AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
 
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -37,14 +38,6 @@ AM_PROG_CC_C_O
 # Enable quiet compiles on automake 1.11.
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-dnl Make sure the pkg-config macros are defined
-m4_ifndef([PKG_PROG_PKG_CONFIG],
-    [m4_fatal([Could not locate the pkg-config autoconf macros.
-  These are usually located in /usr/share/aclocal/pkg.m4. If your macros
-  are in a different location, try setting the environment variable
-  ACLOCAL="aclocal -I/other/macro/dir" before running autoreconf.])])
-PKG_PROG_PKG_CONFIG()
-
 AC_ARG_ENABLE([motif],
     [AS_HELP_STRING([--enable-motif],
         [use Motif widgets @<:@default=disabled@:>@])],
@@ -52,19 +45,27 @@ AC_ARG_ENABLE([motif],
     [enable_motif=no])
 AM_CONDITIONAL([ENABLE_MOTIF], [test "$enable_motif" = yes])
 
-dnl Get the pkg-config definitions for libGL.  We include a fallback
-dnl path for GL implementation that don't provide a .pc file
-PKG_CHECK_MODULES(GL, [gl], [], [
-		  AC_CHECK_HEADER([GL/gl.h],
-				  [],
-				  AC_MSG_ERROR([GL not found]))
-		  AC_CHECK_LIB([GL],
-			       [glBegin],
-			       [GL_LIBS=-lGL],
-			       AC_MSG_ERROR([GL required]))
-		  ])
+AC_PATH_X
+if test "x$x_includes" != "x"
+then
+  CFLAGS="$CFLAGS -I$x_includes"
+fi
+if test "x$x_libraries" != "x"
+then
+  LDFLAGS="$LDFLAGS -L$x_libraries"
+fi
 
-PKG_CHECK_MODULES([GLW],[x11 xt])
+AC_CHECK_HEADER([GL/gl.h],
+    [],
+    AC_MSG_ERROR([GL not found]))
+AC_SEARCH_LIBS([glBegin], [GL],
+    [GL_LIBS=-lGL],
+    AC_MSG_ERROR([GL required]))
+
+AC_SEARCH_LIBS([IceOpenConnection], [ICE])
+AC_SEARCH_LIBS([SmcOpenConnection], [SM])
+AC_SEARCH_LIBS([XCreateWindow], [X11])
+AC_SEARCH_LIBS([XtCreateWidget], [Xt])
 
 MOTIF_CFLAGS=
 if test "x$enable_motif" = xyes; then
@@ -75,19 +76,10 @@ if test "x$enable_motif" = xyes; then
     else
         AC_CHECK_HEADER([Xm/PrimitiveP.h], [],
             [AC_MSG_ERROR([Can't locate Motif headers])])
-        AC_CHECK_LIB([Xm], [XmGetPixmap], [MOTIF_LIBS="-lXm"],
+        AC_SEARCH_LIBS([XmGetPixmap], [Xm], [MOTIF_LIBS="-lXm"],
             [AC_MSG_ERROR([Can't locate Motif Xm library])])
     fi
-    # MOTIF_LIBS is prepended to GLW_LIB_DEPS since Xm needs Xt/X11
-    GLW_PC_LIB_PRIV="$MOTIF_LIBS $GLW_PC_LIB_PRIV"
-    GLW_PC_CFLAGS="$MOTIF_CFLAGS $GLW_PC_CFLAGS"
 fi
-
-AC_SUBST([GLW_PC_LIB_PRIV])
-AC_SUBST([GLW_PC_CFLAGS])
-
-CFLAGS="$CFLAGS $GL_CFLAGS"
-LIBS="$LIBS $GL_LIBS $MOTIF_LIBS"
 
 dnl Set up C warning flags.  Copy of XORG_CWARNFLAGS.
 if  test "x$GCC" = xyes ; then
@@ -107,9 +99,9 @@ else
 fi
 CFLAGS="$CFLAGS $CWARNFLAGS"
 
-PKG_CHECK_MODULES(X11, [x11 xext], [x11_enabled=yes], [enable_x11=no])
+AC_SEARCH_LIBS([XextAddDisplay], [Xext], [x11_enabled=yes], [enable_x11=no])
 
-AC_CONFIG_FILES([glw.pc])
+AC_CONFIG_FILES()
 AC_OUTPUT([
 	Makefile
 ])
