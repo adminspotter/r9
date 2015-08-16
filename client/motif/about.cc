@@ -1,6 +1,6 @@
 /* about.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:31:16 tquirk
+ *   last updated 16 Aug 2015, 12:07:31 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -27,6 +27,8 @@
  */
 
 #include <stdio.h>
+#include <stdint.h>
+#include <glob.h>
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
@@ -39,8 +41,9 @@ static void about_timeout(XtPointer, XtIntervalId *);
 
 static Widget aboutdraw;
 static GC gc = 0L;
-static XtIntervalId id;
+static XtIntervalId id = 0L;
 static Pixmap shown_pixmap, shape_mask;
+static int how_many, which_one;
 
 /* ARGSUSED */
 void about_create_callback(Widget w,
@@ -49,6 +52,7 @@ void about_create_callback(Widget w,
 {
     Widget aboutselbox;
     Arg args[10];
+    glob_t found_files;
     int i = 0;
 
     XtSetArg(args[i], XmNwidth, 300);  ++i;
@@ -71,10 +75,23 @@ void about_create_callback(Widget w,
     XtAddCallback(XtNameToWidget(aboutselbox, "OK"),
                   XmNactivateCallback, about_destroy_callback,
                   (XtPointer)XtParent(aboutselbox));
-    XtAppAddTimeOut(XtWidgetToApplicationContext(aboutdraw),
-                    (unsigned long)100L,
-                    about_timeout,
-                    0L);
+
+    /* How many pixmaps are there */
+    if (!glob(PIXMAP_PATH "about*.xpm", GLOB_NOSORT, NULL, &found_files))
+    {
+        how_many = found_files.gl_matchc;
+        globfree(&found_files);
+
+        if (how_many > 0)
+        {
+            which_one = 0;
+            id = XtAppAddTimeOut(XtWidgetToApplicationContext(aboutdraw),
+                                 (unsigned long)100L,
+                                 about_timeout,
+                                 &which_one);
+        }
+    }
+
     XtManageChild(aboutselbox);
 }
 
@@ -83,8 +100,11 @@ static void about_destroy_callback(Widget w,
                                    XtPointer client_data,
                                    XtPointer call_data)
 {
-    XtRemoveTimeOut(id);
-    id = 0L;
+    if (how_many > 0)
+    {
+        XtRemoveTimeOut(id);
+        id = 0L;
+    }
     XFreePixmap(XtDisplay(aboutdraw), shown_pixmap);
     if (shape_mask != 0L)
         XFreePixmap(XtDisplay(aboutdraw), shape_mask);
@@ -96,9 +116,10 @@ static void about_destroy_callback(Widget w,
 static void about_timeout(XtPointer client_data,
                           XtIntervalId *xid)
 {
-    int which_one = ((int)client_data + 1) % 12;
+    int *which = (int *)client_data;
     char fname[256];
 
+    *which = ((*which) + 1) % how_many;
     if (gc == 0L)
     {
         XGCValues vals;
@@ -107,10 +128,8 @@ static void about_timeout(XtPointer client_data,
         gc = XCreateGC(XtDisplay(aboutdraw), XtWindow(aboutdraw),
                        GCFunction, &vals);
     }
-#ifndef PIXMAP_PATH
-#define PIXMAP_PATH "/home/trinity/src/revision9/client/pixmaps/"
-#endif
-    snprintf(fname, sizeof(fname), PIXMAP_PATH "about%02d.xpm", which_one);
+
+    snprintf(fname, sizeof(fname), PIXMAP_PATH "about%02d.xpm", *which);
     XpmReadFileToPixmap(XtDisplay(aboutdraw),
                         XtWindow(aboutdraw),
                         fname,
@@ -122,5 +141,5 @@ static void about_timeout(XtPointer client_data,
     id = XtAppAddTimeOut(XtWidgetToApplicationContext(aboutdraw),
                          (unsigned long)2500L,
                          about_timeout,
-                         (XtPointer)which_one);
+                         which);
 }

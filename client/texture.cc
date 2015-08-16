@@ -1,6 +1,6 @@
 /* texture.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Aug 2014, 18:05:16 tquirk
+ *   last updated 16 Aug 2015, 09:53:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -293,4 +293,8 @@ void TextureParser::endElement(const XMLCh *name)
         throw std::runtime_error(s.str());
     }
     XNS::XMLString::release(&str);
+}
+
+void draw_texture(uint64_t tex)
+{
 }

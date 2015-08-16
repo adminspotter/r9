@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 14:14:41 tquirk
+ *   last updated 15 Aug 2015, 16:57:43 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -67,6 +67,9 @@
 #include "r9client.h"
 #include "comm.h"
 #include "../proto/proto.h"
+
+uint64_t Comm::sequence = 0LL;
+volatile bool Comm::thread_exit_flag = false;
 
 void Comm::create_socket(struct addrinfo *ai, uint16_t port)
 {

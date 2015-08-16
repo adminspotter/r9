@@ -1,6 +1,6 @@
 /* view.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 22:49:16 tquirk
+ *   last updated 16 Aug 2015, 16:48:42 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,7 +36,7 @@
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
-#include <GLwMDrawA.h>
+#include <GL/GLwMDrawA.h>
 #include <GL/glut.h>
 
 #include <iostream>
@@ -55,7 +55,7 @@ struct object
 static void init_callback(Widget, XtPointer, XtPointer);
 static void resize_callback(Widget, XtPointer, XtPointer);
 static void expose_callback(Widget, XtPointer, XtPointer);
-static void draw_objects(void);
+extern void draw_objects(void);
 
 static object **objects;
 static Widget mainview;
@@ -149,44 +149,7 @@ void expose_callback(Widget w, XtPointer client_data, XtPointer call_data)
     glFlush();
 }
 
-/*static void draw_objects(void)
+void expose_main_view(void)
 {
-    object *optr;*/
-
-    /* Brute force, baby - ya just can't beat it */
-    /*for (i = 0; i < OBJECT_HASH_BUCKETS; ++i)
-    {
-        optr = objects[i];
-        while (optr != NULL)
-        {
-            glPushMatrix();
-            glTranslated(optr->position[0],
-                         optr->position[1],
-                         optr->position[2]);
-            glRotated(optr->orientation[0], 1.0, 0.0, 0.0);
-            glRotated(optr->orientation[1], 0.0, 1.0, 0.0);
-            glRotated(optr->orientation[2], 0.0, 0.0, 1.0);
-            draw_geometry(optr->geometry_id, optr->frame_number);
-            glPopMatrix();
-        }
-    }
-}*/
-
-/*void move_object(uint64_t objectid, uint16_t frame,
-                 Eigen::Vector3d& newpos,
-                 Eigen::Vector3d& neworient)
-{
-    object *optr = ocache[objectid];*/
-
-    /* Update the object's position */
-    /*optr->frame_number = frame;
-    optr->position[0] = newpos[0];
-    optr->position[1] = newpos[1];
-    optr->position[2] = newpos[2];
-    optr->orientation[0] = neworient[0];
-    optr->orientation[1] = neworient[1];
-    optr->orientation[2] = neworient[2];*/
-
-    /* Post an expose for the screen */
-    /*expose_callback(mainview, NULL, NULL);
-}*/
+    expose_callback(mainview, NULL, NULL);
+}

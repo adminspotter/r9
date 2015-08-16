@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Aug 2015, 16:14:31 tquirk
+ *   last updated 16 Aug 2015, 09:34:05 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -213,7 +213,8 @@ class BasicCache
         {
             std::for_each(this->_bc_map.begin(),
                           this->_bc_map.end(),
-                          [] (typename _bct::_bcos_t& v) { func(v.obj); } );
+                          [&] (typename _bct::_bcom_t::value_type& v)
+                            { func(v.second.obj); });
         };
 };
 
@@ -225,15 +226,6 @@ template <typename obj_type,
 class ParsedCache : public BasicCache<obj_type, cleanup>
 {
   private:
-    typedef ParsedCache<obj_type, parser_type, cleanup> _pct;
-    typedef struct object_timeval_tag
-    {
-        struct timeval lastused;
-        obj_type obj;
-    }
-    _pcos_t;
-    typedef std::unordered_map<uint64_t, typename _pct::_pcos_t> _pcom_t;
-
     std::string store, cache;
 
     bool parse_file(const std::string& fname, uint64_t objid)
@@ -332,16 +324,13 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
         };
     virtual obj_type& operator[](uint64_t objid)
         {
-            typename _pct::_pcom_t::iterator object = this->_bc_map.find(objid);
-
-            if (object == this->_bc_map.end())
+            try { return BasicCache<obj_type, cleanup>::operator[](objid); }
+            catch (...)
             {
                 /* Maybe spawn another thread to do the load? */
                 this->load(objid);
-                object = this->_bc_map.find(0LL);
+                return BasicCache<obj_type, cleanup>::operator[](0LL);
             }
-            gettimeofday(&(object->second.lastused), NULL);
-            return object->second.obj;
         };
 };
 

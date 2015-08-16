@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 19:09:23 tquirk
+ *   last updated 16 Aug 2015, 16:45:19 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -51,6 +51,7 @@
 #include "../comm.h"
 #include "../geometry.h"
 #include "../texture.h"
+#include "../object.h"
 
 static void save_callback(Widget, XtPointer, XtPointer);
 static void save_complete_callback(Widget, XtPointer, XtPointer);
@@ -64,6 +65,7 @@ static String restart_command[6], discard_command[4];
 
 GeometryCache *geom;
 TextureCache *tex;
+ObjectCache *obj;
 /* We can be connected to more than one server at a time */
 std::vector<Comm *> comm;
 
@@ -90,6 +92,7 @@ int main(int argc, char **argv)
     config.parse_command_line(argc, argv);
     geom = new GeometryCache("geometry");
     tex = new TextureCache("texture");
+    obj = new ObjectCache("object");
 
     mainwin = XmCreateMainWindow(toplevel, "mainwin", NULL, 0);
     XtManageChild(mainwin);

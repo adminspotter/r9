@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 19:01:26 tquirk
+ *   last updated 16 Aug 2015, 09:55:11 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -433,4 +433,8 @@ void GeometryParser::endElement(const XMLCh *name)
         throw std::runtime_error(s.str());
     }
     XNS::XMLString::release(&str);
+}
+
+void draw_geometry(uint64_t id, uint16_t frame)
+{
 }

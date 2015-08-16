@@ -10,13 +10,13 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall])
 
 AC_GNU_SOURCE
+AC_SYS_LARGEFILE
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
-#m4_define_default(AM_PROG_AR, [])
-AM_PROG_AR
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_LANG(C++)
 
@@ -26,9 +26,7 @@ LT_LANG([C++])
 LT_SYS_MODULE_EXT
 
 # Check for c++11 language support
-#AX_CXX_COMPILE_STDCXX_11
-# TODO:  alter macro above to test C++11 *library* support, for the
-# various config file readers
+AX_CXX_COMPILE_STDCXX_11
 
 # Find the compiled-in g++ extension include dir
 if test "x$CXX" == "xg++"
@@ -132,6 +130,7 @@ then
   CLIENT_LDFLAGS_SAVE="$LDFLAGS"
   CLIENT_LIBS_SAVE="$LIBS"
   CLIENT_CXXFLAGS="$CXXFLAGS"
+  CLIENT_INCLUDES=""
   CLIENT_LDLIBS=""
 
   AC_SEARCH_LIBS([sqrt], [m],
@@ -203,7 +202,7 @@ XMLPlatformUtils::Terminate();
       ac_res=AS_VAR_GET([ac_Search])
       AS_IF(
         [test "$ac_res" != no],
-        [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"]
+        [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"],
         [use_bundled_xerces="yes"])
       AS_VAR_POPDEF([ac_Search])
   esac
@@ -213,12 +212,12 @@ XMLPlatformUtils::Terminate();
     subdirs="xerces-c $subdirs"
     AC_CONFIG_SUBDIRS([xerces-c])
     ABSOLUTE_SRCDIR=$(pwd)
-    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I${ABSOLUTE_SRCDIR}/xerces-c"
+    CLIENT_INCLUDES="$CLIENT_INCLUDES -I${ABSOLUTE_SRCDIR}/xerces-c"
     CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/xerces-c"
     CLIENT_LDLIBS="-lxerces-c $CLIENT_LDLIBS"
   else
-    AC_MSG_NOTICE([includes $with_xerces_includes, libs $with_xerces_libraries])
-    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I$with_xerces_includes"
+    AC_MSG_NOTICE([xerces includes $with_xerces_includes, libs $with_xerces_libraries])
+    CLIENT_INCLUDES="$CLIENT_INCLUDES -I$with_xerces_includes"
     CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$with_xerces_libraries"
     CLIENT_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize $CLIENT_LDLIBS"
   fi
@@ -226,7 +225,7 @@ XMLPlatformUtils::Terminate();
   AC_PATH_X
   if test "x$x_includes" != "x"
   then
-    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I$x_includes"
+    CLIENT_INCLUDES="$CLIENT_INCLUDES -I$x_includes"
   fi
   if test "x$x_libraries" != "x"
   then
@@ -302,7 +301,7 @@ XMLPlatformUtils::Terminate();
     *)
       # Try to use the specified libGLw
       GLW_CXXFLAGS_SAVE="$CXXFLAGS"
-      CXXFLAGS="$CLIENT_CXXFLAGS -I$with_GLw_includes"
+      CXXFLAGS="$CLIENT_INCLUDES -I$with_GLw_includes"
       AC_CHECK_HEADERS([GL/GLwMDrawA.h],
           [],
           [use_bundled_GLw="yes"],
@@ -321,20 +320,21 @@ XMLPlatformUtils::Terminate();
   then
     AC_MSG_NOTICE([using bundled GLw])
     subdirs="glw $subdirs"
-    ac_configure_args="$ac_configure_args --with-motif"
+    ac_configure_args="$ac_configure_args --enable-motif"
     AC_CONFIG_SUBDIRS([glw])
     ABSOLUTE_SRCDIR=$(pwd)
-    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I${ABSOLUTE_SRCDIR}/glw"
+    CLIENT_INCLUDES="$CLIENT_INCLUDES -I${ABSOLUTE_SRCDIR}/glw"
     CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/glw"
     CLIENT_LDLIBS="-lGLw $CLIENT_LDLIBS"
   else
-    AC_MSG_NOTICE([includes $with_GLw_includes, libraries$with_GLw_libraries])
-    CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -I$with_GLw_includes"
+    AC_MSG_NOTICE([GLw includes $with_GLw_includes, libraries$with_GLw_libraries])
+    CLIENT_INCLUDES="$CLIENT_INCLUDES -I$with_GLw_includes"
     CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$with_GLw_libraries"
     CLIENT_LDLIBS="$ac_cv_search_GLwDrawingAreaMakeCurrent $CLIENT_LDLIBS"
   fi
 
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
+  AC_MSG_NOTICE([using CLIENT_INCLUDES=$CLIENT_INCLUDES])
   AC_MSG_NOTICE([using CLIENT_LDFLAGS=$CLIENT_LDFLAGS])
   AC_MSG_NOTICE([using CLIENT_LDLIBS=$CLIENT_LDLIBS])
 
@@ -343,6 +343,7 @@ XMLPlatformUtils::Terminate();
   CXXFLAGS="$CLIENT_CXXFLAGS_SAVE"
 
   AC_SUBST(CLIENT_CXXFLAGS)
+  AC_SUBST(CLIENT_INCLUDES)
   AC_SUBST(CLIENT_LDFLAGS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
@@ -471,6 +472,7 @@ AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday htonll memset mkd
 AC_CONFIG_FILES([Makefile
                  client/Makefile
                  client/motif/Makefile
+                 client/pixmaps/Makefile
                  proto/Makefile
                  server/Makefile
                  server/classes/Makefile

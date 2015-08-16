@@ -1,6 +1,6 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 11:06:33 tquirk
+ *   last updated 16 Aug 2015, 11:01:55 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
