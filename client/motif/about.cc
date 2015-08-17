@@ -1,6 +1,6 @@
 /* about.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 12:07:31 tquirk
+ *   last updated 17 Aug 2015, 10:22:04 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -79,7 +79,7 @@ void about_create_callback(Widget w,
     /* How many pixmaps are there */
     if (!glob(PIXMAP_PATH "about*.xpm", GLOB_NOSORT, NULL, &found_files))
     {
-        how_many = found_files.gl_matchc;
+        how_many = found_files.gl_pathc;
         globfree(&found_files);
 
         if (how_many > 0)

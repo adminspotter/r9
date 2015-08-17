@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Aug 2015, 12:25:04 tquirk
+ *   last updated 17 Aug 2015, 11:25:41 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -189,8 +189,7 @@ void ConfigData::make_config_dirs(void)
     struct stat state;
     std::string dirname = this->config_dir;
 
-    if (stat(dirname.c_str(), &state) == -1 && errno == ENOENT
-        && mkdir(dirname.c_str(), 0700) == -1)
+    if (mkdir(dirname.c_str(), 0700) == -1 && errno != EEXIST)
     {
         std::ostringstream s;
         s << "Error creating r9 preferences directory " << dirname << ": "
@@ -200,8 +199,7 @@ void ConfigData::make_config_dirs(void)
 
     /* Let's make sure we have a few other dirs we'll need */
     std::string subdirname(dirname + "/texture");
-    if (stat(subdirname.c_str(), &state) == -1 && errno == ENOENT
-        && mkdir(subdirname.c_str(), 0700) == -1)
+    if (mkdir(subdirname.c_str(), 0700) == -1 && errno != EEXIST)
     {
         std::ostringstream s;
         s << "Can't make config directory " << subdirname << ": "
@@ -210,8 +208,7 @@ void ConfigData::make_config_dirs(void)
     }
 
     subdirname = dirname + "/geometry";
-    if (stat(subdirname.c_str(), &state) == -1 && errno == ENOENT
-        && mkdir(subdirname.c_str(), 0700) == -1)
+    if (mkdir(subdirname.c_str(), 0700) == -1 && errno != EEXIST)
     {
         std::ostringstream s;
         s << "Can't make config directory " << subdirname << ": "
@@ -220,8 +217,7 @@ void ConfigData::make_config_dirs(void)
     }
 
     subdirname = dirname + "/sound";
-    if (stat(subdirname.c_str(), &state) == -1 && errno == ENOENT
-        && mkdir(subdirname.c_str(), 0700) == -1)
+    if (mkdir(subdirname.c_str(), 0700) == -1 && errno != EEXIST)
     {
         std::ostringstream s;
         s << "Can't make config directory " << subdirname << ": "

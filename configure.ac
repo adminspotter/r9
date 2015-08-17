@@ -212,8 +212,8 @@ XMLPlatformUtils::Terminate();
     subdirs="xerces-c $subdirs"
     AC_CONFIG_SUBDIRS([xerces-c])
     ABSOLUTE_SRCDIR=$(pwd)
-    CLIENT_INCLUDES="$CLIENT_INCLUDES -I${ABSOLUTE_SRCDIR}/xerces-c"
-    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/xerces-c"
+    CLIENT_INCLUDES="$CLIENT_INCLUDES -I${ABSOLUTE_SRCDIR}/xerces-c/src"
+    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/xerces-c/src"
     CLIENT_LDLIBS="-lxerces-c $CLIENT_LDLIBS"
   else
     AC_MSG_NOTICE([xerces includes $with_xerces_includes, libs $with_xerces_libraries])
