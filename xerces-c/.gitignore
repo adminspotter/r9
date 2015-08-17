@@ -1,5 +1,13 @@
 /xerces-c.pc
 /test-results.log
+/doc/html/apiDocs-3/*-source.html
+/doc/html/apiDocs-3/functions_0x*.html
+/doc/html/apiDocs-3/functions_eval_0x*.html
+/doc/html/apiDocs-3/functions_func_0x*.html
+/doc/html/apiDocs-3/functions_vars_0x*.html
+/doc/html/apiDocs-3/globals_0x*.html
+/doc/html/apiDocs-3/globals_defs_0x*.html
+/doc/html/apiDocs-3/tab_*.gif
 /src/xercesc/util/Xerces_autoconf_config.hpp
 /samples/CreateDOMDocument
 /samples/DOMCount
