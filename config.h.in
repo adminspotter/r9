@@ -57,6 +57,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* g++ has a bug in its std::ios_base::failure implementation */
+#undef HAVE_IOS_BASE_FAILURE_CODE
+
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
 
