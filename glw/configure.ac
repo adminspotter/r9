@@ -101,7 +101,5 @@ CFLAGS="$CFLAGS $CWARNFLAGS"
 
 AC_SEARCH_LIBS([XextAddDisplay], [Xext], [x11_enabled=yes], [enable_x11=no])
 
-AC_CONFIG_FILES()
-AC_OUTPUT([
-	Makefile
-])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

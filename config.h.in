@@ -60,21 +60,6 @@
 /* g++ has a bug in its std::ios_base::failure implementation */
 #undef HAVE_IOS_BASE_FAILURE_CODE
 
-/* Define to 1 if you have the `dl' library (-ldl). */
-#undef HAVE_LIBDL
-
-/* Define to 1 if you have the `mysqlclient_r' library (-lmysqlclient_r). */
-#undef HAVE_LIBMYSQLCLIENT_R
-
-/* Define to 1 if you have the `pq' library (-lpq). */
-#undef HAVE_LIBPQ
-
-/* Define to 1 if you have the `pthread' library (-lpthread). */
-#undef HAVE_LIBPTHREAD
-
-/* Define to 1 if you have the `tcl' library (-ltcl). */
-#undef HAVE_LIBTCL
-
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 

@@ -950,3 +950,9 @@
 
 2015-08-10 - TAQ
 	client/cache.h - We need a basic object cache without a parser hooked to it, for the general object cache (a geometry, hooked to a texture, with a specific ID value).  So we now have the BasicCache, and the derived ParsedCache, which still functions as before.
+
+2015-08-22 - TAQ
+	test/ - Started adding unit tests for each of our components.  We're using Google Test and Google Mock for our test framework, and we're also using the gtest-tap-listener from https://github.com/kinow/gtest-tap-listener
+
+2015-08-23 - TAQ
+	xerces-c/, eigen/ - Removed bundled xerces and eigen distributions.  They're common-ish libraries, and are not hard to install, particularly for a developer.  Having them in our distribution just bloats things unnecessarily.  The libGLw subpackage will stay for the time being, since it seems a bit less common (since everybody hates Xt nowadays).

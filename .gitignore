@@ -7,9 +7,9 @@
 .DS_Store
 *~
 TAGS
+.deps/
 .gear/
 .libs/
-test/
 old/
 server/r9d
 server/r9subserver
@@ -21,6 +21,7 @@ Makefile.in
 Makefile.orig
 
 # Autoconf
+.dirstamp
 aclocal.m4
 ar-lib
 autom4te.cache
@@ -36,5 +37,4 @@ m4/libtool.m4
 m4/lt*.m4
 missing
 stamp-h*
-.deps/
-.dirstamp
+test-driver

@@ -90,6 +90,7 @@ AC_ARG_WITH([pgsql],
             AS_HELP_STRING([--with-pgsql], [Build the PostgreSQL server module]),
             [],
             [with_pgsql="no"])
+
 AC_ARG_WITH([client],
             AS_HELP_STRING([--with-client], [Build the client program]),
             [],
@@ -97,7 +98,7 @@ AC_ARG_WITH([client],
 
 AC_ARG_WITH([xerces],
             AS_HELP_STRING([--with-xerces=<path>],
-                           [Build using the system libxerces-c (default 'bundled')]),
+                           [Build using libxerces-c at <path>]),
             [
               if test "x$with_xerces_includes" == "x"
               then
@@ -108,7 +109,7 @@ AC_ARG_WITH([xerces],
                 with_xerces_libraries="${with_xerces}/lib"
               fi
             ],
-            [with_xerces="bundled"])
+            [])
 AC_ARG_WITH([xerces-includes],
             AS_HELP_STRING([--with-xerces-includes=<path>],
                            [Use libxerces-c includes at <path>]))
@@ -167,34 +168,37 @@ then
       [AC_MSG_ERROR([libm not valid, can not build client program.])])
 
   AC_MSG_NOTICE([checking for xerces])
-  case $with_xerces in
-    bundled)
-      use_bundled_xerces="yes"
-      ;;
-    *)
-      # Try to use the specified libxerces-c
-      XERCES_CXXFLAGS_SAVE="$CXXFLAGS"
-      CXXFLAGS="$CLIENT_CXXFLAGS -I$with_xerces_includes"
-      AC_CHECK_HEADERS([xercesc/sax/AttributeList.hpp],
-          [],
-          [use_bundled_xerces="yes"])
-      CXXFLAGS="$XERCES_CXXFLAGS_SAVE"
+  # Try to use the specified libxerces-c
+  if test "x$with_xerces_includes" != "x"
+  then
+    XERCES_INCLUDES="-I$with_xerces_includes"
+  fi
+  if test "x$with_xerces_libraries" != "x"
+  then
+    XERCES_LDFLAGS="-L$with_xerces_libraries"
+  fi
 
-      # This is an inline of a hacked version of AC_SEARCH_LIBS
-      AS_VAR_PUSHDEF([ac_Search], [ac_cv_search_XMLPlatformUtils__Initialize])
-      AC_CACHE_CHECK(
-        [for library containing XMLPlatformUtils::Initialize],
-        [ac_Search],
+  XERCES_CXXFLAGS_SAVE="$CXXFLAGS"
+  CXXFLAGS="$CLIENT_CXXFLAGS $XERCES_INCLUDES"
+  AC_CHECK_HEADERS([xercesc/sax/AttributeList.hpp],
+      [CLIENT_INCLUDES="$CLIENT_INCLUDES $XERCES_INCLUDES"],
+      [AC_MSG_ERROR([xerces includes not valid, can not build client program])])
+
+  # This is an inline of a hacked version of AC_SEARCH_LIBS
+  AS_VAR_PUSHDEF([ac_Search], [ac_cv_search_XMLPlatformUtils__Initialize])
+  AC_CACHE_CHECK(
+    [for library containing XMLPlatformUtils::Initialize],
+    [ac_Search],
+    [
+      ac_func_search_save_LIBS=$LIBS
+      AC_LANG_CONFTEST([AC_LANG_PROGRAM(
         [
-          ac_func_search_save_LIBS=$LIBS
-          AC_LANG_CONFTEST([AC_LANG_PROGRAM(
-            [
 #include <xercesc/util/PlatformUtils.hpp>
 #ifdef XERCES_CPP_NAMESPACE_USE
 XERCES_CPP_NAMESPACE_USE
 #endif
-            ],
-            [
+        ],
+        [
 try
 {
    XMLPlatformUtils::Initialize();
@@ -204,45 +208,33 @@ catch (...)
    // ...
 }
 XMLPlatformUtils::Terminate();
-            ])])
-          for ac_lib in '' xerces-c
-          do
-            if test -z "$ac_lib"
-            then
-              ac_res="none required"
-            else
-              ac_res=-l$ac_lib
-              LIBS="-l$ac_lib -L$with_xerces_libraries $ac_func_search_save_LIBS"
-            fi
-            AC_LINK_IFELSE([], [AS_VAR_SET([ac_Search], [$ac_res])])
-            AS_VAR_SET_IF([ac_Search], [break])
-          done
-          AS_VAR_SET_IF([ac_Search], , [AS_VAR_SET([ac_Search], [no])])
-          rm conftest.$ac_ext
-          LIBS=$ac_func_search_save_LIBS
-        ])
-      ac_res=AS_VAR_GET([ac_Search])
-      AS_IF(
-        [test "$ac_res" != no],
-        [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"],
-        [use_bundled_xerces="yes"])
-      AS_VAR_POPDEF([ac_Search])
-  esac
-  if test "x$use_bundled_xerces" == "xyes"
-  then
-    AC_MSG_NOTICE([using bundled xerces])
-    subdirs="xerces-c $subdirs"
-    AC_CONFIG_SUBDIRS([xerces-c])
-    ABSOLUTE_SRCDIR=$(pwd)
-    CLIENT_INCLUDES="$CLIENT_INCLUDES -I${ABSOLUTE_SRCDIR}/xerces-c/src"
-    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/xerces-c/src"
-    CLIENT_LDLIBS="-lxerces-c $CLIENT_LDLIBS"
-  else
-    AC_MSG_NOTICE([xerces includes $with_xerces_includes, libs $with_xerces_libraries])
-    CLIENT_INCLUDES="$CLIENT_INCLUDES -I$with_xerces_includes"
-    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$with_xerces_libraries"
-    CLIENT_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize $CLIENT_LDLIBS"
-  fi
+        ])])
+      for ac_lib in '' xerces-c
+      do
+        if test -z "$ac_lib"
+        then
+          ac_res="none required"
+        else
+          ac_res=-l$ac_lib
+          LIBS="-l$ac_lib $XERCES_LDFLAGS $ac_func_search_save_LIBS"
+        fi
+        AC_LINK_IFELSE([], [AS_VAR_SET([ac_Search], [$ac_res])])
+        AS_VAR_SET_IF([ac_Search], [break])
+      done
+      AS_VAR_SET_IF([ac_Search], , [AS_VAR_SET([ac_Search], [no])])
+      rm conftest.$ac_ext
+      LIBS=$ac_func_search_save_LIBS
+    ])
+  ac_res=AS_VAR_GET([ac_Search])
+  AS_IF(
+    [test "$ac_res" != no],
+    [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"],
+    [AC_MSG_ERROR([libxerces-c not valid, can not build client program])])
+  AS_VAR_POPDEF([ac_Search])
+  CXXFLAGS="$XERCES_CXXFLAGS_SAVE"
+
+  CLIENT_LDFLAGS="$CLIENT_LDFLAGS $XERCES_LDFLAGS"
+  CLIENT_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize $CLIENT_LDLIBS"
 
   AC_PATH_X
   if test "x$x_includes" != "x"
@@ -342,14 +334,14 @@ XMLPlatformUtils::Terminate();
   then
     AC_MSG_NOTICE([using bundled GLw])
     subdirs="glw $subdirs"
-    ac_configure_args="$ac_configure_args --enable-motif"
+    ac_configure_args="$ac_configure_args --enable-motif --disable-shared"
     AC_CONFIG_SUBDIRS([glw])
     ABSOLUTE_SRCDIR=$(pwd)
     CLIENT_INCLUDES="$CLIENT_INCLUDES -I${ABSOLUTE_SRCDIR}/glw"
     CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/glw"
     CLIENT_LDLIBS="-lGLw $CLIENT_LDLIBS"
   else
-    AC_MSG_NOTICE([GLw includes $with_GLw_includes, libraries$with_GLw_libraries])
+    AC_MSG_NOTICE([GLw includes $with_GLw_includes, libraries $with_GLw_libraries])
     CLIENT_INCLUDES="$CLIENT_INCLUDES -I$with_GLw_includes"
     CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$with_GLw_libraries"
     CLIENT_LDLIBS="$ac_cv_search_GLwDrawingAreaMakeCurrent $CLIENT_LDLIBS"
@@ -369,7 +361,6 @@ XMLPlatformUtils::Terminate();
   AC_SUBST(CLIENT_LDFLAGS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
-AM_CONDITIONAL([WANT_BUNDLED_XERCES], [test "x$use_bundled_xerces" == "xyes"])
 AM_CONDITIONAL([WANT_BUNDLED_LIBGLW], [test "x$use_bundled_libGLw" == "xyes"])
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
 
@@ -378,15 +369,13 @@ if test "$with_mysql" == "yes"
 then
   MYSQL_LIBS_SAVE="$LIBS"
   LIBS=""
-  AC_CHECK_LIB([mysqlclient_r], [mysql_init])
-  if test "$ac_cv_lib_mysqlclient_r_mysql_init" != "yes"
-  then
-    AC_MSG_ERROR([libmysqlclient_r not valid, can not enable MySQL module.])
-  else
-    MYSQL_LDLIBS="$LIBS"
-    AC_SUBST(MYSQL_LDLIBS)
-    want_mysql="yes"
-  fi
+  AC_SEARCH_LIBS([mysql_init], [mysqlclient_r],
+      [
+          MYSQL_LDLIBS="$ac_cv_lib_mysqlclient_r_mysql_init"
+          AC_SUBST(MYSQL_LDLIBS)
+          want_mysql="yes"
+      ],
+      [AC_MSG_ERROR([libmysqlclient_r not valid, can not enable MySQL module.])])
   LIBS="$MYSQL_LIBS_SAVE"
 fi
 AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
@@ -396,15 +385,13 @@ if test "$with_pgsql" == "yes"
 then
   PGSQL_LIBS_SAVE="$LIBS"
   LIBS=""
-  AC_CHECK_LIB([pq], [PQsetdbLogin])
-  if test "$ac_cv_lib_pq_PQsetdbLogin" != "yes"
-  then
-    AC_MSG_ERROR([libpq not valid, can not enable PostgreSQL module.])
-  else
-    PGSQL_LDLIBS="$LIBS"
-    AC_SUBST(PGSQL_LDLIBS)
-    want_pgsql="yes"
-  fi
+  AC_SEARCH_LIBS([PQsetdbLogin], [pq],
+      [
+          PGSQL_LDLIBS="$ac_cv_search_PQsetdbLogin"
+          AC_SUBST(PGSQL_LDLIBS)
+          want_pgsql="yes"
+      ],
+      [AC_MSG_ERROR([libpq not valid, can not enable PostgreSQL module.])])
   LIBS="$PGSQL_LIBS_SAVE"
 fi
 AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
@@ -414,15 +401,13 @@ if test "$with_tcl" == "yes"
 then
   TCL_LIBS_SAVE="$LIBS"
   LIBS=""
-  AC_CHECK_LIB([tcl], [Tcl_CreateInterp])
-  if test "$ac_cv_lib_tcl_Tcl_CreateInterp" != "yes"
-  then
-    AC_MSG_ERROR([libtcl not valid, can not enable Tcl module.])
-  else
-    TCL_LDLIBS="$LIBS"
-    AC_SUBST(TCL_LDLIBS)
-    want_tcl="yes"
-  fi
+  AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
+      [
+          TCL_LDLIBS="$ac_cv_search_Tcl_CreateInterp"
+          AC_SUBST(TCL_LDLIBS)
+          want_tcl="yes"
+      ],
+      [AC_MSG_ERROR([libtcl not valid, can not enable Tcl module.])])
   LIBS="$TCL_LIBS_SAVE"
 fi
 AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
@@ -442,33 +427,25 @@ then
 fi
 AM_CONDITIONAL([WANT_PERL], [test "x$want_perl" == "xyes"])
 
-AC_CHECK_LIB([pthread], [pthread_create])
-if test "$ac_cv_lib_pthread_pthread_create" != "yes"
-then
-  AC_MSG_ERROR([can not continue without libpthread.])
-fi
+AC_SEARCH_LIBS([pthread_create], [pthread],
+    [CHECK_LDLIBS="$CHECK_LDLIBS $ac_cv_search_pthread_create"],
+    [AC_MSG_ERROR([can not build without pthreads.])])
 
-AC_CHECK_LIB([dl], [dlopen])
-if test "$ac_cv_lib_dl_dlopen" != "yes"
-then
-  AC_MSG_ERROR([can not continue without libdl.])
-fi
+AC_SEARCH_LIBS([dlopen], [dl],
+    [],
+    [AC_MSG_ERROR([can not build without dlopen.])])
 
 if test "$with_eigen" != ""
 then
-  EIGEN_CXXFLAGS_SAVE="$CXXFLAGS"
-  CXXFLAGS="$CXXFLAGS -I$with_eigen"
-  AC_CHECK_HEADERS([Eigen/Core], [],
-      [
-          AC_MSG_NOTICE([no valid Eigen installation found, using bundled copy.])
-          # All of the $srcdir type variables seem to be relative.
-          # Per the autoconf docs we're guaranteed to be running
-          # configure from the top directory of the source distro, so
-          # we'll take an absolute path where we are.
-          ABSOLUTE_SRCDIR=$(pwd)
-          CXXFLAGS="$EIGEN_CXXFLAGS_SAVE -I${ABSOLUTE_SRCDIR}/eigen"
-      ])
+  EIGEN_INCLUDES="-I$with_eigen"
 fi
+EIGEN_CXXFLAGS_SAVE="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
+AC_CHECK_HEADERS([Eigen/Core], [],
+    [AC_MSG_NOTICE([no valid Eigen installation found, can not continue])])
+CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
+
+AC_CONFIG_SUBDIRS([test/gmock-1.7.0])
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h byteswap.h endian.h execinfo.h ext/stdio_filebuf.h fcntl.h grp.h limits.h netdb.h netinet/in.h pwd.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
@@ -499,6 +476,7 @@ AC_CONFIG_FILES([Makefile
                  server/Makefile
                  server/classes/Makefile
                  server/classes/actions/Makefile
-                 server/classes/modules/Makefile])
+                 server/classes/modules/Makefile
+                 test/Makefile])
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 AC_OUTPUT
