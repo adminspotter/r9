@@ -956,3 +956,7 @@
 
 2015-08-23 - TAQ
 	xerces-c/, eigen/ - Removed bundled xerces and eigen distributions.  They're common-ish libraries, and are not hard to install, particularly for a developer.  Having them in our distribution just bloats things unnecessarily.  The libGLw subpackage will stay for the time being, since it seems a bit less common (since everybody hates Xt nowadays).
+
+2015-09-06 - TAQ
+	server/classes/modules/db.h, server/classes/modules/db.cc, server/classes/modules/mysql.cc, server/classes/modules/pgsql.cc - Added C-linked wrappers, so we can continue to use the library without having to populate a vtable (in some unportable way).
+	server/classes/modules/language.h, server/classes/language.cc - Added C-linked wrappers for these too.

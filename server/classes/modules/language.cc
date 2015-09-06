@@ -1,6 +1,6 @@
-/* language.h                                              -*- C++ -*-
+/* language.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Sep 2015, 12:07:08 tquirk
+ *   last updated 06 Sep 2015, 12:03:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -20,29 +20,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the base class for embedded language.  We'll derive
- * classes for each language.
+ * This file contains the C polymorphic wrappers for embedded languages.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_LANGUAGE_H__
-#define __INC_LANGUAGE_H__
+#include "language.h"
 
-class Language
+std::string lang_execute(Language *lang, const std::string& a)
 {
-  public:
-    virtual ~Language()
-    {
-    };
-    virtual std::string execute(const std::string&) = 0;
-};
-
-typedef Language *(*lang_create_t)(void);
-typedef void (*lang_destroy_t)(Language *);
-typedef std::string (*lang_execute_t)(Language *, const std::string&);
-
-extern "C" std::string lang_execute(Language *, const std::string&);
-
-#endif /* __INC_LANGUAGE_H__ */
+    return lang->execute(a);
+}
