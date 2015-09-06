@@ -5,7 +5,7 @@ SUBDIRS = $(GMOCK_DIR)
 GTEST_LIBS = $(GMOCK_DIR)/gtest/lib/libgtest.la
 GMOCK_LIBS = $(GMOCK_DIR)/lib/libgmock.la $(GTEST_LIBS)
 
-TC = t_library
+TC = t_library t_log
 if WANT_CLIENT
   TC +=
 endif
@@ -20,6 +20,10 @@ AM_CXXFLAGS = -I$(GMOCK_DIR)/gtest/include -I$(GMOCK_DIR)/include
 t_library_SOURCES = t_library.cc tap.h tap_main.cc \
 	../server/classes/library.cc ../server/classes/library.h
 t_library_LDADD = $(GTEST_LIBS)
+
+t_log_SOURCES = t_log.cc tap.h \
+	../server/log.cc ../server/log.h
+t_log_LDADD = $(GTEST_LIBS)
 
 libtest_la_SOURCES = libtest.cc libtest.h
 libtest_la_LDFLAGS = -rpath /nowhere
