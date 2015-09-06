@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:17:30 tquirk
+ *   last updated 06 Sep 2015, 11:57:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -132,13 +132,13 @@ void PgSQL::db_close(void)
     PQfinish(this->db_handle);
 }
 
-extern "C" DB *create_db(const std::string& a, const std::string& b,
+extern "C" DB *db_create(const std::string& a, const std::string& b,
                          const std::string& c, const std::string& d)
 {
     return new PgSQL(a, b, c, d);
 }
 
-extern "C" void destroy_db(DB *db)
+extern "C" void db_destroy(DB *db)
 {
     delete db;
 }

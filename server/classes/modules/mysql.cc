@@ -1,6 +1,6 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:16:06 tquirk
+ *   last updated 06 Sep 2015, 11:57:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -315,7 +315,7 @@ void MySQL::db_connect(void)
     }
 }
 
-extern "C" DB *create_db(const std::string& a, const std::string& b,
+extern "C" DB *db_create(const std::string& a, const std::string& b,
                          const std::string& c, const std::string& d)
 {
     static bool initialized = false;
@@ -328,7 +328,7 @@ extern "C" DB *create_db(const std::string& a, const std::string& b,
     return new MySQL(a, b, c, d);
 }
 
-extern "C" void destroy_db(DB *db)
+extern "C" void db_destroy(DB *db)
 {
     delete db;
 }

@@ -1,9 +1,9 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2014, 16:48:58 tquirk
+ *   last updated 06 Sep 2015, 12:07:32 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -86,4 +86,45 @@ DB::DB(const std::string& host, const std::string& user,
 
 DB::~DB()
 {
+}
+
+uint64_t db_check_authn(DB *db, const std::string& a, const std::string& b)
+{
+    return db->check_authentication(a, b);
+}
+
+int db_check_authz(DB *db, uint64_t a, uint64_t b)
+{
+    return db->check_authorization(a, b);
+}
+
+int db_new_login(DB *db, uint64_t a, uint64_t b)
+{
+    return db->open_new_login(a, b);
+}
+
+int db_check_login(DB *db, uint64_t a, uint64_t b)
+{
+    return db->check_open_login(a, b);
+}
+
+int db_close_login(DB *db, uint64_t a, uint64_t b)
+{
+    return db->close_open_login(a, b);
+}
+
+int db_player_skills(DB *db, uint64_t a, uint64_t b,
+                     std::map<uint16_t, action_level>& c)
+{
+    return db->get_player_server_skills(a, b, c);
+}
+
+int db_server_skills(DB *db, std::map<uint16_t, action_rec>& a)
+{
+    return db->get_server_skills(a);
+}
+
+int db_server_objs(DB *db, std::map<uint64_t, game_object_list_element> & a)
+{
+    return db->get_server_objects(a);
 }
