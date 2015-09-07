@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 09:34:05 tquirk
+ *   last updated 07 Sep 2015, 09:53:08 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -186,16 +186,10 @@ class BasicCache
         };
     virtual obj_type& operator[](uint64_t objid)
         {
-            typename _bct::_bcom_t::iterator object = this->_bc_map.find(objid);
+            _bcos_t& item = this->_bc_map[objid];
 
-            if (object == this->_bc_map.end())
-            {
-                std::ostringstream s;
-                s << this->type << ' ' << objid << " not found";
-                throw std::runtime_error(s.str());
-            }
-            gettimeofday(&(object->second.lastused), NULL);
-            return object->second.obj;
+            gettimeofday(&(item.lastused), NULL);
+            return item.obj;
         };
     void erase(uint64_t objid)
         {
