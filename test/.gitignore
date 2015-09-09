@@ -1,0 +1,7 @@
+*.log
+*.tap
+*.trs
+
+t_library
+t_log
+t_cache
