@@ -66,24 +66,25 @@ TEST(CacheTest, BasicElementAccess)
 {
     bc_test_t *test_bc = new bc_test_t("access_test");
 
-    /* Insert some elements */
+    (*test_bc)[123] = {4, 5};
 
-    ASSERT_THROW(
-        {
-            (*test_bc)[12345];
-        },
-        std::runtime_error);
-
+    ASSERT_EQ((*test_bc)[123].foo, 4);
+    ASSERT_EQ((*test_bc)[123].bar, 5);
     cleanup_calls = 0;
     delete test_bc;
-    ASSERT_EQ(cleanup_calls, 0);
+    ASSERT_EQ(cleanup_calls, 1);
 }
 
 TEST(CacheTest, BasicElementErase)
 {
     bc_test_t *test_bc = new bc_test_t("erase_test");
 
-    /* Insert some elements */
+    (*test_bc)[123] = {4, 5};
+    (*test_bc)[456] = {7, 8};
+
+    cleanup_calls = 0;
+    test_bc->erase(123);
+    ASSERT_EQ(cleanup_calls, 1);
 
     /* Element that doesn't exist */
     cleanup_calls = 0;
@@ -92,23 +93,26 @@ TEST(CacheTest, BasicElementErase)
 
     cleanup_calls = 0;
     delete test_bc;
-    ASSERT_EQ(cleanup_calls, 0);
+    ASSERT_EQ(cleanup_calls, 1);
 }
 
 TEST(CacheTest, BasicEach)
 {
     bc_test_t *test_bc = new bc_test_t("each_test");
 
-    /* Insert some elements */
+    (*test_bc)[123] = {4, 5};
+    (*test_bc)[456] = {7, 8};
+    (*test_bc)[789] = {0, 1};
+    (*test_bc)[135] = {7, 9};
 
     each_calls = 0;
     std::function<void(test_struct&)> func = each_function;
     test_bc->each(func);
-    ASSERT_EQ(each_calls, 0);
+    ASSERT_EQ(each_calls, 4);
 
     cleanup_calls = 0;
     delete test_bc;
-    ASSERT_EQ(cleanup_calls, 0);
+    ASSERT_EQ(cleanup_calls, 4);
 }
 
 TEST(CacheTest, BasicPruneThread)
@@ -146,7 +150,8 @@ TEST(CacheTest, ThreadCancelFailure)
             test_bc = new bc_test_t("thread_cancel_fail");
         });
 
-    /* Insert some objects */
+    (*test_bc)[123] = {4, 5};
+    (*test_bc)[456] = {7, 8};
 
     cancel_fail = true;
     cleanup_calls = 0;
@@ -155,7 +160,7 @@ TEST(CacheTest, ThreadCancelFailure)
             delete test_bc;
         });
     cancel_fail = false;
-    ASSERT_EQ(cleanup_calls, 0);
+    ASSERT_EQ(cleanup_calls, 2);
     ASSERT_THAT(new_clog.str(),
                 testing::HasSubstr("Couldn't cancel thread_cancel_fail reaper thread:"));
     std::clog.rdbuf(old_clog_rdbuf);
@@ -173,7 +178,8 @@ TEST(CacheTest, ThreadJoinFailure)
             test_bc = new bc_test_t("thread_join_fail");
         });
 
-    /* Insert some objects */
+    (*test_bc)[123] = {4, 5};
+    (*test_bc)[456] = {7, 8};
 
     join_fail = true;
     cleanup_calls = 0;
@@ -182,7 +188,7 @@ TEST(CacheTest, ThreadJoinFailure)
             delete test_bc;
         });
     join_fail = false;
-    ASSERT_EQ(cleanup_calls, 0);
+    ASSERT_EQ(cleanup_calls, 2);
     ASSERT_THAT(new_clog.str(),
                 testing::HasSubstr("Couldn't reap thread_join_fail reaper thread:"));
     std::clog.rdbuf(old_clog_rdbuf);
