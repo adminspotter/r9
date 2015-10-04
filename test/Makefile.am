@@ -29,4 +29,4 @@ t_cache_SOURCES = t_cache.cc tap.h tap_main.cc ../client/cache.h
 t_cache_LDADD = $(GTEST_LIBS) $(GMOCK_LIBS) $(CLIENT_LDLIBS)
 
 libtest_la_SOURCES = libtest.cc libtest.h
-libtest_la_LDFLAGS = -rpath /nowhere
+libtest_la_LDFLAGS = -module -rpath /nowhere

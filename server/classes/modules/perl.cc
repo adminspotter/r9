@@ -1,6 +1,6 @@
 /* perl.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 07:44:07 tquirk
+ *   last updated 04 Oct 2015, 17:34:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -41,14 +41,27 @@
 
 #include "r9perl.h"
 
+extern void xs_init(pTHX);
+
+bool PerlLanguage::INITIALIZED = false;
+
 /* MAGIC!!! */
 #define my_perl this->interp
 
 PerlLanguage::PerlLanguage()
 {
     int argc = 3;
-    char *argv[] = { "", "-e", "0" };
+    const char arg0[] = "", arg1[] = "-e", arg2[] = "0";
+    const char *argv[] = { arg0, arg1, arg2 };
 
+    if (!PerlLanguage::INITIALIZED)
+    {
+        int zero = 0;
+        const char *nothing[] = {};
+
+        PERL_SYS_INIT3(&zero, (char ***)&nothing, (char ***)&nothing);
+        PerlLanguage::INITIALIZED = true;
+    }
     if ((this->interp = perl_alloc()) == NULL)
     {
         std::ostringstream s;
@@ -56,7 +69,7 @@ PerlLanguage::PerlLanguage()
         throw std::runtime_error(s.str());
     }
     perl_construct(this->interp);
-    perl_parse(this->interp, NULL, argc, argv, NULL);
+    perl_parse(this->interp, xs_init, argc, (char **)argv, NULL);
     PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
     perl_run(this->interp);
 
@@ -67,6 +80,7 @@ PerlLanguage::~PerlLanguage(void)
 {
     perl_destruct(this->interp);
     perl_free(this->interp);
+    PERL_SYS_TERM();
     this->interp = NULL;
 }
 

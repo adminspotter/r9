@@ -1,9 +1,11 @@
 #include "../server/classes/library.h"
 #include <gtest/gtest.h>
 
+#include <config.h>
+
 #include "libtest.h"
 
-#define LIBTEST "./.libs/libtest.dylib"
+#define LIBTEST "./.libs/libtest" LT_MODULE_EXT
 
 TEST(LibraryTest, BadConstructor)
 {

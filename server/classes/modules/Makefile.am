@@ -13,20 +13,28 @@ modules_libs += libr9_tcl.la
 endif
 
 lib_LTLIBRARIES = $(modules_libs)
+AM_LDFLAGS = -module
+
+BUILT_SOURCES = perlxsi.c
+CLEANFILES = perlxsi.c
+
+perlxsi.c: Makefile
+	perl -MExtUtils::Embed -e xsinit -- -o perlxsi.c
 
 libr9_console_la_SOURCES = console.cc unix_console.cc inet_console.cc \
 	console.h
 libr9_console_la_CXXFLAGS = $(GXX_EXT_CXXFLAGS)
 
 libr9_MySQL_la_SOURCES = db.cc mysql.cc db.h
-libr9_MySQL_la_LDFLAGS = $(MYSQL_LDLIBS)
+libr9_MySQL_la_LDFLAGS = $(MYSQL_LDLIBS) -module
 
 libr9_pgsql_la_SOURCES = db.cc pgsql.cc db.h
-libr9_pgsql_la_LDFLAGS = $(PGSQL_LDLIBS)
+libr9_pgsql_la_LDFLAGS = $(PGSQL_LDLIBS) -module
 
-libr9_perl_la_SOURCES = perl.cc r9perl.h language.cc language.h
-libr9_perl_la_CXXFLAGS = $(PERL_CFLAGS)
-libr9_perl_la_LDFLAGS = $(PERL_LDFLAGS)
+libr9_perl_la_SOURCES = perl.cc r9perl.h perlxsi.c language.cc language.h
+libr9_perl_la_CFLAGS = $(PERL_CFLAGS)
+libr9_perl_la_CXXFLAGS = $(PERL_CFLAGS) -Wno-reserved-user-defined-literal
+libr9_perl_la_LDFLAGS = $(PERL_LDFLAGS) -module
 
 libr9_tcl_la_SOURCES = tcl.cc r9tcl.h language.cc language.h
-libr9_tcl_la_LDFLAGS = $(TCL_LDLIBS)
+libr9_tcl_la_LDFLAGS = $(TCL_LDLIBS) -module
