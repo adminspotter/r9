@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2015, 09:46:56 tquirk
+ *   last updated 14 Sep 2015, 14:00:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -126,13 +126,13 @@ const int config_data::NUM_THREADS    = 8;
 const int config_data::ZONE_SIZE      = 1000;
 const int config_data::ZONE_STEPS     = 2;
 const float config_data::LOAD_THRESH  = 0.75;
-const char config_data::SERVER_ROOT[] = "/Users/tquirk/src/revision9/server";
-const char config_data::LOG_PREFIX[]  = "revision9";
-const char config_data::PID_FNAME[]   = "/var/run/revision9.pid";
+const char config_data::SERVER_ROOT[] = SERVER_ROOT_DIR;
+const char config_data::LOG_PREFIX[]  = "r9";
+const char config_data::PID_FNAME[]   = SERVER_PID_FNAME;
 const char config_data::DB_TYPE[]     = "MySQL";
 const char config_data::DB_HOST[]     = "localhost";
-const char config_data::DB_NAME[]     = "revision9";
-const char config_data::ACTION_LIB[]  = "libr9_actions.so";
+const char config_data::DB_NAME[]     = "r9";
+const char config_data::ACTION_LIB[]  = "libr9_actions" LT_MODULE_EXT;
 
 typedef void (*config_elem_t)(const std::string&, const std::string&, void *);
 
