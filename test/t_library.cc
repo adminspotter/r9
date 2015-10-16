@@ -9,8 +9,8 @@ TEST(LibraryTest, BadConstructor)
 {
     ASSERT_THROW(
         {
-            std::string noname;
-            Library *lib1 = new Library(noname);
+            std::string badname = "haha, this won't work";
+            Library *lib1 = new Library(badname);
         },
         std::runtime_error);
 }
