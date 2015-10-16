@@ -1,6 +1,6 @@
 /* perl.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Oct 2015, 17:34:22 tquirk
+ *   last updated 13 Oct 2015, 18:19:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -41,7 +41,7 @@
 
 #include "r9perl.h"
 
-extern void xs_init(pTHX);
+extern "C" void xs_init(pTHX);
 
 bool PerlLanguage::INITIALIZED = false;
 
@@ -90,12 +90,12 @@ std::string PerlLanguage::execute(const std::string& cmd)
     return std::string(SvPV_nolen(val));
 }
 
-Language *create_language(void)
+extern "C" Language *create_language(void)
 {
     return new PerlLanguage();
 }
 
-void destroy_language(Language *lang)
+extern "C" void destroy_language(Language *lang)
 {
     delete lang;
 }
