@@ -13,7 +13,7 @@ endif
 TESTS = $(TC)
 
 check_PROGRAMS = $(TC)
-noinst_LTLIBRARIES = libtest.la
+check_LTLIBRARIES = libtest.la
 
 AM_CXXFLAGS = -I$(GMOCK_DIR)/gtest/include -I$(GMOCK_DIR)/include
 
