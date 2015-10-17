@@ -1,6 +1,6 @@
 /* language.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Sep 2015, 12:07:08 tquirk
+ *   last updated 04 Oct 2015, 11:54:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -29,6 +29,8 @@
 
 #ifndef __INC_LANGUAGE_H__
 #define __INC_LANGUAGE_H__
+
+#include <string>
 
 class Language
 {

@@ -1,6 +1,6 @@
 /* r9perl.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 07:44:48 tquirk
+ *   last updated 04 Oct 2015, 11:40:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,6 +36,9 @@
 
 class PerlLanguage : public Language
 {
+  public:
+    static bool INITIALIZED;
+
   private:
     PerlInterpreter *interp;
 

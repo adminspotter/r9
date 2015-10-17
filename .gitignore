@@ -15,6 +15,8 @@ server/r9d
 server/r9subserver
 client/motif/r9client
 
+server/classes/modules/perlxsi.c
+
 # Automake
 Makefile
 Makefile.in

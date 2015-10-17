@@ -1,6 +1,6 @@
 /* tcl.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 07:44:25 tquirk
+ *   last updated 13 Oct 2015, 19:16:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -53,12 +53,12 @@ std::string TclLanguage::execute(const std::string& cmd)
     return std::string(Tcl_GetStringResult(this->interp));
 }
 
-Language *create_language(void)
+extern "C" Language *create_language(void)
 {
     return new TclLanguage();
 }
 
-void destroy_language(Language *lang)
+extern "C" void destroy_language(Language *lang)
 {
     delete lang;
 }
