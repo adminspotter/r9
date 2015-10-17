@@ -5,3 +5,5 @@
 t_library
 t_log
 t_cache
+t_perl
+t_tcl

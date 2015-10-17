@@ -79,7 +79,7 @@ AC_ARG_WITH([tcl],
             [],
             [with_tcl="no"])
 AC_ARG_WITH([perl],
-            AS_HELP_STRING([--with-perl], [Build the Perl server module]),
+            AS_HELP_STRING([--with-perl], [Build the Perl server module.  NOTE: the Perl interpreter can not currently run a simple script, so it may cause crashing in the server.]),
             [],
             [with_perl="no"])
 AC_ARG_WITH([mysql],
