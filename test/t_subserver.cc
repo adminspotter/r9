@@ -8,6 +8,8 @@
 #include <signal.h>
 #include <errno.h>
 
+#include <iostream>
+
 #include <gtest/gtest.h>
 
 #define SUBSERVER "../server/r9subserver"
@@ -89,40 +91,27 @@ class SubserverTest : public ::testing::Test
 
     virtual int pass_fd(int new_fd)
         {
-            struct cmsghdr cmptr;
-            struct iovec iov[1];
-            struct msghdr msg;
-            char buf[2];
+            struct cmsghdr *cmptr;
+            struct iovec iov = { .iov_base = (void *)"", .iov_len = 1 };
+            struct msghdr msg = { 0 };
+            char buf[CMSG_SPACE(sizeof(new_fd))];
 
-            /* We will use the BSD4.4 method, since Linux uses that method */
-            iov[0].iov_base = buf;
-            iov[0].iov_len = 2;
-            msg.msg_iov = iov;
+            memset(buf, 0, sizeof(buf));
+
+            msg.msg_iov = &iov;
             msg.msg_iovlen = 1;
-            msg.msg_name = NULL;
-            msg.msg_namelen = 0;
-            if (new_fd < 0)
-            {
-                msg.msg_control = NULL;
-                msg.msg_controllen = 0;
-                buf[1] = -this->child_sock;
-                if (buf[1] == 0)
-                    buf[1] = 1;
-            }
-            else
-            {
-                cmptr.cmsg_level = SOL_SOCKET;
-                cmptr.cmsg_type = SCM_RIGHTS;
-                cmptr.cmsg_len = sizeof(struct cmsghdr) + sizeof(int);
-                msg.msg_control = (caddr_t)(&cmptr);
-                msg.msg_controllen = sizeof(struct cmsghdr) + sizeof(int);
-                *(int *)CMSG_DATA((&cmptr)) = new_fd;
-                buf[1] = 0;
-            }
-            buf[0] = 0;
-            if (sendmsg(this->child_sock, &msg, 0) != 2)
-                return -1;
-            return 0;
+            msg.msg_control = buf;
+            msg.msg_controllen = sizeof(buf);
+
+            cmptr = CMSG_FIRSTHDR(&msg);
+            cmptr->cmsg_level = SOL_SOCKET;
+            cmptr->cmsg_type = SCM_RIGHTS;
+            cmptr->cmsg_len = CMSG_LEN(sizeof(new_fd));
+
+            memmove(CMSG_DATA(cmptr), &new_fd, sizeof(new_fd));
+            msg.msg_controllen = cmptr->cmsg_len;
+
+            return sendmsg(this->child_sock, &msg, 0);
         };
 };
 
@@ -140,7 +129,8 @@ TEST_F(SubserverTest, PassFD)
 
     /* We'll use fd[0] and pass in fd[1] */
     ret = this->pass_fd(fd[1]);
-    ASSERT_EQ(ret, 0);
+    std::cout << "ret is " << ret << std::endl;
+    ASSERT_GT(ret, 0);
 
     /* Not sure how to test whether the socket is still live. */
 
