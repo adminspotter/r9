@@ -13,7 +13,7 @@
 #define SUBSERVER "../server/r9subserver"
 #define ALARM_SECS 10
 
-class SubserverTest : public testing::Test
+class SubserverTest : public ::testing::Test
 {
   protected:
     pid_t child_pid;
@@ -49,10 +49,7 @@ class SubserverTest : public testing::Test
                 ASSERT_EQ(ret, 0);
                 for (i = 0; i < rlim.rlim_cur; ++i)
                     if (i != STDIN_FILENO)
-                    {
-                        ret = close(i);
-                        ASSERT_EQ(ret, 0);
-                    }
+                        close(i);
 
                 ret = execl(SUBSERVER, (char *)NULL);
 
@@ -73,20 +70,19 @@ class SubserverTest : public testing::Test
                 ret = kill(this->child_pid, SIGTERM);
                 ASSERT_EQ(ret, 0);
                 ret = waitpid(this->child_pid, NULL, 0);
-                ASSERT_EQ(ret, 0);
+                ASSERT_EQ(ret, this->child_pid);
             }
             else
                 alarm(ALARM_SECS);
             ret = close(this->child_sock);
-            ASSERT_EQ(ret, 0);
+            EXPECT_EQ(ret, 0);
             if (this->close_sock)
             {
                 ret = waitpid(this->child_pid, NULL, 0);
-                ASSERT_EQ(ret, 0);
                 if (ret == -1)
                     ASSERT_NE(errno, EINTR);
                 else
-                    ASSERT_EQ(ret, 0);
+                    ASSERT_EQ(ret, this->child_pid);
                 alarm(0);
             }
         };
@@ -109,7 +105,7 @@ class SubserverTest : public testing::Test
             {
                 msg.msg_control = NULL;
                 msg.msg_controllen = 0;
-                buf[1] = -child_sock;
+                buf[1] = -this->child_sock;
                 if (buf[1] == 0)
                     buf[1] = 1;
             }
@@ -132,11 +128,6 @@ class SubserverTest : public testing::Test
 
 TEST_F(SubserverTest, CloseFD)
 {
-    int ret;
-
-    ret = close(this->child_sock);
-    ASSERT_EQ(ret, 0);
-
     this->close_sock = true;
 }
 
