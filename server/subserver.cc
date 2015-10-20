@@ -1,6 +1,6 @@
 /* subserver.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:38:25 tquirk
+ *   last updated 20 Oct 2015, 18:20:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 
     /* Open up a connection to the syslog. */
     std::clog.rdbuf(new Log("subserver", LOG_DAEMON));
-    std::clog << syslogNotice << "subserver starting";
+    std::clog << syslogNotice << "subserver starting" << std::endl;
 
     /* Set up the select descriptor set. */
     FD_ZERO(&master_readfs);
@@ -254,7 +254,7 @@ static void subserver_set_exit_flag(void)
 static int recv_fd(void)
 {
     int newfd, nread, status = -1;
-    char *ptr, buf[2];
+    char buf[2];
     struct iovec iov[1];
     struct msghdr msg;
 
@@ -286,32 +286,19 @@ static int recv_fd(void)
          */
         std::clog << syslogErr << "connection closed by server" << std::endl;
         subserver_set_exit_flag();
+        return -1;
     }
 
-    for (ptr = buf; ptr < &buf[nread]; )
+    status = buf[0] & 0xF;
+    if (status == 0)
     {
-        if (*ptr++ == 0)
+        if (msg.msg_controllen != CONTROLLEN)
         {
-            if (ptr != &buf[nread - 1])
-            {
-                std::clog << syslogErr << "message format error" << std::endl;
-                return -1;
-            }
-            status = *ptr & 255;
-            if (status == 0)
-            {
-                if (msg.msg_controllen != CONTROLLEN)
-                {
-                    std::clog << syslogErr
-                              << "status = 0 but no fd" << std::endl;
-                    return -1;
-                }
-                newfd = *(int *)CMSG_DATA(cmptr);
-            }
-            else
-                newfd = -status;
-            nread -= 2;
+            std::clog << syslogErr
+                      << "status = 0 but no fd" << std::endl;
+            return -1;
         }
+        newfd = *(int *)CMSG_DATA(cmptr);
     }
     if (status >= 0)
         return newfd;
