@@ -123,36 +123,32 @@ TEST_F(SubserverTest, CloseFD)
 TEST_F(SubserverTest, PassFD)
 {
     int ret, fd[2];
+    char buf[64];
 
     ret = socketpair(AF_UNIX, SOCK_STREAM, 0, fd);
     ASSERT_EQ(ret, 0);
 
     /* We'll use fd[0] and pass in fd[1] */
     ret = this->pass_fd(fd[1]);
-    std::cout << "ret is " << ret << std::endl;
     ASSERT_GT(ret, 0);
 
-    /* Not sure how to test whether the socket is still live. */
+    /* Whatever we spew into fd[0] should come out of
+     * this->child_sock with an integer prepended.
+     */
+    alarm(5);
+    ret = write(fd[0], "hey, this is some stuff\n\0", 25);
+    std::cout << "wrote " << ret << " characters" << std::endl;
+    ASSERT_EQ(ret, 25);
+
+    memset(buf, 0, sizeof(buf));
+    std::cout << "about to read stuff..." << std::endl;
+    ret = read(this->child_sock, buf, sizeof(buf));
+    std::cout << "read " << ret << " characters" << std::endl;
+    ASSERT_EQ(ret, 25 + sizeof(int));
+    ret = memcmp(buf + sizeof(int), "hey, this is some stuff\n\0", 25);
+    std::cout << "compare yielded " << ret << std::endl;
+    ASSERT_EQ(ret, 0);
+    alarm(0);
 
     this->close_sock = false;
 }
-
-/*TEST_F(SubserverTest, ReceivePacket)
-{
-    int ret, fd[2];
-
-    ret = socketpair(AF_UNIX, SOCK_STREAM, 0, fd);
-    ASSERT_EQ(ret, 0);
-
-    /* We'll use fd[0] and pass in fd[1] *
-    ret = this->pass_fd(fd[1]);
-    ASSERT_EQ(ret, 0);
-    ret = close(fd[1]);
-    ASSERT_EQ(ret, 0);
-
-    /* Spew some stuff into fd[0] and see what comes out of child_sock *
-    fprintf(fd[0], "hey, this is some stuff");
-
-    this->close_sock = false;
-}
-*/
