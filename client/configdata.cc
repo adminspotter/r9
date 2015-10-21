@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Aug 2015, 15:57:22 tquirk
+ *   last updated 21 Oct 2015, 17:56:33 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -158,12 +158,11 @@ void ConfigData::read_config_file(void)
     std::ifstream ifs(this->config_fname);
     std::string str;
 
-    do
+    while (ifs.good())
     {
         std::getline(ifs, str);
         this->parse_config_line(str);
     }
-    while (!ifs.eof());
 }
 
 void ConfigData::write_config_file(void)
