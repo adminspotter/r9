@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:28:54 tquirk
+ *   last updated 18 Oct 2015, 17:59:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -192,43 +192,31 @@ int stream_socket::choose_subserver(void)
     return best_index;
 }
 
-/* This next function is ripped directly out of the W. Richard Stevens
- * "Advanced Programming in the UNIX Environment" book, pages 487-488.
- * Some names were changed to protect the innocent.
+/* The W. Richard Stevens function wasn't working in the unit test for
+ * the subserver, so we had to do a little tweakery.  Working version
+ * came mostly from http://stackoverflow.com/questions/28003921/sending-file-descriptor-by-linux-socket
  */
 int stream_socket::pass_fd(int fd, int new_fd)
 {
-    struct iovec iov[1];
-    struct msghdr msg;
-    char buf[2];
+    struct cmsghdr *cmptr;
+    struct iovec iov = { .iov_base = (void *)"", .iov_len = 1 };
+    struct msghdr msg = { 0 };
+    char buf[CMSG_SPACE(sizeof(new_fd))];
 
-    /* We will use the BSD4.4 method, since Linux uses that method */
-    iov[0].iov_base = buf;
-    iov[0].iov_len = 2;
-    msg.msg_iov = iov;
+    msg.msg_iov = &iov;
     msg.msg_iovlen = 1;
-    msg.msg_name = NULL;
-    msg.msg_namelen = 0;
-    if (new_fd < 0)
-    {
-        msg.msg_control = NULL;
-        msg.msg_controllen = 0;
-        buf[1] = -fd;
-        if (buf[1] == 0)
-            buf[1] = 1;
-    }
-    else
-    {
-        this->cmptr.cmsg_level = SOL_SOCKET;
-        this->cmptr.cmsg_type = SCM_RIGHTS;
-        this->cmptr.cmsg_len = sizeof(struct cmsghdr) + sizeof(int);
-        msg.msg_control = (caddr_t)(&this->cmptr);
-        msg.msg_controllen = sizeof(struct cmsghdr) + sizeof(int);
-        *(int *)CMSG_DATA((&this->cmptr)) = new_fd;
-        buf[1] = 0;
-    }
-    buf[0] = 0;
-    if (sendmsg(fd, &msg, 0) != 2)
+    msg.msg_control = buf;
+    msg.msg_controllen = sizeof(buf);
+
+    cmptr = CMSG_FIRSTHDR(&msg);
+    cmptr->cmsg_level = SOL_SOCKET;
+    cmptr->cmsg_type = SCM_RIGHTS;
+    cmptr->cmsg_len = CMSG_LEN(sizeof(new_fd));
+
+    memmove(CMSG_DATA(cmptr), &new_fd, sizeof(new_fd));
+    msg.msg_controllen = cmptr->cmsg_len;
+
+    if (sendmsg(fd, &msg, 0) != 1)
         return -1;
     return 0;
 }
