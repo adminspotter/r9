@@ -8,8 +8,6 @@
 #include <signal.h>
 #include <errno.h>
 
-#include <iostream>
-
 #include <gtest/gtest.h>
 
 #define SUBSERVER "../server/r9subserver"
@@ -137,16 +135,12 @@ TEST_F(SubserverTest, PassFD)
      */
     alarm(5);
     ret = write(fd[0], "hey, this is some stuff\n\0", 25);
-    std::cout << "wrote " << ret << " characters" << std::endl;
     ASSERT_EQ(ret, 25);
 
     memset(buf, 0, sizeof(buf));
-    std::cout << "about to read stuff..." << std::endl;
     ret = read(this->child_sock, buf, sizeof(buf));
-    std::cout << "read " << ret << " characters" << std::endl;
     ASSERT_EQ(ret, 25 + sizeof(int));
     ret = memcmp(buf + sizeof(int), "hey, this is some stuff\n\0", 25);
-    std::cout << "compare yielded " << ret << std::endl;
     ASSERT_EQ(ret, 0);
     alarm(0);
 

@@ -1,6 +1,6 @@
 /* subserver.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Oct 2015, 18:20:07 tquirk
+ *   last updated 21 Oct 2015, 14:49:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -98,8 +98,6 @@
 
 #include "log.h"
 
-#define CONTROLLEN   (sizeof(struct cmsghdr) + sizeof(int))
-
 /* Function prototypes */
 static int handle_client(int);
 static void subserver_set_exit_flag(void);
@@ -108,7 +106,6 @@ static void cleanup_subserver(void);
 static void sigterm_handler(int);
 
 /* File-global variables */
-static struct cmsghdr *cmptr = NULL;
 static fd_set readfs, master_readfs;
 static volatile int subserver_loop_exit_flag = 0;
 static std::set<int> connections;
@@ -245,30 +242,33 @@ static void subserver_set_exit_flag(void)
     subserver_loop_exit_flag = 1;
 }
 
-/* The next function is closely modelled after the W. Richard Stevens
- * "Advanced Programming in the UNIX Environment" book, pages 488-489.
+/* The next function is modelled closely from
+ * http://blog.varunajayasiri.com/passing-file-descriptors-between-processes-using-sendmsg-and-recvmsg
+ * since the W Richard Stevens function was no longer working properly.
  *
  * We should only call this function if we get a positive return from
  * select, so blocking should not ever be a problem.
  */
 static int recv_fd(void)
 {
-    int newfd, nread, status = -1;
-    char buf[2];
+    int nread, status = -1;
+    char buf[1], fd_buf[CMSG_SPACE(sizeof(int))];
     struct iovec iov[1];
     struct msghdr msg;
+    struct cmsghdr *cmsg = NULL;
+
+    memset(&msg, 0, sizeof(struct msghdr));
+    memset(fd_buf, 0, sizeof(fd_buf));
 
     iov[0].iov_base = buf;
     iov[0].iov_len = sizeof(buf);
-    msg.msg_iov = iov;
-    msg.msg_iovlen = 1;
+
     msg.msg_name = NULL;
     msg.msg_namelen = 0;
-    if (cmptr == NULL
-        && (cmptr = (struct cmsghdr *)malloc(CONTROLLEN)) == NULL)
-        return -1;
-    msg.msg_control = (caddr_t)cmptr;
-    msg.msg_controllen = CONTROLLEN;
+    msg.msg_control = fd_buf;
+    msg.msg_controllen = CMSG_SPACE(sizeof(int));
+    msg.msg_iov = iov;
+    msg.msg_iovlen = 1;
 
     /* Our read pipe is *always* going to be on STDIN_FILENO */
     if ((nread = recvmsg(STDIN_FILENO, &msg, 0)) < 0)
@@ -276,7 +276,6 @@ static int recv_fd(void)
         std::clog << syslogErr
                   << "recvmsg error: " << strerror(errno)
                   << " (" << errno << ")" << std::endl;
-        return -1;
     }
     else if (nread == 0)
     {
@@ -286,22 +285,26 @@ static int recv_fd(void)
          */
         std::clog << syslogErr << "connection closed by server" << std::endl;
         subserver_set_exit_flag();
-        return -1;
     }
-
-    status = buf[0] & 0xF;
-    if (status == 0)
+    else
     {
-        if (msg.msg_controllen != CONTROLLEN)
+        for (cmsg = CMSG_FIRSTHDR(&msg);
+             cmsg != NULL;
+             cmsg = CMSG_NXTHDR(&msg, cmsg))
+        {
+            if ((cmsg->cmsg_level == SOL_SOCKET)
+                && (cmsg->cmsg_type == SCM_RIGHTS))
+            {
+                status = *(int *)CMSG_DATA(cmsg);
+                break;
+            }
+        }
+        if (status == -1)
         {
             std::clog << syslogErr
-                      << "status = 0 but no fd" << std::endl;
-            return -1;
+                      << "received a message, but no fd" << std::endl;
         }
-        newfd = *(int *)CMSG_DATA(cmptr);
     }
-    if (status >= 0)
-        return newfd;
     return status;
 }
 
