@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Aug 2015, 15:57:22 tquirk
+ *   last updated 22 Oct 2015, 18:44:06 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -39,6 +39,9 @@
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif /* HAVE_STDLIB_H */
+#if HAVE_STDDEF_H
+#include <stddef.h>
+#endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif /* HAVE_SYS_STAT_H */
@@ -65,19 +68,17 @@ static void read_integer(const std::string&, const std::string&, void *);
 static void write_string(std::ostream&, void *);
 static void write_integer(std::ostream&, void *);
 
-ConfigData config;
-
 /* File-global variables */
 const struct config_handlers
 {
     const char *keyword;
-    void *ptr;
+    size_t offset;
     config_read_t rd_func;
     config_write_t wr_func;
 }
 handlers[] =
 {
-#define off(x)  (void *)(&(config.x))
+#define off(x)  offsetof(ConfigData, x)
     /* Rememeber:  floats are * 100 */
     { "ServerAddr", off(server_addr), &read_string,  &write_string  },
     { "ServerPort", off(server_port), &read_integer, &write_integer },
@@ -115,24 +116,27 @@ void ConfigData::parse_command_line(int count, char **args)
     int i;
     std::vector<std::string>::iterator j;
 
-    for (i = 0; i < count; ++i)
-        this->argv.push_back(std::string(args[i]));
-
-    /* getopt is great and everything, but it's a pretty low-level C
-     * function, and even the C++-wrapped version works the same.  We
-     * want something that operates more in the C++ idiom.
-     */
-    for (j = this->argv.begin() + 1; j != this->argv.end(); ++j)
+    if (count > 0)
     {
-        if ((*j) == "-c")
+        for (i = 0; i < count; ++i)
+            this->argv.push_back(std::string(args[i]));
+
+        /* getopt is great and everything, but it's a pretty low-level C
+         * function, and even the C++-wrapped version works the same.  We
+         * want something that operates more in the C++ idiom.
+         */
+        for (j = this->argv.begin() + 1; j != this->argv.end(); ++j)
         {
-            this->config_dir = *(++j);
-            this->config_fname = this->config_dir + "/config";
+            if ((*j) == "-c")
+            {
+                this->config_dir = *(++j);
+                this->config_fname = this->config_dir + "/config";
+            }
+            else if ((*j) == "-f")
+                this->config_fname = *(++j);
+            else
+                std::clog << "WARNING: Unknown option " << *j;
         }
-        else if ((*j) == "-f")
-            this->config_fname = *(++j);
-        else
-            std::clog << "WARNING: Unknown option " << *j;
     }
     this->make_config_dirs();
     try { this->read_config_file(); }
@@ -158,12 +162,11 @@ void ConfigData::read_config_file(void)
     std::ifstream ifs(this->config_fname);
     std::string str;
 
-    do
+    while (ifs.good())
     {
         std::getline(ifs, str);
         this->parse_config_line(str);
     }
-    while (!ifs.eof());
 }
 
 void ConfigData::write_config_file(void)
@@ -184,7 +187,7 @@ void ConfigData::write_config_file(void)
         ofs.fill(pchar);
         ofs.width(psize);
         ofs.setf(pflag);
-        (*(handlers[i].wr_func))(ofs, handlers[i].ptr);
+        (*(handlers[i].wr_func))(ofs, ((void *)this) + handlers[i].offset);
         ofs << std::endl;
     }
     ofs.close();
@@ -261,7 +264,10 @@ void ConfigData::parse_config_line(std::string& line)
 
     for (i = 0; i < ENTRIES(handlers); ++i)
         if (keyword == handlers[i].keyword)
-            (*(handlers[i].rd_func))(keyword, value, handlers[i].ptr);
+        {
+            (*(handlers[i].rd_func))(keyword, value, ((void *)this) + handlers[i].offset);
+            break;
+        }
 
     /* Silently ignore anything we don't otherwise recognize. */
 }
@@ -287,10 +293,10 @@ static void read_integer(const std::string& key,
 
 static void write_string(std::ostream& os, void *ptr)
 {
-    os << (std::string *)ptr;
+    os << *((std::string *)ptr);
 }
 
 static void write_integer(std::ostream& os, void *ptr)
 {
-    os << (int *)ptr;
+    os << *((uint16_t *)ptr);
 }

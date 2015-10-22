@@ -8,3 +8,4 @@ t_subserver
 t_perl
 t_tcl
 t_cache
+t_configdata

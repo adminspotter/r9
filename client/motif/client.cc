@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 16:45:19 tquirk
+ *   last updated 22 Oct 2015, 17:35:31 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -68,6 +68,7 @@ TextureCache *tex;
 ObjectCache *obj;
 /* We can be connected to more than one server at a time */
 std::vector<Comm *> comm;
+ConfigData config;
 
 int main(int argc, char **argv)
 {
