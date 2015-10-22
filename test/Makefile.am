@@ -48,5 +48,6 @@ t_tcl_LDADD = $(GTEST_LIBS)
 t_cache_SOURCES = t_cache.cc tap.h tap_main.cc ../client/cache.h
 t_cache_LDADD = $(GTEST_LIBS) $(GMOCK_LIBS) $(CLIENT_LDLIBS)
 
-t_configdata_SOURCES = t_configdata.cc tap.h tap_main.cc ../client/configdata.h
+t_configdata_SOURCES = t_configdata.cc tap.h tap_main.cc \
+	../client/configdata.h ../client/configdata.cc
 t_configdata_LDADD = $(GTEST_LIBS) $(CLIENT_LDLIBS)
