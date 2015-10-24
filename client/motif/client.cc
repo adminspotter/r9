@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Oct 2015, 17:35:31 tquirk
+ *   last updated 24 Oct 2015, 13:07:59 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -43,6 +43,12 @@
 #include <X11/Xmu/Editres.h>
 #endif /* WANT_EDITRES */
 
+#if HAVE_LIBINTL_H
+#include <libintl.h>
+#else
+#define gettext(x)  x
+#endif
+
 #include <vector>
 
 #include "client.h"
@@ -75,7 +81,8 @@ int main(int argc, char **argv)
     XtAppContext context;
     Widget mainwin;
 
-    toplevel = XtVaOpenApplication(&context, "Revision9",
+    XtSetLanguageProc(NULL, NULL, NULL);
+    toplevel = XtVaOpenApplication(&context, "R9",
                                    NULL, 0,
                                    &argc, argv,
                                    NULL, sessionShellWidgetClass,
@@ -117,10 +124,11 @@ int main(int argc, char **argv)
 #endif /* WANT_EDITRES */
 
     XtRealizeWidget(toplevel);
-    std::clog << "Welcome to Revision 9" << std::endl;
+    std::clog << gettext("Welcome to R9!") << std::endl;
     XtAppMainLoop(context);
 
     cleanup_comm();
+    delete obj;
     delete tex;
     delete geom;
     config.write_config_file();

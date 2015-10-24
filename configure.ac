@@ -347,6 +347,10 @@ XMLPlatformUtils::Terminate();
     CLIENT_LDLIBS="$ac_cv_search_GLwDrawingAreaMakeCurrent $CLIENT_LDLIBS"
   fi
 
+  # We're currently only doing l10n in the client, so we'll check that
+  # header here.
+  AC_CHECK_HEADERS([libintl.h])
+
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
   AC_MSG_NOTICE([using CLIENT_INCLUDES=$CLIENT_INCLUDES])
   AC_MSG_NOTICE([using CLIENT_LDFLAGS=$CLIENT_LDFLAGS])

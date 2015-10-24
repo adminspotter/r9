@@ -1,6 +1,6 @@
 /* menu.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 16:00:47 tquirk
+ *   last updated 24 Oct 2015, 11:08:44 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -29,6 +29,8 @@
  *
  */
 
+#include <config.h>
+
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
@@ -36,6 +38,12 @@
 #include <Xm/RowColumn.h>
 #include <Xm/PushBG.h>
 #include <Xm/SeparatoG.h>
+
+#if HAVE_LIBINTL_H
+#include <libintl.h>
+#else
+#define gettext(x)  x
+#endif
 
 #include <iostream>
 
@@ -197,5 +205,5 @@ static void empty_callback(Widget w,
                            XtPointer client_data,
                            XtPointer call_data)
 {
-    std::clog << "Sorry, not implemented yet" << std::endl;
+    std::clog << gettext("Sorry, this is not implemented yet.") << std::endl;
 }
