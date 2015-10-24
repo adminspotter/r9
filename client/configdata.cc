@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Oct 2015, 18:44:06 tquirk
+ *   last updated 24 Oct 2015, 08:26:26 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -187,7 +187,7 @@ void ConfigData::write_config_file(void)
         ofs.fill(pchar);
         ofs.width(psize);
         ofs.setf(pflag);
-        (*(handlers[i].wr_func))(ofs, ((void *)this) + handlers[i].offset);
+        (*(handlers[i].wr_func))(ofs, ((char *)this) + handlers[i].offset);
         ofs << std::endl;
     }
     ofs.close();
@@ -265,7 +265,7 @@ void ConfigData::parse_config_line(std::string& line)
     for (i = 0; i < ENTRIES(handlers); ++i)
         if (keyword == handlers[i].keyword)
         {
-            (*(handlers[i].rd_func))(keyword, value, ((void *)this) + handlers[i].offset);
+            (*(handlers[i].rd_func))(keyword, value, ((char *)this) + handlers[i].offset);
             break;
         }
 
