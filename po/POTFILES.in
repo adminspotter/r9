@@ -1,0 +1,23 @@
+# List of source files which contain translatable strings.
+client/cache.h
+client/comm.cc
+client/comm.h
+client/configdata.cc
+client/configdata.h
+client/geometry.cc
+client/geometry.h
+client/motif/about.cc
+client/motif/client.cc
+client/motif/client.h
+client/motif/command.cc
+client/motif/menu.cc
+client/motif/message.cc
+client/motif/msglog.cc
+client/motif/msglog.h
+client/motif/setup.cc
+client/motif/view.cc
+client/object.cc
+client/object.h
+client/r9client.h
+client/texture.cc
+client/texture.h
