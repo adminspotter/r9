@@ -1,0 +1,11 @@
+R9*filebutton.labelString: File
+R9*fileconnect.labelString: Connect...
+R9*filedisconnect.labelString: Disconnect
+R9*fileexit.labelString: Exit
+R9*editbutton.labelString: Edit
+R9*editcut.labelString: Cut
+R9*editcopy.labelString: Copy
+R9*editpaste.labelString: Paste
+R9*editsetup.labelString: Setup
+R9*helpbutton.labelString: Help
+R9*helpabout.labelString: About R9
