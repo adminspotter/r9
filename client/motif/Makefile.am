@@ -1,3 +1,5 @@
+SUBDIRS = app-defaults
+
 if WANT_BUNDLED_LIBGLW
   LIBGLW_CFLAGS = -I@srcdir@/../../glw
   LIBGLW_LDADD = @srcdir@/../../glw/libGLw.a

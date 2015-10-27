@@ -479,6 +479,7 @@ AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday htonll memset mkd
 AC_CONFIG_FILES([Makefile
                  client/Makefile
                  client/motif/Makefile
+                 client/motif/app-defaults/Makefile
                  client/pixmaps/Makefile
                  po/Makefile.in
                  proto/Makefile
