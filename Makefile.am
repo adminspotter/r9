@@ -6,6 +6,9 @@ endif
 SD += client
 endif
 SD += test
+if WANT_LOCALES
+SD += po
+endif
 
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = $(SD)

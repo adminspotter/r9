@@ -1,6 +1,6 @@
 /* menu.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2014, 16:00:47 tquirk
+ *   last updated 25 Oct 2015, 18:03:41 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -28,6 +28,8 @@
  *   some actual callback routines.
  *
  */
+
+#include <config.h>
 
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>
@@ -197,5 +199,5 @@ static void empty_callback(Widget w,
                            XtPointer client_data,
                            XtPointer call_data)
 {
-    std::clog << "Sorry, not implemented yet" << std::endl;
+    std::clog << _("Sorry, this is not implemented yet.") << std::endl;
 }

@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Oct 2015, 17:35:31 tquirk
+ *   last updated 25 Oct 2015, 17:59:43 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -75,13 +75,28 @@ int main(int argc, char **argv)
     XtAppContext context;
     Widget mainwin;
 
-    toplevel = XtVaOpenApplication(&context, "Revision9",
+    /* The default language proc does the base level of initialization
+     * for the locale, and is called by XtAppInitialize, which is
+     * called by XtVaOpenApplication below.  This handles the X11 part
+     * of i18n/l10n, as well as the initial call to setlocale(3) which
+     * gettext needs.
+     */
+    XtSetLanguageProc(NULL, NULL, NULL);
+    toplevel = XtVaOpenApplication(&context, "R9",
                                    NULL, 0,
                                    &argc, argv,
                                    NULL, sessionShellWidgetClass,
                                    XtNwidth, 800,
                                    XtNheight, 600,
                                    NULL);
+#if WANT_LOCALES && HAVE_LIBINTL_H
+    /* The rest of the l10n calls, which handle the gettext-specific
+     * parts of the initialization.
+     */
+    bindtextdomain(PACKAGE, LOCALE_DIR);
+    textdomain(PACKAGE);
+#endif /* WANT_LOCALES && HAVE_LIBINTL_H */
+
     /* Session management */
     restart_command[0] = argv[0];
     XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
@@ -117,10 +132,11 @@ int main(int argc, char **argv)
 #endif /* WANT_EDITRES */
 
     XtRealizeWidget(toplevel);
-    std::clog << "Welcome to Revision 9" << std::endl;
+    std::clog << _("Welcome to R9!") << std::endl;
     XtAppMainLoop(context);
 
     cleanup_comm();
+    delete obj;
     delete tex;
     delete geom;
     config.write_config_file();

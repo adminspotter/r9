@@ -1,6 +1,6 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 11:01:55 tquirk
+ *   last updated 25 Oct 2015, 17:58:04 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -30,12 +30,21 @@
 #ifndef __INC_R9CLIENT_CLIENT_H__
 #define __INC_R9CLIENT_CLIENT_H__
 
+#include <config.h>
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
+
+#if WANT_LOCALES && HAVE_LIBINTL_H
+#include <libintl.h>
+#define _(x)  maketext(x)
+#else
+#define _(x)  x
+#endif /* WANT_LOCALES && HAVE_LIBINTL_H */
 
 #include "../../proto/proto.h"
 

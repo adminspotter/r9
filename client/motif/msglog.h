@@ -1,9 +1,9 @@
 /* msglog.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Aug 2014, 00:04:52 tquirk
+ *   last updated 24 Oct 2015, 11:00:47 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,7 +21,7 @@
  *
  *
  * This file contains a stream buffer to enable std::clog to work with
- * syslog, instead of a regular file.
+ * the client message pane, instead of a regular file.
  *
  * Things to do
  *

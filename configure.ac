@@ -18,6 +18,8 @@ AC_PROG_CC
 AC_PROG_INSTALL
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
+AM_GNU_GETTEXT([external])
+
 AC_LANG(C++)
 
 # Libtool init
@@ -347,6 +349,11 @@ XMLPlatformUtils::Terminate();
     CLIENT_LDLIBS="$ac_cv_search_GLwDrawingAreaMakeCurrent $CLIENT_LDLIBS"
   fi
 
+  # We're currently only doing l10n in the client, so we'll check that
+  # header here.
+  AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
+  AC_CHECK_FUNCS([setlocale])
+
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
   AC_MSG_NOTICE([using CLIENT_INCLUDES=$CLIENT_INCLUDES])
   AC_MSG_NOTICE([using CLIENT_LDFLAGS=$CLIENT_LDFLAGS])
@@ -363,6 +370,7 @@ XMLPlatformUtils::Terminate();
 fi
 AM_CONDITIONAL([WANT_BUNDLED_LIBGLW], [test "x$use_bundled_libGLw" == "xyes"])
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
+AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" == "xyes"])
 
 # MySQL server module
 if test "$with_mysql" == "yes"
@@ -471,7 +479,9 @@ AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday htonll memset mkd
 AC_CONFIG_FILES([Makefile
                  client/Makefile
                  client/motif/Makefile
+                 client/motif/app-defaults/Makefile
                  client/pixmaps/Makefile
+                 po/Makefile.in
                  proto/Makefile
                  server/Makefile
                  server/classes/Makefile
