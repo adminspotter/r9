@@ -18,7 +18,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
-AM_GNU_GETTEXT([external])
+m4_ifdef([AM_GNU_GETTEXT], [AM_GNU_GETTEXT([external])])
 
 AC_LANG(C++)
 
