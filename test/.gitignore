@@ -5,6 +5,7 @@
 t_library
 t_log
 t_subserver
+t_threadpool
 t_perl
 t_tcl
 t_cache
