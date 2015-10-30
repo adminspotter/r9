@@ -85,7 +85,7 @@ TEST(ThreadPoolTest, Grow)
     ASSERT_EQ(pool_size, 5);
 
     sleep(1);
-    pool->resize(8);
+    pool->grow(8);
     pool_size = pool->pool_size();
     ASSERT_EQ(pool_size, 8);
 
