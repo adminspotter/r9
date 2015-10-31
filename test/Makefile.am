@@ -5,7 +5,7 @@ SUBDIRS = $(GMOCK_DIR)
 GTEST_LIBS = $(GMOCK_DIR)/gtest/lib/libgtest.la
 GMOCK_LIBS = $(GMOCK_DIR)/lib/libgmock.la $(GTEST_LIBS)
 
-TC = t_library t_log t_subserver t_threadpool
+TC = t_library t_log t_sockaddr t_subserver t_threadpool
 if WANT_PERL
   TC += t_perl
 endif
@@ -33,6 +33,10 @@ t_library_LDADD = $(GTEST_LIBS)
 t_log_SOURCES = t_log.cc tap.h \
 	../server/log.cc ../server/log.h
 t_log_LDADD = $(GTEST_LIBS)
+
+t_sockaddr_SOURCES = t_sockaddr.cc tap.h tap_main.cc \
+	../server/classes/sockaddr.h
+t_sockaddr_LDADD = $(GTEST_LIBS)
 
 t_subserver_SOURCES = t_subserver.cc tap.h tap_main.cc ../server/r9subserver
 t_subserver_LDADD = $(GTEST_LIBS)
