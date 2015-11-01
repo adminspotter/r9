@@ -140,6 +140,47 @@ TEST(SockaddrInTest, Ntop)
     delete sa;
 }
 
+TEST(SockaddrInTest, Port)
+{
+    uint32_t ip_addr;
+    int ret = inet_pton(AF_INET, v4_ADDRESS, &ip_addr);
+    ASSERT_EQ(ret, 1);
+
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(1234);
+    sin.sin_addr.s_addr = ip_addr;
+
+    Sockaddr_in *sa = new Sockaddr_in((const struct sockaddr&)sin);
+
+    ASSERT_EQ(sa->port(), 1234);
+
+    delete sa;
+}
+
+TEST(SockaddrInTest, Sockaddr)
+{
+    uint32_t ip_addr;
+    int ret = inet_pton(AF_INET, v4_ADDRESS, &ip_addr);
+    ASSERT_EQ(ret, 1);
+
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(1234);
+    sin.sin_addr.s_addr = ip_addr;
+
+    Sockaddr_in *sa = new Sockaddr_in((const struct sockaddr&)sin);
+
+    struct sockaddr_in *saddr = (struct sockaddr_in *)sa->sockaddr();
+    ASSERT_EQ(saddr->sin_family, AF_INET);
+    ASSERT_EQ(saddr->sin_port, htons(1234));
+    ASSERT_EQ(saddr->sin_addr.s_addr, ip_addr);
+
+    delete sa;
+}
+
 TEST(SockaddrInTest, Factory)
 {
     struct sockaddr_in sin;
@@ -287,6 +328,51 @@ TEST(SockaddrIn6Test, Ntop)
     Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
 
     ASSERT_STREQ(sa->ntop(), v6_ADDRESS);
+
+    delete sa;
+}
+
+TEST(SockaddrIn6Test, Port)
+{
+    struct in6_addr ip_addr;
+    int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
+    ASSERT_EQ(ret, 1);
+
+    struct sockaddr_in6 sin;
+    sin.sin6_family = AF_INET6;
+    sin.sin6_port = htons(1234);
+    sin.sin6_flowinfo = htonl(0L);
+    sin.sin6_scope_id = htonl(0L);
+    memcpy(&sin.sin6_addr, &ip_addr, sizeof(struct in6_addr));
+
+    Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
+
+    ASSERT_EQ(sa->port(), 1234);
+
+    delete sa;
+}
+
+TEST(SockaddrIn6Test, Sockaddr)
+{
+    struct in6_addr ip_addr;
+    int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
+    ASSERT_EQ(ret, 1);
+
+    struct sockaddr_in6 sin;
+    sin.sin6_family = AF_INET6;
+    sin.sin6_port = htons(1234);
+    sin.sin6_flowinfo = htonl(0L);
+    sin.sin6_scope_id = htonl(0L);
+    memcpy(&sin.sin6_addr, &ip_addr, sizeof(struct in6_addr));
+
+    Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
+
+    struct sockaddr_in6 *saddr = (struct sockaddr_in6 *)sa->sockaddr();
+    ASSERT_EQ(sa->sin6->sin6_family, AF_INET6);
+    ASSERT_EQ(sa->sin6->sin6_port, htons(1234));
+    ASSERT_EQ(sa->sin6->sin6_flowinfo, htonl(0L));
+    ASSERT_EQ(sa->sin6->sin6_scope_id, htonl(0L));
+    ASSERT_EQ(sa->sin6->sin6_addr, ip_addr);
 
     delete sa;
 }
