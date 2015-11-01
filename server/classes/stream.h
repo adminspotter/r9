@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Oct 2015, 12:45:59 tquirk
+ *   last updated 01 Nov 2015, 11:24:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,7 +36,7 @@
 #include <vector>
 
 #include "control.h"
-#include "basesock.h"
+#include "listensock.h"
 
 class stream_user : public base_user
 {
