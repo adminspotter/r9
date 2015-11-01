@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Oct 2015, 17:59:42 tquirk
+ *   last updated 01 Nov 2015, 12:55:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -71,8 +71,8 @@ const stream_socket::subserver& stream_socket::subserver::operator=(const stream
     return *this;
 }
 
-stream_socket::stream_socket(struct addrinfo *ai, uint16_t port)
-    : listen_socket(ai, port), subservers()
+stream_socket::stream_socket(struct addrinfo *ai)
+    : listen_socket(ai), subservers()
 {
     FD_ZERO(&(this->master_readfs));
     FD_SET(this->sock.sock, &(this->master_readfs));
@@ -87,19 +87,19 @@ int stream_socket::create_subserver(void)
     {
         std::clog << syslogErr
                   << "couldn't create subserver sockets for stream port "
-                  << this->sock.port_num << ": "
+                  << this->sock.sa->port() << ": "
                   << strerror(errno) << " (" << errno << ")" << std::endl;
         return retval;
     }
 
     /* We want the port number available to the child, for error reporting */
-    i = this->sock.port_num;
+    i = this->sock.sa->port();
 
     if ((pid = fork()) < 0)
     {
         std::clog << syslogErr
                   << "couldn't fork new subserver for stream port "
-                  << this->sock.port_num << ": "
+                  << this->sock.sa->port() << ": "
                   << strerror(errno) << " (" << errno << ")" << std::endl;
         close(fd[0]);
         close(fd[1]);
@@ -152,7 +152,7 @@ int stream_socket::create_subserver(void)
         this->subservers.push_back(new_sub);
         retval = this->subservers.size() - 1;
         std::clog << "created subserver " << retval
-                  << " for stream port " << this->sock.port_num
+                  << " for stream port " << this->sock.sa->port()
                   << ", sock " << new_sub.sock
                   << ", pid " << new_sub.pid << std::endl;
     }
@@ -234,7 +234,7 @@ stream_socket::~stream_socket()
         if (kill((*i).pid, SIGTERM) == -1)
             std::clog << syslogErr
                       << "couldn't kill subserver " << (*i).pid
-                      << " for stream port " << this->sock.port_num << ": "
+                      << " for stream port " << this->sock.sa->port() << ": "
                       << strerror(errno) << " (" << errno << ")" << std::endl;
         waitpid((*i).pid, NULL, 0);
         FD_CLR((*i).sock, &this->master_readfs);
@@ -250,7 +250,7 @@ void stream_socket::start(void)
     int i, retval;
 
     std::clog << "starting connection loop for stream port "
-              << this->sock.port_num << std::endl;
+              << this->sock.sa->port() << std::endl;
 
     /* Before we go into the select loop, we should spawn off the
      * number of subservers in min_subservers.
@@ -260,7 +260,7 @@ void stream_socket::start(void)
         {
             std::ostringstream s;
             s << "couldn't create subserver for stream port "
-              << this->sock.port_num << ": "
+              << this->sock.sa->port() << ": "
               << strerror(errno) << " (" << errno << ")";
             throw std::runtime_error(s.str());
         }
@@ -280,7 +280,7 @@ void stream_socket::start(void)
     {
         std::ostringstream s;
         s << "couldn't create reaper thread for stream port "
-          << this->sock.port_num << ": "
+          << this->sock.sa->port() << ": "
           << strerror(retval) << " (" << retval << ")";
         throw std::runtime_error(s.str());
     }
@@ -321,14 +321,14 @@ void *stream_socket::stream_listen_worker(void *arg)
                 /* we got a signal; it could have been a HUP */
                 std::clog << syslogNotice
                           << "select interrupted by signal in stream port "
-                          << sts->sock.port_num << std::endl;
+                          << sts->sock.sa->port() << std::endl;
                 continue;
             }
             else
             {
                 std::clog << syslogErr
                           << "select error in stream port "
-                          << sts->sock.port_num << ": "
+                          << sts->sock.sa->port() << ": "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
                 /* Should we blow up or something here? */
@@ -385,7 +385,7 @@ void *stream_socket::stream_listen_worker(void *arg)
                 else
                 {
                     /* This subserver has died. */
-                    std::clog << "stream port " << sts->sock.port_num
+                    std::clog << "stream port " << sts->sock.sa->port()
                               << " subserver " << (*i).pid
                               << " died" << std::endl;
                     waitpid((*i).pid, NULL, 0);
@@ -403,7 +403,7 @@ void *stream_socket::stream_listen_worker(void *arg)
             }
     }
     std::clog << "exiting connection loop for stream port "
-              << sts->sock.port_num << std::endl;
+              << sts->sock.sa->port() << std::endl;
     return NULL;
 }
 
@@ -415,7 +415,7 @@ void *stream_socket::stream_reaper_worker(void *arg)
     time_t now;
 
     std::clog << "started reaper thread for stream port "
-              << sts->sock.port_num << std::endl;
+              << sts->sock.sa->port() << std::endl;
     for (;;)
     {
         sleep(listen_socket::REAP_TIMEOUT);
@@ -430,7 +430,7 @@ void *stream_socket::stream_reaper_worker(void *arg)
                 std::clog << "removing user "
                           << stu->control->username
                           << " (" << stu->userid << ") from stream port "
-                          << sts->sock.port_num << std::endl;
+                          << sts->sock.sa->port() << std::endl;
                 if (stu->control->slave != NULL)
                 {
                     /* Clean up a user who has logged out */
@@ -463,7 +463,7 @@ void *stream_socket::stream_send_worker(void *arg)
     size_t realsize;
 
     std::clog << "started send pool worker for stream port "
-              << sts->sock.port_num << std::endl;
+              << sts->sock.sa->port() << std::endl;
     for (;;)
     {
         sts->send_pool->pop(&req);
@@ -479,6 +479,6 @@ void *stream_socket::stream_send_worker(void *arg)
         }
     }
     std::clog << "exiting send pool worker for stream port "
-              << sts->sock.port_num << std::endl;
+              << sts->sock.sa->port() << std::endl;
     return NULL;
 }

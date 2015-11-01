@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 10:55:57 tquirk
+ *   last updated 01 Nov 2015, 12:50:17 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -43,9 +43,9 @@
 
 #include "../log.h"
 
-basesock::basesock(struct addrinfo *ai, uint16_t port)
+basesock::basesock(struct addrinfo *ai)
 {
-    this->port_num = port;
+    this->sa = build_sockaddr(*ai->ai_addr);
     this->listen_arg = NULL;
     this->create_socket(ai);
 }
@@ -65,8 +65,8 @@ void basesock::create_socket(struct addrinfo *ai)
 {
     uid_t uid = geteuid();
     gid_t gid = getegid();
-    int do_uid = this->port_num <= 1024 && uid != 0;
-    int opt = 1;
+    int do_uid = this->sa->port() <= 1024 && uid != 0;
+    int opt = 1, ret;
     const std::string typestr
         = (ai->ai_socktype == SOCK_DGRAM ? "dgram" : "stream");
 
@@ -76,31 +76,12 @@ void basesock::create_socket(struct addrinfo *ai)
     {
         std::ostringstream s;
         s << "socket creation failed for " << typestr << " port "
-          << this->port_num << ": "
+          << this->sa->port() << ": "
           << strerror(errno) << " (" << errno << ")";
         this->sock = 0;
         throw std::runtime_error(s.str());
     }
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
-
-    switch (ai->ai_addr->sa_family)
-    {
-      case AF_INET:
-        reinterpret_cast<struct sockaddr_in *>(ai->ai_addr)->sin_port
-            = htons(this->port_num);
-        break;
-      case AF_INET6:
-        reinterpret_cast<struct sockaddr_in6 *>(ai->ai_addr)->sin6_port
-            = htons(this->port_num);
-        break;
-      default:
-        close(this->sock);
-        this->sock = 0;
-        std::ostringstream s;
-        s << "don't recognize address family " << ai->ai_addr->sa_family
-          << ": " << strerror(EINVAL) << " (" << EINVAL << ")";
-        throw std::runtime_error(s.str());
-    }
 
     /* If root's gotta open the port, become root, if possible. */
     if (do_uid)
@@ -109,7 +90,7 @@ void basesock::create_socket(struct addrinfo *ai)
         {
             std::ostringstream s;
             s << "can't open " << typestr << " port "
-              << this->port_num << " as non-root user";
+              << this->sa->port() << " as non-root user";
             close(this->sock);
             this->sock = 0;
             throw std::runtime_error(s.str());
@@ -120,26 +101,21 @@ void basesock::create_socket(struct addrinfo *ai)
             setegid(getgid());
         }
     }
-    if (bind(this->sock,
-             (struct sockaddr *)(ai->ai_addr), ai->ai_addrlen) < 0)
-    {
-        if (do_uid)
-        {
-            seteuid(uid);
-            setegid(gid);
-        }
-        std::ostringstream s;
-        s << "bind failed for " << typestr << " port " << this->port_num << ": "
-          << strerror(errno) << " (" << errno << ")";
-        close(this->sock);
-        this->sock = 0;
-        throw std::runtime_error(s.str());
-    }
+    ret = bind(this->sock, this->sa->sockaddr(), ai->ai_addrlen);
     /* Restore the original euid and egid of the process, if necessary. */
     if (do_uid)
     {
         seteuid(uid);
         setegid(gid);
+    }
+    if (ret < 0)
+    {
+        std::ostringstream s;
+        s << "bind failed for " << typestr << " port " << this->sa->port()
+          << ": " << strerror(errno) << " (" << errno << ")";
+        close(this->sock);
+        this->sock = 0;
+        throw std::runtime_error(s.str());
     }
 
     if (ai->ai_socktype == SOCK_STREAM)
@@ -148,7 +124,7 @@ void basesock::create_socket(struct addrinfo *ai)
         {
             std::ostringstream s;
             s << "listen failed for " << typestr << " port "
-              << this->port_num << ": "
+              << this->sa->port() << ": "
               << strerror(errno) << " (" << errno << ")";
             close(this->sock);
             this->sock = 0;
@@ -158,7 +134,7 @@ void basesock::create_socket(struct addrinfo *ai)
 
     std::clog << "created " << typestr << " socket "
               << this->sock << " on port "
-              << this->port_num << std::endl;
+              << this->sa->port() << std::endl;
 }
 
 void basesock::start(void *(*func)(void *))
@@ -168,8 +144,8 @@ void basesock::start(void *(*func)(void *))
     if (this->sock == 0)
     {
         std::ostringstream s;
-        s << "no socket available to listen for port " << this->port_num << ": "
-          << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
+        s << "no socket available to listen for port " << this->sa->port()
+          << ": " << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
         throw std::runtime_error(s.str());
     }
     if ((ret = pthread_create(&(this->listen_thread),
@@ -178,8 +154,8 @@ void basesock::start(void *(*func)(void *))
                               this->listen_arg)) != 0)
     {
         std::ostringstream s;
-        s << "couldn't start listen thread for port " << this->port_num << ": "
-          << strerror(ret) << " (" << ret << ")";
+        s << "couldn't start listen thread for port " << this->sa->port()
+          << ": " << strerror(ret) << " (" << ret << ")";
         throw std::runtime_error(s.str());
     }
 }
@@ -191,16 +167,16 @@ void basesock::stop(void)
     if ((ret = pthread_cancel(this->listen_thread)) != 0)
     {
         std::ostringstream s;
-        s << "couldn't cancel listen thread for port " << this->port_num << ": "
-          << strerror(ret) << " (" << ret << ")";
+        s << "couldn't cancel listen thread for port " << this->sa->port()
+          << ": " << strerror(ret) << " (" << ret << ")";
         throw std::runtime_error(s.str());
     }
     sleep(0);
     if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
     {
         std::ostringstream s;
-        s << "couldn't join listen thread for port " << this->port_num << ": "
-          << strerror(ret) << " (" << ret << ")";
+        s << "couldn't join listen thread for port " << this->sa->port()
+          << ": " << strerror(ret) << " (" << ret << ")";
         throw std::runtime_error(s.str());
     }
 }

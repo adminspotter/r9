@@ -1,6 +1,6 @@
 /* sockaddr.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Oct 2015, 11:28:20 tquirk
+ *   last updated 01 Nov 2015, 13:19:05 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -35,6 +35,8 @@
 #include <arpa/inet.h>
 
 #include <functional>
+#include <sstream>
+#include <stdexcept>
 
 class Sockaddr
 {
@@ -86,6 +88,11 @@ class Sockaddr
         }
 
     virtual char *ntop(void) = 0;
+    virtual uint16_t port(void) = 0;
+    virtual inline struct sockaddr *sockaddr(void)
+        {
+            return (struct sockaddr *)&(this->ss);
+        };
 };
 
 /* Since we can't use a Sockaddr directly in one of our map keys,
@@ -174,6 +181,16 @@ class Sockaddr_in : public Sockaddr
             inet_ntop(this->sin->sin_family, &(this->sin->sin_addr),
                       this->str, INET6_ADDRSTRLEN);
             return this->str;
+        };
+
+    uint16_t port(void)
+        {
+            return ntohs(this->sin->sin_port);
+        };
+
+    struct sockaddr *sockaddr(void)
+        {
+            return (struct sockaddr *)this->sin;
         };
 };
 
@@ -269,6 +286,16 @@ class Sockaddr_in6 : public Sockaddr
                       this->str, INET6_ADDRSTRLEN);
             return this->str;
         };
+
+    uint16_t port(void)
+        {
+            return ntohs(this->sin6->sin6_port);
+        };
+
+    struct sockaddr *sockaddr(void)
+        {
+            return (struct sockaddr *)this->sin6;
+        };
 };
 
 inline Sockaddr *build_sockaddr(struct sockaddr& s)
@@ -288,7 +315,11 @@ inline Sockaddr *build_sockaddr(struct sockaddr& s)
       }
 
       default:
-        return NULL;
+      {
+          std::ostringstream st;
+          st << "invalid address family " << s.sa_family;
+          throw std::runtime_error(st.str());
+      }
     }
 }
 

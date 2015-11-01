@@ -1,6 +1,6 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 11:24:46 tquirk
+ *   last updated 01 Nov 2015, 12:52:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -54,7 +54,7 @@ class dgram_socket : public listen_socket
     std::map<Sockaddr *, dgram_user *, less_sockaddr> socks;
 
   public:
-    dgram_socket(struct addrinfo *, uint16_t);
+    dgram_socket(struct addrinfo *);
     ~dgram_socket();
 
     void start(void);

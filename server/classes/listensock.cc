@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 10:56:20 tquirk
+ *   last updated 01 Nov 2015, 12:51:45 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -37,8 +37,8 @@
 #include "../config_data.h"
 #include "../log.h"
 
-listen_socket::listen_socket(struct addrinfo *ai, uint16_t port)
-    : users(), sock(ai, port)
+listen_socket::listen_socket(struct addrinfo *ai)
+    : users(), sock(ai)
 {
     this->init();
 }
@@ -54,13 +54,13 @@ listen_socket::~listen_socket()
     if ((retval = pthread_cancel(this->reaper)) != 0)
     {
         std::clog << syslogErr << "couldn't cancel reaper thread for port "
-                  << this->sock.port_num << ": "
+                  << this->sock.sa->port() << ": "
                   << strerror(retval) << " (" << retval << ")" << std::endl;
     }
     sleep(0);
     if ((retval = pthread_join(this->reaper, NULL)) != 0)
         std::clog << syslogErr << "error terminating reaper thread for port "
-                  << this->sock.port_num << ": "
+                  << this->sock.sa->port() << ": "
                   << strerror(retval) << " (" << retval << ")" << std::endl;
 
     /* Clear out the users map */

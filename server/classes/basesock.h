@@ -1,6 +1,6 @@
 /* basesock.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 10:26:50 tquirk
+ *   last updated 01 Nov 2015, 12:49:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -34,25 +34,26 @@
 
 #include <cstdint>
 
+#include "sockaddr.h"
 #include "control.h"
 
 class basesock
 {
   public:
+    Sockaddr *sa;
     int sock;
-    uint16_t port_num;
 
     pthread_t listen_thread;
     void *listen_arg;
 
     static const int LISTEN_BACKLOG = 10;
 
-  private:
-    void create_socket(struct addrinfo *);
+  protected:
+    virtual void create_socket(struct addrinfo *);
 
   public:
-    basesock(struct addrinfo *, uint16_t);
-    ~basesock();
+    basesock(struct addrinfo *);
+    virtual ~basesock();
 
     void start(void *(*)(void *));
     void stop(void);
