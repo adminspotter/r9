@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:50:17 tquirk
+ *   last updated 02 Nov 2015, 07:37:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -47,6 +47,7 @@ basesock::basesock(struct addrinfo *ai)
 {
     this->sa = build_sockaddr(*ai->ai_addr);
     this->listen_arg = NULL;
+    this->thread_started = false;
     this->create_socket(ai);
 }
 
@@ -59,6 +60,8 @@ basesock::~basesock()
         close(this->sock);
         this->sock = 0;
     }
+    if (this->sa != NULL)
+        delete this->sa;
 }
 
 void basesock::create_socket(struct addrinfo *ai)
@@ -141,22 +144,26 @@ void basesock::start(void *(*func)(void *))
 {
     int ret;
 
-    if (this->sock == 0)
+    if (!this->thread_started)
     {
-        std::ostringstream s;
-        s << "no socket available to listen for port " << this->sa->port()
-          << ": " << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
-        throw std::runtime_error(s.str());
-    }
-    if ((ret = pthread_create(&(this->listen_thread),
-                              NULL,
-                              func,
-                              this->listen_arg)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't start listen thread for port " << this->sa->port()
-          << ": " << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
+        if (this->sock == 0)
+        {
+            std::ostringstream s;
+            s << "no socket available to listen for port " << this->sa->port()
+              << ": " << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
+            throw std::runtime_error(s.str());
+        }
+        if ((ret = pthread_create(&(this->listen_thread),
+                                  NULL,
+                                  func,
+                                  this->listen_arg)) != 0)
+        {
+            std::ostringstream s;
+            s << "couldn't start listen thread for port " << this->sa->port()
+              << ": " << strerror(ret) << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        this->thread_started = true;
     }
 }
 
@@ -164,20 +171,24 @@ void basesock::stop(void)
 {
     int ret;
 
-    if ((ret = pthread_cancel(this->listen_thread)) != 0)
+    if (this->thread_started)
     {
-        std::ostringstream s;
-        s << "couldn't cancel listen thread for port " << this->sa->port()
-          << ": " << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
-    }
-    sleep(0);
-    if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't join listen thread for port " << this->sa->port()
-          << ": " << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
+        if ((ret = pthread_cancel(this->listen_thread)) != 0)
+        {
+            std::ostringstream s;
+            s << "couldn't cancel listen thread for port " << this->sa->port()
+              << ": " << strerror(ret) << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        sleep(0);
+        if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
+        {
+            std::ostringstream s;
+            s << "couldn't join listen thread for port " << this->sa->port()
+              << ": " << strerror(ret) << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        this->thread_started = false;
     }
 }
 

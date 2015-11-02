@@ -1,6 +1,6 @@
 /* basesock.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:49:44 tquirk
+ *   last updated 02 Nov 2015, 07:32:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -39,6 +39,9 @@
 
 class basesock
 {
+  private:
+    bool thread_started;
+
   public:
     Sockaddr *sa;
     int sock;
