@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:07:27 tquirk
+ *   last updated 01 Nov 2015, 12:53:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -57,8 +57,8 @@ const dgram_user& dgram_user::operator=(const dgram_user& du)
     return *this;
 }
 
-dgram_socket::dgram_socket(struct addrinfo *ai, uint16_t port)
-    : listen_socket(ai, port)
+dgram_socket::dgram_socket(struct addrinfo *ai)
+    : listen_socket(ai)
 {
 }
 
@@ -74,7 +74,7 @@ void dgram_socket::start(void)
     int retval;
 
     std::clog << "starting connection loop for datagram port "
-              << this->sock.port_num << std::endl;
+              << this->sock.sa->port() << std::endl;
 
     /* Start up the listen thread and thread pools */
     sleep(0);
@@ -91,7 +91,7 @@ void dgram_socket::start(void)
     {
         std::ostringstream s;
         s << "couldn't create reaper thread for datagram port "
-          << this->sock.port_num << ": "
+          << this->sock.sa->port() << ": "
           << strerror(retval) << " (" << retval << ")";
         throw std::runtime_error(s.str());
     }
@@ -191,7 +191,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         pthread_testcancel();
     }
     std::clog << "exiting connection loop for datagram port "
-              << dgs->sock.port_num << std::endl;
+              << dgs->sock.sa->port() << std::endl;
     return NULL;
 }
 
@@ -203,7 +203,7 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
     time_t now;
 
     std::clog << "started reaper thread for datagram port "
-              << dgs->sock.port_num << std::endl;
+              << dgs->sock.sa->port() << std::endl;
     for (;;)
     {
         sleep(listen_socket::REAP_TIMEOUT);
@@ -218,7 +218,7 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
                 std::clog << "removing user "
                           << dgu->control->username << " ("
                           << dgu->userid << ") from datagram port "
-                          << dgs->sock.port_num << std::endl;
+                          << dgs->sock.sa->port() << std::endl;
                 if (dgu->control->slave != NULL)
                 {
                     /* Clean up a user who has logged out */
@@ -246,7 +246,7 @@ void *dgram_socket::dgram_send_worker(void *arg)
     size_t realsize;
 
     std::clog << "started send pool worker for datagram port "
-              << dgs->sock.port_num << std::endl;
+              << dgs->sock.sa->port() << std::endl;
     for (;;)
     {
         dgs->send_pool->pop(&req);
@@ -264,7 +264,7 @@ void *dgram_socket::dgram_send_worker(void *arg)
                        sizeof(struct sockaddr_storage)) == -1)
                 std::clog << syslogErr
                           << "error sending packet out datagram port "
-                          << dgs->sock.port_num << ": "
+                          << dgs->sock.sa->port() << ": "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
             else
@@ -274,6 +274,6 @@ void *dgram_socket::dgram_send_worker(void *arg)
         }
     }
     std::clog << "exiting send pool worker for datagram port "
-              << dgs->sock.port_num << std::endl;
+              << dgs->sock.sa->port() << std::endl;
     return NULL;
 }

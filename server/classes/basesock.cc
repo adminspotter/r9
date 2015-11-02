@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:28:05 tquirk
+ *   last updated 02 Nov 2015, 07:37:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -20,9 +20,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the socket creation routine and the listening
- * thread handling.  This is directly instantiable, and only needs a
- * requirement-specific listening routine to be fully usable.
+ * This file contains the socket creation class and the basic user
+ * tracking.  The listen socket will encapsulate these, and extend
+ * them to a more usable state.
  *
  * Things to do
  *
@@ -41,14 +41,13 @@
 
 #include "basesock.h"
 
-#include "../server.h"
-#include "../config_data.h"
 #include "../log.h"
 
-basesock::basesock(struct addrinfo *ai, uint16_t port)
+basesock::basesock(struct addrinfo *ai)
 {
-    this->port_num = port;
+    this->sa = build_sockaddr(*ai->ai_addr);
     this->listen_arg = NULL;
+    this->thread_started = false;
     this->create_socket(ai);
 }
 
@@ -61,14 +60,16 @@ basesock::~basesock()
         close(this->sock);
         this->sock = 0;
     }
+    if (this->sa != NULL)
+        delete this->sa;
 }
 
 void basesock::create_socket(struct addrinfo *ai)
 {
     uid_t uid = geteuid();
     gid_t gid = getegid();
-    int do_uid = this->port_num <= 1024 && uid != 0;
-    int opt = 1;
+    int do_uid = this->sa->port() <= 1024 && uid != 0;
+    int opt = 1, ret;
     const std::string typestr
         = (ai->ai_socktype == SOCK_DGRAM ? "dgram" : "stream");
 
@@ -78,31 +79,12 @@ void basesock::create_socket(struct addrinfo *ai)
     {
         std::ostringstream s;
         s << "socket creation failed for " << typestr << " port "
-          << this->port_num << ": "
+          << this->sa->port() << ": "
           << strerror(errno) << " (" << errno << ")";
         this->sock = 0;
         throw std::runtime_error(s.str());
     }
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
-
-    switch (ai->ai_addr->sa_family)
-    {
-      case AF_INET:
-        reinterpret_cast<struct sockaddr_in *>(ai->ai_addr)->sin_port
-            = htons(this->port_num);
-        break;
-      case AF_INET6:
-        reinterpret_cast<struct sockaddr_in6 *>(ai->ai_addr)->sin6_port
-            = htons(this->port_num);
-        break;
-      default:
-        close(this->sock);
-        this->sock = 0;
-        std::ostringstream s;
-        s << "don't recognize address family " << ai->ai_addr->sa_family
-          << ": " << strerror(EINVAL) << " (" << EINVAL << ")";
-        throw std::runtime_error(s.str());
-    }
 
     /* If root's gotta open the port, become root, if possible. */
     if (do_uid)
@@ -111,7 +93,7 @@ void basesock::create_socket(struct addrinfo *ai)
         {
             std::ostringstream s;
             s << "can't open " << typestr << " port "
-              << this->port_num << " as non-root user";
+              << this->sa->port() << " as non-root user";
             close(this->sock);
             this->sock = 0;
             throw std::runtime_error(s.str());
@@ -122,26 +104,21 @@ void basesock::create_socket(struct addrinfo *ai)
             setegid(getgid());
         }
     }
-    if (bind(this->sock,
-             (struct sockaddr *)(ai->ai_addr), ai->ai_addrlen) < 0)
-    {
-        if (do_uid)
-        {
-            seteuid(uid);
-            setegid(gid);
-        }
-        std::ostringstream s;
-        s << "bind failed for " << typestr << " port " << this->port_num << ": "
-          << strerror(errno) << " (" << errno << ")";
-        close(this->sock);
-        this->sock = 0;
-        throw std::runtime_error(s.str());
-    }
+    ret = bind(this->sock, this->sa->sockaddr(), ai->ai_addrlen);
     /* Restore the original euid and egid of the process, if necessary. */
     if (do_uid)
     {
         seteuid(uid);
         setegid(gid);
+    }
+    if (ret < 0)
+    {
+        std::ostringstream s;
+        s << "bind failed for " << typestr << " port " << this->sa->port()
+          << ": " << strerror(errno) << " (" << errno << ")";
+        close(this->sock);
+        this->sock = 0;
+        throw std::runtime_error(s.str());
     }
 
     if (ai->ai_socktype == SOCK_STREAM)
@@ -150,7 +127,7 @@ void basesock::create_socket(struct addrinfo *ai)
         {
             std::ostringstream s;
             s << "listen failed for " << typestr << " port "
-              << this->port_num << ": "
+              << this->sa->port() << ": "
               << strerror(errno) << " (" << errno << ")";
             close(this->sock);
             this->sock = 0;
@@ -160,29 +137,33 @@ void basesock::create_socket(struct addrinfo *ai)
 
     std::clog << "created " << typestr << " socket "
               << this->sock << " on port "
-              << this->port_num << std::endl;
+              << this->sa->port() << std::endl;
 }
 
 void basesock::start(void *(*func)(void *))
 {
     int ret;
 
-    if (this->sock == 0)
+    if (!this->thread_started)
     {
-        std::ostringstream s;
-        s << "no socket available to listen for port " << this->port_num << ": "
-          << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
-        throw std::runtime_error(s.str());
-    }
-    if ((ret = pthread_create(&(this->listen_thread),
-                              NULL,
-                              func,
-                              this->listen_arg)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't start listen thread for port " << this->port_num << ": "
-          << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
+        if (this->sock == 0)
+        {
+            std::ostringstream s;
+            s << "no socket available to listen for port " << this->sa->port()
+              << ": " << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
+            throw std::runtime_error(s.str());
+        }
+        if ((ret = pthread_create(&(this->listen_thread),
+                                  NULL,
+                                  func,
+                                  this->listen_arg)) != 0)
+        {
+            std::ostringstream s;
+            s << "couldn't start listen thread for port " << this->sa->port()
+              << ": " << strerror(ret) << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        this->thread_started = true;
     }
 }
 
@@ -190,20 +171,24 @@ void basesock::stop(void)
 {
     int ret;
 
-    if ((ret = pthread_cancel(this->listen_thread)) != 0)
+    if (this->thread_started)
     {
-        std::ostringstream s;
-        s << "couldn't cancel listen thread for port " << this->port_num << ": "
-          << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
-    }
-    sleep(0);
-    if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't join listen thread for port " << this->port_num << ": "
-          << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
+        if ((ret = pthread_cancel(this->listen_thread)) != 0)
+        {
+            std::ostringstream s;
+            s << "couldn't cancel listen thread for port " << this->sa->port()
+              << ": " << strerror(ret) << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        sleep(0);
+        if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
+        {
+            std::ostringstream s;
+            s << "couldn't join listen thread for port " << this->sa->port()
+              << ": " << strerror(ret) << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        this->thread_started = false;
     }
 }
 
@@ -241,131 +226,4 @@ const base_user& base_user::operator=(const base_user& u)
     this->timestamp = u.timestamp;
     this->pending_logout = u.pending_logout;
     return *this;
-}
-
-listen_socket::listen_socket(struct addrinfo *ai, uint16_t port)
-    : users(), sock(ai, port)
-{
-    this->init();
-}
-
-listen_socket::~listen_socket()
-{
-    int retval;
-    std::map<uint64_t, base_user *>::iterator i;
-
-    try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
-
-    if ((retval = pthread_cancel(this->reaper)) != 0)
-    {
-        std::clog << syslogErr << "couldn't cancel reaper thread for port "
-                  << this->sock.port_num << ": "
-                  << strerror(retval) << " (" << retval << ")" << std::endl;
-    }
-    sleep(0);
-    if ((retval = pthread_join(this->reaper, NULL)) != 0)
-        std::clog << syslogErr << "error terminating reaper thread for port "
-                  << this->sock.port_num << ": "
-                  << strerror(retval) << " (" << retval << ")" << std::endl;
-
-    /* Clear out the users map */
-    for (i = this->users.begin(); i != this->users.end(); ++i)
-        delete (*i).second;
-    this->users.erase(this->users.begin(), this->users.end());
-
-    if (this->send_pool != NULL)
-        delete this->send_pool;
-
-    if (this->access_pool != NULL)
-        delete this->access_pool;
-}
-
-void listen_socket::init(void)
-{
-    this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);
-    this->access_pool = new ThreadPool<access_list>("access",
-                                                    config.access_threads);
-    this->access_pool->clean_on_pop = true;
-}
-
-void listen_socket::stop(void)
-{
-    this->send_pool->stop();
-    this->access_pool->stop();
-    this->sock.stop();
-}
-
-void *listen_socket::access_pool_worker(void *arg)
-{
-    listen_socket *ls = (listen_socket *)arg;
-    access_list req;
-
-    std::clog << "started access pool worker";
-    for (;;)
-    {
-        ls->access_pool->pop(&req);
-
-        ntoh_packet(&(req.buf), sizeof(packet));
-
-        if (req.buf.basic.type == TYPE_LOGREQ)
-            ls->login_user(req);
-        else if (req.buf.basic.type == TYPE_LGTREQ)
-            ls->logout_user(req);
-        /* Otherwise, we don't recognize it, and will ignore it */
-    }
-    std::clog << "access pool worker ending";
-    return NULL;
-}
-
-void listen_socket::login_user(access_list& p)
-{
-    uint64_t userid = 0LL;
-    std::string username(p.buf.log.username, sizeof(p.buf.log.username));
-    std::string password(p.buf.log.password, sizeof(p.buf.log.password));
-
-    userid = database->check_authentication(username, password);
-
-    /* Don't want to keep passwords around in core if we can help it */
-    memset(p.buf.log.password, 0, sizeof(p.buf.log.password));
-    password.clear();
-
-    std::clog << "login request from "
-              << p.buf.log.username << " (" << userid << ")" << std::endl;
-    if (userid != 0LL)
-    {
-        if (this->users.find(userid) == this->users.end())
-        {
-            Control *newcontrol = new Control(userid, NULL);
-            newcontrol->username = username;
-
-            /* Add this user to the userlist */
-            this->do_login(userid, newcontrol, p);
-            newcontrol->parent = (void *)(this->send_pool);
-
-            std::clog << "logged in user "
-                      << newcontrol->username
-                      << " (" << userid << ")" << std::endl;
-
-            /* Send an ack packet, to let the user know they're in */
-            newcontrol->send_ack(TYPE_LOGREQ);
-        }
-    }
-    /* Otherwise, do nothing, and send nothing */
-}
-
-void listen_socket::logout_user(access_list& p)
-{
-    std::map<uint64_t, base_user *>::iterator found;
-
-    /* Most of this function is now handled by the reaper threads */
-    if ((found = this->users.find(p.what.logout.who)) != this->users.end())
-    {
-        base_user *bu = found->second;
-        bu->pending_logout = true;
-        std::clog << "logout request from "
-                  << bu->control->username
-                  << " (" << bu->control->userid << ")" << std::endl;
-        bu->control->send_ack(TYPE_LGTREQ);
-    }
 }

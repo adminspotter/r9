@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Sep 2015, 11:59:19 tquirk
+ *   last updated 01 Nov 2015, 12:57:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -226,7 +226,7 @@ static void setup_sockets(void)
             continue;
         try
         {
-            stream_socket *sock = new stream_socket(ai, *i);
+            stream_socket *sock = new stream_socket(ai);
             sockets.push_back(sock);
         }
         catch (std::exception& e)
@@ -252,7 +252,7 @@ static void setup_sockets(void)
             continue;
         try
         {
-            dgram_socket *sock = new dgram_socket(ai, *i);
+            dgram_socket *sock = new dgram_socket(ai);
             sockets.push_back(sock);
         }
         catch (std::exception& e)

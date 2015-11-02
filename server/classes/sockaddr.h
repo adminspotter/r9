@@ -1,9 +1,9 @@
 /* sockaddr.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jun 2014, 17:31:45 tquirk
+ *   last updated 01 Nov 2015, 13:19:05 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,6 +33,10 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+#include <functional>
+#include <sstream>
+#include <stdexcept>
 
 class Sockaddr
 {
@@ -84,6 +88,11 @@ class Sockaddr
         }
 
     virtual char *ntop(void) = 0;
+    virtual uint16_t port(void) = 0;
+    virtual inline struct sockaddr *sockaddr(void)
+        {
+            return (struct sockaddr *)&(this->ss);
+        };
 };
 
 /* Since we can't use a Sockaddr directly in one of our map keys,
@@ -91,10 +100,10 @@ class Sockaddr
  * here.  We need a compare functor to deref the pointers for the
  * less-than comparison that's required by the map.
  */
-struct less_sockaddr : std::binary_function<const Sockaddr *,
-                                            const Sockaddr *,
-                                            bool>
+class less_sockaddr
+    : public std::function<bool(const Sockaddr *, const Sockaddr *)>
 {
+  public:
     bool operator()(const Sockaddr *a, const Sockaddr *b) const
         {
             return (*a < *b);
@@ -146,9 +155,9 @@ class Sockaddr_in : public Sockaddr
         };
     bool operator==(const struct sockaddr *s)
         {
-            const struct sockaddr_in& sin
-                = reinterpret_cast<const struct sockaddr_in&>(s);
-            return !memcmp(&(this->ss), &sin, sizeof(struct sockaddr_in));
+            const struct sockaddr_in *sin
+                = reinterpret_cast<const struct sockaddr_in *>(s);
+            return !memcmp(this->sin, sin, sizeof(struct sockaddr_in));
         };
 
     bool operator<(const Sockaddr& s) const
@@ -173,6 +182,16 @@ class Sockaddr_in : public Sockaddr
                       this->str, INET6_ADDRSTRLEN);
             return this->str;
         };
+
+    uint16_t port(void)
+        {
+            return ntohs(this->sin->sin_port);
+        };
+
+    struct sockaddr *sockaddr(void)
+        {
+            return (struct sockaddr *)this->sin;
+        };
 };
 
 /* A couple functions to be able to handle IPV6 addresses easily:
@@ -187,22 +206,7 @@ inline bool operator==(const struct in6_addr& a, const struct in6_addr& b)
 
 inline bool operator<(const struct in6_addr& a, const struct in6_addr& b)
 {
-    return (a.s6_addr[0] < b.s6_addr[0]
-            || a.s6_addr[1] < b.s6_addr[1]
-            || a.s6_addr[2] < b.s6_addr[2]
-            || a.s6_addr[3] < b.s6_addr[3]
-            || a.s6_addr[4] < b.s6_addr[4]
-            || a.s6_addr[5] < b.s6_addr[5]
-            || a.s6_addr[6] < b.s6_addr[6]
-            || a.s6_addr[7] < b.s6_addr[7]
-            || a.s6_addr[8] < b.s6_addr[8]
-            || a.s6_addr[9] < b.s6_addr[9]
-            || a.s6_addr[10] < b.s6_addr[10]
-            || a.s6_addr[11] < b.s6_addr[11]
-            || a.s6_addr[12] < b.s6_addr[12]
-            || a.s6_addr[13] < b.s6_addr[13]
-            || a.s6_addr[14] < b.s6_addr[14]
-            || a.s6_addr[15] < b.s6_addr[15]);
+    return (memcmp(&a, &b, sizeof(struct in6_addr)) < 0);
 }
 
 class Sockaddr_in6 : public Sockaddr
@@ -213,7 +217,7 @@ class Sockaddr_in6 : public Sockaddr
     Sockaddr_in6()
         {
             this->sin6 = (struct sockaddr_in6 *)&ss;
-            this->sin6->sin6_family = AF_INET;
+            this->sin6->sin6_family = AF_INET6;
             this->sin6->sin6_port = htons(0);
             this->sin6->sin6_flowinfo = htonl(0L);
             memcpy(&(this->sin6->sin6_addr.s6_addr),
@@ -252,7 +256,7 @@ class Sockaddr_in6 : public Sockaddr
         {
         };
 
-    bool operator==(const Sockaddr &s) const
+    bool operator==(const Sockaddr& s) const
         {
             const Sockaddr_in6 *si = dynamic_cast<const Sockaddr_in6 *>(&s);
             if (si == NULL)
@@ -282,6 +286,16 @@ class Sockaddr_in6 : public Sockaddr
                       this->str, INET6_ADDRSTRLEN);
             return this->str;
         };
+
+    uint16_t port(void)
+        {
+            return ntohs(this->sin6->sin6_port);
+        };
+
+    struct sockaddr *sockaddr(void)
+        {
+            return (struct sockaddr *)this->sin6;
+        };
 };
 
 inline Sockaddr *build_sockaddr(struct sockaddr& s)
@@ -301,7 +315,11 @@ inline Sockaddr *build_sockaddr(struct sockaddr& s)
       }
 
       default:
-        return NULL;
+      {
+          std::ostringstream st;
+          st << "invalid address family " << s.sa_family;
+          throw std::runtime_error(st.str());
+      }
     }
 }
 

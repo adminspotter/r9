@@ -963,3 +963,6 @@
 
 2015-09-07 - TAQ
 	client/cache.h - It turned out that we didn't have any real way to insert things into the cache.  Instead of throwing an exception on a missing element, we'll now follow the lead of the C++ unordered_map object, and return a default object reference out of the index operator method, suitable for assignment.
+
+2015-11-01 - TAQ
+	server/classes/basesock.h, server/classes/basesock.cc, server/classes/listensock.h, server/classes/listensock.cc - Split the listen_socket out into its own files, because it simplified testing quite a bit.
