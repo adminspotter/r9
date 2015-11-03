@@ -1,6 +1,6 @@
 /* basesock.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Nov 2015, 07:32:32 tquirk
+ *   last updated 03 Nov 2015, 07:46:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -53,6 +53,7 @@ class basesock
 
   protected:
     virtual void create_socket(struct addrinfo *);
+    virtual std::string get_port_string(void);
 
   public:
     basesock(struct addrinfo *);

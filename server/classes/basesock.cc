@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Nov 2015, 07:37:06 tquirk
+ *   last updated 03 Nov 2015, 08:11:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -71,16 +71,15 @@ void basesock::create_socket(struct addrinfo *ai)
     int do_uid = this->sa->port() <= 1024 && uid != 0;
     int opt = 1, ret;
     const std::string typestr
-        = (ai->ai_socktype == SOCK_DGRAM ? "dgram" : "stream");
+        = (ai->ai_socktype == SOCK_DGRAM ? "dgram " : "stream ");
 
     if ((this->sock = socket(ai->ai_family,
                              ai->ai_socktype,
                              ai->ai_protocol)) < 0)
     {
         std::ostringstream s;
-        s << "socket creation failed for " << typestr << " port "
-          << this->sa->port() << ": "
-          << strerror(errno) << " (" << errno << ")";
+        s << "socket creation failed for " << typestr << this->get_port_string()
+          << ": " << strerror(errno) << " (" << errno << ")";
         this->sock = 0;
         throw std::runtime_error(s.str());
     }
@@ -92,8 +91,8 @@ void basesock::create_socket(struct addrinfo *ai)
         if (getuid() != 0)
         {
             std::ostringstream s;
-            s << "can't open " << typestr << " port "
-              << this->sa->port() << " as non-root user";
+            s << "can't open " << typestr << this->get_port_string()
+              << " as non-root user";
             close(this->sock);
             this->sock = 0;
             throw std::runtime_error(s.str());
@@ -114,7 +113,7 @@ void basesock::create_socket(struct addrinfo *ai)
     if (ret < 0)
     {
         std::ostringstream s;
-        s << "bind failed for " << typestr << " port " << this->sa->port()
+        s << "bind failed for " << typestr << this->get_port_string()
           << ": " << strerror(errno) << " (" << errno << ")";
         close(this->sock);
         this->sock = 0;
@@ -126,18 +125,32 @@ void basesock::create_socket(struct addrinfo *ai)
         if (listen(this->sock, basesock::LISTEN_BACKLOG) < 0)
         {
             std::ostringstream s;
-            s << "listen failed for " << typestr << " port "
-              << this->sa->port() << ": "
-              << strerror(errno) << " (" << errno << ")";
+            s << "listen failed for " << typestr << this->get_port_string()
+              << ": " << strerror(errno) << " (" << errno << ")";
             close(this->sock);
             this->sock = 0;
             throw std::runtime_error(s.str());
         }
     }
 
-    std::clog << "created " << typestr << " socket "
-              << this->sock << " on port "
-              << this->sa->port() << std::endl;
+    std::clog << "created " << typestr << "socket "
+              << this->sock << " on " << this->get_port_string() << std::endl;
+}
+
+std::string basesock::get_port_string(void)
+{
+    std::ostringstream s;
+
+    /* Port isn't meaningful with a Sockaddr_un, so let's check if
+     * that's what we have.  ntop returns the path for a unix-domain
+     * sockaddr.
+     */
+    Sockaddr_un *sun = dynamic_cast<Sockaddr_un *>(this->sa);
+    if (sun != NULL)
+        s << sun->ntop();
+    else
+        s << "port " << this->sa->port();
+    return s.str();
 }
 
 void basesock::start(void *(*func)(void *))
@@ -149,7 +162,7 @@ void basesock::start(void *(*func)(void *))
         if (this->sock == 0)
         {
             std::ostringstream s;
-            s << "no socket available to listen for port " << this->sa->port()
+            s << "no socket available to listen for " << this->get_port_string()
               << ": " << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
             throw std::runtime_error(s.str());
         }
@@ -159,7 +172,7 @@ void basesock::start(void *(*func)(void *))
                                   this->listen_arg)) != 0)
         {
             std::ostringstream s;
-            s << "couldn't start listen thread for port " << this->sa->port()
+            s << "couldn't start listen thread for " << this->get_port_string()
               << ": " << strerror(ret) << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
@@ -176,7 +189,7 @@ void basesock::stop(void)
         if ((ret = pthread_cancel(this->listen_thread)) != 0)
         {
             std::ostringstream s;
-            s << "couldn't cancel listen thread for port " << this->sa->port()
+            s << "couldn't cancel listen thread for " << this->get_port_string()
               << ": " << strerror(ret) << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
@@ -184,7 +197,7 @@ void basesock::stop(void)
         if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
         {
             std::ostringstream s;
-            s << "couldn't join listen thread for port " << this->sa->port()
+            s << "couldn't join listen thread for " << this->get_port_string()
               << ": " << strerror(ret) << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }

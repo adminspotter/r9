@@ -1,6 +1,6 @@
 /* sockaddr.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 13:19:05 tquirk
+ *   last updated 02 Nov 2015, 18:42:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,6 +33,7 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/un.h>
 
 #include <functional>
 #include <sstream>
@@ -298,6 +299,89 @@ class Sockaddr_in6 : public Sockaddr
         };
 };
 
+class Sockaddr_un : public Sockaddr
+{
+  public:
+    struct sockaddr_un *sun;
+
+    Sockaddr_un()
+        {
+            this->sun = (struct sockaddr_un *)&ss;
+            this->sun->sun_family = AF_UNIX;
+            memset(this->sun->sun_path, 0, sizeof(this->sun->sun_path));
+        };
+    Sockaddr_un(const Sockaddr& s)
+        {
+            const Sockaddr_un& su = dynamic_cast<const Sockaddr_un&>(s);
+            this->sun = (struct sockaddr_un *)&ss;
+            this->sun->sun_family = su.sun->sun_family;
+            memcpy(this->sun->sun_path,
+                   su.sun->sun_path,
+                   sizeof(this->sun->sun_path));
+        };
+    Sockaddr_un(const struct sockaddr& s)
+        {
+            struct sockaddr_un *su = (struct sockaddr_un *)(&s);
+            this->sun = (struct sockaddr_un *)&ss;
+            this->sun->sun_family = su->sun_family;
+            memcpy(this->sun->sun_path,
+                   su->sun_path,
+                   sizeof(this->sun->sun_path));
+        };
+    ~Sockaddr_un()
+        {
+        };
+
+    bool operator==(const Sockaddr& s)
+        {
+            const Sockaddr_un *su = dynamic_cast<const Sockaddr_un *>(&s);
+            if (su == NULL)
+                return false;
+            return !memcmp(this->sun, su->sun, sizeof(struct sockaddr_un));
+        };
+
+    bool operator==(const struct sockaddr *s)
+        {
+            const struct sockaddr_un *su
+                = reinterpret_cast<const struct sockaddr_un *>(s);
+            return !memcmp(this->sun, sun, sizeof(struct sockaddr_un));
+        };
+
+    virtual bool operator<(const Sockaddr& s) const
+        {
+            const Sockaddr_un *su = dynamic_cast<const Sockaddr_un *>(&s);
+            if (su == NULL)
+                return false;
+            return (memcmp(this->sun->sun_path,
+                           su->sun->sun_path,
+                           sizeof(this->sun->sun_path)) < 0);
+        };
+
+    virtual bool operator<(const struct sockaddr& s) const
+        {
+            const struct sockaddr_un& su
+                = reinterpret_cast<const struct sockaddr_un&>(s);
+            return (memcmp(this->sun->sun_path,
+                           su.sun_path,
+                           sizeof(this->sun->sun_path)) < 0);
+        };
+
+    virtual char *ntop(void)
+        {
+            return this->sun->sun_path;
+        };
+
+    virtual uint16_t port(void)
+        {
+            return UINT16_MAX;
+        };
+
+    struct sockaddr *sockaddr(void)
+        {
+            return (struct sockaddr *)this->sun;
+        };
+};
+
 inline Sockaddr *build_sockaddr(struct sockaddr& s)
 {
     switch (s.sa_family)
@@ -312,6 +396,12 @@ inline Sockaddr *build_sockaddr(struct sockaddr& s)
       {
           Sockaddr_in6 *sin6 = new Sockaddr_in6(s);
           return dynamic_cast<Sockaddr *>(sin6);
+      }
+
+      case AF_UNIX:
+      {
+          Sockaddr_un *sun = new Sockaddr_un(s);
+          return dynamic_cast<Sockaddr *>(sun);
       }
 
       default:
