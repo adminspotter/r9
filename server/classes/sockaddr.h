@@ -1,6 +1,6 @@
 /* sockaddr.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Nov 2015, 18:42:11 tquirk
+ *   last updated 03 Nov 2015, 17:54:33 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -338,13 +338,6 @@ class Sockaddr_un : public Sockaddr
             if (su == NULL)
                 return false;
             return !memcmp(this->sun, su->sun, sizeof(struct sockaddr_un));
-        };
-
-    bool operator==(const struct sockaddr *s)
-        {
-            const struct sockaddr_un *su
-                = reinterpret_cast<const struct sockaddr_un *>(s);
-            return !memcmp(this->sun, sun, sizeof(struct sockaddr_un));
         };
 
     virtual bool operator<(const Sockaddr& s) const
