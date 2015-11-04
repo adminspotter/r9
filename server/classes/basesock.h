@@ -1,6 +1,6 @@
 /* basesock.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Nov 2015, 18:46:53 tquirk
+ *   last updated 04 Nov 2015, 06:48:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -41,7 +41,6 @@
 #include <cstdint>
 
 #include "sockaddr.h"
-#include "control.h"
 
 class basesock
 {

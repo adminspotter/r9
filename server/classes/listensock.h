@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Nov 2015, 18:47:04 tquirk
+ *   last updated 04 Nov 2015, 06:49:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -34,6 +34,7 @@
 #include <map>
 
 #include "basesock.h"
+#include "control.h"
 #include "thread_pool.h"
 #include "defs.h"
 

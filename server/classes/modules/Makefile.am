@@ -21,8 +21,7 @@ CLEANFILES = perlxsi.c
 perlxsi.c: Makefile
 	perl -MExtUtils::Embed -e xsinit -- -o perlxsi.c
 
-libr9_console_la_SOURCES = console.cc unix_console.cc inet_console.cc \
-	console.h
+libr9_console_la_SOURCES = console.cc console.h ../basesock.cc ../basesock.h
 libr9_console_la_CXXFLAGS = $(GXX_EXT_CXXFLAGS)
 
 libr9_MySQL_la_SOURCES = db.cc mysql.cc db.h

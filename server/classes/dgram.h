@@ -1,6 +1,6 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:52:31 tquirk
+ *   last updated 04 Nov 2015, 08:23:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,10 +33,26 @@
 
 #include <cstdint>
 #include <map>
+#include <functional>
 
 #include "control.h"
 #include "listensock.h"
 #include "sockaddr.h"
+
+/* Since we can't use a Sockaddr directly in one of our map keys,
+ * we'll need to use pointers to them, to leverage the polymorphism
+ * here.  We need a compare functor to deref the pointers for the
+ * less-than comparison that's required by the map.
+ */
+class less_sockaddr
+    : public std::function<bool(const Sockaddr *, const Sockaddr *)>
+{
+  public:
+    bool operator()(const Sockaddr *a, const Sockaddr *b) const
+        {
+            return (*a < *b);
+        }
+};
 
 class dgram_user : public base_user
 {
