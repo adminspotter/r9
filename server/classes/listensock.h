@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:52:03 tquirk
+ *   last updated 03 Nov 2015, 18:47:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,6 +36,28 @@
 #include "basesock.h"
 #include "thread_pool.h"
 #include "defs.h"
+
+/* For use in the socket types which use the basesock */
+
+class base_user {
+  public:
+    uint64_t userid;
+    Control *control;
+    time_t timestamp;
+    bool pending_logout;
+
+    base_user(uint64_t, Control *);
+    virtual ~base_user();
+
+  protected:
+    void init(uint64_t, Control *);
+
+  public:
+    virtual bool operator<(const base_user&) const;
+    virtual bool operator==(const base_user&) const;
+
+    virtual const base_user& operator=(const base_user&);
+};
 
 class listen_socket {
   public:

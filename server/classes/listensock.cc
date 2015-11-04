@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:51:45 tquirk
+ *   last updated 03 Nov 2015, 18:50:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,6 +36,42 @@
 #include "../server.h"
 #include "../config_data.h"
 #include "../log.h"
+
+base_user::base_user(uint64_t u, Control *c)
+{
+    this->init(u, c);
+}
+
+base_user::~base_user()
+{
+}
+
+void base_user::init(uint64_t u, Control *c)
+{
+    this->userid = u;
+    this->control = c;
+    this->timestamp = time(NULL);
+    this->pending_logout = false;
+}
+
+bool base_user::operator<(const base_user& u) const
+{
+    return (this->userid < u.userid);
+}
+
+bool base_user::operator==(const base_user& u) const
+{
+    return (this->userid == u.userid);
+}
+
+const base_user& base_user::operator=(const base_user& u)
+{
+    this->userid = u.userid;
+    this->control = u.control;
+    this->timestamp = u.timestamp;
+    this->pending_logout = u.pending_logout;
+    return *this;
+}
 
 listen_socket::listen_socket(struct addrinfo *ai)
     : users(), sock(ai)
