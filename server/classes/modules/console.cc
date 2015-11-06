@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Nov 2015, 08:19:36 tquirk
+ *   last updated 06 Nov 2015, 14:30:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -28,6 +28,8 @@
  *
  */
 
+#include <config.h>
+
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -35,9 +37,14 @@
 
 #include <sstream>
 #include <stdexcept>
-#include <ext/stdio_filebuf.h>
 
 #include "console.h"
+#include "fdstreambuf.h"
+
+#if HAVE_LIBWRAP
+#include <tcpd.h>
+#include "../../config_data.h"
+#endif /* HAVE_LIBWRAP */
 
 pthread_mutex_t ConsoleSession::dispatch_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -46,10 +53,8 @@ ConsoleSession::ConsoleSession(int sock)
     int ret;
 
     this->sock = sock;
-    __gnu_cxx::stdio_filebuf<char> inbuf(sock, std::ios::in);
-    this->in = new std::istream(&inbuf);
-    __gnu_cxx::stdio_filebuf<char> outbuf(sock, std::ios::out);
-    this->out = new std::ostream(&outbuf);
+    this->in = new std::istream(new fdibuf(sock));
+    this->out = new std::ostream(new fdobuf(sock));
 
     if ((ret = pthread_create(&(this->thread_id), NULL,
                               ConsoleSession::session_listener,
@@ -119,7 +124,9 @@ void ConsoleSession::cleanup(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;
 
+    delete sess->in->rdbuf();
     delete sess->in;
+    delete sess->out->rdbuf();
     delete sess->out;
     if (sess->sock)
     {
@@ -195,11 +202,11 @@ void *Console::console_listener(void *arg)
 
 int Console::wrap_request(Sockaddr *sa)
 {
-#ifdef HAVE_LIBWRAP
-    return hosts_ctl(config.log_prefix.c_str(),
-                     sa->hostname(),
-                     sa->ntop(),
-                     NULL);
+#if HAVE_LIBWRAP
+    return hosts_ctl((char *)config.log_prefix.c_str(),
+                     (char *)sa->hostname(),
+                     (char *)sa->ntop(),
+                     STRING_UNKNOWN);
 #else
     return 1;
 #endif

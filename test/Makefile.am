@@ -5,7 +5,7 @@ SUBDIRS = $(GMOCK_DIR)
 GTEST_LIBS = $(GMOCK_DIR)/gtest/lib/libgtest.la
 GMOCK_LIBS = $(GMOCK_DIR)/lib/libgmock.la $(GTEST_LIBS)
 
-TC = t_basesock t_library t_log t_sockaddr t_subserver t_threadpool
+TC = t_basesock t_console t_library t_log t_sockaddr t_subserver t_threadpool
 if WANT_PERL
   TC += t_perl
 endif
@@ -29,6 +29,23 @@ libtest_la_LDFLAGS = -module -rpath /nowhere
 t_basesock_SOURCES = t_basesock.cc tap.h tap_main.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h
 t_basesock_LDADD = $(GTEST_LIBS)
+
+CONFIG_DEFS =
+CONSOLE_EXTRAS =
+if HAVE_LIBWRAP
+  CONFIG_DEFS += -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\" \
+	-DHAVE_LIBWRAP=1
+  CONSOLE_EXTRAS += ../server/config_data.cc ../server/config_data.h
+endif
+
+t_console_SOURCES = t_console.cc tap.h tap_main.cc \
+	../server/classes/modules/console.h \
+	../server/classes/modules/console.cc \
+	../server/classes/basesock.cc ../server/classes/basesock.h \
+	$(CONSOLE_EXTRAS)
+t_console_CXXFLAGS =  $(CONFIG_DEFS) \
+	-I$(GMOCK_DIR)/gtest/include -I$(GMOCK_DIR)/include
+t_console_LDADD = $(GTEST_LIBS)
 
 t_library_SOURCES = t_library.cc tap.h tap_main.cc \
 	../server/classes/library.cc ../server/classes/library.h
