@@ -45,7 +45,7 @@ t_console_SOURCES = t_console.cc tap.h tap_main.cc \
 	$(CONSOLE_EXTRAS)
 t_console_CXXFLAGS =  $(CONFIG_DEFS) \
 	-I$(GMOCK_DIR)/gtest/include -I$(GMOCK_DIR)/include
-t_console_LDADD = $(GTEST_LIBS)
+t_console_LDADD = $(GTEST_LIBS) $(WRAP_LDLIBS)
 
 t_library_SOURCES = t_library.cc tap.h tap_main.cc \
 	../server/classes/library.cc ../server/classes/library.h

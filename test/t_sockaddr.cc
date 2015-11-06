@@ -13,9 +13,11 @@
 
 /* Mock out getnameinfo for the hostname tests */
 /* ARGSUSED */
-int getnameinfo(const struct sockaddr *sa, socklen_t salen,
-                char *host, socklen_t hostlen,
-                char *serv, socklen_t servlen, int flags)
+extern "C" int getnameinfo(const struct sockaddr *__restrict sa,
+                           socklen_t salen,
+                           char *__restrict host, socklen_t hostlen,
+                           char *__restrict serv, socklen_t servlen,
+                           unsigned int flags)
 {
     strcpy(host, HOST_NAME);
     return 0;
@@ -167,7 +169,7 @@ TEST(SockaddrInTest, Hostname)
 
     Sockaddr_in *sa = new Sockaddr_in((const struct sockaddr&)sin);
 
-    ASSERT_STREQ(sa->hostname(), HOST_NAME);
+    ASSERT_FALSE(strcmp(sa->hostname(), HOST_NAME));
 
     delete sa;
 }
@@ -379,7 +381,7 @@ TEST(SockaddrIn6Test, Hostname)
 
     Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
 
-    ASSERT_STREQ(sa->hostname(), HOST_NAME);
+    ASSERT_FALSE(strcmp(sa->hostname(), HOST_NAME));
 
     delete sa;
 }

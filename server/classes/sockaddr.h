@@ -1,6 +1,6 @@
 /* sockaddr.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Nov 2015, 11:14:35 tquirk
+ *   last updated 06 Nov 2015, 16:28:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -159,15 +159,15 @@ class Sockaddr_in : public Sockaddr
             const Sockaddr_in *si = dynamic_cast<const Sockaddr_in *>(&s);
             if (si == NULL)
                 return false;
-            return (this->sin->sin_addr.s_addr < si->sin->sin_addr.s_addr
-                    || this->sin->sin_port < si->sin->sin_port);
+            return (ntohl(this->sin->sin_addr.s_addr) < ntohl(si->sin->sin_addr.s_addr)
+                    || ntohs(this->sin->sin_port) < ntohs(si->sin->sin_port));
         };
     bool operator<(const struct sockaddr& s) const
         {
             const struct sockaddr_in& sin
                 = reinterpret_cast<const struct sockaddr_in&>(s);
-            return (this->sin->sin_addr.s_addr < sin.sin_addr.s_addr
-                    || this->sin->sin_port < sin.sin_port);
+            return (ntohl(this->sin->sin_addr.s_addr) < ntohl(sin.sin_addr.s_addr)
+                    || ntohs(this->sin->sin_port) < ntohs(sin.sin_port));
         };
 
     const char *ntop(void)

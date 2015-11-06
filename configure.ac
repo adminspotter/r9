@@ -355,13 +355,18 @@ AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
 AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" == "xyes"])
 
 # We can use libwrap in the server console, if it's available
+WRAP_LIBS_SAVE="$LIBS"
+LIBS=""
 AC_CHECK_HEADERS([tcpd.h], [have_libwrap="yes"])
 AC_SEARCH_LIBS([hosts_ctl], [wrap], [have_libwrap="yes"])
 AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
 if test "x$have_libwrap" == "xyes"
 then
   AC_DEFINE(HAVE_LIBWRAP, [1], [Enable libwrap support])
+  WRAP_LDLIBS="$LIBS"
+  AC_SUBST(WRAP_LDLIBS)
 fi
+LIBS="$WRAP_LIBS_SAVE"
 
 # MySQL server module
 if test "$with_mysql" == "yes"
