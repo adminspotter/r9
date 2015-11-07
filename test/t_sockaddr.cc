@@ -1,5 +1,7 @@
 #include "../server/classes/sockaddr.h"
 
+#include <config.h>
+
 #include <iostream>
 #include <typeinfo>
 
@@ -13,11 +15,11 @@
 
 /* Mock out getnameinfo for the hostname tests */
 /* ARGSUSED */
-extern "C" int getnameinfo(const struct sockaddr *__restrict sa,
+extern "C" int getnameinfo(const struct sockaddr * __restrict sa,
                            socklen_t salen,
-                           char *__restrict host, socklen_t hostlen,
-                           char *__restrict serv, socklen_t servlen,
-                           unsigned int flags)
+                           char * __restrict host, socklen_t hostlen,
+                           char * __restrict serv, socklen_t servlen,
+                           GETNAMEINFO_FLAGS_TYPE flags)
 {
     strcpy(host, HOST_NAME);
     return 0;

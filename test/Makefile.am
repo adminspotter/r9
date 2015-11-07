@@ -19,7 +19,11 @@ endif
 TESTS = $(TC)
 
 check_PROGRAMS = $(TC)
-check_LTLIBRARIES = libtest.la
+lib_LTLIBRARIES = libtest.la
+
+install-exec-local:
+	@echo "Nothing to install"
+	exit
 
 AM_CXXFLAGS = -I$(GMOCK_DIR)/gtest/include -I$(GMOCK_DIR)/include
 
@@ -43,7 +47,7 @@ t_console_SOURCES = t_console.cc tap.h tap_main.cc \
 	../server/classes/modules/console.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
 	$(CONSOLE_EXTRAS)
-t_console_CXXFLAGS =  $(CONFIG_DEFS) \
+t_console_CXXFLAGS = $(CONFIG_DEFS) \
 	-I$(GMOCK_DIR)/gtest/include -I$(GMOCK_DIR)/include
 t_console_LDADD = $(GTEST_LIBS) $(WRAP_LDLIBS)
 

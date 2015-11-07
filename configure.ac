@@ -472,6 +472,47 @@ AC_FUNC_FORK
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday htonll memset mkdir ntohll select socket strdup strerror strtoull])
 
+# One of the mocks in our test suite needs a possibly-different
+# prototype, depending on the system we're building on.
+AC_MSG_CHECKING([prototype of getnameinfo])
+GETNAMEINFO_CXXFLAGS_SAVE="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS -Wall"
+AC_COMPILE_IFELSE(
+    [
+        AC_LANG_PROGRAM(
+            [
+#include <string.h>
+#include <netdb.h>
+
+struct sockaddr_in a;
+socklen_t b = sizeof(struct sockaddr_in), d, f;
+char *c = "hello", *e = "goodbye";
+unsigned int g = UINT_MAX;
+            ],
+            [
+  int ret;
+
+  d = strlen(c);
+  f = strlen(e);
+  ret = getnameinfo((const struct sockaddr *)&a, b, c, d, e, f, g);
+            ])
+    ],
+    [
+        AC_MSG_RESULT([unsigned flags])
+        AC_DEFINE(
+            [GETNAMEINFO_FLAGS_TYPE],
+            [unsigned int],
+            [Define to the type of getnameinfo's flags argument])
+    ],
+    [
+        AC_MSG_RESULT([int flags])
+        AC_DEFINE(
+            [GETNAMEINFO_FLAGS_TYPE],
+            [int],
+            [Define to the type of getnameinfo's flags argument])
+    ])
+CXXFLAGS="$GETNAMEINFO_CXXFLAGS_SAVE"
+
 AC_CONFIG_FILES([Makefile
                  client/Makefile
                  client/motif/Makefile
