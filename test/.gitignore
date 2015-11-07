@@ -3,6 +3,7 @@
 *.trs
 
 t_basesock
+t_console
 t_library
 t_log
 t_sockaddr

@@ -52,24 +52,6 @@ assert(f.code().value() == 5);
     [AC_MSG_RESULT([no])])
 
 
-# Find the compiled-in g++ extension include dir
-if test "x$CXX" == "xg++"
-then
-  AC_MSG_CHECKING([g++ extension include directory])
-  ax_gxx_include_dir=$(g++ --version 2>&1 | sed -ne '/Configured with/{s/^.*with-gxx-include-dir=//;s/ .*//;p;}')
-  if test -s "$ax_gxx_include_dir"
-  then
-    GXX_EXT_CXXFLAGS="-I$ax_gxx_include_dir"
-    AC_MSG_RESULT([$ax_gxx_include_dir])
-    AC_SUBST(GXX_EXT_CXXFLAGS)
-  else
-    AC_MSG_RESULT([none found])
-  fi
-else
-  AC_MSG_NOTICE([g++ not configured, skipping extension test])
-fi
-
-
 # Arguments
 AC_ARG_ENABLE([editres],
               AS_HELP_STRING([--enable-editres], [Enable Editres support]),
@@ -372,6 +354,20 @@ AM_CONDITIONAL([WANT_BUNDLED_LIBGLW], [test "x$use_bundled_libGLw" == "xyes"])
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
 AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" == "xyes"])
 
+# We can use libwrap in the server console, if it's available
+WRAP_LIBS_SAVE="$LIBS"
+LIBS=""
+AC_CHECK_HEADERS([tcpd.h], [have_libwrap="yes"])
+AC_SEARCH_LIBS([hosts_ctl], [wrap], [have_libwrap="yes"])
+AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
+if test "x$have_libwrap" == "xyes"
+then
+  AC_DEFINE(HAVE_LIBWRAP, [1], [Enable libwrap support])
+  WRAP_LDLIBS="$LIBS"
+  AC_SUBST(WRAP_LDLIBS)
+fi
+LIBS="$WRAP_LIBS_SAVE"
+
 # MySQL server module
 if test "$with_mysql" == "yes"
 then
@@ -456,7 +452,7 @@ CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
 AC_CONFIG_SUBDIRS([test/gmock-1.7.0])
 
 # Checks for header files.
-AC_CHECK_HEADERS([arpa/inet.h byteswap.h endian.h execinfo.h ext/stdio_filebuf.h fcntl.h grp.h limits.h netdb.h netinet/in.h pwd.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h byteswap.h endian.h execinfo.h fcntl.h grp.h limits.h netdb.h netinet/in.h pwd.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -475,6 +471,47 @@ AC_TYPE_UINT64_T
 AC_FUNC_FORK
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday htonll memset mkdir ntohll select socket strdup strerror strtoull])
+
+# One of the mocks in our test suite needs a possibly-different
+# prototype, depending on the system we're building on.
+AC_MSG_CHECKING([prototype of getnameinfo])
+GETNAMEINFO_CXXFLAGS_SAVE="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS -Wall"
+AC_COMPILE_IFELSE(
+    [
+        AC_LANG_PROGRAM(
+            [
+#include <string.h>
+#include <netdb.h>
+
+struct sockaddr_in a;
+socklen_t b = sizeof(struct sockaddr_in), d, f;
+char *c = "hello", *e = "goodbye";
+unsigned int g = UINT_MAX;
+            ],
+            [
+  int ret;
+
+  d = strlen(c);
+  f = strlen(e);
+  ret = getnameinfo((const struct sockaddr *)&a, b, c, d, e, f, g);
+            ])
+    ],
+    [
+        AC_MSG_RESULT([unsigned flags])
+        AC_DEFINE(
+            [GETNAMEINFO_FLAGS_TYPE],
+            [unsigned int],
+            [Define to the type of getnameinfo's flags argument])
+    ],
+    [
+        AC_MSG_RESULT([int flags])
+        AC_DEFINE(
+            [GETNAMEINFO_FLAGS_TYPE],
+            [int],
+            [Define to the type of getnameinfo's flags argument])
+    ])
+CXXFLAGS="$GETNAMEINFO_CXXFLAGS_SAVE"
 
 AC_CONFIG_FILES([Makefile
                  client/Makefile

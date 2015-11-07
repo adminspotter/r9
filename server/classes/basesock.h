@@ -1,6 +1,6 @@
 /* basesock.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Nov 2015, 07:32:32 tquirk
+ *   last updated 04 Nov 2015, 06:48:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -22,6 +22,12 @@
  *
  * This file contains a base socket type.
  *
+ * To create a unix-domain basesock will require a little hackery:
+ * create an addrinfo struct in the typical way (probably use
+ * localhost as the base address) and reset the ai_addr pointer in the
+ * struct to point to a struct sockaddr_un.  Based on the way we grab
+ * the arguments, it should work fine.
+ *
  * Things to do
  *
  */
@@ -35,7 +41,6 @@
 #include <cstdint>
 
 #include "sockaddr.h"
-#include "control.h"
 
 class basesock
 {
@@ -53,6 +58,7 @@ class basesock
 
   protected:
     virtual void create_socket(struct addrinfo *);
+    virtual std::string get_port_string(void);
 
   public:
     basesock(struct addrinfo *);
@@ -60,28 +66,6 @@ class basesock
 
     void start(void *(*)(void *));
     void stop(void);
-};
-
-/* For use in the socket types which use the basesock */
-
-class base_user {
-  public:
-    uint64_t userid;
-    Control *control;
-    time_t timestamp;
-    bool pending_logout;
-
-    base_user(uint64_t, Control *);
-    virtual ~base_user();
-
-  protected:
-    void init(uint64_t, Control *);
-
-  public:
-    virtual bool operator<(const base_user&) const;
-    virtual bool operator==(const base_user&) const;
-
-    virtual const base_user& operator=(const base_user&);
 };
 
 #endif /* __INC_BASESOCK_H__ */

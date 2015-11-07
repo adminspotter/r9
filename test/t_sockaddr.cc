@@ -1,5 +1,7 @@
 #include "../server/classes/sockaddr.h"
 
+#include <config.h>
+
 #include <iostream>
 #include <typeinfo>
 
@@ -8,6 +10,20 @@
 /* Test addresses */
 #define v4_ADDRESS  "192.168.252.16"
 #define v6_ADDRESS  "fd4b:5fd9:9623:5617:dead:beef:abcd:1234"
+
+#define HOST_NAME   "some.host.name.com"
+
+/* Mock out getnameinfo for the hostname tests */
+/* ARGSUSED */
+extern "C" int getnameinfo(const struct sockaddr * __restrict sa,
+                           socklen_t salen,
+                           char * __restrict host, socklen_t hostlen,
+                           char * __restrict serv, socklen_t servlen,
+                           GETNAMEINFO_FLAGS_TYPE flags)
+{
+    strcpy(host, HOST_NAME);
+    return 0;
+}
 
 /* We can't instantiate a Sockaddr object directly, since there are
  * pure-virtual functions, so we'll test the specific _in and _in6
@@ -43,6 +59,7 @@ TEST(SockaddrInTest, CopyConstructor)
     ASSERT_EQ(sa2->sin->sin_port, htons(1234));
     ASSERT_EQ(sa2->sin->sin_addr.s_addr, ip_addr);
 
+    delete sa2;
     delete sa;
 }
 
@@ -140,6 +157,25 @@ TEST(SockaddrInTest, Ntop)
     delete sa;
 }
 
+TEST(SockaddrInTest, Hostname)
+{
+    uint32_t ip_addr;
+    int ret = inet_pton(AF_INET, v4_ADDRESS, &ip_addr);
+    ASSERT_EQ(ret, 1);
+
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(1234);
+    sin.sin_addr.s_addr = ip_addr;
+
+    Sockaddr_in *sa = new Sockaddr_in((const struct sockaddr&)sin);
+
+    ASSERT_FALSE(strcmp(sa->hostname(), HOST_NAME));
+
+    delete sa;
+}
+
 TEST(SockaddrInTest, Port)
 {
     uint32_t ip_addr;
@@ -189,7 +225,7 @@ TEST(SockaddrInTest, Factory)
     int ret = inet_pton(AF_INET, v4_ADDRESS, &sin.sin_addr);
     ASSERT_EQ(ret, 1);
 
-    Sockaddr *sa = build_sockaddr((struct sockaddr& )sin);
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sin);
     Sockaddr_in *sa_in = new Sockaddr_in;
 
     ASSERT_EQ(typeid(*sa), typeid(*sa_in));
@@ -332,6 +368,26 @@ TEST(SockaddrIn6Test, Ntop)
     delete sa;
 }
 
+TEST(SockaddrIn6Test, Hostname)
+{
+    struct in6_addr ip_addr;
+    int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
+    ASSERT_EQ(ret, 1);
+
+    struct sockaddr_in6 sin;
+    sin.sin6_family = AF_INET6;
+    sin.sin6_port = htons(1234);
+    sin.sin6_flowinfo = htonl(0L);
+    sin.sin6_scope_id = htonl(0L);
+    memcpy(&sin.sin6_addr, &ip_addr, sizeof(struct in6_addr));
+
+    Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
+
+    ASSERT_FALSE(strcmp(sa->hostname(), HOST_NAME));
+
+    delete sa;
+}
+
 TEST(SockaddrIn6Test, Port)
 {
     struct in6_addr ip_addr;
@@ -391,5 +447,181 @@ TEST(SockaddrIn6Test, Factory)
     ASSERT_EQ(typeid(*sa), typeid(*sa_in6));
 
     delete sa_in6;
+    delete sa;
+}
+
+TEST(SockaddrUnTest, BlankConstructor)
+{
+    Sockaddr_un *su = new Sockaddr_un;
+
+    ASSERT_EQ(su->sun->sun_family, AF_UNIX);
+    ASSERT_STREQ(su->sun->sun_path, "");
+
+    delete su;
+}
+
+TEST(SockaddrUnTest, CopyConstructor)
+{
+    char path[] = "/this/is/a/path";
+
+    Sockaddr_un *su = new Sockaddr_un;
+
+    strcpy(su->sun->sun_path, path);
+
+    Sockaddr_un *su2 = new Sockaddr_un(*su);
+
+    ASSERT_EQ(su2->sun->sun_family, AF_UNIX);
+    ASSERT_STREQ(su2->sun->sun_path, path);
+
+    delete su2;
+    delete su;
+}
+
+TEST(SockaddrUnTest, StructConstructor)
+{
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
+
+    ASSERT_EQ(su->sun->sun_family, AF_UNIX);
+    ASSERT_STREQ(su->sun->sun_path, path);
+
+    delete su;
+}
+
+TEST(SockaddrUnTest, EqualComparison)
+{
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr_un *su1 = new Sockaddr_un((const struct sockaddr&)sun);
+    Sockaddr_un *su2 = new Sockaddr_un((const struct sockaddr&)sun);
+
+    ASSERT_TRUE(*su1 == *su2);
+
+    su2->sun->sun_path[2] = 'q';
+
+    ASSERT_FALSE(*su1 == *su2);
+
+    delete su2;
+    delete su1;
+}
+
+TEST(SockaddrUnTest, LessComparison)
+{
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr_un *su1 = new Sockaddr_un((const struct sockaddr&)sun);
+    Sockaddr_un *su2 = new Sockaddr_un((const struct sockaddr&)sun);
+
+    ASSERT_FALSE(*su1 < *su2);
+
+    su2->sun->sun_path[2] = 'q';
+
+    ASSERT_TRUE(*su1 < *su2);
+
+    su2->sun->sun_path[2] = 'a';
+
+    ASSERT_FALSE(*su1 < (const struct sockaddr&)sun);
+    ASSERT_TRUE(*su2 < (const struct sockaddr&)sun);
+
+    delete su2;
+    delete su1;
+}
+
+TEST(SockaddrUnTest, Ntop)
+{
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
+
+    ASSERT_STREQ(su->ntop(), path);
+
+    delete su;
+}
+
+TEST(SockaddrUnTest, Hostname)
+{
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
+
+    ASSERT_STREQ(su->hostname(), "localhost");
+
+    delete su;
+}
+
+TEST(SockaddrUnTest, Port)
+{
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
+
+    ASSERT_EQ(su->port(), UINT16_MAX);
+
+    delete su;
+}
+
+TEST(SockaddrUnTest, Sockaddr)
+{
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
+
+    struct sockaddr_un *saddr = (struct sockaddr_un *)su->sockaddr();
+    ASSERT_EQ(saddr->sun_family, AF_UNIX);
+    ASSERT_STREQ(saddr->sun_path, path);
+
+    delete su;
+}
+
+TEST(SockaddrUnTest, Factory)
+{
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sun);
+    Sockaddr_un *su = new Sockaddr_un;
+
+    ASSERT_EQ(typeid(*sa), typeid(*su));
+
+    delete su;
     delete sa;
 }

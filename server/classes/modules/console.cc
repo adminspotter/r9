@@ -1,9 +1,9 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2014, 14:25:26 trinityquirk
+ *   last updated 06 Nov 2015, 14:30:26 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,6 +28,8 @@
  *
  */
 
+#include <config.h>
+
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -35,9 +37,14 @@
 
 #include <sstream>
 #include <stdexcept>
-#include <ext/stdio_filebuf.h>
 
 #include "console.h"
+#include "fdstreambuf.h"
+
+#if HAVE_LIBWRAP
+#include <tcpd.h>
+#include "../../config_data.h"
+#endif /* HAVE_LIBWRAP */
 
 pthread_mutex_t ConsoleSession::dispatch_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -46,13 +53,11 @@ ConsoleSession::ConsoleSession(int sock)
     int ret;
 
     this->sock = sock;
-    __gnu_cxx::stdio_filebuf<char> inbuf(sock, std::ios::in);
-    this->in = new std::istream(&inbuf);
-    __gnu_cxx::stdio_filebuf<char> outbuf(sock, std::ios::out);
-    this->out = new std::ostream(&outbuf);
+    this->in = new std::istream(new fdibuf(sock));
+    this->out = new std::ostream(new fdobuf(sock));
 
     if ((ret = pthread_create(&(this->thread_id), NULL,
-                              ConsoleSession::start,
+                              ConsoleSession::session_listener,
                               (void *)this)) != 0)
     {
         std::ostringstream s;
@@ -77,7 +82,7 @@ void ConsoleSession::drop_lock(void)
     pthread_mutex_unlock(&ConsoleSession::dispatch_lock);
 }
 
-void *ConsoleSession::start(void *arg)
+void *ConsoleSession::session_listener(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;
     int done = 0, old_cancel_type;
@@ -119,7 +124,9 @@ void ConsoleSession::cleanup(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;
 
+    delete sess->in->rdbuf();
     delete sess->in;
+    delete sess->out->rdbuf();
     delete sess->out;
     if (sess->sock)
     {
@@ -140,58 +147,67 @@ std::string ConsoleSession::get_line(void)
     return str;
 }
 
+Console::Console(struct addrinfo *ai)
+    : basesock(ai), sessions()
+{
+}
+
 Console::~Console()
 {
-    try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
-    if (this->console_sock)
-    {
-        close(this->console_sock);
-    }
+    std::vector<ConsoleSession *>::iterator i;
+
+    for (i = this->sessions.begin(); i != this->sessions.end(); ++i)
+        delete *i;
+    this->sessions.erase(this->sessions.begin(), this->sessions.end());
 }
 
-void Console::start(void *(*func)(void *))
+void *Console::console_listener(void *arg)
 {
-    int ret;
+    Console *con = (Console *)arg;
+    int newsock;
+    struct sockaddr_storage ss;
+    socklen_t ss_len = sizeof(ss);
+    Sockaddr *sa;
+    ConsoleSession *sess = NULL;
 
-    if (this->console_sock == 0)
+    while ((newsock = accept(con->sock,
+                             reinterpret_cast<struct sockaddr *>(&ss),
+                             &ss_len)) != -1)
     {
-        std::ostringstream s;
-        s << "no socket available to listen";
-        throw std::runtime_error(s.str());
+        try
+        {
+            sa = NULL;
+            sa = build_sockaddr((struct sockaddr&)ss);
+
+            if (con->wrap_request(sa))
+            {
+                sess = new ConsoleSession(newsock);
+                con->sessions.push_back(sess);
+            }
+            else
+                close(newsock);
+        }
+        catch (std::exception& e)
+        {
+            close(newsock);
+            continue;
+        }
+        if (sa != NULL)
+            delete sa;
+        ss_len = sizeof(ss);
     }
-    if ((ret = pthread_create(&(this->listen_thread),
-                              NULL,
-                              func,
-                              (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't start listen thread: "
-          << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
-    }
+    pthread_exit(NULL);
+    return NULL;
 }
 
-void Console::stop(void)
+int Console::wrap_request(Sockaddr *sa)
 {
-    int ret;
-
-    if ((ret = pthread_cancel(this->listen_thread)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't terminate console thread: "
-          << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
-    }
-    close(this->console_sock);
-    this->console_sock = 0;
-    while (sessions.size())
-    {
-        ConsoleSession *sess = sessions.back();
-        pthread_cancel(sess->thread_id);
-        sleep(0);
-        pthread_join(sess->thread_id, NULL);
-        delete sess;
-        sessions.pop_back();
-    }
+#if HAVE_LIBWRAP
+    return hosts_ctl((char *)config.log_prefix.c_str(),
+                     (char *)sa->hostname(),
+                     (char *)sa->ntop(),
+                     STRING_UNKNOWN);
+#else
+    return 1;
+#endif
 }

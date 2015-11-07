@@ -1,6 +1,6 @@
 /* console.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:14:02 tquirk
+ *   last updated 04 Nov 2015, 07:59:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -38,15 +38,13 @@
 #ifndef __INC_CONSOLE_H__
 #define __INC_CONSOLE_H__
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
 #include <pthread.h>
 
 #include <vector>
 #include <string>
 #include <iostream>
+
+#include "../basesock.h"
 
 /* Each accepted session on a console socket will create a new thread
  * which is handled by a ConsoleSession.  The function calls are
@@ -65,7 +63,7 @@ class ConsoleSession
     ConsoleSession(int);
     ~ConsoleSession();
 
-    static void *start(void *);
+    static void *session_listener(void *);
 
   protected:
     void get_lock(void);
@@ -77,54 +75,18 @@ class ConsoleSession
     std::string get_line(void);
 };
 
-class Console
+class Console : public basesock
 {
-  private:
-    pthread_t listen_thread;
-
   protected:
-    int console_sock;
     std::vector<ConsoleSession *> sessions;
 
   public:
+    Console(struct addrinfo *);
     virtual ~Console();
 
-    /* Both can throw int */
-    void start(void *(*)(void *));
-    void stop(void);
-};
+    int wrap_request(Sockaddr *);
 
-class UnixConsole : public Console
-{
-  private:
-    std::string console_fname;
-
-  public:
-    UnixConsole(char *);
-    ~UnixConsole();
-
-    static void *listener(void *);
-
-  private:
-    void open_socket(void);
-};
-
-class InetConsole : public Console
-{
-  private:
-    uint16_t port_num;
-
-  public:
-    InetConsole(uint16_t, struct addrinfo *);
-    ~InetConsole();
-
-    static void *listener(void *);
-
-  private:
-    /* Can throw int */
-    void open_socket(struct addrinfo *);
-
-    int wrap_request(struct sockaddr_storage *);
+    static void *console_listener(void *);
 };
 
 #endif /* __INC_CONSOLE_H__ */
