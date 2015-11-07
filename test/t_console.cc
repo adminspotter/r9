@@ -16,12 +16,18 @@ extern config_data config;
 
 int hosts_ctl(char *prefix, char *hostname, char *address, char *user)
 {
+    int ret = 1;
+
     std::clog << "into the hosts_ctl mock" << std::endl;
-/*    ASSERT_STREQ(prefix, "prefix");
-    ASSERT_STREQ(hostname, "localhost");
-    ASSERT_STREQ(address, "127.0.0.1");
-    ASSERT_TRUE(user == NULL);*/
-    return 1;
+    if (strcmp(prefix, "prefix"))
+        ret = 0;
+    if (strcmp(hostname, "localhost"))
+        ret = 0;
+    if (strcmp(address, "127.0.0.1"))
+        ret = 0;
+    if (strcmp(user, STRING_UNKNOWN))
+        ret = 0;
+    return ret;
 }
 #endif /* HAVE_LIBWRAP */
 
@@ -102,9 +108,9 @@ TEST(ConsoleTest, WrapRequest)
     config.log_prefix = "prefix";
 #endif
 
-    /* There are more assertions within the wrap_request mock call.
-     * Both our mock, and the non-libwrap original function will
-     * return 1.
+    /* There are more checks within the wrap_request mock call.  If
+     * any of them fails, the mock will return 0.  The non-libwrap
+     * original function will always return 1.
      */
     ASSERT_EQ(con->wrap_request(sa), 1);
 
