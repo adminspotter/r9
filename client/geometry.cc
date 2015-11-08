@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 09:55:11 tquirk
+ *   last updated 08 Nov 2015, 11:14:56 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -23,10 +23,10 @@
  * This file contains the geometry management object for the Revision IX
  * client program.
  *
- * We will save the geometries and textures in directory structures under
- * the user's config directory ($HOME/.revision9/).  Since we will possibly
- * have a HUGE number of geometries and textures, we'll split things up
- * based on the last two digits of the ID.  Each geometry file will contain
+ * We will save the geometries and textures in directory structures
+ * under the user's config directory.  Since we will possibly have a
+ * HUGE number of geometries and textures, we'll split things up based
+ * on the last two digits of the ID.  Each geometry file will contain
  * all the frames for that particular object.
  *
  * Once we load or retrieve the geometry, we'll make a display list out of
@@ -41,11 +41,10 @@
  *
  * We'll keep the prefixes around so we don't have to keep recreating
  * them.  The store is the system-wide geometry repository (in
- * /usr/share/revision9/geometry), where the cache is the user's
- * personal repository (in $HOME/.revision9/geometry).  First we'll
- * look in the cache, then if we don't find what we need, we'll
- * look in the store.  If we *still* don't find it, we'll send out a
- * server request.
+ * $PREFIX/share/r9/geometry), where the cache is the user's personal
+ * repository (in $CONFIG_DIR/geometry).  First we'll look in the
+ * cache, then if we don't find what we need, we'll look in the store.
+ * If we *still* don't find it, we'll send out a server request.
  *
  * Things to do
  *
@@ -368,6 +367,8 @@ GeometryParser::GeometryParser(geometry *elem)
 {
     this->geom = elem;
     this->current = start;
+    this->dtd_path = XNS::XMLString::transcode(DTD_PATH);
+    this->dtd_name = XNS::XMLString::transcode("geometry.dtd");
 }
 
 GeometryParser::~GeometryParser()
