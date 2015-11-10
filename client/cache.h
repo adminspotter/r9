@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Sep 2015, 09:53:08 tquirk
+ *   last updated 09 Nov 2015, 18:41:42 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -68,6 +68,7 @@
 #include <stdexcept>
 
 #include "r9client.h"
+#include "dtdresolver.h"
 
 template <typename T>
 struct noop_cleanup
@@ -238,6 +239,7 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
                 fp = new parser_type(&(this->_bc_map[objid].obj));
                 parser->setDocumentHandler((XNS::DocumentHandler *)fp);
                 parser->setErrorHandler((XNS::ErrorHandler *)fp);
+                parser->setEntityResolver((R9Resolver *)fp);
                 parser->parse(fname.c_str());
             }
             catch (XNS::SAXException& s)

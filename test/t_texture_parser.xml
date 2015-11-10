@@ -1,0 +1,11 @@
+<?xml version="1.0" standalone="no" ?>
+
+<!DOCTYPE texture SYSTEM "subjects.dtd">
+
+<texture version="1" identifier="0">
+  <diffuse r="#8888" g="#8888" b="#8888" a="#0000" />
+  <specular r="#FFFF" g="#FFFF" b="#FFFF" a="#0000" />
+  <shininess>
+    <value>75</value>
+  </shininess>
+</texture>

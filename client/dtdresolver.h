@@ -1,6 +1,6 @@
 /* dtdresolver.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Nov 2015, 12:13:04 tquirk
+ *   last updated 09 Nov 2015, 18:43:04 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,6 +33,9 @@
 #include <xercesc/sax/EntityResolver.hpp>
 #include <xercesc/framework/LocalFileInputSource.hpp>
 #include <xercesc/util/XMLString.hpp>
+#ifndef XNS
+#define XNS  XERCES_CPP_NAMESPACE
+#endif /* XNS */
 
 class R9Resolver : public XNS::EntityResolver
 {

@@ -1,6 +1,6 @@
 /* geometry.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Nov 2015, 11:04:13 tquirk
+ *   last updated 09 Nov 2015, 18:52:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -43,7 +43,7 @@
 
 typedef std::vector<GLuint> geometry;
 
-class GeometryParser : public XNS::HandlerBase, R9Resolver
+class GeometryParser : public XNS::HandlerBase, public R9Resolver
 {
   private:
     enum

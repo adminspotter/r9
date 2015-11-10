@@ -1,6 +1,6 @@
 /* texture.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Nov 2015, 11:17:19 tquirk
+ *   last updated 09 Nov 2015, 18:52:38 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -47,7 +47,7 @@ struct texture
     /* Some sort of texture map in here too */
 };
 
-class TextureParser : public XNS::HandlerBase, R9Resolver
+class TextureParser : public XNS::HandlerBase, public R9Resolver
 {
   private:
     enum
