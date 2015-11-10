@@ -11,13 +11,21 @@ TEST(TextureParserTest, DTDSearchPath)
     TextureParser *texparse = NULL;
 
     XNS::XMLPlatformUtils::Initialize();
+    parser = new XNS::SAXParser();
     parser->setValidationScheme(XNS::SAXParser::Val_Auto);
     parser->setValidationSchemaFullChecking(true);
     parser->setDoNamespaces(true);
     texparse = new TextureParser(tex);
-    texparse->dtd_path = XNS::XMLString::transcode("../client");
+    texparse->dtd_path = XNS::XMLString::transcode("../client/");
     parser->setDocumentHandler((XNS::DocumentHandler *)texparse);
     parser->setErrorHandler((XNS::ErrorHandler *)texparse);
     parser->setEntityResolver((R9Resolver *)texparse);
-    parser->parse(FILE_NAME);
+    ASSERT_NO_THROW(
+        {
+            parser->parse(FILE_NAME);
+        });
+
+    delete texparse;
+    delete parser;
+    delete tex;
 }

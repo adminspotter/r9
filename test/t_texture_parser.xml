@@ -3,9 +3,11 @@
 <!DOCTYPE texture SYSTEM "subjects.dtd">
 
 <texture version="1" identifier="0">
-  <diffuse r="#8888" g="#8888" b="#8888" a="#0000" />
-  <specular r="#FFFF" g="#FFFF" b="#FFFF" a="#0000" />
-  <shininess>
-    <value>75</value>
-  </shininess>
+  <diffuse>
+    <rgba r="0.75" g="0.75" b="0.75" a="1.00" />
+  </diffuse>
+  <specular>
+    <rgba r="1.00" g="1.00" b="1.00" a="1.00" />
+  </specular>
+  <shininess value="75" />
 </texture>
