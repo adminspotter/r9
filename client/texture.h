@@ -1,6 +1,6 @@
 /* texture.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 22:39:55 tquirk
+ *   last updated 09 Nov 2015, 18:52:38 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,6 +36,8 @@
 #if HAVE_XERCESC_SAX_ATTRIBUTELIST_HPP
 #include <xercesc/sax/AttributeList.hpp>
 #endif /* HAVE_XERCESC_SAX_ATTRIBUTELIST_HPP */
+#define XNS XERCES_CPP_NAMESPACE
+#include "dtdresolver.h"
 
 #include "cache.h"
 
@@ -45,8 +47,7 @@ struct texture
     /* Some sort of texture map in here too */
 };
 
-#define XNS XERCES_CPP_NAMESPACE
-class TextureParser : public XNS::HandlerBase
+class TextureParser : public XNS::HandlerBase, public R9Resolver
 {
   private:
     enum

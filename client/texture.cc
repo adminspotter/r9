@@ -1,9 +1,9 @@
 /* texture.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 09:53:51 tquirk
+ *   last updated 08 Nov 2015, 12:10:35 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,20 +23,22 @@
  * This file contains the texture management routines for the Revision IX
  * client program.
  *
- * We will save the geometries and textures in directory structures under
- * the user's config directory ($HOME/.revision9/).  Since we will possibly
- * have a HUGE number of geometries and textures, we'll split things up
- * based on the last digit or two of the ID.  To start, we'll do the last
- * two numbers, and then inside each of those directories will be the texture
- * files.  Each texture can have two files:  the texture data itself (text),
- * and a possible texture map (a graphic file of some format, probably XPM).
+ * We will save the geometries and textures in directory structures
+ * under the user's config directory.  Since we will possibly have a
+ * HUGE number of geometries and textures, we'll split things up based
+ * on the last digit or two of the ID.  To start, we'll do the last
+ * two numbers, and then inside each of those directories will be the
+ * texture files.  Each texture can have two files:  the texture data
+ * itself (text), and a possible texture map (a graphic file of some
+ * format, probably XPM).
  *
- * Let's keep the prefixes around so we don't have to keep recreating them.
- * The texture_prefix is the system-wide texture repository (in
- * /usr/share/revision9/texture), where the texture_cache is the user's
- * personal repository (in $HOME/.revision9/texture).  First we'll look in
- * the user's cache, then if we don't find what we need, we'll look in the
- * store.  If we *still* don't find it, we'll send out a server request.
+ * Let's keep the prefixes around so we don't have to keep recreating
+ * them.  The texture_prefix is the system-wide texture repository (in
+ * $PREFIX/share/revision9/texture), where the texture_cache is the
+ * user's personal repository (in $CONFIG_DIR/texture).  First we'll
+ * look in the user's cache, then if we don't find what we need, we'll
+ * look in the store.  If we *still* don't find it, we'll send out a
+ * server request.
  *
  * Things to do
  *
@@ -238,6 +240,8 @@ TextureParser::TextureParser(texture *obj)
 {
     this->tex = obj;
     this->current = start;
+    this->dtd_path = XNS::XMLString::transcode(DTD_PATH);
+    this->dtd_name = XNS::XMLString::transcode("texture.dtd");
 }
 
 TextureParser::~TextureParser()

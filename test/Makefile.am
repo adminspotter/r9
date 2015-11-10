@@ -13,13 +13,14 @@ if WANT_TCL
   TC += t_tcl
 endif
 if WANT_CLIENT
-  TC += t_cache t_configdata
+  TC += t_cache t_configdata t_texture_parser
 endif
 
 TESTS = $(TC)
 
 check_PROGRAMS = $(TC)
 lib_LTLIBRARIES = libtest.la
+EXTRA_DIST = t_texture_parser.xml
 
 install-exec-local:
 	@echo "Nothing to install"
@@ -84,3 +85,10 @@ t_cache_LDADD = $(GTEST_LIBS) $(GMOCK_LIBS) $(CLIENT_LDLIBS)
 t_configdata_SOURCES = t_configdata.cc tap.h tap_main.cc \
 	../client/configdata.h ../client/configdata.cc
 t_configdata_LDADD = $(GTEST_LIBS) $(CLIENT_LDLIBS)
+
+t_texture_parser_SOURCES = t_texture_parser.cc tap.h tap_main.cc \
+	../client/texture.cc ../client/texture.h
+t_texture_parser_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
+	-DDTD_PATH=\"../client\" \
+	-I$(GMOCK_DIR)/gtest/include -I$(GMOCK_DIR)/include
+t_texture_parser_LDADD = $(GTEST_LIBS) $(CLIENT_LDLIBS)
