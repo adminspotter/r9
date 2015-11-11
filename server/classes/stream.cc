@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:55:29 tquirk
+ *   last updated 11 Nov 2015, 16:06:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -26,13 +26,21 @@
  *
  */
 
+#include <config.h>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <errno.h>
-#ifdef __APPLE__
+#ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
 

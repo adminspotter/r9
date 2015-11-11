@@ -5,10 +5,10 @@ SD += glw
 endif
 SD += client
 endif
-SD += test
 if WANT_LOCALES
 SD += po
 endif
+SD += test
 
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = $(SD)

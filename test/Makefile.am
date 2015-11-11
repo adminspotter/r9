@@ -24,7 +24,7 @@ EXTRA_DIST = t_texture_parser.xml
 
 install-exec-local:
 	@echo "Nothing to install"
-	exit
+	false
 
 AM_CXXFLAGS = -I$(GMOCK_DIR)/gtest/include -I$(GMOCK_DIR)/include
 

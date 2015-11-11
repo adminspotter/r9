@@ -10,6 +10,7 @@
 #define TMP_PATH  "./consoletest"
 
 #if HAVE_LIBWRAP
+#include <tcpd.h>
 #include "../server/config_data.h"
 
 extern config_data config;
