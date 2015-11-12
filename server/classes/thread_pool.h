@@ -1,6 +1,6 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Oct 2015, 06:50:26 tquirk
+ *   last updated 12 Nov 2015, 11:15:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -122,14 +122,14 @@ class ThreadPool
             /* We've moved the starting of the threads into the start() call */
         };
 
-    ~ThreadPool()
+    virtual ~ThreadPool()
         {
             this->stop();
             pthread_cond_destroy(&(this->queue_not_empty));
             pthread_mutex_destroy(&(this->queue_lock));
         };
 
-    void start(void *(*func)(void *))
+    virtual void start(void *(*func)(void *))
         {
             int ret;
             pthread_t thread;

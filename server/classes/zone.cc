@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2015, 06:49:19 tquirk
+ *   last updated 12 Nov 2015, 11:14:33 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -37,11 +37,8 @@
 
 #include "zone.h"
 #include "thread_pool.h"
-#include "listensock.h"
 #include "../config_data.h"
 #include "../log.h"
-
-extern std::vector<listen_socket *> sockets;
 
 /* Private methods */
 void Zone::init(void)
@@ -88,8 +85,7 @@ void Zone::create_thread_pools(void)
         = new ThreadPool<packet_list>("action", config.action_threads);
     this->motion_pool
         = new ThreadPool<Motion *>("motion", config.motion_threads);
-    this->update_pool
-        = new ThreadPool<GameObject *>("update", config.update_threads);
+    this->update_pool = new UpdatePool("update", config.update_threads);
 }
 
 void *Zone::action_pool_worker(void *arg)
@@ -174,31 +170,6 @@ void *Zone::motion_pool_worker(void *arg)
                 || req->rotation[1] != 0.0
                 || req->rotation[2] != 0.0))
             zone->motion_pool->push(req);
-    }
-    return NULL;
-}
-
-void *Zone::update_pool_worker(void *arg)
-{
-    Zone *zone = (Zone *)arg;
-    GameObject *req;
-    uint64_t objid;
-    std::vector<listen_socket *>::iterator sock;
-    std::map<uint64_t, base_user *>::iterator user;
-
-    for (;;)
-    {
-        zone->update_pool->pop(&req);
-
-        objid = req->get_object_id();
-
-        /* Figure out who to send it to */
-        /* Send to EVERYONE (for now) */
-        for (sock = sockets.begin(); sock != sockets.end(); ++sock)
-            for (user = (*sock)->users.begin();
-                 user != (*sock)->users.end();
-                 ++user)
-                user->second->control->send_update(objid);
     }
     return NULL;
 }
@@ -301,8 +272,7 @@ void Zone::start(void)
     this->motion_pool->startup_arg = (void *)this;
     this->motion_pool->start(Zone::motion_pool_worker);
 
-    this->update_pool->startup_arg = (void *)this;
-    this->update_pool->start(Zone::update_pool_worker);
+    this->update_pool->start();
 }
 
 void Zone::stop(void)
