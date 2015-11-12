@@ -6,6 +6,7 @@ libr9_classes_la_SOURCES = control.cc control.h \
 	game_obj.cc game_obj.h \
 	geometry.cc geometry.h \
 	zone.cc zone.h \
+	action_pool.cc action_pool.h \
 	update_pool.cc update_pool.h \
 	library.cc library.h \
 	basesock.cc basesock.h listensock.cc listensock.h \

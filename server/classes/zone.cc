@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 23:42:55 tquirk
+ *   last updated 15 Nov 2015, 11:50:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -81,47 +81,10 @@ void Zone::load_actions(const std::string& libname)
 
 void Zone::create_thread_pools(void)
 {
-    this->action_pool
-        = new ThreadPool<packet_list>("action", config.action_threads);
+    this->action_pool = new ActionPool("action", config.action_threads);
     this->motion_pool
         = new ThreadPool<GameObject *>("motion", config.motion_threads);
     this->update_pool = new UpdatePool("update", config.update_threads);
-}
-
-void *Zone::action_pool_worker(void *arg)
-{
-    Zone *zone = (Zone *)arg;
-    packet_list req;
-    uint16_t skillid;
-
-    for (;;)
-    {
-        /* Grab the next packet off the queue */
-        zone->action_pool->pop(&req);
-
-        /* Process the packet */
-        ntoh_packet(&req.buf, sizeof(packet));
-
-        /* Make sure the action exists and is valid on this server,
-         * before trying to do anything
-         */
-        skillid = req.buf.act.action_id;
-        if (zone->actions.find(skillid) != zone->actions.end()
-            && zone->actions[skillid].valid == true)
-        {
-            /* Make the action call.
-             *
-             * The action routine will handle checking the environment
-             * and relevant skills of the target, and spawning of any
-             * new needed subobjects.
-             */
-            if (((Control *)req.who)->slave->get_object_id()
-                == req.buf.act.object_id)
-                zone->execute_action((Control *)req.who,
-                                     req.buf.act, sizeof(action_request));
-        }
-    }
-    return NULL;
 }
 
 void *Zone::motion_pool_worker(void *arg)
@@ -267,7 +230,7 @@ void Zone::start(void)
      */
 
     this->action_pool->startup_arg = (void *)this;
-    this->action_pool->start(Zone::action_pool_worker);
+    this->action_pool->start(ActionPool::action_pool_worker);
 
     this->motion_pool->startup_arg = (void *)this;
     this->motion_pool->start(Zone::motion_pool_worker);
