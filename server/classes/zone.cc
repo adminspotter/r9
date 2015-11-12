@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:27:18 tquirk
+ *   last updated 12 Nov 2015, 06:49:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -37,8 +37,11 @@
 
 #include "zone.h"
 #include "thread_pool.h"
+#include "listensock.h"
 #include "../config_data.h"
 #include "../log.h"
+
+extern std::vector<listen_socket *> sockets;
 
 /* Private methods */
 void Zone::init(void)
@@ -86,7 +89,7 @@ void Zone::create_thread_pools(void)
     this->motion_pool
         = new ThreadPool<Motion *>("motion", config.motion_threads);
     this->update_pool
-        = new ThreadPool<Motion *>("update", config.update_threads);
+        = new ThreadPool<GameObject *>("update", config.update_threads);
 }
 
 void *Zone::action_pool_worker(void *arg)
@@ -162,7 +165,7 @@ void *Zone::motion_pool_worker(void *arg)
         }
         sector->insert(req);
         /*zone->physics->collide(sector, req);*/
-        zone->update_pool->push(req);
+        zone->update_pool->push(req->object);
 
         if ((req->movement[0] != 0.0
              || req->movement[1] != 0.0
@@ -178,32 +181,24 @@ void *Zone::motion_pool_worker(void *arg)
 void *Zone::update_pool_worker(void *arg)
 {
     Zone *zone = (Zone *)arg;
-    Motion *req;
+    GameObject *req;
     uint64_t objid;
-    packet_list buf;
+    std::vector<listen_socket *>::iterator sock;
+    std::map<uint64_t, base_user *>::iterator user;
 
     for (;;)
     {
         zone->update_pool->pop(&req);
 
-        /* Process the request */
-        /* We won't bother to figure out who can see what just yet */
-        buf.buf.pos.type = TYPE_POSUPD;
-        /* We're not using a sequence number yet, but don't forget about it */
-        objid = buf.buf.pos.object_id = req->object->get_object_id();
-        /* We're not doing frame number yet, but don't forget about it */
-        buf.buf.pos.x_pos = (uint64_t)trunc(req->position[0] * 100);
-        buf.buf.pos.y_pos = (uint64_t)trunc(req->position[1] * 100);
-        buf.buf.pos.z_pos = (uint64_t)trunc(req->position[2] * 100);
-        /*buf.buf.pos.x_orient = (int32_t)trunc(req->orientation[0] * 100);
-        buf.buf.pos.y_orient = (int32_t)trunc(req->orientation[1] * 100);
-        buf.buf.pos.z_orient = (int32_t)trunc(req->orientation[2] * 100);*/
-        buf.buf.pos.x_look = (int32_t)trunc(req->look[0] * 100);
-        buf.buf.pos.y_look = (int32_t)trunc(req->look[1] * 100);
-        buf.buf.pos.z_look = (int32_t)trunc(req->look[2] * 100);
+        objid = req->get_object_id();
+
         /* Figure out who to send it to */
-        /* Push the packet onto the send queue */
-        /*zone->sending_pool->push(&buf, sizeof(packet));*/
+        /* Send to EVERYONE (for now) */
+        for (sock = sockets.begin(); sock != sockets.end(); ++sock)
+            for (user = (*sock)->users.begin();
+                 user != (*sock)->users.end();
+                 ++user)
+                user->second->control->send_update(objid);
     }
     return NULL;
 }
