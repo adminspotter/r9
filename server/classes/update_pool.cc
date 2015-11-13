@@ -1,6 +1,6 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2015, 11:24:58 tquirk
+ *   last updated 13 Nov 2015, 12:30:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -22,6 +22,8 @@
  *
  * The minimal implementation of the Update pool.
  */
+
+#include "../../proto/proto.h"
 
 #include "update_pool.h"
 #include "listensock.h"
@@ -52,7 +54,7 @@ void *UpdatePool::update_pool_worker(void *arg)
 {
     UpdatePool *pool = (UpdatePool *)arg;
     GameObject *req;
-    uint64_t objid;
+    position_update pkt;
     std::vector<listen_socket *>::iterator sock;
     std::map<uint64_t, base_user *>::iterator user;
 
@@ -60,7 +62,18 @@ void *UpdatePool::update_pool_worker(void *arg)
     {
         pool->pop(&req);
 
-        objid = req->get_object_id();
+        pkt.type = TYPE_POSUPD;
+        pkt.object_id = req->get_object_id();
+        pkt.x_pos = (uint64_t)(req->position.x() * 100);
+        pkt.y_pos = (uint64_t)(req->position.y() * 100);
+        pkt.z_pos = (uint64_t)(req->position.z() * 100);
+        pkt.x_orient = (uint32_t)(req->orient.x() * 100);
+        pkt.y_orient = (uint32_t)(req->orient.y() * 100);
+        pkt.z_orient = (uint32_t)(req->orient.z() * 100);
+        pkt.w_orient = (uint32_t)(req->orient.w() * 100);
+        pkt.x_look = (uint32_t)(req->look.x() * 100);
+        pkt.y_look = (uint32_t)(req->look.y() * 100);
+        pkt.z_look = (uint32_t)(req->look.z() * 100);
 
         /* Figure out who to send it to */
         /* Send to EVERYONE (for now) */
@@ -68,7 +81,7 @@ void *UpdatePool::update_pool_worker(void *arg)
             for (user = (*sock)->users.begin();
                  user != (*sock)->users.end();
                  ++user)
-                user->second->control->send_update(objid);
+                user->second->control->send((packet *)&pkt);
     }
     return NULL;
 }

@@ -9,7 +9,7 @@ t_log
 t_sockaddr
 t_subserver
 t_threadpool
-t_update_worker
+t_update_pool
 t_perl
 t_tcl
 t_cache

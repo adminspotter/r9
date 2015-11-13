@@ -14,7 +14,7 @@ TC = t_basesock \
 	t_sockaddr \
 	t_subserver \
 	t_threadpool \
-	t_update_worker
+	t_update_pool
 if WANT_PERL
   TC += t_perl
 endif
@@ -79,12 +79,8 @@ t_threadpool_SOURCES = t_threadpool.cc tap.h tap_main.cc \
 	../server/classes/thread_pool.h
 t_threadpool_LDADD = $(GTEST_LIBS)
 
-t_update_worker_SOURCES = t_update_worker.cc tap.h tap_main.cc \
-	../server/classes/zone.cc ../server/classes/zone.h \
-	../server/log.cc ../server/config_data.cc
-t_update_worker_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
-t_update_worker_LDADD = ../server/classes/libr9_classes.la \
-	$(GTEST_LIBS) $(GMOCK_LIBS)
+t_update_pool_SOURCES = t_update_pool.cc tap.h tap_main.cc
+t_update_pool_LDADD = $(GTEST_LIBS) $(GMOCK_LIBS)
 
 t_perl_SOURCES = t_perl.cc tap.h ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc

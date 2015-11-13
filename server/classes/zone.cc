@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2015, 11:14:33 tquirk
+ *   last updated 13 Nov 2015, 12:27:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -84,7 +84,7 @@ void Zone::create_thread_pools(void)
     this->action_pool
         = new ThreadPool<packet_list>("action", config.action_threads);
     this->motion_pool
-        = new ThreadPool<Motion *>("motion", config.motion_threads);
+        = new ThreadPool<GameObject *>("motion", config.motion_threads);
     this->update_pool = new UpdatePool("update", config.update_threads);
 }
 
@@ -115,7 +115,7 @@ void *Zone::action_pool_worker(void *arg)
              * and relevant skills of the target, and spawning of any
              * new needed subobjects.
              */
-            if (((Control *)req.who)->slave->object->get_object_id()
+            if (((Control *)req.who)->slave->get_object_id()
                 == req.buf.act.object_id)
                 ((Control *)req.who)->execute_action(req.buf.act,
                                                      sizeof(action_request));
@@ -127,7 +127,7 @@ void *Zone::action_pool_worker(void *arg)
 void *Zone::motion_pool_worker(void *arg)
 {
     Zone *zone = (Zone *)arg;
-    Motion *req;
+    GameObject *req;
     struct timeval current;
     double interval;
     Octree *sector;
@@ -161,7 +161,7 @@ void *Zone::motion_pool_worker(void *arg)
         }
         sector->insert(req);
         /*zone->physics->collide(sector, req);*/
-        zone->update_pool->push(req->object);
+        zone->update_pool->push(req);
 
         if ((req->movement[0] != 0.0
              || req->movement[1] != 0.0
@@ -232,12 +232,12 @@ Zone::~Zone()
     std::clog << "deleting game objects" << std::endl;
     if (this->game_objects.size())
     {
-        std::map<uint64_t, game_object_list_element>::iterator i;
+        std::map<uint64_t, GameObject *>::iterator i;
 
         for (i = this->game_objects.begin();
              i != this->game_objects.end();
              ++i)
-            delete i->second.obj;
+            delete i->second;
         /* Maybe save the game objects' locations before deleting them? */
         this->game_objects.erase(this->game_objects.begin(),
                                  this->game_objects.end());
@@ -321,7 +321,7 @@ void Zone::execute_action(Control *con, action_request& req, size_t len)
 
         (*(i->second.action))(con->slave,
                               req.power_level,
-                              this->game_objects.find(req.dest_object_id)->second.mot,
+                              this->game_objects.find(req.dest_object_id)->second,
                               vec);
     }
 }

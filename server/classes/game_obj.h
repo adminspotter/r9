@@ -1,6 +1,6 @@
 /* game_obj.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:09:36 tquirk
+ *   last updated 13 Nov 2015, 08:03:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -30,15 +30,19 @@
 #ifndef __INC_GAME_OBJ_H__
 #define __INC_GAME_OBJ_H__
 
+#include <sys/time.h>
 #include <pthread.h>
 
 #include <cstdint>
 #include <string>
 #include <map>
 
+#include <Eigen/Dense>
+
 class GameObject;
 
 #include "defs.h"
+#include "control.h"
 #include "geometry.h"
 
 class GameObject
@@ -49,20 +53,30 @@ class GameObject
 
     /* const */ uint64_t id_value;
     Geometry *default_geometry;
+    Control *default_master;
+
   public:
     std::map<std::string, attribute> attributes;
     std::map<std::string, nature> natures;
     Geometry *geometry;
+    Control *master;
+    struct timeval last_updated;
+    /* These vectors are in meters/degrees per second */
+    Eigen::Vector3d position, movement, rotation, look;
+    Eigen::Quaterniond orient;
 
   public:
     static uint64_t reset_max_id(void);
 
-    GameObject(Geometry *, uint64_t = 0LL);
+    GameObject(Geometry *, Control *, uint64_t = 0LL);
     ~GameObject();
 
     GameObject *clone(void) const;
 
     uint64_t get_object_id(void) const;
+
+    bool connect(Control *);
+    void disconnect(Control *);
 };
 
 #endif /* __INC_GAME_OBJ_H__ */

@@ -9,7 +9,7 @@ encompasses an entire server.  Its purpose is to keep track of:
     section
     2) the complete list of game objects within the world section
     3) the basic behaviour of the world section (gravity, weather, etc).
-The zone maintains three thread pools, to manage action requests by
+The zone contains three thread pools, to manage action requests by
 actors, handling motion of items within the space, and processing any
 updates to inform actors what objects have changed.  The zone will
 eventually record which zones are adjacent to it in each direction, so it
@@ -22,6 +22,10 @@ each portion of the zone's managed space.  The octree maintains a list
 of game objects it contains.  Each octant also has pointers to each of
 its neighbors, for simpler traversal.
 
+UpdatePool (update_pool.h, update_pool.cc):  This is the thread pool
+which handles sending position updates to clients.  Updates are pushed
+into this pool's work queue by the motion pool workers.
+
 User management objects:
 
 Control (control.h, control.cc):  This object keeps track of a logged-in
@@ -31,19 +35,16 @@ method for mapping an actor to an object, and the dispatcher for taking
 action requests from the actor, verifying that the object can perform
 those actions, and turning them into game activity.
 
-Motion (motion.h, motion.cc):  This is a class which describes the motion
-attributes (position, rotation, and linear and angular velocities) for a
-GameObject, so we do not need to modify the game objects themselves.  This
-sits between the Control object, and the GameObject itself.
-
-GameObject (game_obj.h, game_obj.cc):  This is the basic dynamic object.
-Everything which is able move around in space is represented as such an
-object.  The game object contains references to default motion objects and
-geometries, as well as current motion objects and geometries, which may be
-changed at any time.  Removing the motion or geometry will cause the
-object to revert to its default.  Each object also contains an object ID
-value, currently represented as a 64-bit integer.  The game object also
-knows about attributes and natures that it has.
+GameObject (game_obj.h, game_obj.cc):  This is the basic dynamic
+object.  Everything which is able move around in space is represented
+as such an object.  The game object contains references to default
+control objects and geometries, as well as current control objects and
+geometries, which may be changed at any time.  Removing the control or
+geometry will cause the object to revert to its default.  Each object
+also contains an object ID value, currently represented as a 64-bit
+integer.  The game object also knows about attributes and natures that
+it has.  The position, orientation, and current motion and rotation
+are also kept within the game object.
 
 Geometry (geometry.h, geometry.cc, mostly unimplemented):  This is the
 representation of the geometry of an object.
@@ -59,13 +60,16 @@ Sockaddr.
 Sockaddr_in6 (sockaddr.h):  Handling of IPv6 socket types, derived from
 Sockaddr.
 
+Sockaddr_un (sockaddr.h>:  Handling of unix-domain socket types,
+derived from Sockaddr.
+
 basesock (basesock.h, basesock.cc):  This is a basic listening socket,
 which includes a listening thread.  All methods can throw
 std::runtime_error.
 
-listen_socket (basesock.h, basesock.cc):  This is a virtual base class
-which contains a basesock, a user list, and a thread pool to handle
-sending data out.  The constructor and init methods can throw
+listen_socket (listensock.h, listensock.cc):  This is a virtual base
+class which contains a basesock, a user list, and a thread pool to
+handle sending data out.  The constructor and init methods can throw
 std::runtime_error.
 
 stream_socket (stream.h, stream.cc):  This class is derived from the
@@ -82,9 +86,9 @@ can throw std::runtime_error.
 
 User list objects:
 
-base_user (basesock.h, basesock.cc):  This is a virtual base class which
-contains a user ID, a pointer to a control object, and some elements to
-keep track of possible link-dead or logged-out users.
+base_user (listensock.h, listensock.cc):  This is a virtual base class
+which contains a user ID, a pointer to a control object, and some
+elements to keep track of possible link-dead or logged-out users.
 
 stream_user (stream.h, stream.cc):  This class is derived from the
 base_user, and adds subserver number and file descriptor.

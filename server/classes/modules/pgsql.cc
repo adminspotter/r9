@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Sep 2015, 11:57:48 tquirk
+ *   last updated 13 Nov 2015, 08:33:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -81,7 +81,7 @@ int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
     return 0;
 }
 
-int PgSQL::get_server_objects(std::map<uint64_t, game_object_list_element> &gomap)
+int PgSQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 {
     return 0;
 }

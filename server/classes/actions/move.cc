@@ -1,9 +1,9 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Jun 2014, 09:43:28 tquirk
+ *   last updated 13 Nov 2015, 08:17:52 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,18 +29,18 @@
 
 #include <Eigen/Core>
 
-#include "../motion.h"
+#include "../game_obj.h"
 
-void action_move(Motion *source,
+void action_move(GameObject *source,
                  int intensity,
-                 Motion *target,
+                 GameObject *target,
                  Eigen::Vector3d &direction)
 {
 }
 
-void action_rotate(Motion *source,
+void action_rotate(GameObject *source,
                    int intensity,
-                   Motion *target,
+                   GameObject *target,
                    Eigen::Vector3d &direction)
 {
 }

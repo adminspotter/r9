@@ -1,6 +1,6 @@
 /* octree.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:10:46 tquirk
+ *   last updated 13 Nov 2015, 12:15:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -53,7 +53,7 @@
 #include <set>
 #include <Eigen/Dense>
 
-#include "motion.h"
+#include "game_obj.h"
 
 class Octree
 {
@@ -67,7 +67,7 @@ class Octree
     uint8_t parent_index;
     int depth;
 
-    std::set<Motion *> objects;
+    std::set<GameObject *> objects;
 
   private:
     inline int which_octant(const Eigen::Vector3d& p)
@@ -110,9 +110,9 @@ class Octree
 
     bool empty(void);
 
-    void build(std::list<Motion *>&);
-    void insert(Motion *);
-    void remove(Motion *);
+    void build(std::list<GameObject *>&);
+    void insert(GameObject *);
+    void remove(GameObject *);
 };
 
 #endif /* INC_OCTREE_H__ */

@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:06:45 tquirk
+ *   last updated 13 Nov 2015, 08:28:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -24,6 +24,8 @@
  *
  * Things to do
  *   - Flesh out the attribute and nature as needed.
+ *   - If we can get rid of this file entirely, that would probably be
+ *     a good thing.
  *
  */
 
@@ -42,7 +44,6 @@
 
 /* Eliminate the multiple-include problems */
 class GameObject;
-class Motion;
 class listen_socket;
 
 typedef struct sequence_tag
@@ -50,15 +51,6 @@ typedef struct sequence_tag
     int frame_number, duration;
 }
 sequence_element;
-
-typedef struct game_object_tag
-{
-    GameObject *obj;
-    Motion *mot;
-    Eigen::Vector3d position, look;
-    Eigen::Quaterniond orientation;
-}
-game_object_list_element;
 
 typedef struct packet_list_tag
 {
@@ -101,8 +93,8 @@ class action_rec
 {
   public:
     char *name;
-    void (*action)(Motion *, int, Motion *, Eigen::Vector3d &);
-    uint16_t def;                /* The "default" skill to use */
+    void (*action)(GameObject *, int, GameObject *, Eigen::Vector3d &);
+    uint16_t def;                 /* The "default" skill to use */
     int lower, upper;             /* The bounds for skill levels */
     bool valid;                   /* Is this action valid on this server? */
 
@@ -133,7 +125,6 @@ action_level;
 /* Typedefs we can use for casting things to come out of a dynamically
  * loaded library.
  */
-typedef int zone_control_t(int); /* placeholder */
 typedef void action_reg_t(std::map<uint16_t, action_rec>&);
 typedef void action_unreg_t(std::map<uint16_t, action_rec>&);
 

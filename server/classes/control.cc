@@ -1,6 +1,6 @@
 /* control.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:32:57 tquirk
+ *   last updated 13 Nov 2015, 08:24:17 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -23,13 +23,6 @@
  * This file contains the implementation for the standard control
  * class for the Revision IX system.
  *
- * NOTE: The way we're looking to send position updates, which is to
- * have each control object put together its own update packets and
- * send them, might not scale too well.  So keep an eye out on that;
- * it might become a pretty bad hot-spot, and might be more properly
- * done in the update threads, where a single update packet can be put
- * together and sent to a whole bunch of users.
- *
  * Things to do
  *
  */
@@ -38,12 +31,11 @@
 #include <Eigen/Geometry>
 
 #include "control.h"
-#include "motion.h"
 #include "thread_pool.h"
 #include "zone.h"
 #include "../server.h"
 
-Control::Control(uint64_t userid, Motion *slave)
+Control::Control(uint64_t userid, GameObject *slave)
 {
     this->userid = userid;
     this->default_slave = this->slave = NULL;
@@ -60,7 +52,7 @@ Control::~Control()
         this->slave->disconnect(this);
 }
 
-bool Control::take_over(Motion *new_slave)
+bool Control::take_over(GameObject *new_slave)
 {
     if (new_slave->connect(this))
     {
@@ -112,34 +104,6 @@ void Control::send_ack(int what, int why)
     pkt.ack.request = what;
     /* The why argument is the misc data */
     pkt.ack.misc = why;
-
-    this->send(&pkt);
-}
-
-/* Utility method to send a position update for some object to the user */
-void Control::send_update(uint64_t what)
-{
-    packet pkt;
-
-    /* The what argument contains the objectid of the thing about
-     * which we want to update this user.
-     */
-    game_object_list_element &elem = zone->game_objects[what];
-    pkt.pos.type = TYPE_POSUPD;
-    pkt.pos.object_id = what;
-    /* pkt.frame_number = something */
-    pkt.pos.x_pos = (uint64_t)(elem.position.x() * 100);
-    pkt.pos.y_pos = (uint64_t)(elem.position.y() * 100);
-    pkt.pos.z_pos = (uint64_t)(elem.position.z() * 100);
-    pkt.pos.x_orient = (uint32_t)(elem.orientation.x() * 100);
-    pkt.pos.y_orient = (uint32_t)(elem.orientation.y() * 100);
-    pkt.pos.z_orient = (uint32_t)(elem.orientation.z() * 100);
-    pkt.pos.w_orient = (uint32_t)(elem.orientation.w() * 100);
-    /* We've moved these out of the game object
-    pkt.pos.x_look = (uint32_t)(elem.obj->look.x() * 100);
-    pkt.pos.y_look = (uint32_t)(elem.obj->look.y() * 100);
-    pkt.pos.z_look = (uint32_t)(elem.obj->look.z() * 100);
-    */
 
     this->send(&pkt);
 }

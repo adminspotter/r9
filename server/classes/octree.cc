@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:10:15 tquirk
+ *   last updated 13 Nov 2015, 12:16:20 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -186,10 +186,10 @@ bool Octree::empty(void)
     return this->objects.empty();
 }
 
-void Octree::build(std::list<Motion *>& objs)
+void Octree::build(std::list<GameObject *>& objs)
 {
-    std::list<Motion *> obj_list[8];
-    std::list<Motion *>::iterator i;
+    std::list<GameObject *> obj_list[8];
+    std::list<GameObject *>::iterator i;
     int j;
 
     if (this->depth == Octree::MAX_DEPTH
@@ -228,7 +228,7 @@ void Octree::build(std::list<Motion *>& objs)
         this->compute_neighbors();
 }
 
-void Octree::insert(Motion *mot)
+void Octree::insert(GameObject *mot)
 {
     this->objects.insert(mot);
     if (this->depth < Octree::MAX_DEPTH
@@ -249,7 +249,7 @@ void Octree::insert(Motion *mot)
     }
 }
 
-void Octree::remove(Motion *mot)
+void Octree::remove(GameObject *mot)
 {
     if (this->objects.find(mot) != this->objects.end())
     {

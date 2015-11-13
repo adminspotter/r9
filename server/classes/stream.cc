@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Nov 2015, 16:06:02 tquirk
+ *   last updated 13 Nov 2015, 12:32:05 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -442,8 +442,8 @@ void *stream_socket::stream_reaper_worker(void *arg)
                 if (stu->control->slave != NULL)
                 {
                     /* Clean up a user who has logged out */
-                    stu->control->slave->object->natures["invisible"] = 1;
-                    stu->control->slave->object->natures["non-interactive"] = 1;
+                    stu->control->slave->natures["invisible"] = 1;
+                    stu->control->slave->natures["non-interactive"] = 1;
                 }
                 delete stu->control;
                 /* Tell subserver stu->subserv to close and erase user
