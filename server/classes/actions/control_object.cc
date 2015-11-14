@@ -1,6 +1,6 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:17:59 tquirk
+ *   last updated 14 Nov 2015, 07:58:57 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -61,8 +61,8 @@ void action_control_object(GameObject *source,
             if (target->connect(src))
                 src->slave = target;
         }
-        /* Let the user know how things worked out */
-        src->send_ack(TYPE_ACTREQ, access_type);
+        /* Let the user know how things worked out *
+        src->send_ack(TYPE_ACTREQ, access_type); */
     }
 }
 
@@ -80,5 +80,5 @@ void action_uncontrol_object(GameObject *source,
         target->disconnect(src);
         src->slave = NULL;
     }
-    src->send_ack(TYPE_ACTREQ, 0);
+    /*src->send_ack(TYPE_ACTREQ, 0);*/
 }

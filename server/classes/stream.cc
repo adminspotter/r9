@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 12:32:05 tquirk
+ *   last updated 14 Nov 2015, 11:30:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -296,10 +296,21 @@ void stream_socket::start(void)
 
 void stream_socket::do_login(uint64_t userid, Control *con, access_list& al)
 {
+    packet_list pkt;
+
     stream_user *stu = new stream_user(userid, con);
     stu->subsrv = al.what.login.who.stream.sub;
     stu->fd = al.what.login.who.stream.sock;
     users[userid] = stu;
+
+    /* Send an ack packet, to let the user know they're in */
+    pkt.buf.ack.type = TYPE_ACKPKT;
+    pkt.buf.ack.version = 1;
+    pkt.buf.ack.sequence = stu->sequence++;
+    pkt.buf.ack.request = TYPE_LOGREQ;
+    pkt.buf.ack.misc = 0;
+    pkt.who = stu->userid;
+    this->send_pool->push(pkt);
 }
 
 void *stream_socket::stream_listen_worker(void *arg)
@@ -455,8 +466,16 @@ void *stream_socket::stream_reaper_worker(void *arg)
             }
             else if (stu->timestamp < now - listen_socket::PING_TIMEOUT
                      && stu->pending_logout == false)
+            {
                 /* After 30 seconds, see if the user is still there */
-                stu->control->send_ping();
+                packet_list pkt;
+
+                pkt.buf.basic.type = TYPE_PNGPKT;
+                pkt.buf.basic.version = 1;
+                pkt.buf.basic.sequence = stu->sequence++;
+                pkt.who = stu->userid;
+                sts->send_pool->push(pkt);
+            }
         }
         pthread_testcancel();
     }
@@ -483,7 +502,10 @@ void *stream_socket::stream_send_worker(void *arg)
             if (stu == NULL)
                 continue;
             /* TODO: Encryption */
-            stu->control->send(&(req.buf));
+            write(sts->subservers[stu->subsrv].sock,
+                  (void *)&stu->fd, sizeof(int));
+            write(sts->subservers[stu->subsrv].sock,
+                  (void *)&req, realsize);
         }
     }
     std::clog << "exiting send pool worker for stream port "

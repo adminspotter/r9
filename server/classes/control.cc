@@ -1,6 +1,6 @@
 /* control.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 23:45:47 tquirk
+ *   last updated 14 Nov 2015, 08:17:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -27,9 +27,6 @@
  *
  */
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-
 #include "control.h"
 #include "thread_pool.h"
 
@@ -39,8 +36,6 @@ Control::Control(uint64_t userid, GameObject *slave)
     this->default_slave = this->slave = NULL;
     if (slave->connect(this))
         this->default_slave = this->slave = slave;
-    /* Come up with some sort of random sequence number to start? */
-    this->sequence = 0L;
 }
 
 Control::~Control()
@@ -58,45 +53,4 @@ bool Control::take_over(GameObject *new_slave)
         return true;
     }
     return false;
-}
-
-/* Our parent member should be pointed to a sending queue */
-void Control::send(packet *pkt)
-{
-    packet_list pl;
-
-    /* If we don't have a parent sending queue, obviously we can't
-     * send anything.
-     */
-    if (this->parent == NULL)
-        return;
-
-    memcpy(&(pl.buf), pkt, sizeof(packet));
-    /* Set the basic params for all packets:  version and sequence number */
-    pl.buf.basic.version = 1;
-    pl.buf.basic.sequence = this->sequence++;
-    pl.who = this->userid;
-    ((ThreadPool<packet_list> *)this->parent)->push(pl);
-}
-
-/* Utility method to send a basic ack packet to the user */
-void Control::send_ack(int what, int why)
-{
-    packet pkt;
-
-    /* The what argument contains the type of request we're acknowledging */
-    pkt.ack.type = TYPE_ACKPKT;
-    pkt.ack.request = what;
-    /* The why argument is the misc data */
-    pkt.ack.misc = why;
-
-    this->send(&pkt);
-}
-
-void Control::send_ping(void)
-{
-    packet pkt;
-
-    pkt.basic.type = TYPE_PNGPKT;
-    this->send(&pkt);
 }

@@ -120,13 +120,14 @@ TEST_F(SubserverTest, CloseFD)
 
 TEST_F(SubserverTest, PassFD)
 {
-    int ret, fd[2];
+    int ret, which_fd = -1, fd[2];
     char buf[64];
 
     ret = socketpair(AF_UNIX, SOCK_STREAM, 0, fd);
     ASSERT_EQ(ret, 0);
 
     /* We'll use fd[0] and pass in fd[1] */
+    ASSERT_GT(write(this->child_sock, (void *)&which_fd, sizeof(int)), 0);
     ret = this->pass_fd(fd[1]);
     ASSERT_GT(ret, 0);
 

@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Nov 2015, 18:50:30 tquirk
+ *   last updated 14 Nov 2015, 08:00:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -52,6 +52,8 @@ void base_user::init(uint64_t u, Control *c)
     this->control = c;
     this->timestamp = time(NULL);
     this->pending_logout = false;
+    /* Come up with some sort of random sequence number to start? */
+    this->sequence = 0L;
 }
 
 bool base_user::operator<(const base_user& u) const
@@ -171,14 +173,10 @@ void listen_socket::login_user(access_list& p)
 
             /* Add this user to the userlist */
             this->do_login(userid, newcontrol, p);
-            newcontrol->parent = (void *)(this->send_pool);
 
             std::clog << "logged in user "
                       << newcontrol->username
                       << " (" << userid << ")" << std::endl;
-
-            /* Send an ack packet, to let the user know they're in */
-            newcontrol->send_ack(TYPE_LOGREQ);
         }
     }
     /* Otherwise, do nothing, and send nothing */
@@ -186,6 +184,7 @@ void listen_socket::login_user(access_list& p)
 
 void listen_socket::logout_user(access_list& p)
 {
+    packet_list pkt;
     std::map<uint64_t, base_user *>::iterator found;
 
     /* Most of this function is now handled by the reaper threads */
@@ -196,6 +195,13 @@ void listen_socket::logout_user(access_list& p)
         std::clog << "logout request from "
                   << bu->control->username
                   << " (" << bu->control->userid << ")" << std::endl;
-        bu->control->send_ack(TYPE_LGTREQ);
+
+        pkt.buf.ack.type = TYPE_ACKPKT;
+        pkt.buf.ack.version = 1;
+        pkt.buf.ack.sequence = bu->sequence++;
+        pkt.buf.ack.request = TYPE_LGTREQ;
+        pkt.buf.ack.misc = 0;
+        pkt.who = bu->userid;
+        this->send_pool->push(pkt);
     }
 }

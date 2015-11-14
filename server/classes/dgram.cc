@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 12:31:34 tquirk
+ *   last updated 14 Nov 2015, 08:00:49 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -99,10 +99,21 @@ void dgram_socket::start(void)
 
 void dgram_socket::do_login(uint64_t userid, Control *con, access_list& al)
 {
+    packet_list pkt;
+
     dgram_user *dgu = new dgram_user(userid, con);
     dgu->sa = build_sockaddr((struct sockaddr&)(al.what.login.who.dgram));
     this->users[userid] = dgu;
     this->socks[dgu->sa] = dgu;
+
+    /* Send an ack packet, to let the user know they're in */
+    pkt.buf.ack.type = TYPE_ACKPKT;
+    pkt.buf.ack.version = 1;
+    pkt.buf.ack.sequence = dgu->sequence++;
+    pkt.buf.ack.request = TYPE_LOGREQ;
+    pkt.buf.ack.misc = 0;
+    pkt.who = dgu->userid;
+    this->send_pool->push(pkt);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
@@ -231,7 +242,15 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
             }
             else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
                      && dgu->pending_logout == false)
-                dgu->control->send_ping();
+            {
+                packet_list pkt;
+
+                pkt.buf.basic.type = TYPE_PNGPKT;
+                pkt.buf.basic.version = 1;
+                pkt.buf.basic.sequence = dgu->sequence++;
+                pkt.who = dgu->userid;
+                dgs->send_pool->push(pkt);
+            }
         }
         pthread_testcancel();
     }
