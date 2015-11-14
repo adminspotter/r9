@@ -1,6 +1,6 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 12:30:29 tquirk
+ *   last updated 13 Nov 2015, 16:44:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -54,7 +54,7 @@ void *UpdatePool::update_pool_worker(void *arg)
 {
     UpdatePool *pool = (UpdatePool *)arg;
     GameObject *req;
-    position_update pkt;
+    packet_list pkt;
     std::vector<listen_socket *>::iterator sock;
     std::map<uint64_t, base_user *>::iterator user;
 
@@ -62,18 +62,20 @@ void *UpdatePool::update_pool_worker(void *arg)
     {
         pool->pop(&req);
 
-        pkt.type = TYPE_POSUPD;
-        pkt.object_id = req->get_object_id();
-        pkt.x_pos = (uint64_t)(req->position.x() * 100);
-        pkt.y_pos = (uint64_t)(req->position.y() * 100);
-        pkt.z_pos = (uint64_t)(req->position.z() * 100);
-        pkt.x_orient = (uint32_t)(req->orient.x() * 100);
-        pkt.y_orient = (uint32_t)(req->orient.y() * 100);
-        pkt.z_orient = (uint32_t)(req->orient.z() * 100);
-        pkt.w_orient = (uint32_t)(req->orient.w() * 100);
-        pkt.x_look = (uint32_t)(req->look.x() * 100);
-        pkt.y_look = (uint32_t)(req->look.y() * 100);
-        pkt.z_look = (uint32_t)(req->look.z() * 100);
+        pkt.buf.pos.type = TYPE_POSUPD;
+        pkt.buf.pos.version = 1;
+        /*pkt.buf.pos.sequence = ;*/
+        pkt.buf.pos.object_id = req->get_object_id();
+        pkt.buf.pos.x_pos = (uint64_t)(req->position.x() * 100);
+        pkt.buf.pos.y_pos = (uint64_t)(req->position.y() * 100);
+        pkt.buf.pos.z_pos = (uint64_t)(req->position.z() * 100);
+        pkt.buf.pos.x_orient = (uint32_t)(req->orient.x() * 100);
+        pkt.buf.pos.y_orient = (uint32_t)(req->orient.y() * 100);
+        pkt.buf.pos.z_orient = (uint32_t)(req->orient.z() * 100);
+        pkt.buf.pos.w_orient = (uint32_t)(req->orient.w() * 100);
+        pkt.buf.pos.x_look = (uint32_t)(req->look.x() * 100);
+        pkt.buf.pos.y_look = (uint32_t)(req->look.y() * 100);
+        pkt.buf.pos.z_look = (uint32_t)(req->look.z() * 100);
 
         /* Figure out who to send it to */
         /* Send to EVERYONE (for now) */
@@ -81,7 +83,10 @@ void *UpdatePool::update_pool_worker(void *arg)
             for (user = (*sock)->users.begin();
                  user != (*sock)->users.end();
                  ++user)
-                user->second->control->send((packet *)&pkt);
+            {
+                pkt.who = user->first;
+                (*sock)->send_pool->push(pkt);
+            }
     }
     return NULL;
 }

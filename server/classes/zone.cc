@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 12:27:37 tquirk
+ *   last updated 13 Nov 2015, 23:42:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -117,8 +117,8 @@ void *Zone::action_pool_worker(void *arg)
              */
             if (((Control *)req.who)->slave->get_object_id()
                 == req.buf.act.object_id)
-                ((Control *)req.who)->execute_action(req.buf.act,
-                                                     sizeof(action_request));
+                zone->execute_action((Control *)req.who,
+                                     req.buf.act, sizeof(action_request));
         }
     }
     return NULL;
@@ -296,16 +296,14 @@ void Zone::add_action_request(uint64_t from, packet *buf, size_t len)
 
 void Zone::execute_action(Control *con, action_request& req, size_t len)
 {
-    /* On entry, the control object has already determined if it has
-     * the skill in question, and has scaled the power level of the
-     * request to its skill level.
-     */
-    std::map<uint16_t, action_rec>::iterator i
-        = this->actions.find(req.action_id);
+    std::map<uint16_t, action_rec>::iterator
+        i = this->actions.find(req.action_id);
+    std::map<uint16_t, action_level>::iterator
+        j = con->actions.find(req.action_id);
     Eigen::Vector3d vec;
 
     vec << req.x_pos_dest, req.y_pos_dest, req.z_pos_dest;
-    if (i != this->actions.end())
+    if (i != this->actions.end() && j != con->actions.end())
     {
         /* If it's not valid on this server, it should at least have
          * a default.
@@ -318,10 +316,11 @@ void Zone::execute_action(Control *con, action_request& req, size_t len)
 
         req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
+        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
 
         (*(i->second.action))(con->slave,
                               req.power_level,
-                              this->game_objects.find(req.dest_object_id)->second,
+                              this->game_objects[req.dest_object_id],
                               vec);
     }
 }

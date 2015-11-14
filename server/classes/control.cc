@@ -1,6 +1,6 @@
 /* control.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:24:17 tquirk
+ *   last updated 13 Nov 2015, 23:45:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -32,8 +32,6 @@
 
 #include "control.h"
 #include "thread_pool.h"
-#include "zone.h"
-#include "../server.h"
 
 Control::Control(uint64_t userid, GameObject *slave)
 {
@@ -60,19 +58,6 @@ bool Control::take_over(GameObject *new_slave)
         return true;
     }
     return false;
-}
-
-void Control::execute_action(action_request& buf, size_t len)
-{
-    uint16_t skillid = buf.action_id;
-    std::map<uint16_t, action_level>::iterator i = this->actions.find(skillid);
-
-    if (i != this->actions.end())
-    {
-        /* Ceiling the power of the request by our skill level */
-        buf.power_level = std::max<int>(buf.power_level, i->second.level);
-        zone->execute_action(this, buf, len);
-    }
 }
 
 /* Our parent member should be pointed to a sending queue */

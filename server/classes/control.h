@@ -1,6 +1,6 @@
 /* control.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:20:47 tquirk
+ *   last updated 13 Nov 2015, 23:38:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -26,7 +26,7 @@
  * Things to do
  *   - The send* methods seem weird here.  Do they really belong?
  *     Answer: NO, because they introduce too many dependencies.  Get
- *     rid of them.  Also get rid of execute_action.
+ *     rid of them.
  *
  */
 
@@ -61,7 +61,6 @@ class Control
 
     bool take_over(GameObject *);
 
-    void execute_action(action_request&, size_t);
     void send(packet *);
     void send_ack(int, int = 0);
     void send_ping(void);
