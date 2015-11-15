@@ -77,10 +77,20 @@ t_subserver_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 t_threadpool_SOURCES = t_threadpool.cc ../server/classes/thread_pool.h
 t_threadpool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
-t_update_pool_SOURCES = t_update_pool.cc tap.h tap_main.cc
-t_update_pool_LDADD = $(GTEST_LIBS) $(GMOCK_LIBS)
+t_update_pool_SOURCES = t_update_pool.cc \
+	../server/classes/update_pool.cc ../server/classes/update_pool.h \
+	../server/classes/listensock.cc ../server/classes/listensock.h \
+	../server/classes/basesock.cc ../server/classes/basesock.h \
+	../server/classes/control.cc ../server/classes/control.h \
+	../server/classes/game_obj.cc ../server/classes/game_obj.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
+t_update_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+t_update_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
+	../proto/libr9_proto.la
 
-t_perl_SOURCES = t_perl.cc tap.h ../server/classes/modules/language.h \
+t_perl_SOURCES = t_perl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
 t_perl_LDADD = $(GTEST_LIBS)
 

@@ -1,6 +1,6 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2015, 11:15:16 tquirk
+ *   last updated 15 Nov 2015, 11:27:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -197,7 +197,7 @@ class ThreadPool
             }
         };
 
-    void push(T& req)
+    virtual void push(T& req)
         {
             pthread_mutex_lock(&(this->queue_lock));
             this->request_queue.push(req);
@@ -209,7 +209,7 @@ class ThreadPool
      * until it returns, so that's why we have the exit_flag processing
      * taking place here.
      */
-    void pop(T *buffer)
+    virtual void pop(T *buffer)
         {
             /* Just in case */
             if (buffer == NULL)
