@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2015, 12:49:06 tquirk
+ *   last updated 15 Nov 2015, 11:55:40 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -72,10 +72,10 @@ void *ActionPool::action_pool_worker(void *arg)
              * and relevant skills of the target, and spawning of any
              * new needed subobjects.
              */
-            if (((Control *)req.who)->slave->object->get_object_id()
+            if (((Control *)req.who)->slave->get_object_id()
                 == req.buf.act.object_id)
-                ((Control *)req.who)->execute_action(req.buf.act,
-                                                     sizeof(action_request));
+                zone->execute_action(((Control *)req.who),
+                                     req.buf.act, sizeof(action_request));
         }
     }
     return NULL;
