@@ -1,6 +1,6 @@
 /* subserver.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Oct 2015, 14:49:03 tquirk
+ *   last updated 14 Nov 2015, 11:07:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -73,10 +73,13 @@
  * simply pass the socket number along with the data to be passed, in
  * both directions, for user identification.
  *
+ *
+ * When the server and subserver speak back and forth, they first send
+ * the file descriptor they're speaking about.  A -1 means that the
+ * server is sending a new file descriptor.  Then if there's a
+ * payload, it'll be next.
+ *
  * Things to do
- *   - Finish up the sending and recieving code.
- *   - We can send things to the master, but we'll never receive anything
- *     back, other than a file descriptor.  Not quite what we're after.
  *
  */
 
@@ -97,6 +100,7 @@
 #include <set>
 
 #include "log.h"
+#include "../proto/proto.h"
 
 /* Function prototypes */
 static int handle_client(int);
@@ -117,7 +121,10 @@ static int max_fd = 0;
 int main(int argc, char **argv)
 {
     std::set<int>::iterator i;
-    int select_stat, val;
+    int select_stat, val, which;
+    ssize_t size;
+    size_t pkt_size;
+    packet pkt;
 
     /* Install our sigterm handler so we exit in a timely fashion. */
     signal(SIGTERM, sigterm_handler);
@@ -173,13 +180,53 @@ int main(int argc, char **argv)
         /* At this point, we should know that we had a valid reason
          * for select to exit, so look at our descriptors.
          */
-        if (FD_ISSET(STDIN_FILENO, &readfs) && (val = recv_fd()) >= 0)
+        if (FD_ISSET(STDIN_FILENO, &readfs))
         {
-            /* It's a new connection from the parent. */
-            connections.insert(val);
-            FD_SET(val, &master_readfs);
-            max_fd = std::max(val + 1, max_fd);
-            std::clog << syslogNotice << "Got connection " << val << std::endl;
+            if ((size = read(STDIN_FILENO, (void *)&which, sizeof(int))) == sizeof(int))
+            {
+                if (which == -1)
+                {
+                    /* It's a new connection from the parent. */
+                    if ((val = recv_fd()) >= 0)
+                    {
+                        connections.insert(val);
+                        FD_SET(val, &master_readfs);
+                        max_fd = std::max(val + 1, max_fd);
+                        std::clog << syslogNotice
+                                  << "Got connection " << val << std::endl;
+                    }
+                }
+                else
+                {
+                    /* We got a packet to send out. */
+                    if ((size = read(STDIN_FILENO,
+                                     (void *)&pkt, sizeof(packet))) > 0)
+                    {
+                        if (write(which, (void *)&pkt, size) < 0)
+                            std::clog << syslogWarn
+                                      << "Could not write " << size
+                                      << " bytes to socket " << which
+                                      << ": " << strerror(errno)
+                                      << " (" << errno << ')' << std::endl;
+                    }
+                    else
+                        std::clog << syslogWarn
+                                  << "Could not read packet for socket "
+                                  << which << ": "
+                                  << strerror(errno) << " (" << errno << ')'
+                                  << std::endl;
+                }
+            }
+            else
+            {
+                /* This happens when the main server closes its socket
+                 * to us; this condition *should* never happen, but it
+                 * might.  We'll exit nicely if it does.
+                 */
+                std::clog << syslogErr
+                          << "connection closed by server" << std::endl;
+                subserver_set_exit_flag();
+            }
         }
 
         if (subserver_loop_exit_flag == 1)

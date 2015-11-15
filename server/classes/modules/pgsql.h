@@ -1,6 +1,6 @@
 /* pgsql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:18:05 tquirk
+ *   last updated 13 Nov 2015, 08:33:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -58,7 +58,7 @@ class PgSQL : public DB
 
     /* Server functions */
     int get_server_skills(std::map<uint16_t, action_rec>&);
-    int get_server_objects(std::map<uint64_t, game_object_list_element> &);
+    int get_server_objects(std::map<uint64_t, GameObject *> &);
 
   private:
     void db_connect(void);

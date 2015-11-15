@@ -966,3 +966,7 @@
 
 2015-11-01 - TAQ
 	server/classes/basesock.h, server/classes/basesock.cc, server/classes/listensock.h, server/classes/listensock.cc - Split the listen_socket out into its own files, because it simplified testing quite a bit.
+
+2015-11-13 - TAQ
+	server/classes/game_obj.h, server/classes/game_obj.cc, server/classes/motion.h, server/classes/motion.cc - It didn't make a whole lot of sense to have the game object and motion objects separate - the game object didn't really *do* anything.  So they're combined into the game object now.
+	server/classes/update_pool.h, server/classes/update_pool.cc - In trying to test the various parts of the zone, we discovered that there needed to be way too much scaffolding in place (the zone, the socket list, users, a database, etc.), so we've started cleaning things up, and (hopefully) reducing dependencies.

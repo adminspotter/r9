@@ -1,6 +1,6 @@
 /* control.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:28:13 tquirk
+ *   last updated 14 Nov 2015, 08:16:33 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -24,7 +24,6 @@
  * Revision IX system.
  *
  * Things to do
- *   - The send* methods seem weird here.  Do they really belong?
  *
  */
 
@@ -39,31 +38,21 @@
 
 class Control;
 
-#include "motion.h"
+#include "game_obj.h"
 
 class Control
 {
   public:
     uint64_t userid;
-    Motion *default_slave, *slave;
-    void *parent;  /* This will point at the sending thread queue */
+    GameObject *default_slave, *slave;
     std::string username;
     std::map<uint16_t, action_level> actions;
 
-  private:
-    uint64_t sequence;
-
   public:
-    Control(uint64_t, Motion *);
+    Control(uint64_t, GameObject *);
     ~Control();
 
-    bool take_over(Motion *);
-
-    void execute_action(action_request&, size_t);
-    void send(packet *);
-    void send_ack(int, int = 0);
-    void send_update(uint64_t);
-    void send_ping(void);
+    bool take_over(GameObject *);
 };
 
 #endif /* __INC_CONTROL_H__ */

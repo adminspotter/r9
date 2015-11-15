@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:13:21 tquirk
+ *   last updated 13 Nov 2015, 12:19:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -46,8 +46,8 @@
 
 #include "defs.h"
 #include "control.h"
-#include "game_obj.h"
 #include "thread_pool.h"
+#include "update_pool.h"
 #include "library.h"
 #include "octree.h"
 #include "../../proto/proto.h"
@@ -64,10 +64,10 @@ class Zone
 
   public:
     std::map<uint16_t, action_rec> actions;
-    std::map<uint64_t, game_object_list_element> game_objects;
+    std::map<uint64_t, GameObject *> game_objects;
     ThreadPool<packet_list> *action_pool;   /* Takes action requests      */
-    ThreadPool<Motion *> *motion_pool;      /* Processes motion/collision */
-    ThreadPool<Motion *> *update_pool;      /* Prepares motion updates    */
+    ThreadPool<GameObject *> *motion_pool;  /* Processes motion/collision */
+    UpdatePool *update_pool;                /* Sends motion updates       */
 
   private:
     void init(void);
@@ -91,7 +91,6 @@ class Zone
 
     static void *action_pool_worker(void *);
     static void *motion_pool_worker(void *);
-    static void *update_pool_worker(void *);
 
   public:
     Zone(uint64_t, uint16_t);

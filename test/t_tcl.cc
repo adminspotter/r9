@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include "tap.h"
 
 #include <config.h>
 #include "../server/classes/library.h"
@@ -59,10 +58,6 @@ GTEST_API_ int main(int argc, char **argv)
     int retval;
 
     testing::InitGoogleTest(&argc, argv);
-    testing::TestEventListeners& listeners
-        = testing::UnitTest::GetInstance()->listeners();
-    delete listeners.Release(listeners.default_result_printer());
-    listeners.Append(new tap::TapListener());
 
     /* Load up the perl lib and fetch the symbols */
     Library *lib = new Library(TCL_MOD);

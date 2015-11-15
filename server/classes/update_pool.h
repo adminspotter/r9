@@ -1,6 +1,6 @@
-/* motion.cc
+/* update_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:29:46 tquirk
+ *   last updated 12 Nov 2015, 11:18:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -20,37 +20,27 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the motion class for the Revision IX system.
- *
- * Things to do
- *
+ * This file contains the update thread pool, a pretty thin wrapper
+ * around the ThreadPool, to simplify the interface and allow
+ * reasonable testing.
  */
 
-#include "motion.h"
+#ifndef __INC_UPDATE_POOL_H__
+#define __INC_UPDATE_POOL_H__
 
-Motion::Motion(GameObject *go, Control *con)
-{
-    this->object = go;
-    this->default_master = this->master = con;
-}
+#include "thread_pool.h"
+#include "game_obj.h"
 
-bool Motion::connect(Control *con)
+class UpdatePool : public ThreadPool<GameObject *>
 {
-    /* Only one thing can control a given thing */
-    if (this->default_master == this->master)
-    {
-        /* Permissions will be checked in the control_object action */
-        this->master = con;
-        return true;
-    }
-    return false;
-}
+  public:
+    UpdatePool(const char *, unsigned int);
+    ~UpdatePool();
 
-void Motion::disconnect(Control *con)
-{
-    /* Should we also check whether default_master is the same?  What would
-     * we want to do in that case?
-     */
-    if (this->master == con)
-        master = default_master;
-}
+    void start(void);
+    void start(void *(*)(void *));
+
+    static void *update_pool_worker(void *);
+};
+
+#endif /* __INC_UPDATE_POOL_H__ */

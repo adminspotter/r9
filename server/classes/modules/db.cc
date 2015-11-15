@@ -1,6 +1,6 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Sep 2015, 12:07:32 tquirk
+ *   last updated 14 Nov 2015, 17:56:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -124,7 +124,7 @@ int db_server_skills(DB *db, std::map<uint16_t, action_rec>& a)
     return db->get_server_skills(a);
 }
 
-int db_server_objs(DB *db, std::map<uint64_t, game_object_list_element> & a)
+int db_server_objs(DB *db, std::map<uint64_t, GameObject *>& a)
 {
     return db->get_server_objects(a);
 }

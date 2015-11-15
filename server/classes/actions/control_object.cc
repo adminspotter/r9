@@ -1,9 +1,9 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2014, 08:00:43 tquirk
+ *   last updated 14 Nov 2015, 07:58:57 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,16 +38,15 @@
 #include <Eigen/Core>
 
 #include "../game_obj.h"
-#include "../motion.h"
 #include "../../server.h"
 
 /* ARGSUSED */
-void action_control_object(Motion *source,
+void action_control_object(GameObject *source,
                            int intensity,
-                           Motion *target,
+                           GameObject *target,
                            Eigen::Vector3d &direction)
 {
-    /* Source will be a Control object ptr cast into a Motion ptr */
+    /* Source will be a Control object ptr cast into a GameObject ptr */
     Control *src = (Control *)source;
     int access_type = ACCESS_NONE;
 
@@ -56,24 +55,24 @@ void action_control_object(Motion *source,
         /* Figure out if the player actually has access to the target */
         if ((access_type
              = database->check_authorization(src->userid,
-                                             target->object->get_object_id()))
+                                             target->get_object_id()))
             != ACCESS_NONE)
         {
             if (target->connect(src))
                 src->slave = target;
         }
-        /* Let the user know how things worked out */
-        src->send_ack(TYPE_ACTREQ, access_type);
+        /* Let the user know how things worked out *
+        src->send_ack(TYPE_ACTREQ, access_type); */
     }
 }
 
 /* ARGSUSED */
-void action_uncontrol_object(Motion *source,
+void action_uncontrol_object(GameObject *source,
                              int intensity,
-                             Motion *target,
+                             GameObject *target,
                              Eigen::Vector3d &direction)
 {
-    /* Source will be a Control object ptr cast into a Motion ptr */
+    /* Source will be a Control object ptr cast into a GameObject ptr */
     Control *src = (Control *)source;
 
     if (src->slave == target)
@@ -81,5 +80,5 @@ void action_uncontrol_object(Motion *source,
         target->disconnect(src);
         src->slave = NULL;
     }
-    src->send_ack(TYPE_ACTREQ, 0);
+    /*src->send_ack(TYPE_ACTREQ, 0);*/
 }

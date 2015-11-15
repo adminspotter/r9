@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:33:45 tquirk
+ *   last updated 13 Nov 2015, 08:03:05 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -49,8 +49,9 @@ uint64_t GameObject::reset_max_id(void)
     return val;
 }
 
-GameObject::GameObject(Geometry *g, uint64_t newid)
+GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
 {
+    this->default_master = this->master = c;
     this->default_geometry = this->geometry = g;
     pthread_mutex_lock(&GameObject::max_mutex);
     if (newid == 0LL)
@@ -74,10 +75,31 @@ GameObject::~GameObject()
 
 GameObject *GameObject::clone(void) const
 {
-    return new GameObject(default_geometry);
+    return new GameObject(default_geometry, default_master);
 }
 
 uint64_t GameObject::get_object_id(void) const
 {
     return this->id_value;
+}
+
+bool GameObject::connect(Control *con)
+{
+    /* Only one thing can control a given thing */
+    if (this->default_master == this->master)
+    {
+        /* Permissions will be checked in the control_object action */
+        this->master = con;
+        return true;
+    }
+    return false;
+}
+
+void GameObject::disconnect(Control *con)
+{
+    /* Should we also check whether default_master is the same?  What would
+     * we want to do in that case?
+     */
+    if (this->master == con)
+        master = default_master;
 }

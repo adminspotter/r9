@@ -1,6 +1,6 @@
 /* db.h                                                     -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Sep 2015, 07:59:23 tquirk
+ *   last updated 13 Nov 2015, 08:30:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -72,8 +72,7 @@ class DB
 
     /* Server functions */
     virtual int get_server_skills(std::map<uint16_t, action_rec>&) = 0;
-    virtual int get_server_objects(std::map<uint64_t,
-                                   game_object_list_element> &) = 0;
+    virtual int get_server_objects(std::map<uint64_t, GameObject *> &) = 0;
 };
 
 /* Our database types will be dynamically loaded, so these typedefs
@@ -87,7 +86,7 @@ typedef int *db_authz_lgn_t(DB *, uint64_t, uint64_t);
 typedef int *db_pl_skl_t(DB *, uint64_t, uint64_t,
                             std::map<uint16_t, action_level>&);
 typedef int *db_srv_skl_t(DB *, std::map<uint16_t, action_rec>&);
-typedef int *db_srv_obj_t(DB *, std::map<uint64_t, game_object_list_element> &);
+typedef int *db_srv_obj_t(DB *, std::map<uint64_t, GameObject *> &);
 
 /* Since vtables are not magically populated on library load, and
  * difficult to populate at runtime, we need a portable method for
@@ -102,7 +101,7 @@ extern "C" {
     int db_player_skills(DB *, uint64_t, uint64_t,
                          std::map<uint16_t, action_level>&);
     int db_server_skills(DB *, std::map<uint16_t, action_rec>&);
-    int db_server_objs(DB *, std::map<uint64_t, game_object_list_element> &);
+    int db_server_objs(DB *, std::map<uint64_t, GameObject *> &);
 }
 
 #endif /* __INC_DB_H__ */

@@ -1,6 +1,6 @@
 /* mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Sep 2015, 11:57:29 tquirk
+ *   last updated 13 Nov 2015, 08:32:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -160,8 +160,7 @@ int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
     return count;
 }
 
-int MySQL::get_server_objects(std::map<uint64_t,
-                              game_object_list_element> &gomap)
+int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -182,17 +181,17 @@ int MySQL::get_server_objects(std::map<uint64_t,
         while ((row = mysql_fetch_row(res)) != NULL)
         {
             uint64_t id = strtoull(row[0], NULL, 10);
-            game_object_list_element gole;
+            GameObject *go;
             Geometry *geom = new Geometry();
 
-            gole.obj = new GameObject(geom, id);
-            gole.position[0] = atol(row[1]) / 100.0;
-            gole.position[1] = atol(row[2]) / 100.0;
-            gole.position[2] = atol(row[3]) / 100.0;
+            go->obj = new GameObject(geom, id);
+            go->position[0] = atol(row[1]) / 100.0;
+            go->position[1] = atol(row[2]) / 100.0;
+            go->position[2] = atol(row[3]) / 100.0;
             /* All objects first rez invisible and non-interactive */
-            gole.obj->natures["invisible"] = 1;
-            gole.obj->natures["non-interactive"] = 1;
-            gomap[id] = gole;
+            go->obj->natures["invisible"] = 1;
+            go->obj->natures["non-interactive"] = 1;
+            gomap[id] = go;
             ++count;
         }
         mysql_free_result(res);

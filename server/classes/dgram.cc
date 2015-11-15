@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:53:22 tquirk
+ *   last updated 15 Nov 2015, 10:55:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -95,14 +95,26 @@ void dgram_socket::start(void)
           << strerror(retval) << " (" << retval << ")";
         throw std::runtime_error(s.str());
     }
+    this->reaper_running = true;
 }
 
 void dgram_socket::do_login(uint64_t userid, Control *con, access_list& al)
 {
+    packet_list pkt;
+
     dgram_user *dgu = new dgram_user(userid, con);
     dgu->sa = build_sockaddr((struct sockaddr&)(al.what.login.who.dgram));
     this->users[userid] = dgu;
     this->socks[dgu->sa] = dgu;
+
+    /* Send an ack packet, to let the user know they're in */
+    pkt.buf.ack.type = TYPE_ACKPKT;
+    pkt.buf.ack.version = 1;
+    pkt.buf.ack.sequence = dgu->sequence++;
+    pkt.buf.ack.request = TYPE_LOGREQ;
+    pkt.buf.ack.misc = 0;
+    pkt.who = dgu->userid;
+    this->send_pool->push(pkt);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
@@ -222,8 +234,8 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
                 if (dgu->control->slave != NULL)
                 {
                     /* Clean up a user who has logged out */
-                    dgu->control->slave->object->natures["invisible"] = 1;
-                    dgu->control->slave->object->natures["non-interactive"] = 1;
+                    dgu->control->slave->natures["invisible"] = 1;
+                    dgu->control->slave->natures["non-interactive"] = 1;
                 }
                 delete dgu->control;
                 dgs->socks.erase(dgu->sa);
@@ -231,7 +243,15 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
             }
             else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
                      && dgu->pending_logout == false)
-                dgu->control->send_ping();
+            {
+                packet_list pkt;
+
+                pkt.buf.basic.type = TYPE_PNGPKT;
+                pkt.buf.basic.version = 1;
+                pkt.buf.basic.sequence = dgu->sequence++;
+                pkt.who = dgu->userid;
+                dgs->send_pool->push(pkt);
+            }
         }
         pthread_testcancel();
     }

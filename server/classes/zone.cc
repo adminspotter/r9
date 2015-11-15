@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:27:18 tquirk
+ *   last updated 13 Nov 2015, 23:42:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -84,9 +84,8 @@ void Zone::create_thread_pools(void)
     this->action_pool
         = new ThreadPool<packet_list>("action", config.action_threads);
     this->motion_pool
-        = new ThreadPool<Motion *>("motion", config.motion_threads);
-    this->update_pool
-        = new ThreadPool<Motion *>("update", config.update_threads);
+        = new ThreadPool<GameObject *>("motion", config.motion_threads);
+    this->update_pool = new UpdatePool("update", config.update_threads);
 }
 
 void *Zone::action_pool_worker(void *arg)
@@ -116,10 +115,10 @@ void *Zone::action_pool_worker(void *arg)
              * and relevant skills of the target, and spawning of any
              * new needed subobjects.
              */
-            if (((Control *)req.who)->slave->object->get_object_id()
+            if (((Control *)req.who)->slave->get_object_id()
                 == req.buf.act.object_id)
-                ((Control *)req.who)->execute_action(req.buf.act,
-                                                     sizeof(action_request));
+                zone->execute_action((Control *)req.who,
+                                     req.buf.act, sizeof(action_request));
         }
     }
     return NULL;
@@ -128,7 +127,7 @@ void *Zone::action_pool_worker(void *arg)
 void *Zone::motion_pool_worker(void *arg)
 {
     Zone *zone = (Zone *)arg;
-    Motion *req;
+    GameObject *req;
     struct timeval current;
     double interval;
     Octree *sector;
@@ -171,39 +170,6 @@ void *Zone::motion_pool_worker(void *arg)
                 || req->rotation[1] != 0.0
                 || req->rotation[2] != 0.0))
             zone->motion_pool->push(req);
-    }
-    return NULL;
-}
-
-void *Zone::update_pool_worker(void *arg)
-{
-    Zone *zone = (Zone *)arg;
-    Motion *req;
-    uint64_t objid;
-    packet_list buf;
-
-    for (;;)
-    {
-        zone->update_pool->pop(&req);
-
-        /* Process the request */
-        /* We won't bother to figure out who can see what just yet */
-        buf.buf.pos.type = TYPE_POSUPD;
-        /* We're not using a sequence number yet, but don't forget about it */
-        objid = buf.buf.pos.object_id = req->object->get_object_id();
-        /* We're not doing frame number yet, but don't forget about it */
-        buf.buf.pos.x_pos = (uint64_t)trunc(req->position[0] * 100);
-        buf.buf.pos.y_pos = (uint64_t)trunc(req->position[1] * 100);
-        buf.buf.pos.z_pos = (uint64_t)trunc(req->position[2] * 100);
-        /*buf.buf.pos.x_orient = (int32_t)trunc(req->orientation[0] * 100);
-        buf.buf.pos.y_orient = (int32_t)trunc(req->orientation[1] * 100);
-        buf.buf.pos.z_orient = (int32_t)trunc(req->orientation[2] * 100);*/
-        buf.buf.pos.x_look = (int32_t)trunc(req->look[0] * 100);
-        buf.buf.pos.y_look = (int32_t)trunc(req->look[1] * 100);
-        buf.buf.pos.z_look = (int32_t)trunc(req->look[2] * 100);
-        /* Figure out who to send it to */
-        /* Push the packet onto the send queue */
-        /*zone->sending_pool->push(&buf, sizeof(packet));*/
     }
     return NULL;
 }
@@ -266,12 +232,12 @@ Zone::~Zone()
     std::clog << "deleting game objects" << std::endl;
     if (this->game_objects.size())
     {
-        std::map<uint64_t, game_object_list_element>::iterator i;
+        std::map<uint64_t, GameObject *>::iterator i;
 
         for (i = this->game_objects.begin();
              i != this->game_objects.end();
              ++i)
-            delete i->second.obj;
+            delete i->second;
         /* Maybe save the game objects' locations before deleting them? */
         this->game_objects.erase(this->game_objects.begin(),
                                  this->game_objects.end());
@@ -306,8 +272,7 @@ void Zone::start(void)
     this->motion_pool->startup_arg = (void *)this;
     this->motion_pool->start(Zone::motion_pool_worker);
 
-    this->update_pool->startup_arg = (void *)this;
-    this->update_pool->start(Zone::update_pool_worker);
+    this->update_pool->start();
 }
 
 void Zone::stop(void)
@@ -331,16 +296,14 @@ void Zone::add_action_request(uint64_t from, packet *buf, size_t len)
 
 void Zone::execute_action(Control *con, action_request& req, size_t len)
 {
-    /* On entry, the control object has already determined if it has
-     * the skill in question, and has scaled the power level of the
-     * request to its skill level.
-     */
-    std::map<uint16_t, action_rec>::iterator i
-        = this->actions.find(req.action_id);
+    std::map<uint16_t, action_rec>::iterator
+        i = this->actions.find(req.action_id);
+    std::map<uint16_t, action_level>::iterator
+        j = con->actions.find(req.action_id);
     Eigen::Vector3d vec;
 
     vec << req.x_pos_dest, req.y_pos_dest, req.z_pos_dest;
-    if (i != this->actions.end())
+    if (i != this->actions.end() && j != con->actions.end())
     {
         /* If it's not valid on this server, it should at least have
          * a default.
@@ -353,10 +316,11 @@ void Zone::execute_action(Control *con, action_request& req, size_t len)
 
         req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
+        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
 
         (*(i->second.action))(con->slave,
                               req.power_level,
-                              this->game_objects.find(req.dest_object_id)->second.mot,
+                              this->game_objects[req.dest_object_id],
                               vec);
     }
 }

@@ -5,7 +5,6 @@
 
 #include "../server/log.h"
 #include <gtest/gtest.h>
-#include "tap.h"
 
 bool opened = false, closed = false;
 int options = 0, facility = 0, priority = 0;
@@ -81,10 +80,6 @@ TEST(LogTest, Closed)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    testing::TestEventListeners& listeners
-        = testing::UnitTest::GetInstance()->listeners();
-    delete listeners.Release(listeners.default_result_printer());
-    listeners.Append(new tap::TapListener());
 
     std::clog.rdbuf(new Log("testing", 1));
     std::clog << syslogErr << "success" << std::endl;

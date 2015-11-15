@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:57:08 tquirk
+ *   last updated 12 Nov 2015, 06:27:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -94,7 +94,7 @@ int main_loop_exit_flag = 0;
 Zone *zone = NULL;
 DB *database = NULL;
 static Library *db_lib = NULL;
-static std::vector<listen_socket *> sockets;
+std::vector<listen_socket *> sockets;
 /* May need this mutex */
 static pthread_mutex_t exit_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t exit_flag = PTHREAD_COND_INITIALIZER;
