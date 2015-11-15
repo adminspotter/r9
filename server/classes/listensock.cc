@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2015, 08:00:19 tquirk
+ *   last updated 15 Nov 2015, 10:52:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -89,17 +89,21 @@ listen_socket::~listen_socket()
     try { this->stop(); }
     catch (std::exception& e) { /* Do nothing */ }
 
-    if ((retval = pthread_cancel(this->reaper)) != 0)
+    if (this->reaper_running)
     {
-        std::clog << syslogErr << "couldn't cancel reaper thread for port "
-                  << this->sock.sa->port() << ": "
-                  << strerror(retval) << " (" << retval << ")" << std::endl;
+        if ((retval = pthread_cancel(this->reaper)) != 0)
+        {
+            std::clog << syslogErr << "couldn't cancel reaper thread for port "
+                      << this->sock.sa->port() << ": "
+                      << strerror(retval) << " (" << retval << ")" << std::endl;
+        }
+        sleep(0);
+        if ((retval = pthread_join(this->reaper, NULL)) != 0)
+            std::clog << syslogErr
+                      << "error terminating reaper thread for port "
+                      << this->sock.sa->port() << ": "
+                      << strerror(retval) << " (" << retval << ")" << std::endl;
     }
-    sleep(0);
-    if ((retval = pthread_join(this->reaper, NULL)) != 0)
-        std::clog << syslogErr << "error terminating reaper thread for port "
-                  << this->sock.sa->port() << ": "
-                  << strerror(retval) << " (" << retval << ")" << std::endl;
 
     /* Clear out the users map */
     for (i = this->users.begin(); i != this->users.end(); ++i)
@@ -119,6 +123,8 @@ void listen_socket::init(void)
     this->access_pool = new ThreadPool<access_list>("access",
                                                     config.access_threads);
     this->access_pool->clean_on_pop = true;
+
+    this->reaper_running = false;
 }
 
 void listen_socket::stop(void)

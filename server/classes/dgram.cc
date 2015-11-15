@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2015, 08:00:49 tquirk
+ *   last updated 15 Nov 2015, 10:55:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -95,6 +95,7 @@ void dgram_socket::start(void)
           << strerror(retval) << " (" << retval << ")";
         throw std::runtime_error(s.str());
     }
+    this->reaper_running = true;
 }
 
 void dgram_socket::do_login(uint64_t userid, Control *con, access_list& al)

@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2015, 07:16:45 tquirk
+ *   last updated 15 Nov 2015, 10:56:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -67,6 +67,7 @@ class listen_socket {
     static const int LINK_DEAD_TIMEOUT = 75;
 
   protected:
+    bool reaper_running;
     pthread_t reaper;
 
   public:
