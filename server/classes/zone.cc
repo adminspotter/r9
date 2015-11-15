@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 11:50:03 tquirk
+ *   last updated 15 Nov 2015, 13:08:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -82,59 +82,8 @@ void Zone::load_actions(const std::string& libname)
 void Zone::create_thread_pools(void)
 {
     this->action_pool = new ActionPool("action", config.action_threads);
-    this->motion_pool
-        = new ThreadPool<GameObject *>("motion", config.motion_threads);
+    this->motion_pool = new MotionPool("motion", config.motion_threads);
     this->update_pool = new UpdatePool("update", config.update_threads);
-}
-
-void *Zone::motion_pool_worker(void *arg)
-{
-    Zone *zone = (Zone *)arg;
-    GameObject *req;
-    struct timeval current;
-    double interval;
-    Octree *sector;
-
-    for (;;)
-    {
-        zone->motion_pool->pop(&req);
-
-        gettimeofday(&current, NULL);
-        interval = (current.tv_sec + (current.tv_usec * 1000000))
-            - (req->last_updated.tv_sec
-               + (req->last_updated.tv_usec * 1000000));
-        memcpy(&req->last_updated, &current, sizeof(struct timeval));
-        zone->sector_contains(req->position)->remove(req);
-        req->position += req->movement * interval;
-        /*req->orient += req->rotation * interval;*/
-        sector = zone->sector_contains(req->position);
-        if (sector == NULL)
-        {
-            Eigen::Vector3i sec = zone->which_sector(req->position);
-            Eigen::Vector3d mn, mx;
-
-            mn[0] = sec[0] * zone->x_dim;
-            mn[1] = sec[1] * zone->y_dim;
-            mn[2] = sec[2] * zone->z_dim;
-            mx[0] = mn[0] + zone->x_dim;
-            mx[1] = mn[1] + zone->y_dim;
-            mx[2] = mn[2] + zone->z_dim;
-            sector = new Octree(NULL, mn, mx, 0);
-            zone->sectors[sec[0]][sec[1]][sec[2]] = sector;
-        }
-        sector->insert(req);
-        /*zone->physics->collide(sector, req);*/
-        zone->update_pool->push(req);
-
-        if ((req->movement[0] != 0.0
-             || req->movement[1] != 0.0
-             || req->movement[2] != 0.0)
-            || (req->rotation[0] != 0.0
-                || req->rotation[1] != 0.0
-                || req->rotation[2] != 0.0))
-            zone->motion_pool->push(req);
-    }
-    return NULL;
 }
 
 /* Public methods */
@@ -233,7 +182,7 @@ void Zone::start(void)
     this->action_pool->start(ActionPool::action_pool_worker);
 
     this->motion_pool->startup_arg = (void *)this;
-    this->motion_pool->start(Zone::motion_pool_worker);
+    this->motion_pool->start(MotionPool::motion_pool_worker);
 
     this->update_pool->start();
 }

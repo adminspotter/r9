@@ -1,6 +1,6 @@
-/* action_pool.h                                           -*- C++ -*-
+/* motion_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 13:03:23 tquirk
+ *   last updated 15 Nov 2015, 13:07:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -20,26 +20,26 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the action thread pool, a pretty thin wrapper
+ * This file contains the motion thread pool, a pretty thin wrapper
  * around the ThreadPool, to simplify the interface and allow
  * reasonable testing.
  */
 
-#ifndef __INC_ACTION_POOL_H__
-#define __INC_ACTION_POOL_H__
+#ifndef __INC_MOTION_POOL_H__
+#define __INC_MOTION_POOL_H__
 
 #include "thread_pool.h"
-#include "defs.h"
+#include "game_obj.h"
 
-class ActionPool : public ThreadPool<packet_list>
+class MotionPool : public ThreadPool<GameObject *>
 {
   public:
-    ActionPool(const char *, unsigned int);
-    ~ActionPool();
+    MotionPool(const char *, unsigned int);
+    ~MotionPool();
 
     void start(void *(*)(void *));
 
-    static void *action_pool_worker(void *);
+    static void *motion_pool_worker(void *);
 };
 
-#endif /* __INC_ACTION_POOL_H__ */
+#endif /* __INC_MOTION_POOL_H__ */
