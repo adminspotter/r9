@@ -59,13 +59,6 @@ AM_CONDITIONAL([HAVE_PTHREADS],[test "x$have_pthreads" = "xyes"])
 AC_SUBST(PTHREAD_CFLAGS)
 AC_SUBST(PTHREAD_LIBS)
 
-# In order to speed up tests, we'll make the fused tests optional
-AC_ARG_ENABLE([fused-tests],
-              [AS_HELP_STRING([--enable-fused-tests],
-                              [Enables fused tests. (Default is disabled.)])
-              ], [], [enable_fused_tests="yes"])
-AM_CONDITIONAL([WANT_FUSED_TESTS],[test "x$enable_fused_tests" == "xyes"])
-
 # TODO(chandlerc@google.com) Check for the necessary system headers.
 
 # TODO(chandlerc@google.com) Check the types, structures, and other compiler
