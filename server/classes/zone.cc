@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 13:08:54 tquirk
+ *   last updated 17 Nov 2015, 06:11:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -76,6 +76,7 @@ void Zone::load_actions(const std::string& libname)
     {
         std::clog << syslogErr
                   << "error loading actions library: " << e.what() << std::endl;
+        this->action_lib = NULL;
     }
 }
 

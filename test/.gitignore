@@ -2,6 +2,7 @@
 *.tap
 *.trs
 
+t_action_pool
 t_basesock
 t_console
 t_library
