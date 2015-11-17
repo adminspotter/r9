@@ -9,7 +9,8 @@ GMOCK_LIBS = $(GMOCK_DIR)/lib/libgmock.la $(GTEST_LIBS)
 GTEST_MAIN_OBJ = $(GMOCK_DIR)/gtest/src/gtest_main.o
 GMOCK_MAIN_OBJ = $(GMOCK_DIR)/src/gmock_main.o
 
-TC = t_basesock \
+TC = t_action_pool \
+	t_basesock \
 	t_console \
 	t_library \
 	t_log \
@@ -39,19 +40,34 @@ install-exec-local:
 
 AM_CXXFLAGS = $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 
-libtest_la_SOURCES = libtest.cc libtest.h
-libtest_la_LDFLAGS = -module -rpath /nowhere
-
-t_basesock_SOURCES = t_basesock.cc \
-	../server/classes/basesock.cc ../server/classes/basesock.h
-t_basesock_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
-
 CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
 CONSOLE_EXTRAS =
 if HAVE_LIBWRAP
   CONFIG_DEFS += -DHAVE_LIBWRAP=1
   CONSOLE_EXTRAS += ../server/config_data.cc ../server/config_data.h
 endif
+
+libtest_la_SOURCES = libtest.cc libtest.h
+libtest_la_LDFLAGS = -module -rpath /nowhere
+
+t_action_pool_SOURCES = t_action_pool.cc \
+	../server/classes/action_pool.cc ../server/classes/action_pool.h \
+	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
+	../server/classes/update_pool.cc ../server/classes/update_pool.h \
+	../server/classes/zone.cc ../server/classes/zone.h \
+	../server/classes/control.cc ../server/classes/control.h \
+	../server/classes/game_obj.cc ../server/classes/game_obj.h \
+	../server/classes/library.cc ../server/classes/library.h \
+	../server/classes/octree.cc ../server/classes/octree.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+t_action_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
+	../proto/libr9_proto.la
+
+t_basesock_SOURCES = t_basesock.cc \
+	../server/classes/basesock.cc ../server/classes/basesock.h
+t_basesock_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_console_SOURCES = t_console.cc \
 	../server/classes/modules/console.h \

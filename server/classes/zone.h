@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 12:19:34 tquirk
+ *   last updated 15 Nov 2015, 22:12:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -46,7 +46,8 @@
 
 #include "defs.h"
 #include "control.h"
-#include "thread_pool.h"
+#include "action_pool.h"
+#include "motion_pool.h"
 #include "update_pool.h"
 #include "library.h"
 #include "octree.h"
@@ -54,6 +55,8 @@
 
 class Zone
 {
+    friend class MotionPool;
+
   private:
     uint16_t x_steps, y_steps, z_steps;
     uint64_t x_dim, y_dim, z_dim;
@@ -65,9 +68,9 @@ class Zone
   public:
     std::map<uint16_t, action_rec> actions;
     std::map<uint64_t, GameObject *> game_objects;
-    ThreadPool<packet_list> *action_pool;   /* Takes action requests      */
-    ThreadPool<GameObject *> *motion_pool;  /* Processes motion/collision */
-    UpdatePool *update_pool;                /* Sends motion updates       */
+    ActionPool *action_pool;   /* Takes action requests      */
+    MotionPool *motion_pool;   /* Processes motion/collision */
+    UpdatePool *update_pool;   /* Sends motion updates       */
 
   private:
     void init(void);
@@ -77,7 +80,22 @@ class Zone
     inline Octree *sector_contains(Eigen::Vector3d& pos)
         {
             Eigen::Vector3i sec = this->which_sector(pos);
-            return this->sectors[sec[0]][sec[1]][sec[2]];
+            Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
+            if (oct == NULL)
+            {
+                Eigen::Vector3i sec = this->which_sector(pos);
+                Eigen::Vector3d mn, mx;
+
+                mn[0] = sec[0] * this->x_dim;
+                mn[1] = sec[1] * this->y_dim;
+                mn[2] = sec[2] * this->z_dim;
+                mx[0] = mn[0] + this->x_dim;
+                mx[1] = mn[1] + this->y_dim;
+                mx[2] = mn[2] + this->z_dim;
+                oct = new Octree(NULL, mn, mx, 0);
+                this->sectors[sec[0]][sec[1]][sec[2]] = oct;
+            }
+            return oct;
         };
     inline Eigen::Vector3i which_sector(Eigen::Vector3d& pos)
         {
@@ -89,9 +107,6 @@ class Zone
             return sector;
         };
 
-    static void *action_pool_worker(void *);
-    static void *motion_pool_worker(void *);
-
   public:
     Zone(uint64_t, uint16_t);
     Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t);
@@ -101,9 +116,9 @@ class Zone
     void stop(void);
 
     /* Interface to the action pool */
-    void add_action_request(uint64_t, packet *, size_t);
+     virtual void add_action_request(uint64_t, packet *, size_t);
 
-    void execute_action(Control *, action_request&, size_t);
+    virtual void execute_action(Control *, action_request&, size_t);
 };
 
 #endif /* __INC_ZONE_H__ */
