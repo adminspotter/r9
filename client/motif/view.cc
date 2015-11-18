@@ -1,6 +1,6 @@
 /* view.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 16:48:42 tquirk
+ *   last updated 18 Nov 2015, 06:39:19 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -63,13 +63,13 @@ static GLfloat light_position[] = { 5.0, 50.0, -10.0, 1.0 };
 
 Widget create_main_view(Widget parent)
 {
-    mainview = XtVaCreateManagedWidget("mainview",
-                                       glwMDrawingAreaWidgetClass,
-                                       parent,
-                                       GLwNrgba, True,
-                                       GLwNdoublebuffer, True,
-                                       GLwNdepthSize, 1,
-                                       NULL);
+    Arg args[3];
+
+    XtSetArg(args[0], GLwNrgba, True);
+    XtSetArg(args[1], GLwNdoublebuffer, True);
+    XtSetArg(args[2], GLwNdepthSize, 1);
+
+    mainview = GLwCreateMDrawingArea(parent, "mainview", args, 3);
     XtAddCallback(mainview, GLwNginitCallback, init_callback, NULL);
     XtAddCallback(mainview, GLwNresizeCallback, resize_callback, NULL);
     XtAddCallback(mainview, GLwNexposeCallback, expose_callback, NULL);
