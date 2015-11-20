@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 22:12:26 tquirk
+ *   last updated 19 Nov 2015, 07:36:01 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -116,7 +116,7 @@ class Zone
     void stop(void);
 
     /* Interface to the action pool */
-     virtual void add_action_request(uint64_t, packet *, size_t);
+    virtual void add_action_request(uint64_t, packet *, size_t);
 
     virtual void execute_action(Control *, action_request&, size_t);
 };

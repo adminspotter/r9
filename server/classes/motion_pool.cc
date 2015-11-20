@@ -1,6 +1,6 @@
 /* motion_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 13:16:38 tquirk
+ *   last updated 19 Nov 2015, 17:54:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -58,9 +58,9 @@ void *MotionPool::motion_pool_worker(void *arg)
         zone->motion_pool->pop(&req);
 
         gettimeofday(&current, NULL);
-        interval = (current.tv_sec + (current.tv_usec * 1000000))
+        interval = (current.tv_sec + (current.tv_usec / 1000000.0))
             - (req->last_updated.tv_sec
-               + (req->last_updated.tv_usec * 1000000));
+               + (req->last_updated.tv_usec / 1000000.0));
         memcpy(&req->last_updated, &current, sizeof(struct timeval));
         zone->sector_contains(req->position)->remove(req);
         req->position += req->movement * interval;

@@ -14,6 +14,7 @@ TC = t_action_pool \
 	t_console \
 	t_library \
 	t_log \
+	t_motion_pool \
 	t_sockaddr \
 	t_subserver \
 	t_threadpool \
@@ -83,6 +84,19 @@ t_library_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_log_SOURCES = t_log.cc ../server/log.cc ../server/log.h
 t_log_LDADD = $(GTEST_LIBS)
+
+t_motion_pool_SOURCES = t_motion_pool.cc \
+	../server/classes/action_pool.cc ../server/classes/action_pool.h \
+	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
+	../server/classes/update_pool.cc ../server/classes/update_pool.h \
+	../server/classes/zone.cc ../server/classes/zone.h \
+	../server/classes/game_obj.cc ../server/classes/game_obj.h \
+	../server/classes/library.cc ../server/classes/library.h \
+	../server/classes/octree.cc ../server/classes/octree.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_motion_pool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) ../proto/libr9_proto.la
 
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
