@@ -1,6 +1,6 @@
 /* view.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 16:48:42 tquirk
+ *   last updated 20 Nov 2015, 07:16:30 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -44,20 +44,11 @@
 #include "client.h"
 #include "../cache.h"
 
-struct object
-{
-    uint64_t object_id;
-    uint64_t geometry_id;
-    uint16_t frame_number;
-    GLdouble position[3], orientation[3];
-};
-
 static void init_callback(Widget, XtPointer, XtPointer);
 static void resize_callback(Widget, XtPointer, XtPointer);
 static void expose_callback(Widget, XtPointer, XtPointer);
 extern void draw_objects(void);
 
-static object **objects;
 static Widget mainview;
 static GLfloat light_position[] = { 5.0, 50.0, -10.0, 1.0 };
 
@@ -73,9 +64,6 @@ Widget create_main_view(Widget parent)
     XtAddCallback(mainview, GLwNginitCallback, init_callback, NULL);
     XtAddCallback(mainview, GLwNresizeCallback, resize_callback, NULL);
     XtAddCallback(mainview, GLwNexposeCallback, expose_callback, NULL);
-
-    /* Set up the object cache */
-    /* Start up the cleanup thread */
 
     return mainview;
 }
