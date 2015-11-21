@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Oct 2015, 08:26:26 tquirk
+ *   last updated 21 Nov 2015, 10:18:38 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -54,11 +54,12 @@
 #include <stdexcept>
 
 #include "configdata.h"
+#include "l10n.h"
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 
 const int ConfigData::SERVER_PORT    = 8500;
-const char ConfigData::SERVER_ADDR[] = "192.168.100.2";
+const char ConfigData::SERVER_ADDR[] = "127.0.0.1";
 
 typedef void (*config_read_t)(const std::string&, const std::string&, void *);
 typedef void (*config_write_t)(std::ostream&, void *);
@@ -160,12 +161,18 @@ void ConfigData::parse_command_line(int count, char **args)
 void ConfigData::read_config_file(void)
 {
     std::ifstream ifs(this->config_fname);
-    std::string str;
+    std::string str, pristine_str;
 
     while (ifs.good())
     {
         std::getline(ifs, str);
-        this->parse_config_line(str);
+        pristine_str = str;
+        try { this->parse_config_line(str); }
+        catch (std::out_of_range& e)
+        {
+            std::clog << _("Skipping bad config line: ")
+                      << '"' << pristine_str << '"' << std::endl;
+        }
     }
 }
 
@@ -187,7 +194,7 @@ void ConfigData::write_config_file(void)
         ofs.fill(pchar);
         ofs.width(psize);
         ofs.setf(pflag);
-        (*(handlers[i].wr_func))(ofs, ((char *)this) + handlers[i].offset);
+        handlers[i].wr_func(ofs, ((char *)this) + handlers[i].offset);
         ofs << std::endl;
     }
     ofs.close();

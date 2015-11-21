@@ -7,6 +7,6 @@ dtd_DATA = geometry.dtd texture.dtd
 
 libr9_client_a_SOURCES = geometry.cc object.cc texture.cc comm.cc \
 	configdata.cc cache.h geometry.h object.h texture.h comm.h \
-	configdata.h
+	configdata.h l10n.h
 libr9_client_a_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	-DDTD_PATH=\"$(dtddir)/\"

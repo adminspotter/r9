@@ -1,6 +1,6 @@
-/* client.h
+/* l10n.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Nov 2015, 10:11:22 tquirk
+ *   last updated 21 Nov 2015, 10:11:13 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -20,35 +20,23 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the publically-available function prototypes
- * and structures for the client program.
+ * This file contains the localization-related includes and defines
+ * for the client program.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_R9CLIENT_CLIENT_H__
-#define __INC_R9CLIENT_CLIENT_H__
+#ifndef __INC_L10N_H__
+#define __INC_L10N_H__
 
 #include <config.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <X11/Xlib.h>
-#include <X11/StringDefs.h>
-#include <X11/Intrinsic.h>
+#if WANT_LOCALES && HAVE_LIBINTL_H
+#include <libintl.h>
+#define _(x)  maketext(x)
+#else
+#define _(x)  x
+#endif /* WANT_LOCALES && HAVE_LIBINTL_H */
 
-#include "../l10n.h"
-#include "../../proto/proto.h"
-
-Widget create_menu_tree(Widget);
-Widget create_main_view(Widget);
-Widget create_command_area(Widget);
-Widget create_message_area(Widget);
-Widget create_settings_box(Widget);
-
-void about_create_callback(Widget, XtPointer, XtPointer);
-void settings_show_callback(Widget, XtPointer, XtPointer);
-
-#endif /* __INC_R9CLIENT_CLIENT_H__ */
+#endif /* __INC_L10N_H__ */
