@@ -518,6 +518,8 @@ AC_CONFIG_FILES([Makefile
                  client/motif/Makefile
                  client/motif/app-defaults/Makefile
                  client/pixmaps/Makefile
+                 client/geometry/Makefile
+                 client/texture/Makefile
                  po/Makefile.in
                  proto/Makefile
                  server/Makefile

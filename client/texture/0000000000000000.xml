@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone="no" ?>
+
+<!DOCTYPE texture SYSTEM "texture.dtd">
+
+<texture version="1" identifier="0">
+  <diffuse>
+    <rgba r="0.75" g="0.75" b="0.75" a="1.00" />
+  </diffuse>
+  <specular>
+    <rgba r="1.00" g="1.00" b="1.00" a="1.00" />
+  </specular>
+  <shininess value="75" />
+</texture>

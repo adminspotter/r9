@@ -1,9 +1,9 @@
-SUBDIRS = . motif pixmaps
+SUBDIRS = . motif pixmaps geometry texture
 
 noinst_LIBRARIES = libr9_client.a
 
 dtddir = @datadir@/$(PACKAGE)/dtd
-dtd_DATA = geometry.dtd texture.dtd
+dist_dtd_DATA = geometry.dtd texture.dtd
 
 libr9_client_a_SOURCES = geometry.cc object.cc texture.cc comm.cc \
 	configdata.cc cache.h geometry.h object.h texture.h comm.h \

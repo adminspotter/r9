@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="no" ?>
+
+<!DOCTYPE geometry SYSTEM "geometry.dtd">
+
+<geometry version="1" identifier="0">
+  <frame>
+    <sphere radius="0.5" texture="0" />
+  </frame>
+</geometry>
