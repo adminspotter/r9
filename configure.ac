@@ -375,7 +375,7 @@ then
   LIBS=""
   AC_SEARCH_LIBS([mysql_init], [mysqlclient_r],
       [
-          MYSQL_LDLIBS="$ac_cv_lib_mysqlclient_r_mysql_init"
+          MYSQL_LDLIBS="$ac_cv_search_mysql_init"
           AC_SUBST(MYSQL_LDLIBS)
           want_mysql="yes"
       ],

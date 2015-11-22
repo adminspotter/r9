@@ -1,6 +1,6 @@
 /* db.h                                                     -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:30:16 tquirk
+ *   last updated 22 Nov 2015, 14:10:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -81,27 +81,5 @@ class DB
 typedef DB *db_create_t(const std::string&, const std::string&,
                         const std::string&, const std::string&);
 typedef void db_destroy_t(DB *);
-typedef uint64_t *db_authn_t(DB *, const std::string&, const std::string&);
-typedef int *db_authz_lgn_t(DB *, uint64_t, uint64_t);
-typedef int *db_pl_skl_t(DB *, uint64_t, uint64_t,
-                            std::map<uint16_t, action_level>&);
-typedef int *db_srv_skl_t(DB *, std::map<uint16_t, action_rec>&);
-typedef int *db_srv_obj_t(DB *, std::map<uint64_t, GameObject *> &);
-
-/* Since vtables are not magically populated on library load, and
- * difficult to populate at runtime, we need a portable method for
- * calling out to our loaded database objects.
- */
-extern "C" {
-    uint64_t db_check_authn(DB *, const std::string&, const std::string&);
-    int db_check_authz(DB *, uint64_t, uint64_t);
-    int db_new_login(DB *, uint64_t, uint64_t);
-    int db_check_login(DB *, uint64_t, uint64_t);
-    int db_close_login(DB *, uint64_t, uint64_t);
-    int db_player_skills(DB *, uint64_t, uint64_t,
-                         std::map<uint16_t, action_level>&);
-    int db_server_skills(DB *, std::map<uint16_t, action_rec>&);
-    int db_server_objs(DB *, std::map<uint64_t, GameObject *> &);
-}
 
 #endif /* __INC_DB_H__ */

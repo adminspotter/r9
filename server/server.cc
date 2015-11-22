@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2015, 06:27:44 tquirk
+ *   last updated 22 Nov 2015, 13:57:57 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -310,8 +310,6 @@ void set_exit_flag(void)
 static void setup_zone(void)
 {
     db_create_t *db_create;
-    db_srv_skl_t *db_srv_skills;
-    db_srv_obj_t *db_srv_objs;
 
     std::clog << "in zone setup" << std::endl;
     zone = new Zone(config.size.dim[0], config.size.dim[1],
@@ -321,13 +319,11 @@ static void setup_zone(void)
     /* Load up the database lib before we start the access thread pool */
     db_lib = new Library("libr9_" + config.db_type + LT_MODULE_EXT);
     db_create = (db_create_t *)db_lib->symbol("db_create");
-    db_srv_skills = (db_srv_skl_t *)db_lib->symbol("db_server_skills");
-    db_srv_objs = (db_srv_obj_t *)db_lib->symbol("db_server_objs");
 
     database = db_create(config.db_host, config.db_user,
                          config.db_pass, config.db_name);
-    db_srv_skills(database, zone->actions);
-    db_srv_objs(database, zone->game_objects);
+    database->get_server_skills(zone->actions);
+    database->get_server_objects(zone->game_objects);
 
     zone->start();
     std::clog << "zone setup done" << std::endl;
