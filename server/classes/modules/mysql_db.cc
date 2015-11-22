@@ -1,6 +1,6 @@
-/* mysql.cc
+/* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:32:32 tquirk
+ *   last updated 22 Nov 2015, 09:26:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -37,7 +37,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "mysql.h"
+#include "mysql_db.h"
 #include "../game_obj.h"
 
 MySQL::MySQL(const std::string& host, const std::string& user,
@@ -184,13 +184,13 @@ int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
             GameObject *go;
             Geometry *geom = new Geometry();
 
-            go->obj = new GameObject(geom, id);
+            go = new GameObject(geom, NULL, id);
             go->position[0] = atol(row[1]) / 100.0;
             go->position[1] = atol(row[2]) / 100.0;
             go->position[2] = atol(row[3]) / 100.0;
             /* All objects first rez invisible and non-interactive */
-            go->obj->natures["invisible"] = 1;
-            go->obj->natures["non-interactive"] = 1;
+            go->natures["invisible"] = 1;
+            go->natures["non-interactive"] = 1;
             gomap[id] = go;
             ++count;
         }

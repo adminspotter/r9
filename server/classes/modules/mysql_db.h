@@ -1,6 +1,6 @@
-/* mysql.h                                                  -*- C++ -*-
+/* mysql_db.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:33:02 tquirk
+ *   last updated 22 Nov 2015, 09:24:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef __INC_MYSQL_H__
-#define __INC_MYSQL_H__
+#ifndef __INC_MYSQL_DB_H__
+#define __INC_MYSQL_DB_H__
 
 #include <mysql.h>
 
@@ -63,4 +63,4 @@ class MySQL : public DB
     void db_connect(void);
 };
 
-#endif /* __INC_MYSQL_H__ */
+#endif /* __INC_MYSQL_DB_H__ */
