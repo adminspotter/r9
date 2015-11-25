@@ -1,6 +1,6 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Nov 2015, 10:11:22 tquirk
+ *   last updated 25 Nov 2015, 17:05:59 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -50,5 +50,8 @@ Widget create_settings_box(Widget);
 
 void about_create_callback(Widget, XtPointer, XtPointer);
 void settings_show_callback(Widget, XtPointer, XtPointer);
+
+void setup_comm(struct addrinfo *);
+void cleanup_comm(void);
 
 #endif /* __INC_R9CLIENT_CLIENT_H__ */

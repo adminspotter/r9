@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Aug 2015, 16:57:43 tquirk
+ *   last updated 25 Nov 2015, 17:36:32 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -71,7 +71,7 @@
 uint64_t Comm::sequence = 0LL;
 volatile bool Comm::thread_exit_flag = false;
 
-void Comm::create_socket(struct addrinfo *ai, uint16_t port)
+void Comm::create_socket(struct addrinfo *ai)
 {
     if ((this->sock = socket(ai->ai_family,
                              ai->ai_socktype,
@@ -82,32 +82,7 @@ void Comm::create_socket(struct addrinfo *ai, uint16_t port)
           << strerror(errno) << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
-    this->remote.ss_family = ai->ai_family;
-    switch (ai->ai_family)
-    {
-      case AF_INET:
-        {
-            struct sockaddr_in *sin
-                = reinterpret_cast<struct sockaddr_in *>(&(this->remote));
-            sin->sin_port = htons(port);
-            sin->sin_addr.s_addr = htonl(reinterpret_cast<struct sockaddr_in *>(ai->ai_addr)->sin_addr.s_addr);
-            break;
-        }
-
-      case AF_INET6:
-        {
-            struct sockaddr_in6 *sin6
-                = reinterpret_cast<struct sockaddr_in6 *>(&(this->remote));
-            sin6->sin6_port = htons(port);
-            memcpy(sin6->sin6_addr.s6_addr,
-                   reinterpret_cast<struct sockaddr_in6 *>(ai->ai_addr)->sin6_addr.s6_addr,
-                   sizeof(struct in6_addr));
-            break;
-        }
-
-      default:
-        throw std::runtime_error("Invalid address family for socket");
-    }
+    memcpy(&this->remote, ai->ai_addr, sizeof(sockaddr_storage));
 }
 
 void *Comm::send_worker(void *arg)
@@ -234,12 +209,12 @@ void Comm::dispatch(packet& buf)
     }
 }
 
-Comm::Comm(struct addrinfo *ai, uint16_t port)
+Comm::Comm(struct addrinfo *ai)
     : send_queue()
 {
     int ret;
 
-    this->create_socket(ai, port);
+    this->create_socket(ai);
 
     /* Init the mutex and cond variables */
     if ((ret = pthread_mutex_init(&(this->send_lock), NULL)) != 0)

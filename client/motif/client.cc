@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Oct 2015, 17:59:43 tquirk
+ *   last updated 25 Nov 2015, 17:39:03 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -58,7 +58,6 @@ static void save_complete_callback(Widget, XtPointer, XtPointer);
 static void die_callback(Widget, XtPointer, XtPointer);
 static void interact_callback(Widget, XtPointer, XtPointer);
 static Boolean save_state(void);
-static void cleanup_comm(void);
 
 static Widget toplevel;
 static String restart_command[6], discard_command[4];
@@ -229,11 +228,11 @@ static Boolean save_state(void)
     return True;
 }
 
-/* ARGSUSED */
-static void setup_comm_callback(Widget w,
-                                XtPointer client_data,
-                                XtPointer call_data)
+void setup_comm(struct addrinfo *ai)
 {
+    Comm *c = new Comm(ai);
+    comm.push_back(c);
+    c->send_login(config.username, config.password);
 }
 
 void cleanup_comm(void)

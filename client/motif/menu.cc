@@ -1,9 +1,9 @@
 /* menu.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Oct 2015, 18:03:41 tquirk
+ *   last updated 25 Nov 2015, 17:46:06 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,6 +31,16 @@
 
 #include <config.h>
 
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif /* HAVE_SYS_SOCKET_H */
+#if HAVE_NETDB_H
+#include <netdb.h>
+#endif /* HAVE_NETDB_H */
+
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
@@ -42,6 +52,9 @@
 #include <iostream>
 
 #include "client.h"
+
+#include "../configdata.h"
+#include "../comm.h"
 
 /* Static function prototypes */
 static void create_file_menu(Widget);
@@ -177,7 +190,27 @@ static void login_callback(Widget w,
                            XtPointer client_data,
                            XtPointer call_data)
 {
-    /*send_login(config.username, config.password);*/
+    char portstr[16];
+    struct addrinfo hints, *ai;
+    int ret;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_flags = AI_NUMERICSERV;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_DGRAM;
+    snprintf(portstr, sizeof(portstr), "%d", config.server_port);
+    if ((ret = getaddrinfo(config.server_addr.c_str(), portstr,
+                           &hints, &ai)) != 0)
+    {
+        std::clog << "Couldn't find host " << config.server_addr
+                  << ": " << gai_strerror(ret) << " (" << ret << ')'
+                  << std::endl;
+        return;
+    }
+    setup_comm(ai);
+    std::clog << "Created socket to server " << config.server_addr
+              << ", port " << portstr << std::endl;
+    freeaddrinfo(ai);
 }
 
 /* ARGSUSED */
@@ -185,7 +218,7 @@ static void logout_callback(Widget w,
                             XtPointer client_data,
                             XtPointer call_data)
 {
-    /*send_logout();*/
+    cleanup_comm();
 }
 
 /* ARGSUSED */

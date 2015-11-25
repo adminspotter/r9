@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2015, 15:08:03 tquirk
+ *   last updated 25 Nov 2015, 16:54:29 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -62,7 +62,7 @@ class Comm
     static uint64_t sequence;
     static volatile bool thread_exit_flag;
 
-    void create_socket(struct addrinfo *, uint16_t);
+    void create_socket(struct addrinfo *);
 
     static void *send_worker(void *);
     static void *recv_worker(void *);
@@ -70,7 +70,7 @@ class Comm
     void dispatch(packet&);
 
   public:
-    Comm(struct addrinfo *, uint16_t);
+    Comm(struct addrinfo *);
     ~Comm();
 
     void send(packet&, size_t);

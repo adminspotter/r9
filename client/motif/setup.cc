@@ -1,6 +1,6 @@
 /* setup.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 19:10:03 tquirk
+ *   last updated 25 Nov 2015, 09:23:50 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -265,8 +265,8 @@ static void settings_apply_callback(Widget w,
     XtVaGetValues(networkhost, XmNvalue, &c_ptr, NULL);
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    if ((ret = getaddrinfo(c_ptr, NULL, &hints, &ai)) != 0)
+    hints.ai_socktype = SOCK_DGRAM;
+    if ((ret = getaddrinfo(c_ptr, NULL, &hints, &ai)) == 0)
     {
         /* It's a valid IP address or hostname */
         config.server_addr = c_ptr;
@@ -278,8 +278,8 @@ static void settings_apply_callback(Widget w,
          * networkhost box.  If we're trying to dismiss the box as
          * well, we should not do it.
          */
-        std::cout << "Invalid hostname/IP address: " << c_ptr << ": "
-                  << gai_strerror(ret) << std::endl;
+        std::clog << "Invalid hostname/IP address: " << c_ptr << ": "
+                  << gai_strerror(ret) << " (" << ret << ')' << std::endl;
         XtVaSetValues(settingnb, XmNcurrentPageNumber, 3, NULL);
         /* Set keyboard focus to networkhost - this doesn't work */
         XtSetKeyboardFocus(settingbox, XtParent(networkhost));
@@ -288,7 +288,7 @@ static void settings_apply_callback(Widget w,
     XtFree(c_ptr);
 
     XtVaGetValues(networkport, XmNvalue, &c_ptr, NULL);
-    newport = htons((uint16_t)atoi(c_ptr));
+    newport = (uint16_t)atoi(c_ptr);
     if (newport != config.server_port)
         config.server_port = newport;
     XtFree(c_ptr);
