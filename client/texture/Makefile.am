@@ -3,4 +3,4 @@ texturedir = @datadir@/$(PACKAGE)/texture
 dist_noinst_DATA = 0000000000000000.xml
 
 install-data-local:
-	i=0; while [ $$i -lt 256 ] ; do subdir=$$(printf "%02x" $$i) ; dir="$(texturedir)/$$subdir" ; if [ ! -d $$dir ] ; then mkdir $$dir ; fi ; if stat -t *$$subdir.xml >/dev/null 2>&1 ; then for file in *$$subdir.xml ; do $(install_sh_DATA) $$file $$dir ; done ; fi ; i=$$(expr $$i + 1) ; done
+	i=0; while [ $$i -lt 256 ] ; do subdir=$$(printf "%02x" $$i) ; dir="$(texturedir)/$$subdir" ; if [ ! -d $$dir ] ; then mkdir $$dir ; fi ; if stat *$$subdir.xml >/dev/null 2>&1 ; then for file in *$$subdir.xml ; do $(install_sh_DATA) $$file $$dir ; done ; fi ; i=$$(expr $$i + 1) ; done
