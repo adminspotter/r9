@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Nov 2015, 13:57:57 tquirk
+ *   last updated 27 Nov 2015, 06:38:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -155,15 +155,18 @@ static void setup_daemon(void)
     pid_t pid;
     char str[16];
 
-    /* Start up like a proper daemon */
-    if ((pid = fork()) < 0)
+    if (config.daemonize)
     {
-        std::ostringstream s;
-        s << "failed to fork: " << strerror(errno) << " (" << errno << ")";
-        throw std::runtime_error(s.str());
+        /* Start up like a proper daemon */
+        if ((pid = fork()) < 0)
+        {
+            std::ostringstream s;
+            s << "failed to fork: " << strerror(errno) << " (" << errno << ")";
+            throw std::runtime_error(s.str());
+        }
+        else if (pid != 0)
+            exit(0);
     }
-    else if (pid != 0)
-        exit(0);
 
     pid = getpid();
     setsid();
@@ -187,15 +190,20 @@ static void setup_daemon(void)
           << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
+    if (config.daemonize)
+    {
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
+    }
 }
 
 static void setup_log(void)
 {
     /* Open the system log. */
-    std::clog.rdbuf(new Log(config.log_prefix, config.log_facility));
+    if (config.daemonize)
+        std::clog.rdbuf(new Log(config.log_prefix, config.log_facility));
+
     std::clog << syslogNotice << "starting" << std::endl;
 }
 
@@ -373,9 +381,11 @@ static void cleanup_sockets(void)
 
 static void cleanup_log(void)
 {
-    /* Close the system log gracefully. */
     std::clog << syslogNotice << "terminating" << std::endl;
-    dynamic_cast<Log *>(std::clog.rdbuf())->close();
+
+    /* Close the system log gracefully. */
+    if (config.daemonize)
+        dynamic_cast<Log *>(std::clog.rdbuf())->close();
 }
 
 static void cleanup_daemon(void)

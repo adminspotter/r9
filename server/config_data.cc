@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Sep 2015, 14:00:35 tquirk
+ *   last updated 27 Nov 2015, 06:25:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -223,6 +223,7 @@ void config_data::set_defaults(void)
     this->action_lib     = config_data::ACTION_LIB;
     this->console_fname  = "";
 
+    this->daemonize      = true;
     this->use_keepalive  = false;
     this->use_nonblock   = false;
     this->use_reuse      = true;
@@ -284,6 +285,8 @@ void config_data::parse_command_line(int count, char **args)
     {
         if ((*j) == "-f")
             this->read_config_file(*(++j));
+        else if ((*j) == "-d")
+            this->daemonize = false;
         else
             std::clog << "WARNING: Unknown option " << *j;
     }

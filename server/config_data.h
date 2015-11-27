@@ -1,6 +1,6 @@
 /* config_data.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2015, 09:12:08 tquirk
+ *   last updated 27 Nov 2015, 06:23:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -62,7 +62,7 @@ class config_data
 
     std::vector<std::string> argv;
     std::vector<int> stream, dgram;
-    bool use_keepalive, use_nonblock, use_reuse;
+    bool daemonize, use_keepalive, use_nonblock, use_reuse;
     int use_linger, log_facility;
     std::string server_root, log_prefix, pid_fname;
     float load_threshold;
