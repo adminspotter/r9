@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Nov 2015, 17:36:32 tquirk
+ *   last updated 27 Nov 2015, 16:21:36 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -71,6 +71,47 @@
 uint64_t Comm::sequence = 0LL;
 volatile bool Comm::thread_exit_flag = false;
 
+std::ostream& operator<<(std::ostream& os, const struct sockaddr *sa)
+{
+    char addrstr[INET6_ADDRSTRLEN];
+
+    os << "Family:   ";
+    switch (sa->sa_family)
+    {
+      case AF_INET:
+      {
+          struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+
+          os << "AF_INET" << std::endl;
+          os << "Port:     " << ntohs(sin->sin_port) << std::endl;
+          os << "Address:  ";
+          inet_ntop(AF_INET, (void *)&sin->sin_addr, addrstr, INET6_ADDRSTRLEN);
+          os << addrstr << std::endl;
+          break;
+      }
+
+      case AF_INET6:
+      {
+          struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
+
+          os << "AF_INET6" << std::endl;
+          os << "Port:     " << ntohs(sin6->sin6_port) << std::endl;
+          os << "Flowinfo: " << ntohl(sin6->sin6_flowinfo) << std::endl;
+          os << "Address:  ";
+          inet_ntop(AF_INET6, (void *)&sin6->sin6_addr,
+                    addrstr, INET6_ADDRSTRLEN);
+          os << addrstr << std::endl;
+          os << "Scope ID: " << ntohl(sin6->sin6_scope_id) << std::endl;
+          break;
+      }
+
+      default:
+        os << "unknown" << std::endl;
+        break;
+    }
+    return os;
+}
+
 void Comm::create_socket(struct addrinfo *ai)
 {
     if ((this->sock = socket(ai->ai_family,
@@ -88,14 +129,16 @@ void Comm::create_socket(struct addrinfo *ai)
 void *Comm::send_worker(void *arg)
 {
     Comm *comm = (Comm *)arg;
+    packet *pkt;
 
     for (;;)
     {
         pthread_mutex_lock(&(comm->send_lock));
-
         while (comm->send_queue.empty() && !Comm::thread_exit_flag)
             pthread_cond_wait(&(comm->send_queue_not_empty),
                               &(comm->send_lock));
+        pkt = comm->send_queue.front();
+        comm->send_queue.pop();
 
         if (Comm::thread_exit_flag)
         {
@@ -103,13 +146,18 @@ void *Comm::send_worker(void *arg)
             pthread_exit(NULL);
         }
 
-        sendto(comm->sock,
-               (void *)(&(comm->send_queue.front())),
-               packet_size(&(comm->send_queue.front())),
-               0,
-               (struct sockaddr *)&(comm->remote),
-               sizeof(struct sockaddr_storage));
+        std::cout << (struct sockaddr *)&comm->remote << std::endl;
+        if (sendto(comm->sock,
+                   (void *)pkt, packet_size(pkt),
+                   0,
+                   (struct sockaddr *)&comm->remote,
+                   sizeof(struct sockaddr_storage)) == -1)
+            std::cout << "got a send error: " << strerror(errno) << " (" << errno << ')' << std::endl;
+        else
+            std::cout << "sent packet" << std::endl;
         pthread_mutex_unlock(&(comm->send_lock));
+        memset(pkt, 0, sizeof(packet));
+        delete pkt;
     }
     return NULL;
 }
@@ -130,14 +178,7 @@ void *Comm::recv_worker(void *arg)
         /* Verify that the sender is who we think it should be */
         if (memcmp(&sin, &(comm->remote), fromlen))
         {
-            char addrstr[INET6_ADDRSTRLEN];
-            std::clog << "Got packet from unknown sender ";
-            inet_ntop(sin.ss_family,
-                      sin.ss_family == AF_INET
-                      ? (void *)&(reinterpret_cast<struct sockaddr_in *>(&sin)->sin_addr)
-                      : (void *)&(reinterpret_cast<struct sockaddr_in6 *>(&sin)->sin6_addr),
-                      addrstr, INET6_ADDRSTRLEN);
-            std::clog << addrstr << std::endl;
+            std::clog << "Got packet from unknown sender " << std::endl;
             continue;
         }
 
@@ -276,10 +317,10 @@ Comm::~Comm()
     pthread_join(this->recv_thread, NULL);
 }
 
-void Comm::send(packet& p, size_t len)
+void Comm::send(packet *p, size_t len)
 {
     pthread_mutex_lock(&(this->send_lock));
-    if (!hton_packet(&p, len))
+    if (!hton_packet(p, len))
         std::clog << "Error hton'ing packet" << std::endl;
     else
     {
@@ -291,51 +332,49 @@ void Comm::send(packet& p, size_t len)
 
 void Comm::send_login(const std::string& user, const std::string& pass)
 {
-    packet req;
+    packet *req = new packet;
 
-    memset((void *)&(req.log), 0, sizeof(login_request));
-    req.log.type = TYPE_LOGREQ;
-    req.log.version = 1;
-    req.log.sequence = sequence++;
-    strncpy(req.log.username, user.c_str(), sizeof(req.log.username));
-    strncpy(req.log.password, pass.c_str(), sizeof(req.log.password));
+    memset((void *)req, 0, sizeof(login_request));
+    req->log.type = TYPE_LOGREQ;
+    req->log.version = 1;
+    req->log.sequence = this->sequence++;
+    strncpy(req->log.username, user.c_str(), sizeof(req->log.username));
+    strncpy(req->log.password, pass.c_str(), sizeof(req->log.password));
     this->send(req, sizeof(login_request));
-    /* Get rid of passwords from memory where possible */
-    memset((void *)&req, 0, sizeof(login_request));
 }
 
 void Comm::send_action_request(uint16_t actionid,
                                uint64_t target,
                                uint8_t power)
 {
-    packet req;
+    packet *req = new packet;
 
-    req.act.type = TYPE_ACTREQ;
-    req.act.version = 1;
-    req.act.sequence = sequence++;
-    req.act.action_id = actionid;
-    req.act.power_level = power;
-    req.act.dest_object_id = target;
+    req->act.type = TYPE_ACTREQ;
+    req->act.version = 1;
+    req->act.sequence = sequence++;
+    req->act.action_id = actionid;
+    req->act.power_level = power;
+    req->act.dest_object_id = target;
     this->send(req, sizeof(action_request));
 }
 
 void Comm::send_logout(void)
 {
-    packet req;
+    packet *req = new packet;
 
-    req.lgt.type = TYPE_LGTREQ;
-    req.lgt.version = 1;
-    req.lgt.sequence = sequence++;
+    req->lgt.type = TYPE_LGTREQ;
+    req->lgt.version = 1;
+    req->lgt.sequence = sequence++;
     this->send(req, sizeof(logout_request));
 }
 
 void Comm::send_ack(uint8_t type)
 {
-    packet req;
+    packet *req = new packet;
 
-    req.ack.type = TYPE_ACKPKT;
-    req.ack.version = 1;
-    req.ack.sequence = sequence++;
-    req.ack.request = type;
+    req->ack.type = TYPE_ACKPKT;
+    req->ack.version = 1;
+    req->ack.sequence = sequence++;
+    req->ack.request = type;
     this->send(req, sizeof(ack_packet));
 }

@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Nov 2015, 16:54:29 tquirk
+ *   last updated 27 Nov 2015, 09:17:22 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -57,7 +57,7 @@ class Comm
     pthread_t send_thread, recv_thread;
     pthread_mutex_t send_lock;
     pthread_cond_t send_queue_not_empty;
-    std::queue<packet> send_queue;
+    std::queue<packet *> send_queue;
 
     static uint64_t sequence;
     static volatile bool thread_exit_flag;
@@ -73,7 +73,7 @@ class Comm
     Comm(struct addrinfo *);
     ~Comm();
 
-    void send(packet&, size_t);
+    void send(packet *, size_t);
 
     void send_login(const std::string&, const std::string&);
     void send_action_request(uint16_t, uint64_t, uint8_t);

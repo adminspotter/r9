@@ -82,7 +82,9 @@ t_library_SOURCES = t_library.cc \
 	../server/classes/library.cc ../server/classes/library.h
 t_library_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
-t_log_SOURCES = t_log.cc ../server/log.cc ../server/log.h
+t_log_SOURCES = t_log.cc ../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_log_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_log_LDADD = $(GTEST_LIBS)
 
 t_motion_pool_SOURCES = t_motion_pool.cc \
@@ -102,6 +104,7 @@ t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_subserver_SOURCES = t_subserver.cc ../server/r9subserver
+t_subserver_CXXFLAGS = -DIN_SUBSERVER $(GTEST_INCLUDES)
 t_subserver_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_threadpool_SOURCES = t_threadpool.cc ../server/classes/thread_pool.h
