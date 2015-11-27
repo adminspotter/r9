@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Nov 2015, 06:38:22 tquirk
+ *   last updated 27 Nov 2015, 07:01:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -230,7 +230,7 @@ static void setup_sockets(void)
     for (i = config.stream.begin(); i != config.stream.end(); ++i)
     {
         /* First get an addrinfo struct for the socket */
-        if ((ai = get_addr_info(SOCK_DGRAM, *i)) == NULL)
+        if ((ai = get_addr_info(SOCK_STREAM, *i)) == NULL)
             continue;
         try
         {
@@ -256,7 +256,7 @@ static void setup_sockets(void)
     for (i = config.dgram.begin(); i != config.dgram.end(); ++i)
     {
         /* First get an addrinfo struct for the socket */
-        if ((ai = get_addr_info(SOCK_STREAM, *i)) == NULL)
+        if ((ai = get_addr_info(SOCK_DGRAM, *i)) == NULL)
             continue;
         try
         {
