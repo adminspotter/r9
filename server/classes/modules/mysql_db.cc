@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Nov 2015, 09:26:42 tquirk
+ *   last updated 28 Nov 2015, 14:15:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -69,7 +69,7 @@ uint64_t MySQL::check_authentication(const std::string& user,
              "SELECT playerid "
              "FROM players "
              "WHERE username='%.*s' "
-             "AND password=SHA1('%.*s') "
+             "AND password=SHA2('%.*s',512) "
              "AND suspended=0",
              DB::MAX_USERNAME, user.c_str(),
              DB::MAX_PASSWORD, pass.c_str());

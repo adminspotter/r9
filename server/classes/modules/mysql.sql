@@ -1,7 +1,7 @@
 CREATE TABLE players (
   playerid BIGINT NOT NULL AUTO_INCREMENT,
   username VARCHAR(64) NOT NULL,
-  password VARCHAR(64) NOT NULL,
+  password VARCHAR(128) NOT NULL,
   email VARCHAR(64) NOT NULL,
   suspended TINYINT NOT NULL DEFAULT 0,
   PRIMARY KEY (playerid)

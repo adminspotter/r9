@@ -1,6 +1,6 @@
 /* control.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2015, 08:17:19 tquirk
+ *   last updated 28 Nov 2015, 15:12:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,9 +33,9 @@
 Control::Control(uint64_t userid, GameObject *slave)
 {
     this->userid = userid;
-    this->default_slave = this->slave = NULL;
-    if (slave->connect(this))
-        this->default_slave = this->slave = slave;
+    this->default_slave = this->slave = slave;
+    if (this->slave != NULL)
+        this->slave->connect(this);
 }
 
 Control::~Control()
