@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 10:52:04 tquirk
+ *   last updated 28 Nov 2015, 09:54:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -207,7 +207,8 @@ void listen_socket::logout_user(access_list& p)
         pkt.buf.ack.sequence = bu->sequence++;
         pkt.buf.ack.request = TYPE_LGTREQ;
         pkt.buf.ack.misc = 0;
-        pkt.who = bu->userid;
+        pkt.who = bu->control;
+        pkt.parent = this;
         this->send_pool->push(pkt);
     }
 }

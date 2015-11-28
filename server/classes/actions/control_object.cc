@@ -1,6 +1,6 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2015, 07:58:57 tquirk
+ *   last updated 28 Nov 2015, 09:17:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -41,10 +41,10 @@
 #include "../../server.h"
 
 /* ARGSUSED */
-void action_control_object(GameObject *source,
-                           int intensity,
-                           GameObject *target,
-                           Eigen::Vector3d &direction)
+int action_control_object(GameObject *source,
+                          int intensity,
+                          GameObject *target,
+                          Eigen::Vector3d &direction)
 {
     /* Source will be a Control object ptr cast into a GameObject ptr */
     Control *src = (Control *)source;
@@ -61,16 +61,17 @@ void action_control_object(GameObject *source,
             if (target->connect(src))
                 src->slave = target;
         }
-        /* Let the user know how things worked out *
-        src->send_ack(TYPE_ACTREQ, access_type); */
+        /* Let the user know how things worked out */
+        return access_type;
     }
+    return -1;
 }
 
 /* ARGSUSED */
-void action_uncontrol_object(GameObject *source,
-                             int intensity,
-                             GameObject *target,
-                             Eigen::Vector3d &direction)
+int action_uncontrol_object(GameObject *source,
+                            int intensity,
+                            GameObject *target,
+                            Eigen::Vector3d &direction)
 {
     /* Source will be a Control object ptr cast into a GameObject ptr */
     Control *src = (Control *)source;
@@ -79,6 +80,7 @@ void action_uncontrol_object(GameObject *source,
     {
         target->disconnect(src);
         src->slave = NULL;
+        return 0;
     }
-    /*src->send_ack(TYPE_ACTREQ, 0);*/
+    return -1;
 }

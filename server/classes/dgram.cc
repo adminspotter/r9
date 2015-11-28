@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Nov 2015, 08:18:28 tquirk
+ *   last updated 28 Nov 2015, 09:57:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -114,7 +114,8 @@ void dgram_socket::do_login(uint64_t userid, Control *con, access_list& al)
     pkt.buf.ack.sequence = dgu->sequence++;
     pkt.buf.ack.request = TYPE_LOGREQ;
     pkt.buf.ack.misc = 0;
-    pkt.who = dgu->userid;
+    pkt.who = con;
+    pkt.parent = this;
     this->send_pool->push(pkt);
 }
 
@@ -180,6 +181,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
                    sizeof(struct sockaddr_storage));
             dgs->access_pool->push(a);
         }
+        std::clog << "checked for login" << std::endl;
 
         /* Do something with whatever we got */
         switch (buf.basic.type)
@@ -205,13 +207,15 @@ void *dgram_socket::dgram_listen_worker(void *arg)
             std::clog << "got an action request packet" << std::endl;
             found->second->timestamp = time(NULL);
             memcpy(&p.buf, &buf, len);
-            p.who = found->second->userid;
+            p.who = found->second->control;
+            p.parent = dgs;
             zone->action_pool->push(p);
             break;
 
           default:
             break;
         }
+        std::clog << "done checking, deleting sockaddr" << std::endl;
         delete sa;
     }
     std::clog << "exiting connection loop for datagram port "
@@ -261,7 +265,8 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
                 pkt.buf.basic.type = TYPE_PNGPKT;
                 pkt.buf.basic.version = 1;
                 pkt.buf.basic.sequence = dgu->sequence++;
-                pkt.who = dgu->userid;
+                pkt.who = dgu->control;
+                pkt.parent = dgs;
                 dgs->send_pool->push(pkt);
             }
         }
@@ -286,9 +291,16 @@ void *dgram_socket::dgram_send_worker(void *arg)
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize))
         {
-            dgu = dynamic_cast<dgram_user *>(dgs->users[req.who]);
+            /* The users member comes from the listen_socket, and is a
+             * map of userid to base_user; we're 99.99% sure that all
+             * the elements in our users map will be dgram_users, but
+             * we'll dynamic cast and check the return just to be 100%
+             * sure.  If it becomes a problem, we can cast explicitly.
+             */
+            dgu = dynamic_cast<dgram_user *>(dgs->users[req.who->userid]);
             if (dgu == NULL)
                 continue;
+
             /* TODO: Encryption */
             if (sendto(dgs->sock.sock,
                        (void *)&req.buf, realsize, 0,

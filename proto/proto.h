@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2015, 08:51:26 tquirk
+ *   last updated 28 Nov 2015, 08:01:20 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -87,10 +87,10 @@
 #define TYPE_PNGPKT 6        /* Ping packet */
 
 /* Access types for the login ACK's misc field.  Are there more types? */
-#define ACCESS_NONE 0        /* No access allowed */
-#define ACCESS_VIEW 1        /* View-only access (can't enter the zone) */
-#define ACCESS_MOVE 2        /* Move-around-in access (normal access) */
-#define ACCESS_MDFY 3        /* Modify access */
+#define ACCESS_NONE 1        /* No access allowed */
+#define ACCESS_VIEW 2        /* View-only access (can't enter the zone) */
+#define ACCESS_MOVE 3        /* Move-around-in access (normal access) */
+#define ACCESS_MDFY 4        /* Modify access */
 
 /* For testing what type of packet it really is, plus a few of the basic
  * elements.

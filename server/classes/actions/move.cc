@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:17:52 tquirk
+ *   last updated 28 Nov 2015, 09:18:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -31,16 +31,18 @@
 
 #include "../game_obj.h"
 
-void action_move(GameObject *source,
-                 int intensity,
-                 GameObject *target,
-                 Eigen::Vector3d &direction)
+int action_move(GameObject *source,
+                int intensity,
+                GameObject *target,
+                Eigen::Vector3d &direction)
 {
+    return -1;
 }
 
-void action_rotate(GameObject *source,
-                   int intensity,
-                   GameObject *target,
-                   Eigen::Vector3d &direction)
+int action_rotate(GameObject *source,
+                  int intensity,
+                  GameObject *target,
+                  Eigen::Vector3d &direction)
 {
+    return -1;
 }

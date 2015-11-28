@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 11:55:40 tquirk
+ *   last updated 28 Nov 2015, 10:01:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -25,6 +25,7 @@
 
 #include "action_pool.h"
 #include "zone.h"
+#include "listensock.h"
 
 ActionPool::ActionPool(const char *pool_name, unsigned int pool_size)
     : ThreadPool<packet_list>(pool_name, pool_size)
@@ -50,6 +51,7 @@ void *ActionPool::action_pool_worker(void *arg)
     Zone *zone = (Zone *)arg;
     packet_list req;
     uint16_t skillid;
+    int ret;
 
     for (;;)
     {
@@ -72,10 +74,22 @@ void *ActionPool::action_pool_worker(void *arg)
              * and relevant skills of the target, and spawning of any
              * new needed subobjects.
              */
-            if (((Control *)req.who)->slave->get_object_id()
-                == req.buf.act.object_id)
-                zone->execute_action(((Control *)req.who),
-                                     req.buf.act, sizeof(action_request));
+            if (req.who->slave->get_object_id() == req.buf.act.object_id)
+                if ((ret = zone->execute_action(req.who,
+                                                req.buf.act,
+                                                sizeof(action_request))) > 0)
+                {
+                    packet_list pkt;
+
+                    pkt.buf.ack.type = TYPE_ACKPKT;
+                    pkt.buf.ack.version = 1;
+                    /*pkt.buf.ack.sequence = ;*/
+                    pkt.buf.ack.request = skillid;
+                    pkt.buf.ack.misc = (uint8_t)ret;
+                    pkt.who = req.who;
+
+                    req.parent->send_pool->push(pkt);
+                }
         }
     }
     return NULL;

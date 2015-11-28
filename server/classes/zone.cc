@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Nov 2015, 06:11:06 tquirk
+ *   last updated 28 Nov 2015, 09:58:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -195,19 +195,7 @@ void Zone::stop(void)
     this->update_pool->stop();
 }
 
-void Zone::add_action_request(uint64_t from, packet *buf, size_t len)
-{
-    packet_list pl;
-
-    if (this->action_pool != NULL)
-    {
-        memcpy(&(pl.buf), buf, len);
-        pl.who = from;
-        this->action_pool->push(pl);
-    }
-}
-
-void Zone::execute_action(Control *con, action_request& req, size_t len)
+int Zone::execute_action(Control *con, action_request& req, size_t len)
 {
     std::map<uint16_t, action_rec>::iterator
         i = this->actions.find(req.action_id);
@@ -231,9 +219,10 @@ void Zone::execute_action(Control *con, action_request& req, size_t len)
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
         req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
 
-        (*(i->second.action))(con->slave,
-                              req.power_level,
-                              this->game_objects[req.dest_object_id],
-                              vec);
+        return (*(i->second.action))(con->slave,
+                                     req.power_level,
+                                     this->game_objects[req.dest_object_id],
+                                     vec);
     }
+    return -1;
 }

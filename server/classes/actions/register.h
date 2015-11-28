@@ -1,6 +1,6 @@
 /* register.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:12:56 tquirk
+ *   last updated 28 Nov 2015, 09:19:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -32,18 +32,18 @@
 
 #include "../game_obj.h"
 
-typedef void action_routine_t(GameObject *, int,
-                              GameObject *, Eigen::Vector3d&);
+typedef int action_routine_t(GameObject *, int,
+                             GameObject *, Eigen::Vector3d&);
 
 /* Prototypes for each action function */
-void action_control_object(GameObject *, int,
-                           GameObject *, Eigen::Vector3d &);
-void action_uncontrol_object(GameObject *, int,
-                             GameObject *, Eigen::Vector3d &);
-void action_move(GameObject *, int,
-                 GameObject *, Eigen::Vector3d &);
-void action_rotate(GameObject *, int,
-                   GameObject *, Eigen::Vector3d &);
+int action_control_object(GameObject *, int,
+                          GameObject *, Eigen::Vector3d &);
+int action_uncontrol_object(GameObject *, int,
+                            GameObject *, Eigen::Vector3d &);
+int action_move(GameObject *, int,
+                GameObject *, Eigen::Vector3d &);
+int action_rotate(GameObject *, int,
+                  GameObject *, Eigen::Vector3d &);
 
 struct action_routines_list_tag
 {

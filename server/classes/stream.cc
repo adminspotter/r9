@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 11:47:42 tquirk
+ *   last updated 28 Nov 2015, 09:54:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -310,7 +310,8 @@ void stream_socket::do_login(uint64_t userid, Control *con, access_list& al)
     pkt.buf.ack.sequence = stu->sequence++;
     pkt.buf.ack.request = TYPE_LOGREQ;
     pkt.buf.ack.misc = 0;
-    pkt.who = stu->userid;
+    pkt.who = con;
+    pkt.parent = this;
     this->send_pool->push(pkt);
 }
 
@@ -474,7 +475,8 @@ void *stream_socket::stream_reaper_worker(void *arg)
                 pkt.buf.basic.type = TYPE_PNGPKT;
                 pkt.buf.basic.version = 1;
                 pkt.buf.basic.sequence = stu->sequence++;
-                pkt.who = stu->userid;
+                pkt.who = stu->control;
+                pkt.parent = sts;
                 sts->send_pool->push(pkt);
             }
         }
@@ -499,7 +501,7 @@ void *stream_socket::stream_send_worker(void *arg)
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize))
         {
-            stu = dynamic_cast<stream_user *>(sts->users[req.who]);
+            stu = dynamic_cast<stream_user *>(sts->users[req.who->userid]);
             if (stu == NULL)
                 continue;
             /* TODO: Encryption */

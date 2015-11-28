@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:28:09 tquirk
+ *   last updated 28 Nov 2015, 09:51:53 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -43,6 +43,7 @@
 #include "../../proto/proto.h"
 
 /* Eliminate the multiple-include problems */
+class Control;
 class GameObject;
 class listen_socket;
 
@@ -55,7 +56,8 @@ sequence_element;
 typedef struct packet_list_tag
 {
     packet buf;
-    uint64_t who;
+    listen_socket *parent;
+    Control *who;
 }
 packet_list;
 
@@ -93,7 +95,7 @@ class action_rec
 {
   public:
     char *name;
-    void (*action)(GameObject *, int, GameObject *, Eigen::Vector3d &);
+    int (*action)(GameObject *, int, GameObject *, Eigen::Vector3d &);
     uint16_t def;                 /* The "default" skill to use */
     int lower, upper;             /* The bounds for skill levels */
     bool valid;                   /* Is this action valid on this server? */

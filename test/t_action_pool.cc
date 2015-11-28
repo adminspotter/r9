@@ -18,7 +18,7 @@ class mock_Zone : public Zone
               uint16_t d, uint16_t e, uint16_t f) : Zone(a, b, c, d, e, f) {};
     ~mock_Zone() {};
 
-    MOCK_METHOD3(execute_action, void(Control *a, action_request& b, size_t c));
+    MOCK_METHOD3(execute_action, int(Control *a, action_request& b, size_t c));
 };
 
 DB *database;
@@ -41,7 +41,7 @@ TEST(ActionPoolTest, NoSkill)
     pkt.buf.act.action_id = 12345;
     pkt.buf.act.power_level = 5;
     hton_packet(&pkt.buf, sizeof(action_request));
-    pkt.who = (uint64_t)control;
+    pkt.who = control;
 
     go->connect(control);
 
@@ -79,7 +79,7 @@ TEST(ActionPoolTest, InvalidSkill)
     pkt.buf.act.action_id = 12345;
     pkt.buf.act.power_level = 5;
     hton_packet(&pkt.buf, sizeof(action_request));
-    pkt.who = (uint64_t)control;
+    pkt.who = control;
 
     go->connect(control);
 
@@ -117,7 +117,7 @@ TEST(ActionPoolTest, WrongObjectId)
     pkt.buf.act.action_id = 12345;
     pkt.buf.act.power_level = 5;
     hton_packet(&pkt.buf, sizeof(action_request));
-    pkt.who = (uint64_t)control;
+    pkt.who = control;
 
     go->connect(control);
 
@@ -155,7 +155,7 @@ TEST(ActionPoolTest, GoodObjectId)
     pkt.buf.act.action_id = 12345;
     pkt.buf.act.power_level = 5;
     hton_packet(&pkt.buf, sizeof(action_request));
-    pkt.who = (uint64_t)control;
+    pkt.who = control;
 
     go->connect(control);
 
