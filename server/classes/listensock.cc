@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:54:24 tquirk
+ *   last updated 28 Nov 2015, 15:39:57 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -168,8 +168,6 @@ void listen_socket::login_user(access_list& p)
     memset(p.buf.log.password, 0, sizeof(p.buf.log.password));
     password.clear();
 
-    std::clog << "login request from "
-              << p.buf.log.username << " (" << userid << ")" << std::endl;
     if (userid != 0LL)
     {
         if (this->users.find(userid) == this->users.end())

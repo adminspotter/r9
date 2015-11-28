@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:57:23 tquirk
+ *   last updated 28 Nov 2015, 15:37:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -181,7 +181,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
                    sizeof(struct sockaddr_storage));
             dgs->access_pool->push(a);
         }
-        std::clog << "checked for login" << std::endl;
 
         /* Do something with whatever we got */
         switch (buf.basic.type)
@@ -215,7 +214,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
           default:
             break;
         }
-        std::clog << "done checking, deleting sockaddr" << std::endl;
         delete sa;
     }
     std::clog << "exiting connection loop for datagram port "
@@ -304,17 +302,13 @@ void *dgram_socket::dgram_send_worker(void *arg)
             /* TODO: Encryption */
             if (sendto(dgs->sock.sock,
                        (void *)&req.buf, realsize, 0,
-                       (struct sockaddr *)&(dgu->sa),
+                       (struct sockaddr *)&(dgu->sa->ss),
                        sizeof(struct sockaddr_storage)) == -1)
                 std::clog << syslogErr
                           << "error sending packet out datagram port "
                           << dgs->sock.sa->port() << ": "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
-            else
-                std::clog << "sent a packet of type "
-                          << req.buf.basic.type << " to "
-                          << dgu->sa->ntop() << std::endl;
         }
     }
     std::clog << "exiting send pool worker for datagram port "
