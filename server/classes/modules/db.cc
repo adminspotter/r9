@@ -1,6 +1,6 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Nov 2015, 13:52:26 tquirk
+ *   last updated 29 Nov 2015, 16:59:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -81,6 +81,7 @@ DB::DB(const std::string& host, const std::string& user,
        const std::string& pass, const std::string& name)
     : dbhost(host), dbuser(user), dbpass(pass), dbname(name)
 {
+    this->host_id = 0LL;
     this->get_host_address();
 }
 

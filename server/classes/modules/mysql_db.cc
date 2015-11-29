@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 14:15:02 tquirk
+ *   last updated 29 Nov 2015, 17:12:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -95,7 +95,7 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
     MYSQL_RES *res;
     MYSQL_ROW row;
     char str[256];
-    int retval = 0;
+    int retval = 1;
 
     snprintf(str, sizeof(str),
              "SELECT c.access_type "
@@ -243,22 +243,23 @@ int MySQL::get_player_server_skills(uint64_t userid,
     return count;
 }
 
-int MySQL::open_new_login(uint64_t userid, uint64_t charid)
+int MySQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 {
-    /*MYSQL_RES *res;
+    MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];*/
+    char str[256];
     int retval = 0;
 
-    /*snprintf(str, sizeof(str),
-             "INSERT INTO player_logins "
-             "(playerid, characterid, serverid, src_ip, src_port, login_time) "
-             "VALUES (%lld,%lld,%s,%d,%d)", userid, charid);
     this->db_connect();
+    snprintf(str, sizeof(str),
+             "INSERT INTO player_logins "
+             "(playerid, characterid, serverid, src_ip, src_port) "
+             "VALUES (%lld,%lld,%lld,'%s',%d)",
+             userid, charid, this->host_id, sa->hostname(), sa->port());
 
-    if ((retval = mysql_real_query(&(this->db_handle), str, strlen(str))) == 0)
-        ;
-    mysql_close(&(this->db_handle));*/
+    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0)
+        retval = mysql_affected_rows(&(this->db_handle));
+    mysql_close(&(this->db_handle));
     return retval;
 }
 
@@ -296,9 +297,25 @@ int MySQL::check_open_login(uint64_t userid, uint64_t charid)
     return retval;
 }
 
-int MySQL::close_open_login(uint64_t userid, uint64_t charid)
+int MySQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 {
-    return 0;
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    char str[256];
+    int retval = 0;
+
+    this->db_connect();
+    snprintf(str, sizeof(str),
+             "UPDATE player_logins SET logout_time=NOW() "
+             "WHERE playerid=%lld AND characterid=%lld AND "
+             "serverid=%lld AND src_ip='%s' AND src_port=%d "
+             "AND logout_time IS NULL",
+             userid, charid, this->host_id, sa->hostname(), sa->port());
+
+    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0)
+        retval = mysql_affected_rows(&(this->db_handle));
+    mysql_close(&(this->db_handle));
+    return retval;
 }
 
 void MySQL::db_connect(void)
@@ -311,6 +328,26 @@ void MySQL::db_connect(void)
         s << "couldn't connect to MySQL server: "
           << mysql_error(&(this->db_handle));
         throw std::runtime_error(s.str());
+    }
+
+    /* Retrieve our server id if we haven't already gotten it. */
+    if (this->host_id == 0LL)
+    {
+        MYSQL_RES *res;
+        MYSQL_ROW row;
+        char str[256];
+
+        snprintf(str, sizeof(str),
+                 "SELECT serverid FROM servers WHERE ip='%s'",
+                 this->host_ip);
+
+        if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
+            && (res = mysql_use_result(&(this->db_handle))) != NULL
+            && (row = mysql_fetch_row(res)) != NULL)
+        {
+            this->host_id = strtoull(row[1], NULL, 10);
+            mysql_free_result(res);
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 /* db.h                                                     -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Nov 2015, 14:10:44 tquirk
+ *   last updated 29 Nov 2015, 16:57:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -35,6 +35,7 @@
 #include <map>
 
 #include "../defs.h"
+#include "../sockaddr.h"
 
 class DB
 {
@@ -51,6 +52,7 @@ class DB
      * the IPv6 max length to ensure that everything will fit.
      */
     char host_ip[INET6_ADDRSTRLEN];
+    uint64_t host_id;
 
     void get_host_address(void);
 
@@ -63,9 +65,9 @@ class DB
     virtual uint64_t check_authentication(const std::string&,
                                            const std::string&) = 0;
     virtual int check_authorization(uint64_t, uint64_t) = 0;
-    virtual int open_new_login(uint64_t, uint64_t) = 0;
+    virtual int open_new_login(uint64_t, uint64_t, Sockaddr *) = 0;
     virtual int check_open_login(uint64_t, uint64_t) = 0;
-    virtual int close_open_login(uint64_t, uint64_t) = 0;
+    virtual int close_open_login(uint64_t, uint64_t, Sockaddr *) = 0;
     virtual int get_player_server_skills(uint64_t, uint64_t,
                                          std::map<uint16_t,
                                          action_level>&) = 0;

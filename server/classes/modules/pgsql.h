@@ -1,6 +1,6 @@
 /* pgsql.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:33:18 tquirk
+ *   last updated 29 Nov 2015, 16:38:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -49,9 +49,9 @@ class PgSQL : public DB
     /* Player functions */
     uint64_t check_authentication(const std::string&, const std::string&);
     int check_authorization(uint64_t, uint64_t);
-    int open_new_login(uint64_t, uint64_t);
+    int open_new_login(uint64_t, uint64_t, Sockaddr *);
     int check_open_login(uint64_t, uint64_t);
-    int close_open_login(uint64_t, uint64_t);
+    int close_open_login(uint64_t, uint64_t, Sockaddr *);
     int get_player_server_skills(uint64_t, uint64_t,
                                  std::map<uint16_t,
                                  action_level>&);

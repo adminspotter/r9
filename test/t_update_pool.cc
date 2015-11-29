@@ -27,9 +27,9 @@ class mock_DB : public DB
     MOCK_METHOD2(check_authentication, uint64_t(const std::string& a,
                                                 const std::string& b));
     MOCK_METHOD2(check_authorization, int(uint64_t a, uint64_t b));
-    MOCK_METHOD2(open_new_login, int(uint64_t a, uint64_t b));
+    MOCK_METHOD3(open_new_login, int(uint64_t a, uint64_t b, Sockaddr *c));
     MOCK_METHOD2(check_open_login, int(uint64_t a, uint64_t b));
-    MOCK_METHOD2(close_open_login, int(uint64_t a, uint64_t b));
+    MOCK_METHOD3(close_open_login, int(uint64_t a, uint64_t b, Sockaddr *c));
     MOCK_METHOD3(get_player_server_skills,
                  int(uint64_t a, uint64_t b,
                      std::map<uint16_t, action_level>& c));

@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:33:32 tquirk
+ *   last updated 29 Nov 2015, 16:38:57 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -93,7 +93,7 @@ int PgSQL::get_player_server_skills(uint64_t userid,
     return 0;
 }
 
-int PgSQL::open_new_login(uint64_t userid, uint64_t charid)
+int PgSQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 {
     return 0;
 }
@@ -103,7 +103,7 @@ int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
     return 0;
 }
 
-int PgSQL::close_open_login(uint64_t userid, uint64_t charid)
+int PgSQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 {
     return 0;
 }
