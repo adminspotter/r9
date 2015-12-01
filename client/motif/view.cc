@@ -1,6 +1,6 @@
 /* view.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Nov 2015, 20:36:39 tquirk
+ *   last updated 01 Dec 2015, 09:38:03 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -75,6 +75,8 @@ void init_callback(Widget w, XtPointer client_data, XtPointer call_data)
     GLXContext context;
     GLfloat white_light[] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat global_ambient[] = { 0.1, 0.1, 0.1, 1.0 };
+    int zero = 0;
+    char *empty = NULL;
 
     /* Create and set the GLXContext */
     XtVaGetValues(w, GLwNvisualInfo, &visual_info, NULL);
@@ -97,6 +99,14 @@ void init_callback(Widget w, XtPointer client_data, XtPointer call_data)
     glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glEnable(GL_LIGHT0);
+
+    /* GLUT needs initialization too */
+    glutInit(&zero, &empty);
+
+    /* Now that all the GL stuff is initialized, we'll go ahead and
+     * crank up the client core caches.
+     */
+    init_client_core();
 
     /* We have to set the viewport and projection matrix before anything
      * will show up on the screen.  The resize function does that.

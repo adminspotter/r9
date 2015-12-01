@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Nov 2015, 20:35:42 tquirk
+ *   last updated 01 Dec 2015, 09:37:36 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -101,7 +101,6 @@ int main(int argc, char **argv)
     XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
 
     config.parse_command_line(argc, argv);
-    init_client_core();
 
     mainwin = XmCreateMainWindow(toplevel, "mainwin", NULL, 0);
     XtManageChild(mainwin);
