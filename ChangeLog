@@ -973,3 +973,6 @@
 
 2015-11-28 - TAQ
 	- The action routines, in some cases, need to return a status code, so we have added a return value from each routine.  This necessitated a significant refactor of the packet_list to include a parent socket and a control object.
+
+2015-12-01 - TAQ
+	client/r9client.h - Renamed to client_core.h, and added a client_core.cc, which contains the various object caches.  We should be able to implement the guts of the client program in a single file, and have the GUI portion just display what the core is doing.

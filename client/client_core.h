@@ -1,6 +1,6 @@
-/* r9client.h
+/* client_core.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:27:10 tquirk
+ *   last updated 01 Dec 2015, 06:55:37 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -27,18 +27,17 @@
  *
  */
 
-#ifndef __INC_R9CLIENT_H__
-#define __INC_R9CLIENT_H__
+#ifndef __INC_R9CLIENT_CORE_H__
+#define __INC_R9CLIENT_CORE_H__
 
-#include "../proto/proto.h"
+void init_client_core(void);
+void cleanup_client_core(void);
 
-#ifndef STORE_PREFIX
-#define STORE_PREFIX   "/usr/share/r9/"
-#endif /* STORE_PREFIX */
-
-void draw_geometry(uint64_t, uint16_t);
 void draw_texture(uint64_t);
+void draw_geometry(uint64_t, uint16_t);
 
-void move_object(uint64_t, uint16_t, double, double, double, double, double, double);
+void draw_objects(void);
+void move_object(uint64_t, uint16_t,
+                 double, double, double, double, double, double);
 
-#endif /* __INC_R9CLIENT_H__ */
+#endif /* __INC_R9CLIENT_CORE_H__ */

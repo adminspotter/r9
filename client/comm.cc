@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Nov 2015, 16:21:36 tquirk
+ *   last updated 30 Nov 2015, 20:33:28 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -64,9 +64,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "r9client.h"
+#include "client_core.h"
 #include "comm.h"
-#include "../proto/proto.h"
 
 uint64_t Comm::sequence = 0LL;
 volatile bool Comm::thread_exit_flag = false;

@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Nov 2015, 18:41:42 tquirk
+ *   last updated 30 Nov 2015, 20:28:21 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -67,7 +67,6 @@
 #include <iomanip>
 #include <stdexcept>
 
-#include "r9client.h"
 #include "dtdresolver.h"
 
 template <typename T>

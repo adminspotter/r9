@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Nov 2015, 09:17:22 tquirk
+ *   last updated 30 Nov 2015, 20:33:23 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -47,6 +47,8 @@
 
 #include <cstdint>
 #include <queue>
+
+#include "../proto/proto.h"
 
 class Comm
 {

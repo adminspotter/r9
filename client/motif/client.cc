@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Nov 2015, 17:39:03 tquirk
+ *   last updated 30 Nov 2015, 20:35:42 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -43,15 +43,14 @@
 #include <X11/Xmu/Editres.h>
 #endif /* WANT_EDITRES */
 
+#include <iostream>
 #include <vector>
 
 #include "client.h"
 
 #include "../configdata.h"
 #include "../comm.h"
-#include "../geometry.h"
-#include "../texture.h"
-#include "../object.h"
+#include "../client_core.h"
 
 static void save_callback(Widget, XtPointer, XtPointer);
 static void save_complete_callback(Widget, XtPointer, XtPointer);
@@ -62,9 +61,6 @@ static Boolean save_state(void);
 static Widget toplevel;
 static String restart_command[6], discard_command[4];
 
-GeometryCache *geom;
-TextureCache *tex;
-ObjectCache *obj;
 /* We can be connected to more than one server at a time */
 std::vector<Comm *> comm;
 ConfigData config;
@@ -105,9 +101,7 @@ int main(int argc, char **argv)
     XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
 
     config.parse_command_line(argc, argv);
-    geom = new GeometryCache("geometry");
-    tex = new TextureCache("texture");
-    obj = new ObjectCache("object");
+    init_client_core();
 
     mainwin = XmCreateMainWindow(toplevel, "mainwin", NULL, 0);
     XtManageChild(mainwin);
@@ -135,9 +129,7 @@ int main(int argc, char **argv)
     XtAppMainLoop(context);
 
     cleanup_comm();
-    delete obj;
-    delete tex;
-    delete geom;
+    cleanup_client_core();
     config.write_config_file();
 
     return 0;

@@ -1,6 +1,6 @@
-/* object.cc
+/* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2015, 08:40:02 tquirk
+ *   last updated 01 Dec 2015, 06:56:11 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains some basic object-management routines.
+ * This file contains the caches and some general drawing routines.
  *
  * Things to do
  *   - Act sensibly in draw_objects, instead of brute-forcing it.
@@ -31,11 +31,54 @@
 
 #include <functional>
 
+#include "client_core.h"
+
+#include "texture.h"
+#include "geometry.h"
 #include "object.h"
 
-extern void expose_main_view(void);
+TextureCache *tex = NULL;
+GeometryCache *geom = NULL;
+ObjectCache *obj = NULL;
 
-extern ObjectCache *obj;
+void init_client_core(void)
+{
+    tex = new TextureCache("texture");
+    geom = new GeometryCache("geometry");
+    obj = new ObjectCache("object");
+}
+
+void cleanup_client_core(void)
+{
+    if (tex != NULL)
+    {
+        delete tex;
+        tex = NULL;
+    }
+    if (geom != NULL)
+    {
+        delete geom;
+        geom = NULL;
+    }
+    if (obj != NULL)
+    {
+        delete obj;
+        obj = NULL;
+    }
+}
+
+void draw_texture(uint64_t texid)
+{
+    texture& t = (*tex)[texid];
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, t.diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, t.specular);
+    glMaterialf(GL_FRONT, GL_SHININESS, t.shininess);
+}
+
+void draw_geometry(uint64_t geomid, uint16_t frame)
+{
+    glCallList((*geom)[geomid][frame]);
+}
 
 struct draw_object
 {
@@ -74,7 +117,4 @@ void move_object(uint64_t objectid, uint16_t frame,
     oref.orientation[0] = xori;
     oref.orientation[1] = yori;
     oref.orientation[2] = zori;
-
-    /* Post an expose for the screen */
-    expose_main_view();
 }

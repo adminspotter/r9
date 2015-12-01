@@ -1,6 +1,6 @@
 /* view.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Nov 2015, 07:16:30 tquirk
+ *   last updated 30 Nov 2015, 20:36:39 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -41,8 +41,8 @@
 
 #include <iostream>
 
+#include "../client_core.h"
 #include "client.h"
-#include "../cache.h"
 
 static void init_callback(Widget, XtPointer, XtPointer);
 static void resize_callback(Widget, XtPointer, XtPointer);
