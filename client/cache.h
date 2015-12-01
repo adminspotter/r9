@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Nov 2015, 20:28:21 tquirk
+ *   last updated 01 Dec 2015, 07:20:05 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -244,7 +244,9 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
             catch (XNS::SAXException& s)
             {
                 std::clog << "Couldn't load " << this->type
-                          << " data file: " << s.getMessage() << std::endl;
+                          << " data file: "
+                          << XNS::XMLString::transcode(s.getMessage())
+                          << std::endl;
             }
             catch (std::exception& e)
             {
