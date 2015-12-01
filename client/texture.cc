@@ -1,6 +1,6 @@
 /* texture.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Nov 2015, 19:42:34 tquirk
+ *   last updated 01 Dec 2015, 08:18:08 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -240,8 +240,8 @@ TextureParser::TextureParser(texture *obj)
 {
     this->tex = obj;
     this->current = start;
-    this->dtd_path = XNS::XMLString::transcode(DTD_PATH);
-    this->dtd_name = XNS::XMLString::transcode("texture.dtd");
+    this->dtd_path = DTD_PATH;
+    this->dtd_name = "texture.dtd";
 }
 
 TextureParser::~TextureParser()

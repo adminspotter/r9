@@ -1,6 +1,6 @@
 /* dtdresolver.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Nov 2015, 18:43:04 tquirk
+ *   last updated 01 Dec 2015, 08:23:18 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -40,14 +40,19 @@
 class R9Resolver : public XNS::EntityResolver
 {
   public:
-    XMLCh *dtd_path, *dtd_name;
+    const char *dtd_path, *dtd_name;
 
     XNS::InputSource *resolveEntity(const XMLCh *const pub_id,
                                     const XMLCh *const sys_id)
         {
-            if (XNS::XMLString::compareString(sys_id, this->dtd_name))
-                return new XNS::LocalFileInputSource(this->dtd_path,
-                                                     this->dtd_name);
+            char *sys_string = XNS::XMLString::transcode(sys_id);
+
+            if (strcmp(this->dtd_name, sys_string) == 0)
+            {
+                XMLCh *path = XNS::XMLString::transcode(this->dtd_path);
+                XMLCh *name = XNS::XMLString::transcode(this->dtd_name);
+                return new XNS::LocalFileInputSource(path, name);
+            }
             return NULL;
         };
 };

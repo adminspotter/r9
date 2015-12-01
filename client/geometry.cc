@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Dec 2015, 06:54:22 tquirk
+ *   last updated 01 Dec 2015, 08:17:44 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -368,8 +368,8 @@ GeometryParser::GeometryParser(geometry *elem)
 {
     this->geom = elem;
     this->current = start;
-    this->dtd_path = XNS::XMLString::transcode(DTD_PATH);
-    this->dtd_name = XNS::XMLString::transcode("geometry.dtd");
+    this->dtd_path = DTD_PATH;
+    this->dtd_name = "geometry.dtd";
 }
 
 GeometryParser::~GeometryParser()
