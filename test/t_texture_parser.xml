@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no" ?>
 
-<!DOCTYPE texture SYSTEM "subjects.dtd">
+<!DOCTYPE texture SYSTEM "texture.dtd">
 
 <texture version="1" identifier="0">
   <diffuse>

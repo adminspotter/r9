@@ -16,7 +16,8 @@ TEST(TextureParserTest, DTDSearchPath)
     parser->setValidationSchemaFullChecking(true);
     parser->setDoNamespaces(true);
     texparse = new TextureParser(tex);
-    texparse->dtd_path = XNS::XMLString::transcode("../client/");
+    texparse->dtd_path = DTD_PATH;
+    texparse->dtd_name = "texture.dtd";
     parser->setDocumentHandler((XNS::DocumentHandler *)texparse);
     parser->setErrorHandler((XNS::ErrorHandler *)texparse);
     parser->setEntityResolver((R9Resolver *)texparse);

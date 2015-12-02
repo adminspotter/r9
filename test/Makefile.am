@@ -132,6 +132,9 @@ t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 t_tcl_LDADD = $(GTEST_LIBS)
 
 t_cache_SOURCES = t_cache.cc ../client/cache.h
+t_cache_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
+	$(GTEST_INCLUDES) $(GMOCK_INCLUDES) \
+	-DSTORE_PREFIX=\"../client\"
 t_cache_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) $(CLIENT_LDLIBS)
 
 t_configdata_SOURCES = t_configdata.cc \
@@ -141,6 +144,6 @@ t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)
 t_texture_parser_SOURCES = t_texture_parser.cc \
 	../client/texture.cc ../client/texture.h
 t_texture_parser_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
-	-DDTD_PATH=\"../client\" \
+	-DDTD_PATH=\"../client/\" -DSTORE_PREFIX=\"../client\" \
 	$(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_texture_parser_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)
