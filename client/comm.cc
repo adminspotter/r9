@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Nov 2015, 20:33:28 tquirk
+ *   last updated 02 Dec 2015, 07:22:53 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -70,47 +70,6 @@
 uint64_t Comm::sequence = 0LL;
 volatile bool Comm::thread_exit_flag = false;
 
-std::ostream& operator<<(std::ostream& os, const struct sockaddr *sa)
-{
-    char addrstr[INET6_ADDRSTRLEN];
-
-    os << "Family:   ";
-    switch (sa->sa_family)
-    {
-      case AF_INET:
-      {
-          struct sockaddr_in *sin = (struct sockaddr_in *)sa;
-
-          os << "AF_INET" << std::endl;
-          os << "Port:     " << ntohs(sin->sin_port) << std::endl;
-          os << "Address:  ";
-          inet_ntop(AF_INET, (void *)&sin->sin_addr, addrstr, INET6_ADDRSTRLEN);
-          os << addrstr << std::endl;
-          break;
-      }
-
-      case AF_INET6:
-      {
-          struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
-
-          os << "AF_INET6" << std::endl;
-          os << "Port:     " << ntohs(sin6->sin6_port) << std::endl;
-          os << "Flowinfo: " << ntohl(sin6->sin6_flowinfo) << std::endl;
-          os << "Address:  ";
-          inet_ntop(AF_INET6, (void *)&sin6->sin6_addr,
-                    addrstr, INET6_ADDRSTRLEN);
-          os << addrstr << std::endl;
-          os << "Scope ID: " << ntohl(sin6->sin6_scope_id) << std::endl;
-          break;
-      }
-
-      default:
-        os << "unknown" << std::endl;
-        break;
-    }
-    return os;
-}
-
 void Comm::create_socket(struct addrinfo *ai)
 {
     if ((this->sock = socket(ai->ai_family,
@@ -123,6 +82,23 @@ void Comm::create_socket(struct addrinfo *ai)
         throw std::runtime_error(s.str());
     }
     memcpy(&this->remote, ai->ai_addr, sizeof(sockaddr_storage));
+
+    /* OSX requires a family-specific size, rather than just
+     * sizeof(sockaddr_storage).
+     */
+    switch (ai->ai_family)
+    {
+      case AF_INET:
+        this->remote_size = sizeof(sockaddr_in);
+        break;
+
+      case AF_INET6:
+        this->remote_size = sizeof(sockaddr_in6);
+        break;
+
+      default:
+        break;
+    }
 }
 
 void *Comm::send_worker(void *arg)
@@ -145,15 +121,13 @@ void *Comm::send_worker(void *arg)
             pthread_exit(NULL);
         }
 
-        std::cout << (struct sockaddr *)&comm->remote << std::endl;
         if (sendto(comm->sock,
                    (void *)pkt, packet_size(pkt),
                    0,
                    (struct sockaddr *)&comm->remote,
-                   sizeof(struct sockaddr_storage)) == -1)
-            std::cout << "got a send error: " << strerror(errno) << " (" << errno << ')' << std::endl;
-        else
-            std::cout << "sent packet" << std::endl;
+                   comm->remote_size) == -1)
+            std::clog << "got a send error: "
+                      << strerror(errno) << " (" << errno << ')' << std::endl;
         pthread_mutex_unlock(&(comm->send_lock));
         memset(pkt, 0, sizeof(packet));
         delete pkt;
