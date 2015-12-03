@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 15:39:57 tquirk
+ *   last updated 03 Dec 2015, 16:51:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -84,7 +84,7 @@ listen_socket::listen_socket(struct addrinfo *ai)
 listen_socket::~listen_socket()
 {
     int retval;
-    std::map<uint64_t, base_user *>::iterator i;
+    listen_socket::users_iterator i;
 
     try { this->stop(); }
     catch (std::exception& e) { /* Do nothing */ }
@@ -158,9 +158,10 @@ void *listen_socket::access_pool_worker(void *arg)
 
 void listen_socket::login_user(access_list& p)
 {
-    uint64_t userid = 0LL;
+    uint64_t userid = 0LL, char_objid = 0LL;
     std::string username(p.buf.log.username, sizeof(p.buf.log.username));
     std::string password(p.buf.log.password, sizeof(p.buf.log.password));
+    std::string charname(p.buf.log.charname, sizeof(p.buf.log.charname));
 
     userid = database->check_authentication(username, password);
 
@@ -168,7 +169,9 @@ void listen_socket::login_user(access_list& p)
     memset(p.buf.log.password, 0, sizeof(p.buf.log.password));
     password.clear();
 
-    if (userid != 0LL)
+    char_objid = database->get_character_objectid(charname);
+
+    if (userid != 0LL && char_objid != 0LL)
     {
         if (this->users.find(userid) == this->users.end())
         {
@@ -181,6 +184,9 @@ void listen_socket::login_user(access_list& p)
             std::clog << "logged in user "
                       << newcontrol->username
                       << " (" << userid << ")" << std::endl;
+
+            /* Hook the new control up to the appropriate object */
+            zone->connect_game_object(newcontrol, char_objid);
         }
     }
     /* Otherwise, do nothing, and send nothing */
@@ -189,7 +195,7 @@ void listen_socket::login_user(access_list& p)
 void listen_socket::logout_user(access_list& p)
 {
     packet_list pkt;
-    std::map<uint64_t, base_user *>::iterator found;
+    listen_socket::users_iterator found;
 
     /* Most of this function is now handled by the reaper threads */
     if ((found = this->users.find(p.what.logout.who)) != this->users.end())

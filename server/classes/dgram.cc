@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Dec 2015, 17:47:59 tquirk
+ *   last updated 03 Dec 2015, 16:52:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -127,7 +127,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     Sockaddr *sa;
     struct sockaddr_storage from;
     socklen_t fromlen;
-    std::map<Sockaddr *, dgram_user *, less_sockaddr>::iterator found;
+    dgram_socket::socks_iterator found;
     access_list a;
     packet_list p;
 
@@ -224,7 +224,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
 void *dgram_socket::dgram_reaper_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
-    std::map<uint64_t, base_user *>::iterator i;
+    listen_socket::users_iterator i;
     dgram_user *dgu;
     time_t now;
 

@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 10:56:12 tquirk
+ *   last updated 03 Dec 2015, 16:51:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -72,6 +72,9 @@ class listen_socket {
 
   public:
     std::map<uint64_t, base_user *> users;
+
+    typedef std::map<uint64_t, base_user *>::iterator users_iterator;
+
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
     basesock sock;

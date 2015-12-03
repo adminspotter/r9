@@ -1,6 +1,6 @@
 /* console.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Nov 2015, 07:59:24 tquirk
+ *   last updated 03 Dec 2015, 16:41:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -79,6 +79,8 @@ class Console : public basesock
 {
   protected:
     std::vector<ConsoleSession *> sessions;
+
+    typedef std::vector<ConsoleSession *>::iterator sessions_iterator;
 
   public:
     Console(struct addrinfo *);

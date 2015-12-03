@@ -1,6 +1,6 @@
 /* control.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2015, 08:16:33 tquirk
+ *   last updated 03 Dec 2015, 16:13:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -47,6 +47,8 @@ class Control
     GameObject *default_slave, *slave;
     std::string username;
     std::map<uint16_t, action_level> actions;
+
+    typedef std::map<uint16_t, action_level>::iterator actions_iterator;
 
   public:
     Control(uint64_t, GameObject *);
