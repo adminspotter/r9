@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Dec 2015, 17:50:30 tquirk
+ *   last updated 03 Dec 2015, 07:42:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -79,7 +79,7 @@ uint64_t MySQL::check_authentication(const std::string& user,
         && (res = mysql_use_result(&(this->db_handle))) != NULL
         && (row = mysql_fetch_row(res)) != NULL)
     {
-        retval = atol(row[0]);
+        retval = strtoull(row[0], NULL, 10);
         mysql_free_result(res);
     }
     mysql_close(&(this->db_handle));
@@ -115,6 +115,34 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
         && (row = mysql_fetch_row(res)) != NULL)
     {
         retval = atoi(row[0]);
+        mysql_free_result(res);
+    }
+    mysql_close(&(this->db_handle));
+    return retval;
+}
+
+uint64_t MySQL::get_character_objectid(const std::string& charname)
+{
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    char str[256];
+    uint64_t retval = 0;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.objectid "
+             "FROM characters AS a, servers AS b, server_characters AS c "
+             "WHERE a.charactername='%.*s' "
+             "AND a.characterid = c.characterid "
+             "AND b.serverid=c.serverid "
+             "AND b.ip='%s'",
+             DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
+    this->db_connect();
+
+    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
+        && (res = mysql_use_result(&(this->db_handle))) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
+    {
+        retval = strtoull(row[0], NULL, 10);
         mysql_free_result(res);
     }
     mysql_close(&(this->db_handle));

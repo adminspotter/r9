@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Nov 2015, 16:38:57 tquirk
+ *   last updated 03 Dec 2015, 07:36:20 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -74,6 +74,11 @@ uint64_t PgSQL::check_authentication(const std::string& user, const std::string&
 int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
 {
     return 0;
+}
+
+uint64_t PgSQL::get_character_objectid(const std::string& charname)
+{
+    return 0LL;
 }
 
 int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
