@@ -1,6 +1,6 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:17:39 tquirk
+ *   last updated 02 Dec 2015, 17:48:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -50,7 +50,7 @@ int action_control_object(GameObject *source,
     Control *src = (Control *)source;
     int access_type = ACCESS_NONE;
 
-    if (src->slave == NULL)
+    if (src->slave == NULL && target != NULL)
     {
         /* Figure out if the player actually has access to the target */
         if ((access_type
@@ -59,7 +59,11 @@ int action_control_object(GameObject *source,
             != ACCESS_NONE)
         {
             if (target->connect(src))
+            {
+                target->natures.erase("invisible");
+                target->natures.erase("non-interactive");
                 src->slave = target;
+            }
         }
         /* Let the user know how things worked out */
         return access_type;

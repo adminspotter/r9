@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Nov 2015, 17:12:18 tquirk
+ *   last updated 02 Dec 2015, 17:50:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -189,8 +189,8 @@ int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
             go->position[1] = atol(row[2]) / 100.0;
             go->position[2] = atol(row[3]) / 100.0;
             /* All objects first rez invisible and non-interactive */
-            go->natures["invisible"] = 1;
-            go->natures["non-interactive"] = 1;
+            go->natures.insert("invisible");
+            go->natures.insert("non-interactive");
             gomap[id] = go;
             ++count;
         }

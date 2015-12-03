@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 15:37:39 tquirk
+ *   last updated 02 Dec 2015, 17:47:59 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -248,8 +248,8 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
                 if (dgu->control->slave != NULL)
                 {
                     /* Clean up a user who has logged out */
-                    dgu->control->slave->natures["invisible"] = 1;
-                    dgu->control->slave->natures["non-interactive"] = 1;
+                    dgu->control->slave->natures.insert("invisible");
+                    dgu->control->slave->natures.insert("non-interactive");
                 }
                 delete dgu->control;
                 dgs->socks.erase(dgu->sa);

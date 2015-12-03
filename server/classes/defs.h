@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:51:53 tquirk
+ *   last updated 02 Dec 2015, 18:31:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -116,7 +116,6 @@ class action_rec
         };
 };
 typedef int attribute;
-typedef int nature;
 typedef struct action_level_tag
 {
     uint16_t index, level, improvement;

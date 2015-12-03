@@ -1,6 +1,6 @@
 /* game_obj.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:03:32 tquirk
+ *   last updated 02 Dec 2015, 17:48:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,6 +36,7 @@
 #include <cstdint>
 #include <string>
 #include <map>
+#include <set>
 
 #include <Eigen/Dense>
 
@@ -57,7 +58,7 @@ class GameObject
 
   public:
     std::map<std::string, attribute> attributes;
-    std::map<std::string, nature> natures;
+    std::set<std::string> natures;
     Geometry *geometry;
     Control *master;
     struct timeval last_updated;
