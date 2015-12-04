@@ -1,6 +1,6 @@
 /* setup.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Nov 2015, 09:23:50 tquirk
+ *   last updated 04 Dec 2015, 13:28:32 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -68,7 +68,7 @@ static void settings_apply_callback(Widget, XtPointer, XtPointer);
 static void settings_cancel_callback(Widget, XtPointer, XtPointer);
 
 static Widget settingbox, settingnb;
-static Widget networkhost, networkport, networkuser, networkpass;
+static Widget networkhost, networkport, networkuser, networkpass, networkchar;
 
 Widget create_settings_box(Widget parent)
 {
@@ -168,7 +168,7 @@ static void create_network_settings_form(Widget parent, int pgnum)
                                              parent,
                                              XmNnotebookChildType, XmPAGE,
                                              XmNpageNumber, pgnum,
-                                             XmNnumColumns, 4,
+                                             XmNnumColumns, 5,
                                              XmNorientation, XmHORIZONTAL,
                                              XmNpacking, XmPACK_COLUMN,
                                              XmNentryVerticalAlignment,
@@ -210,6 +210,14 @@ static void create_network_settings_form(Widget parent, int pgnum)
                                            settingnetwork,
                                            NULL);
     networkpass = XtVaCreateManagedWidget("networkpass",
+                                          xmTextFieldWidgetClass,
+                                          settingnetwork,
+                                          NULL);
+    networklabel = XtVaCreateManagedWidget("networkcharlabel",
+                                           xmLabelWidgetClass,
+                                           settingnetwork,
+                                           NULL);
+    networkchar = XtVaCreateManagedWidget("networkchar",
                                           xmTextFieldWidgetClass,
                                           settingnetwork,
                                           NULL);
@@ -301,6 +309,11 @@ static void settings_apply_callback(Widget w,
     XtVaGetValues(networkpass, XmNvalue, &c_ptr, NULL);
     if (config.password != c_ptr)
         config.password = c_ptr;
+    XtFree(c_ptr);
+
+    XtVaGetValues(networkchar, XmNvalue, &c_ptr, NULL);
+    if (config.charname != c_ptr)
+        config.charname = c_ptr;
     XtFree(c_ptr);
 }
 

@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Dec 2015, 07:15:14 tquirk
+ *   last updated 04 Dec 2015, 13:21:14 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -78,7 +78,7 @@ class Comm
 
     void send(packet *, size_t);
 
-    void send_login(const std::string&, const std::string&);
+    void send_login(const std::string&, const std::string&, const std::string&);
     void send_action_request(uint16_t, uint64_t, uint8_t);
     void send_logout(void);
     void send_ack(uint8_t);

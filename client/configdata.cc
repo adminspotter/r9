@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Nov 2015, 10:18:38 tquirk
+ *   last updated 04 Dec 2015, 13:25:32 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -84,7 +84,8 @@ handlers[] =
     { "ServerAddr", off(server_addr), &read_string,  &write_string  },
     { "ServerPort", off(server_port), &read_integer, &write_integer },
     { "Username",   off(username),    &read_string,  &write_string  },
-    { "Password",   off(password),    &read_string,  &write_string  }
+    { "Password",   off(password),    &read_string,  &write_string  },
+    { "Charname",   off(charname),    &read_string,  &write_string  }
 #undef off
 };
 
