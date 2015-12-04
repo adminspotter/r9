@@ -2,6 +2,7 @@
 #include "../server/classes/listensock.h"
 #include "../server/config_data.h"
 #include "../server/classes/modules/db.h"
+#include "../server/classes/zone.h"
 
 #include <iostream>
 
@@ -13,6 +14,7 @@
 using ::testing::_;
 
 std::vector<listen_socket *> sockets;
+Zone *zone;
 
 class mock_DB : public DB
 {

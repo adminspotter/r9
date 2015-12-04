@@ -1,6 +1,6 @@
 /* game_obj.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Dec 2015, 17:48:00 tquirk
+ *   last updated 04 Dec 2015, 08:05:41 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -78,6 +78,8 @@ class GameObject
 
     bool connect(Control *);
     void disconnect(Control *);
+
+    double distance_from(Eigen::Vector3d&);
 };
 
 #endif /* __INC_GAME_OBJ_H__ */

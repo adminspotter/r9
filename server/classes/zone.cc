@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:26:20 tquirk
+ *   last updated 04 Dec 2015, 08:24:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -205,12 +205,20 @@ void Zone::connect_game_object(Control *con, uint64_t objid)
     {
         /* Create the object? */
         go = new GameObject(NULL, con, objid);
+        /* Set a position somewhere - the spawn point, perhaps? */
     }
     else
         go = gi->second;
     go->connect(con);
+    this->update_pool->push(go);
 
     /* Send updates on all objects within visual range */
+    for (gi = this->game_objects.begin(); gi != this->game_objects.end(); ++gi)
+    {
+        /* Figure out how to send only to specific users */
+        if (go->distance_from(gi->second->position) < 1000.0)
+            this->update_pool->push(gi->second);
+    }
 }
 
 int Zone::execute_action(Control *con, action_request& req, size_t len)
