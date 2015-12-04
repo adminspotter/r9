@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 15:37:39 tquirk
+ *   last updated 03 Dec 2015, 16:52:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -127,7 +127,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     Sockaddr *sa;
     struct sockaddr_storage from;
     socklen_t fromlen;
-    std::map<Sockaddr *, dgram_user *, less_sockaddr>::iterator found;
+    dgram_socket::socks_iterator found;
     access_list a;
     packet_list p;
 
@@ -224,7 +224,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
 void *dgram_socket::dgram_reaper_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
-    std::map<uint64_t, base_user *>::iterator i;
+    listen_socket::users_iterator i;
     dgram_user *dgu;
     time_t now;
 
@@ -248,8 +248,8 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
                 if (dgu->control->slave != NULL)
                 {
                     /* Clean up a user who has logged out */
-                    dgu->control->slave->natures["invisible"] = 1;
-                    dgu->control->slave->natures["non-interactive"] = 1;
+                    dgu->control->slave->natures.insert("invisible");
+                    dgu->control->slave->natures.insert("non-interactive");
                 }
                 delete dgu->control;
                 dgs->socks.erase(dgu->sa);

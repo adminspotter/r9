@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:59:44 tquirk
+ *   last updated 03 Dec 2015, 16:17:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -68,6 +68,10 @@ class Zone
   public:
     std::map<uint16_t, action_rec> actions;
     std::map<uint64_t, GameObject *> game_objects;
+
+    typedef std::map<uint16_t, action_rec>::iterator actions_iterator;
+    typedef std::map<uint64_t, GameObject *>::iterator objects_iterator;
+
     ActionPool *action_pool;   /* Takes action requests      */
     MotionPool *motion_pool;   /* Processes motion/collision */
     UpdatePool *update_pool;   /* Sends motion updates       */
@@ -115,6 +119,7 @@ class Zone
     void start(void);
     void stop(void);
 
+    virtual void connect_game_object(Control *, uint64_t);
     virtual int execute_action(Control *, action_request&, size_t);
 };
 

@@ -1,6 +1,6 @@
 /* db.h                                                     -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Nov 2015, 16:57:25 tquirk
+ *   last updated 03 Dec 2015, 07:41:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -46,6 +46,7 @@ class DB
     /* A couple of maximum lengths */
     static const int MAX_USERNAME = 64;
     static const int MAX_PASSWORD = 64;
+    static const int MAX_CHARNAME = 64;
 
   protected:
     /* IPv6 addresses can be a lot longer than IPv4, so we'll just use
@@ -65,6 +66,7 @@ class DB
     virtual uint64_t check_authentication(const std::string&,
                                            const std::string&) = 0;
     virtual int check_authorization(uint64_t, uint64_t) = 0;
+    virtual uint64_t get_character_objectid(const std::string&) = 0;
     virtual int open_new_login(uint64_t, uint64_t, Sockaddr *) = 0;
     virtual int check_open_login(uint64_t, uint64_t) = 0;
     virtual int close_open_login(uint64_t, uint64_t, Sockaddr *) = 0;

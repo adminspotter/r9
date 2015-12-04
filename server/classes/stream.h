@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2015, 12:53:39 tquirk
+ *   last updated 03 Dec 2015, 16:36:57 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -62,6 +62,9 @@ class stream_socket : public listen_socket
   private:
     int max_fd;
     std::vector<stream_socket::subserver> subservers;
+
+    typedef std::vector<stream_socket::subserver>::iterator subserver_iterator;
+
     fd_set readfs, master_readfs;
 
   private:

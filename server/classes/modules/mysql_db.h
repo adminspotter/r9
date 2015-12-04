@@ -1,6 +1,6 @@
 /* mysql_db.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Nov 2015, 16:57:14 tquirk
+ *   last updated 03 Dec 2015, 07:41:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -48,6 +48,7 @@ class MySQL : public DB
     /* Player functions */
     uint64_t check_authentication(const std::string&, const std::string&);
     int check_authorization(uint64_t, uint64_t);
+    uint64_t get_character_objectid(const std::string&);
     int open_new_login(uint64_t, uint64_t, Sockaddr *);
     int check_open_login(uint64_t, uint64_t);
     int close_open_login(uint64_t, uint64_t, Sockaddr *);

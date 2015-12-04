@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:58:42 tquirk
+ *   last updated 04 Dec 2015, 08:24:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -145,7 +145,7 @@ Zone::~Zone()
     std::clog << "deleting game objects" << std::endl;
     if (this->game_objects.size())
     {
-        std::map<uint64_t, GameObject *>::iterator i;
+        Zone::objects_iterator i;
 
         for (i = this->game_objects.begin();
              i != this->game_objects.end();
@@ -195,12 +195,36 @@ void Zone::stop(void)
     this->update_pool->stop();
 }
 
+void Zone::connect_game_object(Control *con, uint64_t objid)
+{
+    GameObject *go;
+    Zone::objects_iterator gi = this->game_objects.find(objid);
+
+    /* Hook up to our character object */
+    if (gi == this->game_objects.end())
+    {
+        /* Create the object? */
+        go = new GameObject(NULL, con, objid);
+        /* Set a position somewhere - the spawn point, perhaps? */
+    }
+    else
+        go = gi->second;
+    go->connect(con);
+    this->update_pool->push(go);
+
+    /* Send updates on all objects within visual range */
+    for (gi = this->game_objects.begin(); gi != this->game_objects.end(); ++gi)
+    {
+        /* Figure out how to send only to specific users */
+        if (go->distance_from(gi->second->position) < 1000.0)
+            this->update_pool->push(gi->second);
+    }
+}
+
 int Zone::execute_action(Control *con, action_request& req, size_t len)
 {
-    std::map<uint16_t, action_rec>::iterator
-        i = this->actions.find(req.action_id);
-    std::map<uint16_t, action_level>::iterator
-        j = con->actions.find(req.action_id);
+    Zone::actions_iterator i = this->actions.find(req.action_id);
+    Control::actions_iterator j = con->actions.find(req.action_id);
     Eigen::Vector3d vec;
 
     vec << req.x_pos_dest, req.y_pos_dest, req.z_pos_dest;

@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:54:48 tquirk
+ *   last updated 03 Dec 2015, 16:53:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -231,7 +231,7 @@ int stream_socket::pass_fd(int fd, int new_fd)
 
 stream_socket::~stream_socket()
 {
-    std::vector<subserver>::iterator i;
+    stream_socket::subserver_iterator i;
 
     if (this->sock.sock != 0)
         FD_CLR(this->sock.sock, &this->master_readfs);
@@ -323,7 +323,7 @@ void *stream_socket::stream_listen_worker(void *arg)
     struct sockaddr_in sin;
     socklen_t slen;
     struct linger ls;
-    std::vector<subserver>::iterator i, j;
+    stream_socket::subserver_iterator i, j;
 
     for (;;)
     {
@@ -431,7 +431,7 @@ void *stream_socket::stream_listen_worker(void *arg)
 void *stream_socket::stream_reaper_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
-    std::map<uint64_t, base_user *>::iterator i;
+    listen_socket::users_iterator i;
     stream_user *stu;
     time_t now;
 
@@ -455,8 +455,8 @@ void *stream_socket::stream_reaper_worker(void *arg)
                 if (stu->control->slave != NULL)
                 {
                     /* Clean up a user who has logged out */
-                    stu->control->slave->natures["invisible"] = 1;
-                    stu->control->slave->natures["non-interactive"] = 1;
+                    stu->control->slave->natures.insert("invisible");
+                    stu->control->slave->natures.insert("non-interactive");
                 }
                 delete stu->control;
                 /* Tell subserver stu->subserv to close and erase user

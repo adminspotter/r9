@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 08:01:20 tquirk
+ *   last updated 03 Dec 2015, 16:34:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -123,6 +123,7 @@ typedef struct login_request_tag
     uint64_t sequence;      /* timestamp / sequence number */
     char username[64];
     char password[64];
+    char charname[64];
 } __attribute__ ((__packed__))
 login_request;
 

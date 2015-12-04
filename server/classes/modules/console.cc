@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Nov 2015, 14:30:26 tquirk
+ *   last updated 03 Dec 2015, 16:41:40 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -154,7 +154,7 @@ Console::Console(struct addrinfo *ai)
 
 Console::~Console()
 {
-    std::vector<ConsoleSession *>::iterator i;
+    Console::sessions_iterator i;
 
     for (i = this->sessions.begin(); i != this->sessions.end(); ++i)
         delete *i;

@@ -2,6 +2,7 @@
 #include "../server/classes/listensock.h"
 #include "../server/config_data.h"
 #include "../server/classes/modules/db.h"
+#include "../server/classes/zone.h"
 
 #include <iostream>
 
@@ -13,6 +14,7 @@
 using ::testing::_;
 
 std::vector<listen_socket *> sockets;
+Zone *zone;
 
 class mock_DB : public DB
 {
@@ -27,6 +29,7 @@ class mock_DB : public DB
     MOCK_METHOD2(check_authentication, uint64_t(const std::string& a,
                                                 const std::string& b));
     MOCK_METHOD2(check_authorization, int(uint64_t a, uint64_t b));
+    MOCK_METHOD1(get_character_objectid, uint64_t(const std::string& a));
     MOCK_METHOD3(open_new_login, int(uint64_t a, uint64_t b, Sockaddr *c));
     MOCK_METHOD2(check_open_login, int(uint64_t a, uint64_t b));
     MOCK_METHOD3(close_open_login, int(uint64_t a, uint64_t b, Sockaddr *c));

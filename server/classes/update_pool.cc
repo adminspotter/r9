@@ -1,6 +1,6 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:55:52 tquirk
+ *   last updated 03 Dec 2015, 16:52:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -56,7 +56,7 @@ void *UpdatePool::update_pool_worker(void *arg)
     GameObject *req;
     packet_list pkt;
     std::vector<listen_socket *>::iterator sock;
-    std::map<uint64_t, base_user *>::iterator user;
+    listen_socket::users_iterator user;
 
     for (;;)
     {

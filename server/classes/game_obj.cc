@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 08:03:05 tquirk
+ *   last updated 04 Dec 2015, 08:05:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -102,4 +102,12 @@ void GameObject::disconnect(Control *con)
      */
     if (this->master == con)
         master = default_master;
+}
+
+double GameObject::distance_from(Eigen::Vector3d& pt)
+{
+    Eigen::Vector3d dist;
+
+    dist = this->position.cwiseProduct(this->position) + pt.cwiseProduct(pt);
+    return sqrt(dist[0] + dist[1] + dist[2]);
 }
