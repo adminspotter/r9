@@ -79,17 +79,18 @@ CREATE TABLE character_skills (
   FOREIGN KEY (skillid) REFERENCES skills(skillid) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE server_characters (
+CREATE TABLE server_objects (
   serverid BIGINT NOT NULL,
-  characterid BIGINT NOT NULL,
   objectid BIGINT NOT NULL,
+  characterid BIGINT NOT NULL,
+  geometryid BIGINT DEFAULT 0,
   sector_x BIGINT NOT NULL,
   sector_y BIGINT NOT NULL,
   sector_z BIGINT NOT NULL,
   pos_x BIGINT NOT NULL,
   pos_y BIGINT NOT NULL,
   pos_z BIGINT NOT NULL,
-  PRIMARY KEY (serverid, characterid),
+  PRIMARY KEY (serverid, objectid, characterid),
   FOREIGN KEY (serverid) REFERENCES servers(serverid) ON UPDATE CASCADE ON DELETE NO ACTION,
   FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

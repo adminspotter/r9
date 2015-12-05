@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 07:42:32 tquirk
+ *   last updated 05 Dec 2015, 07:55:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -130,7 +130,7 @@ uint64_t MySQL::get_character_objectid(const std::string& charname)
 
     snprintf(str, sizeof(str),
              "SELECT c.objectid "
-             "FROM characters AS a, servers AS b, server_characters AS c "
+             "FROM characters AS a, servers AS b, server_objects AS c "
              "WHERE a.charactername='%.*s' "
              "AND a.characterid = c.characterid "
              "AND b.serverid=c.serverid "
@@ -196,8 +196,8 @@ int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
     int count = 0;
 
     snprintf(str, sizeof(str),
-             "SELECT b.objectid, b.pos_x, b.pos_y, b.pos_z "
-             "FROM servers AS a, server_characters AS b "
+             "SELECT b.objectid, b.characterid, b.pos_x, b.pos_y, b.pos_z "
+             "FROM servers AS a, server_objects AS b "
              "WHERE a.ip='%s' "
              "AND a.serverid=b.serverid",
              this->host_ip);
@@ -208,18 +208,22 @@ int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
     {
         while ((row = mysql_fetch_row(res)) != NULL)
         {
-            uint64_t id = strtoull(row[0], NULL, 10);
+            uint64_t objid = strtoull(row[0], NULL, 10),
+                charid = strtoull(row[1], NULL, 10);
             GameObject *go;
             Geometry *geom = new Geometry();
 
-            go = new GameObject(geom, NULL, id);
-            go->position[0] = atol(row[1]) / 100.0;
-            go->position[1] = atol(row[2]) / 100.0;
-            go->position[2] = atol(row[3]) / 100.0;
-            /* All objects first rez invisible and non-interactive */
-            go->natures.insert("invisible");
-            go->natures.insert("non-interactive");
-            gomap[id] = go;
+            go = new GameObject(geom, NULL, objid);
+            go->position[0] = atol(row[2]) / 100.0;
+            go->position[1] = atol(row[3]) / 100.0;
+            go->position[2] = atol(row[4]) / 100.0;
+            if (charid != 0LL)
+            {
+                /* All characters first rez invisible and non-interactive */
+                go->natures.insert("invisible");
+                go->natures.insert("non-interactive");
+            }
+            gomap[objid] = go;
             ++count;
         }
         mysql_free_result(res);
