@@ -1,6 +1,6 @@
 /* setup.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 13:28:32 tquirk
+ *   last updated 06 Dec 2015, 12:07:09 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -168,7 +168,7 @@ static void create_network_settings_form(Widget parent, int pgnum)
                                              parent,
                                              XmNnotebookChildType, XmPAGE,
                                              XmNpageNumber, pgnum,
-                                             XmNnumColumns, 5,
+                                             XmNnumColumns, 4,
                                              XmNorientation, XmHORIZONTAL,
                                              XmNpacking, XmPACK_COLUMN,
                                              XmNentryVerticalAlignment,
@@ -202,14 +202,6 @@ static void create_network_settings_form(Widget parent, int pgnum)
                                            settingnetwork,
                                            NULL);
     networkuser = XtVaCreateManagedWidget("networkuser",
-                                          xmTextFieldWidgetClass,
-                                          settingnetwork,
-                                          NULL);
-    networklabel = XtVaCreateManagedWidget("networkpasslabel",
-                                           xmLabelWidgetClass,
-                                           settingnetwork,
-                                           NULL);
-    networkpass = XtVaCreateManagedWidget("networkpass",
                                           xmTextFieldWidgetClass,
                                           settingnetwork,
                                           NULL);
@@ -306,11 +298,6 @@ static void settings_apply_callback(Widget w,
         config.username = c_ptr;
     XtFree(c_ptr);
 
-    XtVaGetValues(networkpass, XmNvalue, &c_ptr, NULL);
-    if (config.password != c_ptr)
-        config.password = c_ptr;
-    XtFree(c_ptr);
-
     XtVaGetValues(networkchar, XmNvalue, &c_ptr, NULL);
     if (config.charname != c_ptr)
         config.charname = c_ptr;
@@ -328,5 +315,5 @@ static void settings_cancel_callback(Widget w,
     snprintf(c_str, sizeof(c_str), "%d", config.server_port);
     XtVaSetValues(networkport, XmNvalue, c_str, NULL);
     XtVaSetValues(networkuser, XmNvalue, config.username.c_str(), NULL);
-    XtVaSetValues(networkpass, XmNvalue, config.password.c_str(), NULL);
+    XtVaSetValues(networkchar, XmNvalue, config.charname.c_str(), NULL);
 }

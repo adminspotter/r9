@@ -1,6 +1,6 @@
 /* menu.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Nov 2015, 17:46:06 tquirk
+ *   last updated 06 Dec 2015, 13:30:13 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -48,6 +48,9 @@
 #include <Xm/RowColumn.h>
 #include <Xm/PushBG.h>
 #include <Xm/SeparatoG.h>
+#include <Xm/SelectioB.h>
+#include <Xm/Label.h>
+#include <Xm/TextF.h>
 
 #include <iostream>
 
@@ -60,10 +63,16 @@
 static void create_file_menu(Widget);
 static void create_edit_menu(Widget);
 static void create_help_menu(Widget);
+static void show_login_box_callback(Widget, XtPointer, XtPointer);
+static void login_password_callback(Widget, XtPointer, XtPointer);
 static void login_callback(Widget, XtPointer, XtPointer);
 static void logout_callback(Widget, XtPointer, XtPointer);
 static void exit_callback(Widget, XtPointer, XtPointer);
 static void empty_callback(Widget, XtPointer, XtPointer);
+
+/* Variables for the login box */
+static char *actual_pass = NULL;
+Widget loginuser, loginpass, loginchar;
 
 Widget create_menu_tree(Widget parent)
 {
@@ -102,7 +111,7 @@ static void create_file_menu(Widget parent)
                                          NULL);
     XtAddCallback(connectbutton,
                   XmNactivateCallback,
-                  login_callback,
+                  show_login_box_callback,
                   (XtPointer)filemenu);
     XtAddCallback(disconnectbutton,
                   XmNactivateCallback,
@@ -186,11 +195,128 @@ static void create_help_menu(Widget parent)
 }
 
 /* ARGSUSED */
+static void show_login_box_callback(Widget w,
+                                    XtPointer client_data,
+                                    XtPointer call_data)
+{
+    Widget loginrowcol, loginlabel;
+    Widget loginbox;
+    char tmp_str[64];
+
+    loginbox = XmCreateSelectionDialog((Widget)client_data,
+                                       "loginbox", NULL, 0);
+    XtUnmanageChild(XtNameToWidget(loginbox, "Apply"));
+    XtUnmanageChild(XtNameToWidget(loginbox, "Items"));
+    XtUnmanageChild(XtNameToWidget(loginbox, "ItemsListSW"));
+    XtUnmanageChild(XtNameToWidget(loginbox, "Selection"));
+    XtUnmanageChild(XtNameToWidget(loginbox, "Text"));
+    loginrowcol = XtVaCreateManagedWidget("loginrowcol",
+                                          xmRowColumnWidgetClass,
+                                          loginbox,
+                                          XmNnumColumns, 4,
+                                          XmNorientation, XmHORIZONTAL,
+                                          XmNpacking, XmPACK_COLUMN,
+                                          XmNentryVerticalAlignment,
+                                          XmALIGNMENT_CENTER,
+                                          XmNadjustLast, False,
+                                          NULL);
+    loginlabel = XtVaCreateManagedWidget("loginuserlabel",
+                                         xmLabelWidgetClass,
+                                         loginrowcol,
+                                         NULL);
+    loginuser = XtVaCreateManagedWidget("loginuser",
+                                        xmTextFieldWidgetClass,
+                                        loginrowcol,
+                                        NULL);
+    loginlabel = XtVaCreateManagedWidget("loginpasslabel",
+                                         xmLabelWidgetClass,
+                                         loginrowcol,
+                                         NULL);
+    loginpass = XtVaCreateManagedWidget("loginpass",
+                                        xmTextFieldWidgetClass,
+                                        loginrowcol,
+                                        NULL);
+    loginlabel = XtVaCreateManagedWidget("logincharlabel",
+                                         xmLabelWidgetClass,
+                                         loginrowcol,
+                                         NULL);
+    loginchar = XtVaCreateManagedWidget("loginchar",
+                                        xmTextFieldWidgetClass,
+                                        loginrowcol,
+                                        NULL);
+
+    XtAddCallback(loginpass,
+                  XmNmodifyVerifyCallback,
+                  login_password_callback,
+                  NULL);
+    XtAddCallback(XtNameToWidget(loginbox, "OK"),
+                  XmNactivateCallback,
+                  login_callback,
+                  NULL);
+
+    XtVaSetValues(loginrowcol,
+                  XmNinitialFocus, loginpass,
+                  NULL);
+    XtManageChild(loginbox);
+    strncpy(tmp_str, config.username.c_str(), sizeof(tmp_str));
+    XmTextFieldSetString(loginuser, tmp_str);
+    XmTextFieldSetInsertionPosition(loginuser, config.username.length());
+    strncpy(tmp_str, config.charname.c_str(), sizeof(tmp_str));
+    XmTextFieldSetString(loginchar, tmp_str);
+    XmTextFieldSetInsertionPosition(loginchar, config.charname.length());
+}
+
+/* ARGSUSED */
+static void login_password_callback(Widget w,
+                                    XtPointer client_data,
+                                    XtPointer call_data)
+{
+    char *new_pass;
+    int len;
+    XmTextVerifyCallbackStruct *cbs = (XmTextVerifyCallbackStruct *)call_data;
+
+    /* We're backspacing */
+    if (cbs->startPos < cbs->currInsert)
+    {
+        cbs->endPos = strlen(actual_pass);
+        actual_pass[cbs->startPos] = 0;
+        /* backspace--terminate */
+        return;
+    }
+
+    /* Don't allow pasting - make the user actually type the password */
+    if (cbs->text->length > 1) {
+        std::clog << _("Pasting is not allowed. You must type the password.")
+                  << std::endl;
+        cbs->doit = False;
+        return;
+    }
+
+    /* Current length + new char + NULL terminator */
+    new_pass = XtMalloc(cbs->endPos + 2);
+
+    if (actual_pass)
+    {
+        strcpy(new_pass, actual_pass);
+        XtFree(actual_pass);
+    }
+    else
+        new_pass[0] = 0;
+
+    actual_pass = new_pass;
+    strncat(actual_pass, cbs->text->ptr, cbs->text->length);
+    actual_pass[cbs->endPos + cbs->text->length] = 0;
+
+    for (len = 0; len < cbs->text->length; len++)
+        cbs->text->ptr[len] = '*';
+}
+
+/* ARGSUSED */
 static void login_callback(Widget w,
                            XtPointer client_data,
                            XtPointer call_data)
 {
-    char portstr[16];
+    char portstr[16], *username, *charname;
     struct addrinfo hints, *ai;
     int ret;
 
@@ -207,7 +333,15 @@ static void login_callback(Widget w,
                   << std::endl;
         return;
     }
-    setup_comm(ai);
+
+    username = XmTextFieldGetString(loginuser);
+    charname = XmTextFieldGetString(loginchar);
+    setup_comm(ai, username, actual_pass, charname);
+    XtFree(username);
+    memset(actual_pass, 0, strlen(actual_pass));
+    XtFree(actual_pass);
+    XtFree(charname);
+
     std::clog << "Created socket to server " << config.server_addr
               << ", port " << portstr << std::endl;
     freeaddrinfo(ai);

@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 13:27:08 tquirk
+ *   last updated 06 Dec 2015, 11:12:28 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -219,21 +219,19 @@ static Boolean save_state(void)
     return True;
 }
 
-void setup_comm(struct addrinfo *ai)
+void setup_comm(struct addrinfo *ai,
+                const char *user, const char *pass, const char *charname)
 {
     Comm *c = new Comm(ai);
     comm.push_back(c);
-    c->send_login(config.username, config.password, config.charname);
+    c->send_login(user, pass, charname);
 }
 
 void cleanup_comm(void)
 {
     while (!comm.empty())
     {
-        Comm *c = comm.back();
-        c->send_logout();
-        sleep(0);
-        delete c;
+        delete comm.back();
         comm.pop_back();
     }
 }

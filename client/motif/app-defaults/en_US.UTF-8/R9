@@ -32,11 +32,16 @@ R9*networkbutton.labelString: Network
 R9*networkhostlabel.labelString: Server address
 R9*networkportlabel.labelString: Server port
 R9*networkuserlabel.labelString: Username
-R9*networkpasslabel.labelString: Password
 R9*networkcharlabel.labelString: Character name
 
 ! Game settings pane
 R9*gamebutton.labelString: Game
+
+! Login popup
+R9*loginbox_popup.title: Login
+R9*loginuserlabel.labelString: Username
+R9*loginpasslabel.labelString: Password
+R9*logincharlabel.labelString: Character name
 
 ! About box
 R9*aboutselbox_popup.title: About R9
