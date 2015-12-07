@@ -16,8 +16,6 @@ client/motif/msglog.cc
 client/motif/msglog.h
 client/motif/setup.cc
 client/motif/view.cc
-client/object.cc
 client/object.h
-client/r9client.h
 client/texture.cc
 client/texture.h
