@@ -15,5 +15,6 @@ t_update_pool
 t_perl
 t_tcl
 t_cache
+t_comm
 t_configdata
 t_texture_parser

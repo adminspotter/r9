@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2015, 14:21:57 tquirk
+ *   last updated 07 Dec 2015, 15:42:39 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -46,6 +46,7 @@
 #include <pthread.h>
 
 #include <cstdint>
+#include <string>
 #include <queue>
 
 #include "../proto/proto.h"
@@ -70,25 +71,28 @@ class Comm
     static void *send_worker(void *);
     static void *recv_worker(void *);
 
+  protected:
     typedef void (Comm::*pkt_handler)(packet&);
     static pkt_handler pkt_type[7];
 
-    void handle_pngpkt(packet&);
-    void handle_ackpkt(packet&);
-    void handle_posupd(packet&);
-    void handle_srvnot(packet&);
-    void handle_unsupported(packet&);
+    virtual void handle_pngpkt(packet&);
+    virtual void handle_ackpkt(packet&);
+    virtual void handle_posupd(packet&);
+    virtual void handle_srvnot(packet&);
+    virtual void handle_unsupported(packet&);
 
   public:
     Comm(struct addrinfo *);
-    ~Comm();
+    virtual ~Comm();
 
-    void send(packet *, size_t);
+    virtual void send(packet *, size_t);
 
-    void send_login(const std::string&, const std::string&, const std::string&);
-    void send_action_request(uint16_t, uint64_t, uint8_t);
-    void send_logout(void);
-    void send_ack(uint8_t);
+    virtual void send_login(const std::string&,
+                            const std::string&,
+                            const std::string&);
+    virtual void send_action_request(uint16_t, uint64_t, uint8_t);
+    virtual void send_logout(void);
+    virtual void send_ack(uint8_t);
 };
 
 #endif /* __INC_R9CLIENT_COMM_H__ */

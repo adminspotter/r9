@@ -26,7 +26,7 @@ if WANT_TCL
   TC += t_tcl
 endif
 if WANT_CLIENT
-  TC += t_cache t_configdata t_texture_parser
+  TC += t_cache t_comm t_configdata t_texture_parser
 endif
 
 TESTS = $(TC)
@@ -141,6 +141,10 @@ t_cache_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	$(GTEST_INCLUDES) $(GMOCK_INCLUDES) \
 	-DSTORE_PREFIX=\"../client\"
 t_cache_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) $(CLIENT_LDLIBS)
+
+t_comm_SOURCES = t_comm.cc ../client/comm.cc ../client/comm.h
+t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) $(CLIENT_LDLIBS) \
+	../proto/libr9_proto.la
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc

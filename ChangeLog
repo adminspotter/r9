@@ -976,3 +976,6 @@
 
 2015-12-01 - TAQ
 	client/r9client.h - Renamed to client_core.h, and added a client_core.cc, which contains the various object caches.  We should be able to implement the guts of the client program in a single file, and have the GUI portion just display what the core is doing.
+
+2015-12-07 - TAQ
+	client/comm.h, client/comm.cc - We're using a jump-table to dispatch the incoming network traffic, instead of a giant switch tree.
