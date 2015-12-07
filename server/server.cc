@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Nov 2015, 07:01:07 tquirk
+ *   last updated 07 Dec 2015, 17:33:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -77,6 +77,7 @@
 #include "classes/basesock.h"
 #include "classes/stream.h"
 #include "classes/dgram.h"
+#include "classes/modules/console.h"
 
 static void setup_daemon(void);
 static void setup_log(void);
@@ -93,8 +94,9 @@ static void cleanup_daemon(void);
 int main_loop_exit_flag = 0;
 Zone *zone = NULL;
 DB *database = NULL;
-static Library *db_lib = NULL;
+static Library *db_lib = NULL, *console_lib = NULL;
 std::vector<listen_socket *> sockets;
+std::vector<Console *> consoles;
 /* May need this mutex */
 static pthread_mutex_t exit_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t exit_flag = PTHREAD_COND_INITIALIZER;
@@ -123,7 +125,12 @@ int main(int argc, char **argv)
         std::clog << syslogErr << e.what() << std::endl;
         goto BAILOUT2;
     }
-    setup_console();
+    try { setup_console(); }
+    catch (std::exception& e)
+    {
+        std::clog << syslogErr << e.what() << std::endl;
+        goto BAILOUT3;
+    }
 
     /* Since all our stuff is running in other threads, we'll just
      * wait until the exit flag gets waved.
@@ -138,6 +145,7 @@ int main(int argc, char **argv)
 
     /* Clean everything up before we exit. */
     cleanup_console();
+  BAILOUT3:
     cleanup_sockets();
   BAILOUT2:
     cleanup_zone();
@@ -339,15 +347,109 @@ static void setup_zone(void)
 
 static void setup_console(void)
 {
+    console_create_t *console_create;
+    console_destroy_t *console_destroy;
+
+    if (config.console_fname == "" && config.console_inet == 0)
+    {
+        std::clog << "no consoles to create" << std::endl;
+        return;
+    }
+
+    /* Load the console module */
+    console_lib = new Library("libr9_console" LT_MODULE_EXT);
+    console_create =
+        (console_create_t *)console_lib->symbol("console_create");
+    console_destroy =
+        (console_destroy_t *)console_lib->symbol("console_destroy");
+
+    if (config.console_fname != "")
+    {
+        struct addrinfo ai;
+        struct sockaddr_un sun;
+
+        /* Manufacture an addrinfo that has the unix socket structure
+         * instead of a regular sockaddr_in/in6.  The console creator
+         * understands what to do with it.
+         */
+        memset(&ai, 0, sizeof(struct addrinfo));
+        ai.ai_family = AF_UNIX;
+        ai.ai_socktype = SOCK_STREAM;
+        ai.ai_protocol = 0;
+        ai.ai_addrlen = sizeof(struct sockaddr_un);
+        ai.ai_addr = (struct sockaddr *)&sun;
+
+        memset(&sun, 0, sizeof(struct sockaddr_un));
+        sun.sun_family = AF_UNIX;
+        strncpy(sun.sun_path,
+                config.console_fname.c_str(),
+                config.console_fname.size());
+
+        consoles.push_back(console_create(&ai));
+    }
+    if (config.console_inet != 0)
+    {
+        struct addrinfo *ai;
+
+        /* First get an addrinfo struct for the socket */
+        if ((ai = get_addr_info(SOCK_STREAM, config.console_inet)) == NULL)
+        {
+            std::string s("failed to get address info for inet console port");
+            throw std::runtime_error(s);
+        }
+        try
+        {
+            Console *con = console_create(ai);
+            consoles.push_back(con);
+        }
+        catch (std::exception& e)
+        {
+            while (consoles.size())
+            {
+                console_destroy(consoles.back());
+                consoles.pop_back();
+            }
+            throw;
+        }
+        freeaddrinfo(ai);
+    }
+    std::clog << "console setup done" << std::endl;
 }
 
 static void cleanup_console(void)
 {
+    struct stat st;
+
+    /* If we didn't load the console lib, we didn't create any consoles */
+    if (console_lib == NULL)
+        return;
+
+    try
+    {
+        console_destroy_t *console_destroy =
+            (console_destroy_t *)console_lib->symbol("console_destroy");
+        while (consoles.size())
+        {
+            console_destroy(consoles.back());
+            consoles.pop_back();
+        }
+        if (stat(config.console_fname.c_str(), &st) == 0
+            && S_ISSOCK(st.st_mode))
+        {
+            std::clog << "unlinking unix console" << std::endl;
+            unlink(config.console_fname.c_str());
+        }
+    }
+    catch (std::exception& e) { /* Do nothing */ }
+
+    /* Unload the library */
+    std::clog << "closing console library" << std::endl;
+    delete console_lib;
+    console_lib = NULL;
 }
 
 static void cleanup_zone(void)
 {
-    std::clog << "in zone cleanup" << std::endl;
     if (zone != NULL)
     {
         std::clog << "deleting zone" << std::endl;

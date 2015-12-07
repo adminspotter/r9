@@ -1,6 +1,6 @@
 /* console.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:41:13 tquirk
+ *   last updated 07 Dec 2015, 08:39:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -90,5 +90,8 @@ class Console : public basesock
 
     static void *console_listener(void *);
 };
+
+typedef Console *console_create_t(struct addrinfo *);
+typedef void console_destroy_t(Console *);
 
 #endif /* __INC_CONSOLE_H__ */

@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:41:40 tquirk
+ *   last updated 07 Dec 2015, 08:42:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -210,4 +210,14 @@ int Console::wrap_request(Sockaddr *sa)
 #else
     return 1;
 #endif
+}
+
+extern "C" Console *console_create(struct addrinfo *ai)
+{
+    return new Console(ai);
+}
+
+extern "C" void console_destroy(Console *con)
+{
+    delete con;
 }
