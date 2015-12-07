@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 13:21:14 tquirk
+ *   last updated 07 Dec 2015, 14:21:57 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -70,7 +70,14 @@ class Comm
     static void *send_worker(void *);
     static void *recv_worker(void *);
 
-    void dispatch(packet&);
+    typedef void (Comm::*pkt_handler)(packet&);
+    static pkt_handler pkt_type[7];
+
+    void handle_pngpkt(packet&);
+    void handle_ackpkt(packet&);
+    void handle_posupd(packet&);
+    void handle_srvnot(packet&);
+    void handle_unsupported(packet&);
 
   public:
     Comm(struct addrinfo *);
