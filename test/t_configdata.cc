@@ -74,7 +74,7 @@ void create_temp_config_file(std::string& fname)
     ofs << "	         ServerAddr haha    # comment at the end" << std::endl;
     ofs << "ServerPort 12345   	       " << std::endl;
     ofs << "Username  		someuser" << std::endl;
-    ofs << "   Password    worstpasswordintheworld   " << std::endl;
+    ofs << "   Charname    worstcharnameintheworld   " << std::endl;
     ofs.close();
 }
 
@@ -228,8 +228,8 @@ TEST_F(ConfigdataTest, ReadConfigFile)
     ASSERT_EQ(conf->server_port, 12345);
     expected = "someuser";
     ASSERT_EQ(conf->username, expected);
-    expected = "worstpasswordintheworld";
-    ASSERT_EQ(conf->password, expected);
+    expected = "worstcharnameintheworld";
+    ASSERT_EQ(conf->charname, expected);
 
     ASSERT_NO_THROW(
         {
@@ -254,7 +254,7 @@ TEST_F(ConfigdataTest, WriteConfigFile)
     conf->server_addr = "whoa";
     conf->server_port = 9876;
     conf->username = "howdy";
-    conf->password = "anotherreallybadpassword";
+    conf->charname = "anotherreallybadcharname";
 
     ret = mkdir(conf->config_dir.c_str(), 0700);
     ASSERT_EQ(ret, 0);
@@ -279,8 +279,8 @@ TEST_F(ConfigdataTest, WriteConfigFile)
     ASSERT_EQ(conf->server_port, 9876);
     expected = "howdy";
     ASSERT_EQ(conf->username, expected);
-    expected = "anotherreallybadpassword";
-    ASSERT_EQ(conf->password, expected);
+    expected = "anotherreallybadcharname";
+    ASSERT_EQ(conf->charname, expected);
 
     ASSERT_NO_THROW(
         {
