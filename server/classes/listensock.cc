@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:51:23 tquirk
+ *   last updated 08 Dec 2015, 07:50:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -159,37 +159,52 @@ void *listen_socket::access_pool_worker(void *arg)
 void listen_socket::login_user(access_list& p)
 {
     uint64_t userid = 0LL, char_objid = 0LL;
+    int auth_level;
     std::string username(p.buf.log.username, sizeof(p.buf.log.username));
     std::string password(p.buf.log.password, sizeof(p.buf.log.password));
     std::string charname(p.buf.log.charname, sizeof(p.buf.log.charname));
+    Control *newcontrol = NULL;
 
     userid = database->check_authentication(username, password);
 
-    /* Don't want to keep passwords around in core if we can help it */
+    /* Don't want to keep passwords around in core if we can help it. */
     memset(p.buf.log.password, 0, sizeof(p.buf.log.password));
     password.clear();
 
-    char_objid = database->get_character_objectid(charname);
+    if (userid == 0LL)
+        return;
 
-    if (userid != 0LL && char_objid != 0LL)
+    auth_level = database->check_authorization(userid, charname);
+
+    /* If they're already in our list, turn off any pending logout. */
+    if (this->users.find(userid) != this->users.end())
     {
-        if (this->users.find(userid) == this->users.end())
-        {
-            Control *newcontrol = new Control(userid, NULL);
-            newcontrol->username = username;
-
-            /* Add this user to the userlist */
-            this->do_login(userid, newcontrol, p);
-
-            std::clog << "logged in user "
-                      << newcontrol->username
-                      << " (" << userid << ")" << std::endl;
-
-            /* Hook the new control up to the appropriate object */
-            zone->connect_game_object(newcontrol, char_objid);
-        }
+        /* This is going to be a race with the reaper thread. */
+        this->users[userid]->pending_logout = false;
+        return;
     }
-    /* Otherwise, do nothing, and send nothing */
+
+    /* If we've got a real user, go ahead and make a control object
+     * for them.  If the access level is too low, we'll reap it
+     * immediately, but we do need the control to be able to send
+     * something back.
+     */
+    newcontrol = new Control(userid, NULL);
+    newcontrol->username = username;
+
+    std::clog << "login request from user "
+              << newcontrol->username << " (" << userid
+              << "), auth " << auth_level << std::endl;
+
+    /* Perform the derived class's login part. */
+    this->do_login(userid, newcontrol, p, auth_level);
+
+    /* Hook the new control up to the appropriate object, if appropriate. */
+    if (auth_level >= ACCESS_MOVE)
+    {
+        char_objid = database->get_character_objectid(charname);
+        zone->connect_game_object(newcontrol, char_objid);
+    }
 }
 
 void listen_socket::logout_user(access_list& p)

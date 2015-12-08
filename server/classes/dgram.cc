@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:52:28 tquirk
+ *   last updated 08 Dec 2015, 07:46:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -99,7 +99,10 @@ void dgram_socket::start(void)
     this->reaper_running = true;
 }
 
-void dgram_socket::do_login(uint64_t userid, Control *con, access_list& al)
+void dgram_socket::do_login(uint64_t userid,
+                            Control *con,
+                            access_list& al,
+                            int access_level)
 {
     packet_list pkt;
 
@@ -108,12 +111,20 @@ void dgram_socket::do_login(uint64_t userid, Control *con, access_list& al)
     this->users[userid] = dgu;
     this->socks[dgu->sa] = dgu;
 
-    /* Send an ack packet, to let the user know they're in */
+    if (access_level < ACCESS_VIEW)
+        /* We still need a control object to be able to send something
+         * back, but since this user has no access, we'll go ahead and
+         * make one that'll be reaped immediately.  This could be a
+         * race with the reaper thread.
+         */
+        dgu->pending_logout = true;
+
+    /* Send an ack packet, to let the user know their request status */
     pkt.buf.ack.type = TYPE_ACKPKT;
     pkt.buf.ack.version = 1;
     pkt.buf.ack.sequence = dgu->sequence++;
     pkt.buf.ack.request = TYPE_LOGREQ;
-    pkt.buf.ack.misc = 0;
+    pkt.buf.ack.misc = (uint8_t)access_level;
     pkt.who = con;
     pkt.parent = this;
     this->send_pool->push(pkt);

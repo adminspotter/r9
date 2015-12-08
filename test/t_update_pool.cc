@@ -29,6 +29,7 @@ class mock_DB : public DB
     MOCK_METHOD2(check_authentication, uint64_t(const std::string& a,
                                                 const std::string& b));
     MOCK_METHOD2(check_authorization, int(uint64_t a, uint64_t b));
+    MOCK_METHOD2(check_authorization, int(uint64_t a, const std::string& b));
     MOCK_METHOD1(get_character_objectid, uint64_t(const std::string& a));
     MOCK_METHOD3(open_new_login, int(uint64_t a, uint64_t b, Sockaddr *c));
     MOCK_METHOD2(check_open_login, int(uint64_t a, uint64_t b));
@@ -57,7 +58,7 @@ class mock_listen : public listen_socket
     MOCK_METHOD1(login_user, void(access_list& a));
     MOCK_METHOD1(logout_user, void(access_list& a));
 
-    MOCK_METHOD3(do_login, void(uint64_t a, Control *b, access_list& c));
+    MOCK_METHOD4(do_login, void(uint64_t a, Control *b, access_list& c, int d));
 };
 
 class mock_SendPool : public ThreadPool<packet_list>

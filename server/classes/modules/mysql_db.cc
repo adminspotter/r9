@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Dec 2015, 07:55:09 tquirk
+ *   last updated 05 Dec 2015, 08:47:41 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -39,6 +39,7 @@
 
 #include "mysql_db.h"
 #include "../game_obj.h"
+#include "../../../proto/proto.h"
 
 MySQL::MySQL(const std::string& host, const std::string& user,
              const std::string& pass, const std::string& db)
@@ -95,7 +96,7 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
     MYSQL_RES *res;
     MYSQL_ROW row;
     char str[256];
-    int retval = 1;
+    int retval = ACCESS_NONE;
 
     snprintf(str, sizeof(str),
              "SELECT c.access_type "
@@ -108,6 +109,37 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
              "AND c.serverid=d.serverid "
              "AND d.ip='%s'",
              userid, charid, this->host_ip);
+    this->db_connect();
+
+    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
+        && (res = mysql_use_result(&(this->db_handle))) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
+    {
+        retval = atoi(row[0]);
+        mysql_free_result(res);
+    }
+    mysql_close(&(this->db_handle));
+    return retval;
+}
+
+int MySQL::check_authorization(uint64_t userid, const std::string& charname)
+{
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    char str[256];
+    int retval = ACCESS_NONE;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.access_type "
+             "FROM players AS a, characters AS b, server_access AS c, "
+             "servers AS d "
+             "WHERE a.playerid=%lld "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s' "
+             "AND b.characterid=c.characterid "
+             "AND c.serverid=d.serverid "
+             "AND d.ip='%s'",
+             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
     this->db_connect();
 
     if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0

@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:51:13 tquirk
+ *   last updated 08 Dec 2015, 07:29:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -93,7 +93,7 @@ class listen_socket {
     virtual void login_user(access_list&);
     virtual void logout_user(access_list&);
 
-    virtual void do_login(uint64_t, Control *, access_list&) = 0;
+    virtual void do_login(uint64_t, Control *, access_list&, int) = 0;
 };
 
 #endif /* __INC_LISTENSOCK_H__ */
