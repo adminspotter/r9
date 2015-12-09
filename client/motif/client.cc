@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Dec 2015, 11:12:28 tquirk
+ *   last updated 09 Dec 2015, 10:31:18 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -224,6 +224,7 @@ void setup_comm(struct addrinfo *ai,
 {
     Comm *c = new Comm(ai);
     comm.push_back(c);
+    c->start();
     c->send_login(user, pass, charname);
 }
 

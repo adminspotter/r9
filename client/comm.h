@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Dec 2015, 17:31:33 tquirk
+ *   last updated 09 Dec 2015, 10:30:46 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -83,6 +83,9 @@ class Comm
   public:
     Comm(struct addrinfo *);
     virtual ~Comm();
+
+    virtual void start(void);
+    virtual void stop(void);
 
     virtual void send(packet *, size_t);
 

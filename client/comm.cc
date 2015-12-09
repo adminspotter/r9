@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Dec 2015, 06:05:23 tquirk
+ *   last updated 09 Dec 2015, 10:30:44 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -292,6 +292,16 @@ Comm::Comm(struct addrinfo *ai)
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
+}
+
+Comm::~Comm()
+{
+    this->stop();
+}
+
+void Comm::start(void)
+{
+    int ret;
 
     /* Now start up the actual threads */
     if ((ret = pthread_create(&(this->send_thread),
@@ -323,7 +333,7 @@ Comm::Comm(struct addrinfo *ai)
     }
 }
 
-Comm::~Comm()
+void Comm::stop(void)
 {
     if (this->sock)
         this->send_logout();

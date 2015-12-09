@@ -6,7 +6,7 @@
 using ::testing::_;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
-bool bad_ntoh = false, delay_recvfrom = false;
+bool bad_ntoh = false;
 int sockaddr_calls;
 
 struct sockaddr_storage expected_sockaddr;
@@ -27,10 +27,6 @@ ssize_t recvfrom(int a,
     /* Only respond to the first call; the second call should just "block" */
     if (sockaddr_calls++ != 0)
         sleep(10);
-
-    /* We may need to "block" for enough time for us to set our mocks */
-    if (delay_recvfrom == true)
-        sleep(1);
 
     if (recvfrom_error == true)
     {
@@ -119,12 +115,12 @@ TEST(CommRecvTest, RecvBadResult)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    delay_recvfrom = false;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
         {
             comm = new mock_Comm(&ai);
+            comm->start();
         });
     sleep(1);
     delete comm;
@@ -158,12 +154,12 @@ TEST(CommRecvTest, RecvBadSender)
     bad_sender = true;
     bad_packet = false;
     bad_ntoh = false;
-    delay_recvfrom = false;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
         {
             comm = new mock_Comm(&ai);
+            comm->start();
         });
     sleep(1);
     delete comm;
@@ -197,12 +193,12 @@ TEST(CommRecvTest, RecvBadPacket)
     bad_sender = false;
     bad_packet = true;
     bad_ntoh = false;
-    delay_recvfrom = false;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
         {
             comm = new mock_Comm(&ai);
+            comm->start();
         });
     sleep(1);
     delete comm;
@@ -236,12 +232,12 @@ TEST(CommRecvTest, RecvNoNtoh)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = true;
-    delay_recvfrom = false;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
         {
             comm = new mock_Comm(&ai);
+            comm->start();
         });
     sleep(1);
     delete comm;
@@ -275,7 +271,6 @@ TEST(CommRecvTest, RecvPing)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    delay_recvfrom = true;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
@@ -283,6 +278,10 @@ TEST(CommRecvTest, RecvPing)
             comm = new mock_Comm(&ai);
         });
     EXPECT_CALL(*comm, handle_pngpkt(_)).Times(1);
+    ASSERT_NO_THROW(
+        {
+            comm->start();
+        });
     sleep(1);
     delete comm;
 
@@ -314,7 +313,6 @@ TEST(CommRecvTest, RecvAck)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    delay_recvfrom = true;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
@@ -322,6 +320,10 @@ TEST(CommRecvTest, RecvAck)
             comm = new mock_Comm(&ai);
         });
     EXPECT_CALL(*comm, handle_ackpkt(_)).Times(1);
+    ASSERT_NO_THROW(
+        {
+            comm->start();
+        });
     sleep(1);
     delete comm;
 
@@ -353,7 +355,6 @@ TEST(CommRecvTest, RecvPosUpdate)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    delay_recvfrom = true;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
@@ -361,6 +362,10 @@ TEST(CommRecvTest, RecvPosUpdate)
             comm = new mock_Comm(&ai);
         });
     EXPECT_CALL(*comm, handle_posupd(_)).Times(1);
+    ASSERT_NO_THROW(
+        {
+            comm->start();
+        });
     sleep(1);
     delete comm;
 
@@ -392,7 +397,6 @@ TEST(CommRecvTest, RecvServerNotice)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    delay_recvfrom = true;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
@@ -400,6 +404,10 @@ TEST(CommRecvTest, RecvServerNotice)
             comm = new mock_Comm(&ai);
         });
     EXPECT_CALL(*comm, handle_srvnot(_)).Times(1);
+    ASSERT_NO_THROW(
+        {
+            comm->start();
+        });
     sleep(1);
     delete comm;
 
@@ -431,7 +439,6 @@ TEST(CommRecvTest, RecvUnsupported)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    delay_recvfrom = true;
     sockaddr_calls = 0;
 
     ASSERT_NO_THROW(
@@ -439,6 +446,10 @@ TEST(CommRecvTest, RecvUnsupported)
             comm = new mock_Comm(&ai);
         });
     EXPECT_CALL(*comm, handle_unsupported(_)).Times(1);
+    ASSERT_NO_THROW(
+        {
+            comm->start();
+        });
     sleep(1);
     delete comm;
 
