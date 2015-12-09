@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2015, 14:37:52 tquirk
+ *   last updated 09 Dec 2015, 06:05:23 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -120,20 +120,25 @@ void *Comm::send_worker(void *arg)
     Comm *comm = (Comm *)arg;
     packet *pkt;
 
+    /* Make sure we can be cancelled as we expect. */
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
     for (;;)
     {
         pthread_mutex_lock(&(comm->send_lock));
         while (comm->send_queue.empty() && !Comm::thread_exit_flag)
             pthread_cond_wait(&(comm->send_queue_not_empty),
                               &(comm->send_lock));
-        pkt = comm->send_queue.front();
-        comm->send_queue.pop();
 
         if (Comm::thread_exit_flag)
         {
             pthread_mutex_unlock(&(comm->send_lock));
             pthread_exit(NULL);
         }
+
+        pkt = comm->send_queue.front();
+        comm->send_queue.pop();
 
         if (sendto(comm->sock,
                    (void *)pkt, packet_size(pkt),
@@ -157,24 +162,33 @@ void *Comm::recv_worker(void *arg)
     socklen_t fromlen;
     int len;
 
+    /* Make sure we can be cancelled as we expect. */
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
     for (;;)
     {
         fromlen = sizeof(struct sockaddr_storage);
-        len = recvfrom(comm->sock, (void *)&buf, sizeof(packet), 0,
-                       (struct sockaddr *)&sin, &fromlen);
+        if ((len = recvfrom(comm->sock, (void *)&buf, sizeof(packet), 0,
+                            (struct sockaddr *)&sin, &fromlen)) < 0)
+        {
+            std::clog << "Error receiving packet: "
+                      << strerror(errno) << " (" << errno << ')' << std::endl;
+            continue;
+        }
         /* Verify that the sender is who we think it should be */
         if (memcmp(&sin, &(comm->remote), fromlen))
         {
-            std::clog << "Got packet from unknown sender " << std::endl;
+            std::clog << "Got packet from unknown sender" << std::endl;
             continue;
         }
-
+        /* Needs to be a real packet type */
         if (buf.basic.type >= sizeof(pkt_type))
         {
             std::clog << "Unknown packet type " << buf.basic.type << std::endl;
             continue;
         }
-
+        /* We should be able to convert to host byte ordering */
         if (!ntoh_packet(&buf, len))
         {
             std::clog << "Error while ntoh'ing packet" << std::endl;

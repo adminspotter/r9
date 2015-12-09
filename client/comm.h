@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2015, 15:42:39 tquirk
+ *   last updated 08 Dec 2015, 17:31:33 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -53,7 +53,7 @@
 
 class Comm
 {
-  private:
+  protected:
     int sock;
     struct sockaddr_storage remote;
     size_t remote_size;
@@ -66,14 +66,13 @@ class Comm
     static uint64_t sequence;
     static volatile bool thread_exit_flag;
 
+    typedef void (Comm::*pkt_handler)(packet&);
+    static pkt_handler pkt_type[7];
+
     void create_socket(struct addrinfo *);
 
     static void *send_worker(void *);
     static void *recv_worker(void *);
-
-  protected:
-    typedef void (Comm::*pkt_handler)(packet&);
-    static pkt_handler pkt_type[7];
 
     virtual void handle_pngpkt(packet&);
     virtual void handle_ackpkt(packet&);
