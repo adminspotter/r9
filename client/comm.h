@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 13:21:14 tquirk
+ *   last updated 09 Dec 2015, 18:05:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -46,13 +46,14 @@
 #include <pthread.h>
 
 #include <cstdint>
+#include <string>
 #include <queue>
 
 #include "../proto/proto.h"
 
 class Comm
 {
-  private:
+  protected:
     int sock;
     struct sockaddr_storage remote;
     size_t remote_size;
@@ -63,25 +64,37 @@ class Comm
     std::queue<packet *> send_queue;
 
     static uint64_t sequence;
-    static volatile bool thread_exit_flag;
+    volatile bool thread_exit_flag;
+
+    typedef void (Comm::*pkt_handler)(packet&);
+    static pkt_handler pkt_type[7];
 
     void create_socket(struct addrinfo *);
 
     static void *send_worker(void *);
     static void *recv_worker(void *);
 
-    void dispatch(packet&);
+    virtual void handle_pngpkt(packet&);
+    virtual void handle_ackpkt(packet&);
+    virtual void handle_posupd(packet&);
+    virtual void handle_srvnot(packet&);
+    virtual void handle_unsupported(packet&);
 
   public:
     Comm(struct addrinfo *);
-    ~Comm();
+    virtual ~Comm();
 
-    void send(packet *, size_t);
+    virtual void start(void);
+    virtual void stop(void);
 
-    void send_login(const std::string&, const std::string&, const std::string&);
-    void send_action_request(uint16_t, uint64_t, uint8_t);
-    void send_logout(void);
-    void send_ack(uint8_t);
+    virtual void send(packet *, size_t);
+
+    virtual void send_login(const std::string&,
+                            const std::string&,
+                            const std::string&);
+    virtual void send_action_request(uint16_t, uint64_t, uint8_t);
+    virtual void send_logout(void);
+    virtual void send_ack(uint8_t);
 };
 
 #endif /* __INC_R9CLIENT_COMM_H__ */

@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 13:20:55 tquirk
+ *   last updated 09 Dec 2015, 18:09:58 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -68,7 +68,20 @@
 #include "comm.h"
 
 uint64_t Comm::sequence = 0LL;
-volatile bool Comm::thread_exit_flag = false;
+
+/* Jump table for protocol handling */
+Comm::pkt_handler Comm::pkt_type[] =
+{
+    &Comm::handle_ackpkt,       /* Ack             */
+    &Comm::handle_unsupported,  /* Login req       */
+    &Comm::handle_unsupported,  /* Logout req      */
+    &Comm::handle_unsupported,  /* Action req      */
+    &Comm::handle_posupd,       /* Position update */
+    &Comm::handle_srvnot,       /* Server notice   */
+    &Comm::handle_pngpkt        /* Ping            */
+};
+
+#define COMM_MEMBER(a, b) ((a).*(b))
 
 void Comm::create_socket(struct addrinfo *ai)
 {
@@ -106,20 +119,25 @@ void *Comm::send_worker(void *arg)
     Comm *comm = (Comm *)arg;
     packet *pkt;
 
+    /* Make sure we can be cancelled as we expect. */
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
     for (;;)
     {
         pthread_mutex_lock(&(comm->send_lock));
-        while (comm->send_queue.empty() && !Comm::thread_exit_flag)
+        while (comm->send_queue.empty() && !comm->thread_exit_flag)
             pthread_cond_wait(&(comm->send_queue_not_empty),
                               &(comm->send_lock));
-        pkt = comm->send_queue.front();
-        comm->send_queue.pop();
 
-        if (Comm::thread_exit_flag)
+        if (comm->thread_exit_flag)
         {
             pthread_mutex_unlock(&(comm->send_lock));
             pthread_exit(NULL);
         }
+
+        pkt = comm->send_queue.front();
+        comm->send_queue.pop();
 
         if (sendto(comm->sock,
                    (void *)pkt, packet_size(pkt),
@@ -143,84 +161,111 @@ void *Comm::recv_worker(void *arg)
     socklen_t fromlen;
     int len;
 
+    /* Make sure we can be cancelled as we expect. */
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
     for (;;)
     {
         fromlen = sizeof(struct sockaddr_storage);
-        len = recvfrom(comm->sock, (void *)&buf, sizeof(packet), 0,
-                       (struct sockaddr *)&sin, &fromlen);
+        if ((len = recvfrom(comm->sock, (void *)&buf, sizeof(packet), 0,
+                            (struct sockaddr *)&sin, &fromlen)) < 0)
+        {
+            std::clog << "Error receiving packet: "
+                      << strerror(errno) << " (" << errno << ')' << std::endl;
+            continue;
+        }
         /* Verify that the sender is who we think it should be */
         if (memcmp(&sin, &(comm->remote), fromlen))
         {
-            std::clog << "Got packet from unknown sender " << std::endl;
+            std::clog << "Got packet from unknown sender" << std::endl;
             continue;
         }
-
+        /* Needs to be a real packet type */
+        if (buf.basic.type >= sizeof(pkt_type))
+        {
+            std::clog << "Unknown packet type " << buf.basic.type << std::endl;
+            continue;
+        }
+        /* We should be able to convert to host byte ordering */
         if (!ntoh_packet(&buf, len))
         {
             std::clog << "Error while ntoh'ing packet" << std::endl;
             continue;
         }
-        comm->dispatch(buf);
+
+        COMM_MEMBER(*comm, pkt_type[buf.basic.type])(buf);
     }
     return NULL;
 }
 
-void Comm::dispatch(packet& buf)
+void Comm::handle_pngpkt(packet& p)
 {
-    /* We got a packet, now figure out what type it is and process it */
-    switch (buf.basic.type)
-    {
-      case TYPE_ACKPKT:
-        /* Acknowledgement packet */
-        switch (buf.ack.request)
+    this->send_ack(TYPE_PNGPKT);
+}
+
+void Comm::handle_ackpkt(packet& p)
+{
+    char *access_type[] =
         {
-          case TYPE_LOGREQ:
-            /* The response to our login request */
-            std::clog << "Login response, type " << buf.ack.misc << " access"
-                      << std::endl;
-            break;
+            NULL,
+            "ACCESS_NONE",
+            "ACCESS_VIEW",
+            "ACCESS_MOVE",
+            "ACCESS_MDFY"
+        };
+    ack_packet& a = (ack_packet&)p.ack;
 
-          case TYPE_LGTREQ:
-            /* The response to our logout request */
-            std::clog << "Logout response, type " << buf.ack.misc << " access"
-                      << std::endl;
-            break;
-
-          default:
-            std::clog << "Got an unknown ack packet: " << buf.ack.request
-                      << std::endl;
-            break;
-        }
-        break;
-
-      case TYPE_POSUPD:
-        /* Position update */
-        move_object(buf.pos.object_id,
-                    buf.pos.frame_number,
-                    (double)buf.pos.x_pos / 100.0,
-                    (double)buf.pos.y_pos / 100.0,
-                    (double)buf.pos.z_pos / 100.0,
-                    (double)buf.pos.x_orient / 100.0,
-                    (double)buf.pos.y_orient / 100.0,
-                    (double)buf.pos.z_orient / 100.0);
-        break;
-
-      case TYPE_SRVNOT:
-        /* Server notification */
-        break;
-
-      case TYPE_PNGPKT:
-        this->send_ack(TYPE_PNGPKT);
-        break;
-
+    switch (a.request)
+    {
       case TYPE_LOGREQ:
+        /* The response to our login request */
+        std::clog << "Login response, type ";
+        if (a.misc < 1 || a.misc >= sizeof(access_type))
+            std::clog << "unknown" << std::endl;
+        else
+            std::clog << access_type[a.misc] << " access" << std::endl;
+        break;
+
       case TYPE_LGTREQ:
-      case TYPE_ACTREQ:
+        /* The response to our logout request */
+        std::clog << "Logout response, type ";
+        if (a.misc < 1 || a.misc >= sizeof(access_type))
+            std::clog << "unknown" << std::endl;
+        else
+            std::clog << access_type[a.misc] << " access" << std::endl;
+        break;
+
       default:
-        std::clog << "Got an unexpected packet type: " << buf.basic.type
+        std::clog << "Got an unknown ack packet: " << a.request
                   << std::endl;
         break;
     }
+}
+
+void Comm::handle_posupd(packet& p)
+{
+    position_update& u = (position_update&)p.pos;
+
+    move_object(u.object_id,
+                u.frame_number,
+                (double)u.x_pos / 100.0,
+                (double)u.y_pos / 100.0,
+                (double)u.z_pos / 100.0,
+                (double)u.x_orient / 100.0,
+                (double)u.y_orient / 100.0,
+                (double)u.z_orient / 100.0);
+}
+
+void Comm::handle_srvnot(packet& p)
+{
+    std::clog << "Got a server notice" << std::endl;
+}
+
+void Comm::handle_unsupported(packet& p)
+{
+    std::clog << "Got an unexpected packet type: " << p.basic.type
+              << std::endl;
 }
 
 Comm::Comm(struct addrinfo *ai)
@@ -246,8 +291,19 @@ Comm::Comm(struct addrinfo *ai)
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
+}
+
+Comm::~Comm()
+{
+    this->stop();
+}
+
+void Comm::start(void)
+{
+    int ret;
 
     /* Now start up the actual threads */
+    this->thread_exit_flag = false;
     if ((ret = pthread_create(&(this->send_thread),
                               NULL,
                               Comm::send_worker,
@@ -277,11 +333,11 @@ Comm::Comm(struct addrinfo *ai)
     }
 }
 
-Comm::~Comm()
+void Comm::stop(void)
 {
     if (this->sock)
         this->send_logout();
-    this->thread_exit_flag = 1;
+    this->thread_exit_flag = true;
     pthread_cond_broadcast(&(this->send_queue_not_empty));
     sleep(0);
     pthread_join(this->send_thread, NULL);
