@@ -6,8 +6,8 @@
 using ::testing::_;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
-bool bad_ntoh = false;
-int sockaddr_calls;
+bool bad_ntoh = false, bad_hton = false, sendto_error = false;
+int recvfrom_calls, packet_type;
 
 struct sockaddr_storage expected_sockaddr;
 packet expected_packet;
@@ -25,7 +25,7 @@ ssize_t recvfrom(int a,
                  struct sockaddr *e, socklen_t *f)
 {
     /* Only respond to the first call; the second call should just "block" */
-    if (sockaddr_calls++ != 0)
+    if (recvfrom_calls++ != 0)
         sleep(10);
 
     if (recvfrom_error == true)
@@ -41,6 +41,21 @@ ssize_t recvfrom(int a,
     return c;
 }
 
+ssize_t sendto(int a,
+               const void *b, size_t c,
+               int d,
+               const struct sockaddr *e, socklen_t f)
+{
+    if (sendto_error == true)
+    {
+        errno = ENOENT;
+        return -1;
+    }
+    packet *p = (packet *)b;
+    packet_type = (int)p->basic.type;
+    return packet_size((packet *)b);
+}
+
 int socket(int a, int b, int c)
 {
     return 123;
@@ -49,6 +64,13 @@ int socket(int a, int b, int c)
 int ntoh_packet(packet *a, size_t b)
 {
     if (bad_ntoh == true)
+        return 0;
+    return 1;
+}
+
+int hton_packet(packet *a, size_t b)
+{
+    if (bad_hton == true)
         return 0;
     return 1;
 }
@@ -75,20 +97,264 @@ class mock_Comm : public Comm
     MOCK_METHOD1(send_ack, void(uint8_t));
 };
 
+TEST(CommSendTest, SendBadHton)
+{
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    Comm *comm = NULL;
+    struct addrinfo ai;
+    packet *pkt = new packet;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    memset((void *)pkt, 0, sizeof(packet));
+    pkt->basic.type = TYPE_PNGPKT;
+    pkt->basic.version = 1;
+
+    bad_hton = true;
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    ASSERT_NO_THROW(
+        {
+            comm = new Comm(&ai);
+            comm->start();
+        });
+    comm->send(pkt, sizeof(packet));
+    sleep(1);
+    ASSERT_NO_THROW(
+        {
+            comm->stop();
+        });
+    delete pkt;
+    delete comm;
+
+    ASSERT_THAT(new_clog.str(),
+                testing::HasSubstr("Error hton'ing packet"));
+    std::clog.rdbuf(old_clog_rdbuf);
+}
+
+TEST(CommSendTest, SendBadSend)
+{
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    Comm *comm = NULL;
+    struct addrinfo ai;
+
+    /* send_worker will delete this */
+    packet *pkt = new packet;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    memset((void *)pkt, 0, sizeof(packet));
+    pkt->basic.type = TYPE_PNGPKT;
+    pkt->basic.version = 1;
+
+    bad_hton = false;
+    sendto_error = true;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    ASSERT_NO_THROW(
+        {
+            comm = new Comm(&ai);
+            comm->start();
+        });
+    comm->send(pkt, sizeof(packet));
+    sleep(1);
+    ASSERT_NO_THROW(
+        {
+            comm->stop();
+        });
+    delete comm;
+
+    ASSERT_THAT(new_clog.str(),
+                testing::HasSubstr("got a send error:"));
+    std::clog.rdbuf(old_clog_rdbuf);
+}
+
 TEST(CommSendTest, SendPacket)
 {
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    Comm *comm = NULL;
+    struct addrinfo ai;
+
+    /* send_worker will delete this */
+    packet *pkt = new packet;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    memset((void *)pkt, 0, sizeof(packet));
+    pkt->basic.type = TYPE_PNGPKT;
+    pkt->basic.version = 1;
+
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    ASSERT_NO_THROW(
+        {
+            comm = new Comm(&ai);
+            comm->start();
+        });
+    comm->send(pkt, sizeof(packet));
+    sleep(1);
+    ASSERT_NO_THROW(
+        {
+            comm->stop();
+        });
+    delete comm;
+
+    ASSERT_EQ(packet_type, TYPE_PNGPKT);
+    ASSERT_STREQ(new_clog.str().c_str(), "");
+    std::clog.rdbuf(old_clog_rdbuf);
 }
 
 TEST(CommSendTest, SendLogin)
 {
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    Comm *comm = NULL;
+    struct addrinfo ai;
+    std::string a("hi"), b("howdy"), c("hello");
+
+    /* send_worker will delete this */
+    packet *pkt = new packet;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    ASSERT_NO_THROW(
+        {
+            comm = new Comm(&ai);
+            comm->start();
+        });
+    comm->send_login(a, b, c);
+    sleep(1);
+    ASSERT_NO_THROW(
+        {
+            comm->stop();
+        });
+    delete comm;
+
+    ASSERT_EQ(packet_type, TYPE_LOGREQ);
+    ASSERT_STREQ(new_clog.str().c_str(), "");
+    std::clog.rdbuf(old_clog_rdbuf);
 }
 
 TEST(CommSendTest, SendActionReq)
 {
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    Comm *comm = NULL;
+    struct addrinfo ai;
+
+    /* send_worker will delete this */
+    packet *pkt = new packet;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    ASSERT_NO_THROW(
+        {
+            comm = new Comm(&ai);
+            comm->start();
+        });
+    comm->send_action_request(1, 1, 1);
+    sleep(1);
+    ASSERT_NO_THROW(
+        {
+            comm->stop();
+        });
+    delete comm;
+
+    ASSERT_EQ(packet_type, TYPE_ACTREQ);
+    ASSERT_STREQ(new_clog.str().c_str(), "");
+    std::clog.rdbuf(old_clog_rdbuf);
 }
 
 TEST(CommSendTest, SendLogout)
 {
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    Comm *comm = NULL;
+    struct addrinfo ai;
+
+    /* send_worker will delete this */
+    packet *pkt = new packet;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    ASSERT_NO_THROW(
+        {
+            comm = new Comm(&ai);
+            comm->start();
+        });
+    comm->send_logout();
+    sleep(1);
+    ASSERT_NO_THROW(
+        {
+            comm->stop();
+        });
+    delete comm;
+
+    ASSERT_EQ(packet_type, TYPE_LGTREQ);
+    ASSERT_STREQ(new_clog.str().c_str(), "");
+    std::clog.rdbuf(old_clog_rdbuf);
 }
 
 TEST(CommRecvTest, RecvBadResult)
@@ -115,7 +381,7 @@ TEST(CommRecvTest, RecvBadResult)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {
@@ -154,7 +420,7 @@ TEST(CommRecvTest, RecvBadSender)
     bad_sender = true;
     bad_packet = false;
     bad_ntoh = false;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {
@@ -193,7 +459,7 @@ TEST(CommRecvTest, RecvBadPacket)
     bad_sender = false;
     bad_packet = true;
     bad_ntoh = false;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {
@@ -232,7 +498,7 @@ TEST(CommRecvTest, RecvNoNtoh)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = true;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {
@@ -271,7 +537,7 @@ TEST(CommRecvTest, RecvPing)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {
@@ -313,7 +579,7 @@ TEST(CommRecvTest, RecvAck)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {
@@ -355,7 +621,7 @@ TEST(CommRecvTest, RecvPosUpdate)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {
@@ -397,7 +663,7 @@ TEST(CommRecvTest, RecvServerNotice)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {
@@ -439,7 +705,7 @@ TEST(CommRecvTest, RecvUnsupported)
     bad_sender = false;
     bad_packet = false;
     bad_ntoh = false;
-    sockaddr_calls = 0;
+    recvfrom_calls = 0;
 
     ASSERT_NO_THROW(
         {

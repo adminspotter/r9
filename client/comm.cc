@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Dec 2015, 10:30:44 tquirk
+ *   last updated 09 Dec 2015, 18:09:58 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -68,7 +68,6 @@
 #include "comm.h"
 
 uint64_t Comm::sequence = 0LL;
-volatile bool Comm::thread_exit_flag = false;
 
 /* Jump table for protocol handling */
 Comm::pkt_handler Comm::pkt_type[] =
@@ -127,11 +126,11 @@ void *Comm::send_worker(void *arg)
     for (;;)
     {
         pthread_mutex_lock(&(comm->send_lock));
-        while (comm->send_queue.empty() && !Comm::thread_exit_flag)
+        while (comm->send_queue.empty() && !comm->thread_exit_flag)
             pthread_cond_wait(&(comm->send_queue_not_empty),
                               &(comm->send_lock));
 
-        if (Comm::thread_exit_flag)
+        if (comm->thread_exit_flag)
         {
             pthread_mutex_unlock(&(comm->send_lock));
             pthread_exit(NULL);
@@ -304,6 +303,7 @@ void Comm::start(void)
     int ret;
 
     /* Now start up the actual threads */
+    this->thread_exit_flag = false;
     if ((ret = pthread_create(&(this->send_thread),
                               NULL,
                               Comm::send_worker,
@@ -337,7 +337,7 @@ void Comm::stop(void)
 {
     if (this->sock)
         this->send_logout();
-    this->thread_exit_flag = 1;
+    this->thread_exit_flag = true;
     pthread_cond_broadcast(&(this->send_queue_not_empty));
     sleep(0);
     pthread_join(this->send_thread, NULL);
