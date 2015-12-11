@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Dec 2015, 18:09:58 tquirk
+ *   last updated 11 Dec 2015, 06:55:32 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -350,7 +350,10 @@ void Comm::send(packet *p, size_t len)
 {
     pthread_mutex_lock(&(this->send_lock));
     if (!hton_packet(p, len))
+    {
         std::clog << "Error hton'ing packet" << std::endl;
+        delete p;
+    }
     else
     {
         this->send_queue.push(p);
