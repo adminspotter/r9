@@ -1,6 +1,6 @@
 /* object.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 22:41:37 tquirk
+ *   last updated 16 Dec 2015, 12:13:11 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -22,6 +22,8 @@
  *
  * This file contains the object cache class declaration.  An "object"
  * is a geometry, combined with position, rotation, and frame number.
+ * For the time being, however, we're eliminating the geometry and
+ * frame number, and focusing on the position and orientation ONLY.
  *
  * Things to do
  *
@@ -40,8 +42,6 @@
 
 struct object
 {
-    uint64_t geometry_id;
-    uint16_t frame_number;
     GLdouble position[3], orientation[3];
 };
 

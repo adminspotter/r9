@@ -9,4 +9,5 @@ libr9_client_a_SOURCES = geometry.cc texture.cc comm.cc client_core.cc \
 	configdata.cc cache.h geometry.h object.h texture.h comm.h \
 	client_core.h configdata.h l10n.h
 libr9_client_a_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
-	-DDTD_PATH=\"$(dtddir)/\" -DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\"
+	-DDTD_PATH=\"$(dtddir)/\" -DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \
+	-DGL_GLEXT_PROTOTYPES

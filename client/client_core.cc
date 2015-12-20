@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Dec 2015, 06:56:11 tquirk
+ *   last updated 20 Dec 2015, 11:23:30 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,51 +33,176 @@
 
 #include "client_core.h"
 
-#include "texture.h"
-#include "geometry.h"
 #include "object.h"
 
-TextureCache *tex = NULL;
-GeometryCache *geom = NULL;
+#include <GL/gl.h>
+#include <GL/glext.h>
+
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#define GLSL(src) "#version 330 core\n" #src
+
+const static GLchar *vert_src = GLSL(
+    in vec3 position;
+    in vec3 color;
+
+    out vec3 vcolor;
+
+    // This will just be a point
+    void main() {
+        vcolor = color;
+        gl_Position = vec4(position, 1.0);
+    };
+);
+
+const static GLchar *geom_src = GLSL(
+    layout(points) in;
+    layout(triangle_strip, max_vertices = 14) out;
+
+    in vec3 vcolor[];
+    out vec3 gcolor;
+
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 proj;
+
+    // Draw a cube at the input point
+    void main() {
+        gcolor = vcolor[0];
+
+        // Top
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(-0.5, 0.5, -0.5, 1.0));
+        EmitVertex();
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(0.5, 0.5, -0.5, 1.0));
+        EmitVertex();
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(-0.5, 0.5, 0.5, 1.0));
+        EmitVertex();
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(0.5, 0.5, 0.5, 1.0));
+        EmitVertex();
+
+        // Right side
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(0.5, -0.5, 0.5, 1.0));
+        EmitVertex();
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(0.5, 0.5, -0.5, 1.0));
+        EmitVertex();
+
+        // Back
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(0.5, -0.5, -0.5, 1.0));
+        EmitVertex();
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(-0.5, 0.5, -0.5, 1.0));
+        EmitVertex();
+
+        // Left side
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(-0.5, -0.5, -0.5, 1.0));
+        EmitVertex();
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(-0.5, 0.5, 0.5, 1.0));
+        EmitVertex();
+
+        // Front
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(-0.5, -0.5, 0.5, 1.0));
+        EmitVertex();
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(0.5, -0.5, 0.5, 1.0));
+        EmitVertex();
+
+        // Bottom
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(-0.5, -0.5, -0.5, 1.0));
+        EmitVertex();
+        gl_Position = proj * view * model
+            * (gl_in[0].gl_Position + vec4(0.5, -0.5, -0.5, 1.0));
+        EmitVertex();
+
+        EndPrimitive();
+    };
+);
+
+const static GLchar *frag_src = GLSL(
+    in vec3 gcolor;
+
+    out vec3 fcolor;
+
+    void main() {
+        fcolor = gcolor;
+    };
+);
+
+static GLuint create_shader(GLenum, const GLchar *);
+static GLuint create_program(void);
+
 ObjectCache *obj = NULL;
+GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
+glm::mat4 projection;
 
 void init_client_core(void)
 {
-    tex = new TextureCache("texture");
-    geom = new GeometryCache("geometry");
     obj = new ObjectCache("object");
+
+    /* Set up the shaders, programs, and vbos */
+    if ((vert_shader = create_shader(GL_VERTEX_SHADER, vert_src)) == 0)
+        goto VERT_BAILOUT;
+    if ((geom_shader = create_shader(GL_GEOMETRY_SHADER, geom_src)) == 0)
+        goto GEOM_BAILOUT;
+    if ((frag_shader = create_shader(GL_FRAGMENT_SHADER, frag_src)) == 0)
+        goto FRAG_BAILOUT;
+
+    if ((shader_pgm = create_program()) == 0)
+        goto PROGRAM_BAILOUT;
+    glUseProgram(shader_pgm);
+
+    return;
+
+  PROGRAM_BAILOUT:
+    glDeleteShader(frag_shader);
+  FRAG_BAILOUT:
+    glDeleteShader(geom_shader);
+  GEOM_BAILOUT:
+    glDeleteShader(vert_shader);
+  VERT_BAILOUT:
+    return;
 }
 
 void cleanup_client_core(void)
 {
-    if (tex != NULL)
-    {
-        delete tex;
-        tex = NULL;
-    }
-    if (geom != NULL)
-    {
-        delete geom;
-        geom = NULL;
-    }
     if (obj != NULL)
     {
         delete obj;
         obj = NULL;
     }
+
+    /* Delete the programs, shaders, and vbos */
+    if (frag_shader != 0)
+        glDeleteShader(frag_shader);
+    if (geom_shader != 0)
+        glDeleteShader(geom_shader);
+    if (vert_shader != 0)
+        glDeleteShader(vert_shader);
+    if (shader_pgm != 0)
+    {
+        glUseProgram(0);
+        glDeleteProgram(shader_pgm);
+    }
 }
 
 void draw_texture(uint64_t texid)
 {
-    texture& t = (*tex)[texid];
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, t.diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, t.specular);
-    glMaterialf(GL_FRONT, GL_SHININESS, t.shininess);
 }
 
 void draw_geometry(uint64_t geomid, uint16_t frame)
 {
-    glCallList((*geom)[geomid][frame]);
 }
 
 struct draw_object
@@ -91,7 +216,7 @@ struct draw_object
             glRotated(o.orientation[0], 1.0, 0.0, 0.0);
             glRotated(o.orientation[1], 0.0, 1.0, 0.0);
             glRotated(o.orientation[2], 0.0, 0.0, 1.0);
-            draw_geometry(o.geometry_id, o.frame_number);
+            //draw_geometry(o.geometry_id, o.frame_number);
             glPopMatrix();
         }
 };
@@ -110,11 +235,98 @@ void move_object(uint64_t objectid, uint16_t frame,
     object& oref = (*obj)[objectid];
 
     /* Update the object's position */
-    oref.frame_number = frame;
     oref.position[0] = xpos;
     oref.position[1] = ypos;
     oref.position[2] = zpos;
     oref.orientation[0] = xori;
     oref.orientation[1] = yori;
     oref.orientation[2] = zori;
+}
+
+void resize_window(int width, int height)
+{
+    GLuint proj_loc = glGetUniformLocation(shader_pgm, "proj");
+
+    /* A 50mm lens on a 35mm camera has a 39.6 degree horizontal FoV */
+    projection = glm::perspective(glm::radians(39.6f),
+                                  (float)width / (float)height,
+                                  0.1f, 1000.0f);
+    glUniformMatrix4fv(proj_loc, 1, GL_FALSE, glm::value_ptr(projection));
+}
+
+GLuint create_shader(GLenum type, const GLchar *src)
+{
+    GLuint shader = glCreateShader(type);
+
+    if (shader != 0)
+    {
+        GLint res = GL_FALSE;
+        int len = 0;
+
+        glShaderSource(shader, 1, &src, NULL);
+        glCompileShader(shader);
+
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
+        if (len > 0)
+        {
+            GLchar message[len + 1];
+
+            memset(message, 0, len + 1);
+            glGetShaderInfoLog(shader, len, NULL, message);
+            std::clog << message << std::endl;
+        }
+
+        /* Check for failure and delete the shader if necessary */
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &res);
+        if (res == GL_FALSE)
+        {
+            glDeleteShader(shader);
+            shader = 0;
+        }
+    }
+
+    return shader;
+}
+
+GLuint create_program(void)
+{
+    GLuint pgm = glCreateProgram();
+
+    if (pgm != 0)
+    {
+        GLint res = GL_FALSE;
+        int len = 0;
+
+        glGetError();
+        glAttachShader(pgm, vert_shader);
+        glAttachShader(pgm, geom_shader);
+        glAttachShader(pgm, frag_shader);
+        if (glGetError() != GL_NO_ERROR)
+        {
+            std::clog << "Could not attach shaders to the shader program"
+                      << std::endl;
+            glDeleteProgram(pgm);
+            return 0;
+        }
+
+        glLinkProgram(pgm);
+
+        glGetProgramiv(pgm, GL_INFO_LOG_LENGTH, &len);
+        if (len > 0)
+        {
+            GLchar message[len + 1];
+
+            memset(message, 0, len + 1);
+            glGetProgramInfoLog(pgm, len, NULL, message);
+            std::clog << message << std::endl;
+        }
+
+        glGetProgramiv(pgm, GL_LINK_STATUS, &res);
+        if (res == GL_FALSE)
+        {
+            glDeleteProgram(pgm);
+            pgm = 0;
+        }
+    }
+    return pgm;
 }

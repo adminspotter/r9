@@ -1,6 +1,6 @@
 /* view.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Dec 2015, 09:38:03 tquirk
+ *   last updated 19 Dec 2015, 12:40:43 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -24,9 +24,6 @@
  * for the Revision 9 client program.
  *
  * Things to do
- *   - Use our fancy cache object, instead of doing one here by hand.
- *   - Act sensibly in draw_objects, instead of brute-forcing it.
- *   - Make sure the depth buffer is being created and used.
  *   - Define a set of translations and actions, and create routines to
  *     support each one individually.
  *
@@ -36,8 +33,11 @@
 #include <X11/Xlib.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
+#include <X11/cursorfont.h>
+
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <GL/GLwMDrawA.h>
-#include <GL/glut.h>
 
 #include <iostream>
 
@@ -50,7 +50,6 @@ static void expose_callback(Widget, XtPointer, XtPointer);
 extern void draw_objects(void);
 
 static Widget mainview;
-static GLfloat light_position[] = { 5.0, 50.0, -10.0, 1.0 };
 
 Widget create_main_view(Widget parent)
 {
@@ -73,10 +72,7 @@ void init_callback(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XVisualInfo *visual_info;
     GLXContext context;
-    GLfloat white_light[] = { 1.0, 1.0, 1.0, 1.0 };
-    GLfloat global_ambient[] = { 0.1, 0.1, 0.1, 1.0 };
-    int zero = 0;
-    char *empty = NULL;
+    Cursor cursor;
 
     /* Create and set the GLXContext */
     XtVaGetValues(w, GLwNvisualInfo, &visual_info, NULL);
@@ -86,22 +82,13 @@ void init_callback(Widget w, XtPointer client_data, XtPointer call_data)
     /* Depth parameters */
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
-    /* Lighting model parameters */
-    glEnable(GL_LIGHTING);
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
-    glShadeModel(GL_SMOOTH);
-    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+    std::clog << "Initialized " << glGetString(GL_VERSION) << std::endl;
 
-    /* Light 0 parameters */
-    glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, global_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    glEnable(GL_LIGHT0);
-
-    /* GLUT needs initialization too */
-    glutInit(&zero, &empty);
+    /* Change the cursor for our window */
+    cursor = XCreateFontCursor(XtDisplay(w), XC_crosshair);
+    XDefineCursor(XtDisplay(w), XtWindow(w), cursor);
 
     /* Now that all the GL stuff is initialized, we'll go ahead and
      * crank up the client core caches.
@@ -120,14 +107,7 @@ void resize_callback(Widget w, XtPointer client_data, XtPointer call_data)
     GLwDrawingAreaCallbackStruct *cbstruct =
         (GLwDrawingAreaCallbackStruct *)call_data;
 
-    glViewport(0, 0, (GLsizei)cbstruct->width, (GLsizei)cbstruct->height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(75.0,
-                   (GLdouble)cbstruct->width / (GLdouble)cbstruct->height,
-                   0.1,
-                   100.0);
-    glMatrixMode(GL_MODELVIEW);
+    resize_window((int)cbstruct->width, (int)cbstruct->height);
 
     /* After we resize, we automatically get exposed, so we don't need to
      * clear the window or explicitly call expose or even do a flush.
@@ -138,10 +118,6 @@ void resize_callback(Widget w, XtPointer client_data, XtPointer call_data)
 void expose_callback(Widget w, XtPointer client_data, XtPointer call_data)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    /* Set the view point */
-    glLoadIdentity();
-    glRotatef(180, 0.0, 0.0, 1.0);
-    /* Draw what we're supposed to see */
     draw_objects();
     GLwDrawingAreaSwapBuffers(w);
     glFlush();

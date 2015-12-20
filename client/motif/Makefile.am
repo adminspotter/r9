@@ -16,7 +16,8 @@ bin_PROGRAMS = r9client
 r9client_SOURCES = about.cc command.cc client.cc menu.cc message.cc \
 	msglog.cc setup.cc view.cc client.h msglog.h
 r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(PIXMAPS_DIR) $(LOCALE_DIR) \
-	$(LIBGLW_CFLAGS) $(CLIENT_INCLUDES)
+	$(LIBGLW_CFLAGS) $(CLIENT_INCLUDES) \
+	-DGL_GLEXT_PROTOTYPES
 r9client_LDFLAGS = $(CLIENT_LDFLAGS)
 r9client_LDADD = ../libr9_client.a $(LIBGLW_LDADD) \
 	../../proto/libr9_proto.la $(CLIENT_LDLIBS)
