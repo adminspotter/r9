@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Dec 2015, 11:23:30 tquirk
+ *   last updated 26 Dec 2015, 19:23:57 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -38,9 +38,11 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 
+#include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #define GLSL(src) "#version 330 core\n" #src
 
@@ -70,60 +72,49 @@ const static GLchar *geom_src = GLSL(
 
     // Draw a cube at the input point
     void main() {
+        mat4 pvm = proj * view * model;
         gcolor = vcolor[0];
 
         // Top
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(-0.5, 0.5, -0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(-0.5, 0.5, -0.5, 1.0));
         EmitVertex();
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(0.5, 0.5, -0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(0.5, 0.5, -0.5, 1.0));
         EmitVertex();
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(-0.5, 0.5, 0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(-0.5, 0.5, 0.5, 1.0));
         EmitVertex();
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(0.5, 0.5, 0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(0.5, 0.5, 0.5, 1.0));
         EmitVertex();
 
         // Right side
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(0.5, -0.5, 0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(0.5, -0.5, 0.5, 1.0));
         EmitVertex();
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(0.5, 0.5, -0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(0.5, 0.5, -0.5, 1.0));
         EmitVertex();
 
         // Back
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(0.5, -0.5, -0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(0.5, -0.5, -0.5, 1.0));
         EmitVertex();
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(-0.5, 0.5, -0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(-0.5, 0.5, -0.5, 1.0));
         EmitVertex();
 
         // Left side
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(-0.5, -0.5, -0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position
+                             + vec4(-0.5, -0.5, -0.5, 1.0));
         EmitVertex();
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(-0.5, 0.5, 0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(-0.5, 0.5, 0.5, 1.0));
         EmitVertex();
 
         // Front
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(-0.5, -0.5, 0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(-0.5, -0.5, 0.5, 1.0));
         EmitVertex();
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(0.5, -0.5, 0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(0.5, -0.5, 0.5, 1.0));
         EmitVertex();
 
         // Bottom
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(-0.5, -0.5, -0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position
+                             + vec4(-0.5, -0.5, -0.5, 1.0));
         EmitVertex();
-        gl_Position = proj * view * model
-            * (gl_in[0].gl_Position + vec4(0.5, -0.5, -0.5, 1.0));
+        gl_Position = pvm * (gl_in[0].gl_Position + vec4(0.5, -0.5, -0.5, 1.0));
         EmitVertex();
 
         EndPrimitive();
@@ -145,7 +136,8 @@ static GLuint create_program(void);
 
 ObjectCache *obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
-glm::mat4 projection;
+GLuint model_loc, view_loc, proj_loc, pos_loc;
+glm::mat4 model, view, projection;
 
 void init_client_core(void)
 {
@@ -163,7 +155,12 @@ void init_client_core(void)
         goto PROGRAM_BAILOUT;
     glUseProgram(shader_pgm);
 
-    return;
+    model_loc = glGetUniformLocation(shader_pgm, "model");
+    view_loc = glGetUniformLocation(shader_pgm, "view");
+    proj_loc = glGetUniformLocation(shader_pgm, "proj");
+    pos_loc = glGetAttribLocation(shader_pgm, "position");
+
+     return;
 
   PROGRAM_BAILOUT:
     glDeleteShader(frag_shader);
@@ -197,40 +194,32 @@ void cleanup_client_core(void)
     }
 }
 
-void draw_texture(uint64_t texid)
-{
-}
-
-void draw_geometry(uint64_t geomid, uint16_t frame)
-{
-}
-
 struct draw_object
 {
     void operator()(object& o)
         {
-            glPushMatrix();
-            glTranslated(o.position[0],
-                         o.position[1],
-                         o.position[2]);
-            glRotated(o.orientation[0], 1.0, 0.0, 0.0);
-            glRotated(o.orientation[1], 0.0, 1.0, 0.0);
-            glRotated(o.orientation[2], 0.0, 0.0, 1.0);
+            glm::mat4 trans = glm::translate(glm::mat4(1.0f), o.position);
+            model = glm::rotate(trans,
+                                glm::angle(o.orientation),
+                                glm::axis(o.orientation));
+
+            glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
             //draw_geometry(o.geometry_id, o.frame_number);
-            glPopMatrix();
         }
 };
 
 void draw_objects(void)
 {
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+
     /* Brute force, baby - ya just can't beat it */
     std::function<void(object&)> draw = draw_object();
     obj->each(draw);
 }
 
 void move_object(uint64_t objectid, uint16_t frame,
-                 double xpos, double ypos, double zpos,
-                 double xori, double yori, double zori)
+                 float xpos, float ypos, float zpos,
+                 float xori, float yori, float zori, float wori)
 {
     object& oref = (*obj)[objectid];
 
@@ -241,12 +230,11 @@ void move_object(uint64_t objectid, uint16_t frame,
     oref.orientation[0] = xori;
     oref.orientation[1] = yori;
     oref.orientation[2] = zori;
+    oref.orientation[3] = wori;
 }
 
 void resize_window(int width, int height)
 {
-    GLuint proj_loc = glGetUniformLocation(shader_pgm, "proj");
-
     /* A 50mm lens on a 35mm camera has a 39.6 degree horizontal FoV */
     projection = glm::perspective(glm::radians(39.6f),
                                   (float)width / (float)height,

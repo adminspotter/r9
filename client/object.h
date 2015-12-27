@@ -1,6 +1,6 @@
 /* object.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Dec 2015, 12:13:11 tquirk
+ *   last updated 27 Dec 2015, 09:16:52 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,13 +36,15 @@
 
 #include <stdint.h>
 
-#include <GL/gl.h>
+#include <glm/vec3.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include "cache.h"
 
 struct object
 {
-    GLdouble position[3], orientation[3];
+    glm::vec3 position;
+    glm::fquat orientation;
 };
 
 typedef BasicCache<object> ObjectCache;

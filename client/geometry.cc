@@ -1,6 +1,6 @@
 /* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Dec 2015, 08:17:44 tquirk
+ *   last updated 27 Dec 2015, 09:19:55 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -49,10 +49,6 @@
  * Things to do
  *
  */
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
 
 #include <cstdint>
 #include <cstring>
@@ -124,8 +120,6 @@ void GeometryParser::open_frame(XNS::AttributeList& attrs)
     {
         this->current = frame_st;
         this->geom->push_back(glGenLists(1));
-        /* This would be the time to grab a mutex */
-        glNewList(this->geom->back(), GL_COMPILE);
     }
     else
         throw std::runtime_error("Bad frame open tag");
@@ -136,8 +130,6 @@ void GeometryParser::close_frame(void)
     if (this->current == polylist_en || this->current == sphere_st)
     {
         this->current = frame_en;
-        glEndList();
-        /* This would be the time to drop a mutex */
     }
     else
         throw std::runtime_error("Bad frame close tag");
@@ -179,8 +171,6 @@ void GeometryParser::open_sphere(XNS::AttributeList& attrs)
                 throw std::runtime_error(s.str());
             }
         }
-        draw_texture(tid);
-        glutSolidSphere(radius, 4, 4);
     }
     else
         throw std::runtime_error("Bad sphere tag");
@@ -230,8 +220,6 @@ void GeometryParser::open_polygon(XNS::AttributeList& attrs)
                 throw std::runtime_error(s.str());
             }
         }
-        glBegin(GL_POLYGON);
-        draw_texture(tid);
     }
     else
         throw std::runtime_error("Bad polygon open tag");
@@ -242,7 +230,6 @@ void GeometryParser::close_polygon(void)
     if (this->current == point_en)
     {
         this->current = polygon_en;
-        glEnd();
     }
     else
         throw std::runtime_error("Bad polygon close tag");
@@ -265,8 +252,6 @@ void GeometryParser::close_point(void)
     if (this->current == normal_st)
     {
         this->current = point_en;
-        glNormal3fv(this->norm);
-        glVertex3fv(this->pt);
     }
     else
         throw std::runtime_error("Bad point close tag");

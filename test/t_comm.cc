@@ -13,8 +13,8 @@ struct sockaddr_storage expected_sockaddr;
 packet expected_packet;
 
 void move_object(uint64_t a, uint16_t b,
-                 double c, double d, double e,
-                 double f, double g, double h)
+                 float c, float d, float e,
+                 float f, float g, float h, float i)
 {
     return;
 }
@@ -104,6 +104,8 @@ TEST(CommSendTest, SendBadHton)
     std::clog.rdbuf(new_clog.rdbuf());
     Comm *comm = NULL;
     struct addrinfo ai;
+
+    /* send will delete this */
     packet *pkt = new packet;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -134,7 +136,6 @@ TEST(CommSendTest, SendBadHton)
         {
             comm->stop();
         });
-    delete pkt;
     delete comm;
 
     ASSERT_THAT(new_clog.str(),
