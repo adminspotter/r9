@@ -122,12 +122,6 @@ AC_ARG_WITH([GLw-libraries],
             AS_HELP_STRING([--with-GLw-libraries=<path>],
                            [Use libGLw libraries at <path>]))
 
-AC_ARG_WITH([eigen],
-            AS_HELP_STRING([--with-eigen=<path>],
-                           [Build using system Eigen installation at <path> (default 'bundled')]),
-            [],
-            [with_eigen="bundled"])
-
 # Client program
 if test "$with_client" == "yes"
 then
@@ -276,19 +270,9 @@ XMLPlatformUtils::Terminate();
       [AC_MSG_ERROR([libXm not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
-  AC_SEARCH_LIBS([glNewList], [GL],
+  AC_SEARCH_LIBS([glCreateShader], [GL],
       [CLIENT_LDLIBS="$ac_cv_search_glNewList $CLIENT_LDLIBS"],
       [AC_MSG_ERROR([libGL not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([gluPerspective], [GLU],
-      [CLIENT_LDLIBS="$ac_cv_search_gluPerspective $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libGLU not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([glutSolidSphere], [glut],
-      [CLIENT_LDLIBS="$ac_cv_search_glutSolidSphere $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libglut not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
   AC_MSG_NOTICE([checking for GLw])
@@ -335,6 +319,12 @@ XMLPlatformUtils::Terminate();
   # header here.
   AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
   AC_CHECK_FUNCS([setlocale])
+
+  # Check for GLM headers
+  GLM_CPPFLAGS_SAVE="$CPPFLAGS"
+  CPPFLAGS="$CXXFLAGS"
+  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_NOTICE([no valid GLM installation found, can not continue])])
+  CPPFLAGS="$GLM_CPPFLAGS_SAVE"
 
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
   AC_MSG_NOTICE([using CLIENT_INCLUDES=$CLIENT_INCLUDES])
@@ -443,10 +433,13 @@ if test "$with_eigen" != ""
 then
   EIGEN_INCLUDES="-I$with_eigen"
 fi
+EIGEN_CPPFLAGS_SAVE="$CPPFLAGS"
 EIGEN_CXXFLAGS_SAVE="$CXXFLAGS"
+CPPFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
 CXXFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
 AC_CHECK_HEADERS([Eigen/Core], [],
     [AC_MSG_NOTICE([no valid Eigen installation found, can not continue])])
+CPPFLAGS="$EIGEN_CPPFLAGS_SAVE"
 CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
 
 AC_CONFIG_SUBDIRS([test/gmock-1.7.0])
