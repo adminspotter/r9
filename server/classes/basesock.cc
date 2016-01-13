@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Nov 2015, 18:47:23 tquirk
+ *   last updated 13 Jan 2016, 10:14:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -61,7 +61,19 @@ basesock::~basesock()
         this->sock = 0;
     }
     if (this->sa != NULL)
+    {
+        /* If we're a unix domain, unlink the file. */
+        if (this->sa->sockaddr()->sa_family == AF_UNIX)
+        {
+            struct sockaddr_un *sun = (struct sockaddr_un *)this->sa->sockaddr();
+            if (unlink(sun->sun_path))
+                std::clog << syslogWarn << "could not unlink path "
+                          << sun->sun_path
+                          << ": " << strerror(errno) << " (" << errno << ')'
+                          << std::endl;
+        }
         delete this->sa;
+    }
 }
 
 void basesock::create_socket(struct addrinfo *ai)
