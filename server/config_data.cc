@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Nov 2015, 06:25:24 tquirk
+ *   last updated 12 Jan 2016, 17:53:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -27,23 +27,21 @@
  *   AccessThreads <num>    number of access threads to start
  *   ActionLib <libname>    name of library which contains the action routines
  *   ActionThreads <num>    number of action threads to start
- *   ConFilename <string>   filename of the unix console
- *   ConPort <num>          port of the inet console
+ *   Console <port type>    port specification for a console listener
  *   DBDatabase <dbname>    the name of the database to use
  *   DBHost <host>          database server hostname
  *   DBPassword <password>  the unencrypted password to get into the database
  *   DBType <type>          which database to use - mysql, pgsql, etc.
  *   DBUser <username>      the database username
- *   DgramPort <number>     a UDP port the server will listen to
  *   LogFacility <string>   the facility that the program will use for syslog
  *   LogPrefix <string>     the prefix that the program will use in syslog
  *   MaxSubservers <num>    the maximum number of subservers
  *   MinSubservers <num>    the minimum number of subservers
  *   MotionThreads <num>    number of motion threads to start
  *   PidFile <fname>        the pid/lock file to use
+ *   Port <port type>       port specification for a server listener
  *   SendThreads <num>      number of send threads to start
  *   ServerGID <group>      the server will run as group id <group>
- *   StreamPort <number>    a TCP port the server will listen to
  *   ServerRoot <path>      the server's root directory
  *   ServerUID <user>       the server will run as user id <user>
  *   UpdateThreads <num>    number of update threads to start
@@ -59,6 +57,10 @@
  * (case-insensitive), as are numbers >0.  A null or 0-length value is
  * also interpreted as true.  If it doesn't recognize the option
  * string according to the above rules, it is false.
+ *
+ * Port types are as follows:
+ *   (dgram|stream):<optional addr>:<port>
+ *   unix:<path>
  *
  * Comments can basically be anything that we don't explicitly
  * recognize.  Everything that doesn't fit these parameters is
@@ -143,7 +145,7 @@ static void config_boolean_element(const std::string&, const std::string&, void 
 static void config_user_element(const std::string&, const std::string&, void *);
 static void config_group_element(const std::string&, const std::string&, void *);
 static void config_logfac_element(const std::string&, const std::string&, void *);
-static void config_socket_element(const std::string&, const std::string&, void *);
+static void config_port_element(const std::string&, const std::string&, void *);
 static void config_location_element(const std::string&, const std::string&, void *);
 
 /* Global variables */
@@ -162,23 +164,21 @@ handlers[] =
     { "AccessThreads", off(access_threads), &config_integer_element  },
     { "ActionLib",     off(action_lib),     &config_string_element   },
     { "ActionThreads", off(action_threads), &config_integer_element  },
-    { "ConFilename",   off(console_fname),  &config_string_element   },
-    { "ConPort",       off(console_inet),   &config_integer_element  },
+    { "Console",       off(consoles),       &config_port_element     },
     { "DBDatabase",    off(db_name),        &config_string_element   },
     { "DBHost",        off(db_host),        &config_string_element   },
     { "DBPassword",    off(db_pass),        &config_string_element   },
     { "DBType",        off(db_type),        &config_string_element   },
     { "DBUser",        off(db_user),        &config_string_element   },
-    { "DgramPort",     off(dgram),          &config_socket_element   },
     { "LogFacility",   off(log_facility),   &config_logfac_element   },
     { "LogPrefix",     off(log_prefix),     &config_string_element   },
     { "MaxSubservers", off(max_subservers), &config_integer_element  },
     { "MinSubservers", off(min_subservers), &config_integer_element  },
     { "MotionThreads", off(motion_threads), &config_integer_element  },
     { "PidFile",       off(pid_fname),      &config_string_element   },
+    { "Port",          off(listen_ports),   &config_port_element     },
     { "SendThreads",   off(send_threads),   &config_integer_element  },
     { "ServerGID",     NULL,                &config_group_element    },
-    { "StreamPort",    off(stream),         &config_socket_element   },
     { "ServerRoot",    off(server_root),    &config_string_element   },
     { "ServerUID",     NULL,                &config_user_element     },
     { "SpawnPoint",    off(spawn),          &config_location_element },
@@ -193,12 +193,12 @@ handlers[] =
 };
 
 config_data::config_data()
-    : argv(), stream(), dgram(),
+    : argv(), listen_ports(), consoles(),
       server_root(config_data::SERVER_ROOT),
       log_prefix(config_data::LOG_PREFIX), pid_fname(config_data::PID_FNAME),
       db_type(config_data::DB_TYPE), db_host(config_data::DB_HOST),
       db_user(), db_pass(), db_name(config_data::DB_NAME),
-      action_lib(config_data::ACTION_LIB), console_fname()
+      action_lib(config_data::ACTION_LIB)
 {
     this->set_defaults();
 }
@@ -206,8 +206,8 @@ config_data::config_data()
 config_data::~config_data()
 {
     this->argv.clear();
-    this->stream.clear();
-    this->dgram.clear();
+    this->listen_ports.clear();
+    this->consoles.clear();
 }
 
 void config_data::set_defaults(void)
@@ -221,7 +221,6 @@ void config_data::set_defaults(void)
     this->db_pass        = "";
     this->db_name        = config_data::DB_NAME;
     this->action_lib     = config_data::ACTION_LIB;
-    this->console_fname  = "";
 
     this->daemonize      = true;
     this->use_keepalive  = false;
@@ -260,8 +259,8 @@ void setup_configuration(int count, char **args)
 void cleanup_configuration(void)
 {
     /* We'll leave argv alone because this may be a reinit */
-    config.stream.clear();
-    config.dgram.clear();
+    config.listen_ports.clear();
+    config.consoles.clear();
     config.set_defaults();
 
     chdir("/");
@@ -441,13 +440,68 @@ static void config_logfac_element(const std::string& key,
 }
 
 /* ARGSUSED */
-static void config_socket_element(const std::string& key,
-                                  const std::string& value,
-                                  void *ptr)
+static void config_port_element(const std::string& key,
+                                const std::string& value,
+                                void *ptr)
 {
-    std::vector<int> *element = (std::vector<int> *)ptr;
+    std::vector<port> *element = (std::vector<port> *)ptr;
+    std::string val = value, type_str;
+    std::string::size_type found;
+    port new_port;
 
-    element->push_back(std::stoi(value));
+    /* Elements will be in the forms:
+     * (dgram|stream):<addr>:<port>
+     * unix:<path>
+     *
+     * addr is an optional IP address of some kind
+     *   (1.2.3.4 or [::f00f:1234])
+     * port is a port number
+     * path is the pathname of the unix domain socket
+     */
+
+    if ((found = val.find_first_of(":")) == std::string::npos)
+        goto ERROR;
+    type_str = val.substr(0, found);
+    val.replace(0, found + 1, "");
+    if (type_str == "unix")
+    {
+        new_port.type = port_unix;
+        new_port.addr = val;
+    }
+    else
+    {
+        if (type_str == "dgram")
+            new_port.type = port_dgram;
+        else if (type_str == "stream")
+            new_port.type = port_stream;
+        else
+            goto ERROR;
+
+        if ((found = val.find_last_of(":")) == std::string::npos)
+            goto ERROR;
+        new_port.addr = val.substr(0, found);
+        new_port.port = val.substr(found + 1);
+
+        /* See if we've got an IPv6 address */
+        if ((found = new_port.addr.find_first_of(":"))
+            != std::string::npos)
+        {
+            if ((found = new_port.addr.find_first_of("[")) == std::string::npos)
+                goto ERROR;
+            new_port.addr.erase(found, 1);
+            if ((found = new_port.addr.find_last_of("]")) == std::string::npos)
+                goto ERROR;
+            new_port.addr.erase(found, 1);
+        }
+    }
+
+    element->push_back(new_port);
+    return;
+
+  ERROR:
+    std::clog << "Incorrectly formatted port specification ("
+              << value << ") for " << key << std::endl;
+    return;
 }
 
 /* ARGSUSED */

@@ -1,6 +1,6 @@
 /* config_data.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Nov 2015, 06:23:54 tquirk
+ *   last updated 08 Jan 2016, 17:23:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -40,6 +40,23 @@ typedef struct location_struct
 }
 location;
 
+/* We need to be able to represent any kind of port in a single structure */
+typedef enum port_type_tag
+{
+    port_unix = 0,
+    port_dgram,
+    port_stream
+}
+port_type;
+typedef struct port_struct
+{
+    port_type type;
+    std::string addr, port;
+
+    port_struct() : addr(), port() {};
+}
+port;
+
 class config_data
 {
   public:
@@ -61,7 +78,7 @@ class config_data
     static const char ACTION_LIB[];
 
     std::vector<std::string> argv;
-    std::vector<int> stream, dgram;
+    std::vector<port> listen_ports, consoles;
     bool daemonize, use_keepalive, use_nonblock, use_reuse;
     int use_linger, log_facility;
     std::string server_root, log_prefix, pid_fname;
@@ -72,9 +89,6 @@ class config_data
     location size, spawn;
     std::string db_type, db_host, db_user, db_pass, db_name;
     std::string action_lib;
-
-    std::string console_fname;
-    int console_inet;
 
     config_data();
     ~config_data();

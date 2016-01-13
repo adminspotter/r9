@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2015, 17:33:18 tquirk
+ *   last updated 12 Jan 2016, 18:15:27 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -75,14 +75,15 @@
 
 #include "classes/library.h"
 #include "classes/basesock.h"
-#include "classes/stream.h"
-#include "classes/dgram.h"
+#include "classes/socket.h"
 #include "classes/modules/console.h"
 
 static void setup_daemon(void);
 static void setup_log(void);
 static void setup_sockets(void);
-static struct addrinfo *get_addr_info(int, int);
+static struct addrinfo *get_addr_info(int,
+                                      const std::string&,
+                                      const std::string&);
 static void setup_zone(void);
 static void setup_console(void);
 static void cleanup_console(void);
@@ -218,32 +219,31 @@ static void setup_log(void)
 static void setup_sockets(void)
 {
     struct addrinfo *ai;
-    std::vector<int>::iterator i;
+    std::vector<port>::iterator i;
     std::vector<listen_socket *>::iterator j;
+    int type_map[] = { 0, SOCK_DGRAM, SOCK_STREAM };
     int created = 0;
 
     /* Bailout now if there are no sockets to create */
-    if (config.stream.size() == 0 && config.dgram.size() == 0)
+    if (config.listen_ports.size() == 0)
     {
         std::string s("no sockets to create");
         throw std::runtime_error(s);
     }
 
     std::clog << "going to create "
-              << config.stream.size() << " stream port"
-              << (config.stream.size() == 1 ? "" : "s")
-              << " and " << config.dgram.size() << " dgram port"
-              << (config.dgram.size() == 1 ? "" : "s") << std::endl;
+              << config.listen_ports.size() << " listening port"
+              << (config.listen_ports.size() == 1 ? "" : "s")
+              << std::endl;
 
-    for (i = config.stream.begin(); i != config.stream.end(); ++i)
+    for (i = config.listen_ports.begin(); i != config.listen_ports.end(); ++i)
     {
         /* First get an addrinfo struct for the socket */
-        if ((ai = get_addr_info(SOCK_STREAM, *i)) == NULL)
+        if ((ai = get_addr_info(type_map[i->type], i->addr, i->port)) == NULL)
             continue;
         try
         {
-            stream_socket *sock = new stream_socket(ai);
-            sockets.push_back(sock);
+            sockets.push_back(socket_create(ai));
         }
         catch (std::exception& e)
         {
@@ -258,33 +258,7 @@ static void setup_sockets(void)
         ++created;
     }
     if (created > 0)
-        std::clog << "created " << created << " stream socket"
-                  << (created == 1 ? "" : "s") << std::endl;
-
-    for (i = config.dgram.begin(); i != config.dgram.end(); ++i)
-    {
-        /* First get an addrinfo struct for the socket */
-        if ((ai = get_addr_info(SOCK_DGRAM, *i)) == NULL)
-            continue;
-        try
-        {
-            dgram_socket *sock = new dgram_socket(ai);
-            sockets.push_back(sock);
-        }
-        catch (std::exception& e)
-        {
-            while (sockets.size())
-            {
-                delete sockets.back();
-                sockets.pop_back();
-            }
-            throw;
-        }
-        freeaddrinfo(ai);
-    }
-    created = sockets.size() - created;
-    if (created > 0)
-        std::clog << "created " << created << " dgram socket"
+        std::clog << "created " << created << " listening socket"
                   << (created == 1 ? "" : "s") << std::endl;
 
     /* Now start them all up */
@@ -292,23 +266,46 @@ static void setup_sockets(void)
         (*j)->start();
 }
 
-static struct addrinfo *get_addr_info(int type, int port)
+static struct addrinfo *get_addr_info(int type,
+                                      const std::string& addr,
+                                      const std::string& port)
 {
     struct addrinfo hints, *ai = NULL;
     int ret;
-    char port_str[16];
+
+    if (type != SOCK_STREAM && type != SOCK_DGRAM)
+    {
+        struct sockaddr_un *sun = new struct sockaddr_un;
+
+        /* Manufacture an addrinfo that has the unix socket structure
+         * instead of a regular sockaddr_in/in6.  The console creator
+         * understands what to do with it.  The listener creator will
+         * probably blow up, but that would just be weird to do.
+         */
+        ai = new struct addrinfo;
+        memset(ai, 0, sizeof(struct addrinfo));
+        ai->ai_family = AF_UNIX;
+        ai->ai_socktype = SOCK_STREAM;
+        ai->ai_protocol = 0;
+        ai->ai_addrlen = sizeof(struct sockaddr_un);
+        ai->ai_addr = (struct sockaddr *)sun;
+
+        memset(sun, 0, sizeof(struct sockaddr_un));
+        sun->sun_family = AF_UNIX;
+        strncpy(sun->sun_path, addr.c_str(), addr.size());
+        return ai;
+    }
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = type;
-    snprintf(port_str, sizeof(port_str), "%d", port);
-    if ((ret = getaddrinfo(NULL, port_str, &hints, &ai)) != 0)
+    if ((ret = getaddrinfo(addr.c_str(), port.c_str(), &hints, &ai)) != 0)
     {
         std::clog << syslogErr
                   << "failed to get address info for "
                   << (type == SOCK_STREAM ? "stream" : "dgram")
-                  << " port " << port << ": "
+                  << " port " << addr << ':' << port << ": "
                   << gai_strerror(ret) << " (" << ret << ")" << std::endl;
         return NULL;
     }
@@ -349,8 +346,11 @@ static void setup_console(void)
 {
     console_create_t *console_create;
     console_destroy_t *console_destroy;
+    std::vector<port>::iterator i;
+    int type_map[] = { 0, SOCK_DGRAM, SOCK_STREAM };
+    int created = 0;
 
-    if (config.console_fname == "" && config.console_inet == 0)
+    if (config.consoles.size() == 0)
     {
         std::clog << "no consoles to create" << std::endl;
         return;
@@ -363,44 +363,16 @@ static void setup_console(void)
     console_destroy =
         (console_destroy_t *)console_lib->symbol("console_destroy");
 
-    if (config.console_fname != "")
-    {
-        struct addrinfo ai;
-        struct sockaddr_un sun;
-
-        /* Manufacture an addrinfo that has the unix socket structure
-         * instead of a regular sockaddr_in/in6.  The console creator
-         * understands what to do with it.
-         */
-        memset(&ai, 0, sizeof(struct addrinfo));
-        ai.ai_family = AF_UNIX;
-        ai.ai_socktype = SOCK_STREAM;
-        ai.ai_protocol = 0;
-        ai.ai_addrlen = sizeof(struct sockaddr_un);
-        ai.ai_addr = (struct sockaddr *)&sun;
-
-        memset(&sun, 0, sizeof(struct sockaddr_un));
-        sun.sun_family = AF_UNIX;
-        strncpy(sun.sun_path,
-                config.console_fname.c_str(),
-                config.console_fname.size());
-
-        consoles.push_back(console_create(&ai));
-    }
-    if (config.console_inet != 0)
+    for (i = config.consoles.begin(); i != config.consoles.end(); ++i)
     {
         struct addrinfo *ai;
 
         /* First get an addrinfo struct for the socket */
-        if ((ai = get_addr_info(SOCK_STREAM, config.console_inet)) == NULL)
-        {
-            std::string s("failed to get address info for inet console port");
-            throw std::runtime_error(s);
-        }
+        if ((ai = get_addr_info(type_map[i->type], i->addr, i->port)) == NULL)
+            continue;
         try
         {
-            Console *con = console_create(ai);
-            consoles.push_back(con);
+            consoles.push_back(console_create(ai));
         }
         catch (std::exception& e)
         {
@@ -412,8 +384,11 @@ static void setup_console(void)
             throw;
         }
         freeaddrinfo(ai);
+        ++created;
     }
-    std::clog << "console setup done" << std::endl;
+    if (created > 0)
+        std::clog << "created " << created << " console socket"
+                  << (created == 1 ? "" : "s") << std::endl;
 }
 
 static void cleanup_console(void)
@@ -433,12 +408,12 @@ static void cleanup_console(void)
             console_destroy(consoles.back());
             consoles.pop_back();
         }
-        if (stat(config.console_fname.c_str(), &st) == 0
+        /*if (stat(config.console_fname.c_str(), &st) == 0
             && S_ISSOCK(st.st_mode))
         {
             std::clog << "unlinking unix console" << std::endl;
             unlink(config.console_fname.c_str());
-        }
+        }*/
     }
     catch (std::exception& e) { /* Do nothing */ }
 
