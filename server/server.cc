@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jan 2016, 18:15:27 tquirk
+ *   last updated 13 Jan 2016, 13:00:01 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -408,12 +408,6 @@ static void cleanup_console(void)
             console_destroy(consoles.back());
             consoles.pop_back();
         }
-        /*if (stat(config.console_fname.c_str(), &st) == 0
-            && S_ISSOCK(st.st_mode))
-        {
-            std::clog << "unlinking unix console" << std::endl;
-            unlink(config.console_fname.c_str());
-        }*/
     }
     catch (std::exception& e) { /* Do nothing */ }
 
