@@ -67,13 +67,17 @@ t_action_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la
 
 t_basesock_SOURCES = t_basesock.cc \
-	../server/classes/basesock.cc ../server/classes/basesock.h
+	../server/classes/basesock.cc ../server/classes/basesock.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_basesock_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_basesock_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_console_SOURCES = t_console.cc \
 	../server/classes/modules/console.h \
 	../server/classes/modules/console.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
+	../server/log.cc ../server/log.h \
 	$(CONSOLE_EXTRAS)
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_console_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(WRAP_LDLIBS)

@@ -104,6 +104,8 @@ TEST(CommSendTest, SendBadHton)
     std::clog.rdbuf(new_clog.rdbuf());
     Comm *comm = NULL;
     struct addrinfo ai;
+
+    /* send_worker will delete this */
     packet *pkt = new packet;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -134,7 +136,6 @@ TEST(CommSendTest, SendBadHton)
         {
             comm->stop();
         });
-    delete pkt;
     delete comm;
 
     ASSERT_THAT(new_clog.str(),
