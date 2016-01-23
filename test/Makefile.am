@@ -151,10 +151,3 @@ t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) $(CLIENT_LDLIBS) \
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
 t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)
-
-t_texture_parser_SOURCES = t_texture_parser.cc \
-	../client/texture.cc ../client/texture.h
-t_texture_parser_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
-	-DDTD_PATH=\"../client/\" -DSTORE_PREFIX=\"../client\" \
-	$(GMOCK_INCLUDES) $(GTEST_INCLUDES)
-t_texture_parser_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)
