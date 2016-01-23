@@ -26,7 +26,7 @@ if WANT_TCL
   TC += t_tcl
 endif
 if WANT_CLIENT
-  TC += t_cache t_comm t_configdata t_texture_parser
+  TC += t_cache t_comm t_configdata
 endif
 
 TESTS = $(TC)
@@ -34,6 +34,8 @@ TESTS = $(TC)
 check_PROGRAMS = $(TC)
 lib_LTLIBRARIES = libtest.la
 EXTRA_DIST = t_texture_parser.xml
+
+check: SUBDIRS =
 
 install-exec-local:
 	@echo "Nothing to install"
