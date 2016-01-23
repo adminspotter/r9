@@ -84,13 +84,6 @@ dependency upon GoogleTest to build, please provide a version, or allow
 GoogleMock to use any installed version and fall back upon its internal
 version.])])
 
-# In order to speed up tests, we'll make the fused tests optional
-AC_ARG_ENABLE([fused-tests],
-              [AS_HELP_STRING([--enable-fused-tests],
-                              [Enables fused tests. (Default is disabled.)])
-              ], [], [enable_fused_tests="yes"])
-AM_CONDITIONAL([WANT_FUSED_TESTS],[test "x$enable_fused_tests" == "xyes"])
-
 # Setup various GTEST variables. TODO(chandlerc@google.com): When these are
 # used below, they should be used such that any pre-existing values always
 # trump values we set them to, so that they can be used to selectively override
