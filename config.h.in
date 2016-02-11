@@ -67,6 +67,21 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
+/* Define to 1 if you have the <glm/gtc/matrix_transform.hpp> header file. */
+#undef HAVE_GLM_GTC_MATRIX_TRANSFORM_HPP
+
+/* Define to 1 if you have the <glm/gtc/type_ptr.hpp> header file. */
+#undef HAVE_GLM_GTC_TYPE_PTR_HPP
+
+/* Define to 1 if you have the <glm/gtx/quaternion.hpp> header file. */
+#undef HAVE_GLM_GTX_QUATERNION_HPP
+
+/* Define to 1 if you have the <glm/mat4x4.hpp> header file. */
+#undef HAVE_GLM_MAT4X4_HPP
+
+/* Define to 1 if you have the <glm/vec3.hpp> header file. */
+#undef HAVE_GLM_VEC3_HPP
+
 /* Define to 1 if you have the <GL/GLwMDrawA.h> header file. */
 #undef HAVE_GL_GLWMDRAWA_H
 
