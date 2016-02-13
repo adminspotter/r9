@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Feb 2016, 08:04:38 tquirk
+ *   last updated 13 Feb 2016, 10:33:10 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,6 +36,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <stdexcept>
+#include <sstream>
 #include <functional>
 
 #include "client_core.h"
@@ -63,7 +65,7 @@ const static GLchar *vert_src = GLSL(
     void main() {
         vcolor = color;
         gl_Position = vec4(position, 1.0);
-    };
+    }
 );
 
 const static GLchar *geom_src = GLSL(
@@ -124,7 +126,7 @@ const static GLchar *geom_src = GLSL(
         EmitVertex();
 
         EndPrimitive();
-    };
+    }
 );
 
 const static GLchar *frag_src = GLSL(
@@ -134,40 +136,42 @@ const static GLchar *frag_src = GLSL(
 
     void main() {
         fcolor = gcolor;
-    };
+    }
 );
 
 static GLuint create_shader(GLenum, const GLchar *);
 static GLuint create_program(void);
+std::string GLenum_to_string(GLenum);
 
 ObjectCache *obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
 GLuint model_loc, view_loc, proj_loc;
+GLuint vao;
 GLint position_attr, color_attr;
 glm::mat4 model, view, projection;
 unsigned int rand_seed;
 
 void init_client_core(void)
 {
+    std::clog << "initializing the client core" << std::endl;
     rand_seed = time(NULL);
 
     obj = new ObjectCache("object");
 
-    /* Set up the shaders, programs, and vbos */
-    if ((vert_shader = create_shader(GL_VERTEX_SHADER, vert_src)) == 0)
-        goto VERT_BAILOUT;
-    if ((geom_shader = create_shader(GL_GEOMETRY_SHADER, geom_src)) == 0)
-        goto GEOM_BAILOUT;
-    if ((frag_shader = create_shader(GL_FRAGMENT_SHADER, frag_src)) == 0)
-        goto FRAG_BAILOUT;
+    std::clog << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
 
-    if ((shader_pgm = create_program()) == 0)
-        goto PROGRAM_BAILOUT;
+    /* Set up the shaders, programs, and vbos */
+    vert_shader = create_shader(GL_VERTEX_SHADER, vert_src);
+    geom_shader = create_shader(GL_GEOMETRY_SHADER, geom_src);
+    frag_shader = create_shader(GL_FRAGMENT_SHADER, frag_src);
+    shader_pgm = create_program();
 
     model_loc = glGetUniformLocation(shader_pgm, "model");
     view_loc = glGetUniformLocation(shader_pgm, "view");
     proj_loc = glGetUniformLocation(shader_pgm, "proj");
 
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
     position_attr = glGetAttribLocation(shader_pgm, "position");
     glEnableVertexAttribArray(position_attr);
     glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE,
@@ -179,16 +183,7 @@ void init_client_core(void)
                           sizeof(float) * 6,
                           (void *)(sizeof(float) * 3));
 
-    return;
-
-  PROGRAM_BAILOUT:
-    glDeleteShader(frag_shader);
-  FRAG_BAILOUT:
-    glDeleteShader(geom_shader);
-  GEOM_BAILOUT:
-    glDeleteShader(vert_shader);
-  VERT_BAILOUT:
-    return;
+    std::clog << "client core initialized" << std::endl;
 }
 
 void cleanup_client_core(void)
@@ -290,77 +285,118 @@ void resize_window(int width, int height)
 
 GLuint create_shader(GLenum type, const GLchar *src)
 {
+    GLint res = GL_FALSE;
+    int len = 0;
+    std::ostringstream s;
     GLuint shader = glCreateShader(type);
 
-    if (shader != 0)
+    s << GLenum_to_string(type) << ": ";
+
+    if (shader == 0)
     {
-        GLint res = GL_FALSE;
-        int len = 0;
-
-        glShaderSource(shader, 1, &src, NULL);
-        glCompileShader(shader);
-
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-        if (len > 0)
-        {
-            GLchar message[len + 1];
-
-            memset(message, 0, len + 1);
-            glGetShaderInfoLog(shader, len, NULL, message);
-            std::clog << message << std::endl;
-        }
-
-        /* Check for failure and delete the shader if necessary */
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &res);
-        if (res == GL_FALSE)
-        {
-            glDeleteShader(shader);
-            shader = 0;
-        }
+        s << "could not create shader: " << GLenum_to_string(glGetError());
+        throw std::runtime_error(s.str());
     }
 
+    glShaderSource(shader, 1, &src, NULL);
+    glCompileShader(shader);
+
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
+    if (len > 0)
+    {
+        GLchar message[len + 1];
+
+        memset(message, 0, len + 1);
+        glGetShaderInfoLog(shader, len, NULL, message);
+
+        s << message;
+    }
+
+    /* Delete the shader and throw an exception on failure */
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &res);
+    if (res == GL_FALSE)
+    {
+        glDeleteShader(shader);
+        throw std::runtime_error(s.str());
+    }
+
+    if (len > 0)
+        std::clog << s.str() << std::endl;
     return shader;
 }
 
 GLuint create_program(void)
 {
+    GLenum err;
+    GLint res = GL_FALSE;
+    int len = 0;
+    std::ostringstream s;
     GLuint pgm = glCreateProgram();
 
-    if (pgm != 0)
+    s << "GL program: ";
+
+    if (pgm == 0)
     {
-        GLint res = GL_FALSE;
-        int len = 0;
-
-        glGetError();
-        glAttachShader(pgm, vert_shader);
-        glAttachShader(pgm, geom_shader);
-        glAttachShader(pgm, frag_shader);
-        if (glGetError() != GL_NO_ERROR)
-        {
-            std::clog << "Could not attach shaders to the shader program"
-                      << std::endl;
-            glDeleteProgram(pgm);
-            return 0;
-        }
-
-        glLinkProgram(pgm);
-
-        glGetProgramiv(pgm, GL_INFO_LOG_LENGTH, &len);
-        if (len > 0)
-        {
-            GLchar message[len + 1];
-
-            memset(message, 0, len + 1);
-            glGetProgramInfoLog(pgm, len, NULL, message);
-            std::clog << message << std::endl;
-        }
-
-        glGetProgramiv(pgm, GL_LINK_STATUS, &res);
-        if (res == GL_FALSE)
-        {
-            glDeleteProgram(pgm);
-            pgm = 0;
-        }
+        s << "could not create GL program: " << GLenum_to_string(glGetError());
+        throw std::runtime_error(s.str());
     }
+
+    glGetError();
+    glAttachShader(pgm, vert_shader);
+    glAttachShader(pgm, geom_shader);
+    glAttachShader(pgm, frag_shader);
+    if ((err = glGetError()) != GL_NO_ERROR)
+    {
+        s << "Could not attach shaders to the shader program: "
+          << GLenum_to_string(err);
+        glDeleteProgram(pgm);
+        throw std::runtime_error(s.str());
+    }
+
+    glLinkProgram(pgm);
+
+    glGetProgramiv(pgm, GL_INFO_LOG_LENGTH, &len);
+    if (len > 0)
+    {
+        GLchar message[len + 1];
+
+        memset(message, 0, len + 1);
+        glGetProgramInfoLog(pgm, len, NULL, message);
+        s << message;
+    }
+
+    glGetProgramiv(pgm, GL_LINK_STATUS, &res);
+    if (res == GL_FALSE)
+    {
+        glDeleteProgram(pgm);
+        throw std::runtime_error(s.str());
+    }
+
+    if (len > 0)
+        std::clog << s.str() << std::endl;
     return pgm;
+}
+
+std::string GLenum_to_string(GLenum e)
+{
+    std::string s;
+
+    switch (e)
+    {
+      case GL_NO_ERROR:          s = "GL_NO_ERROR"; break;
+      case GL_INVALID_ENUM:      s = "GL_INVALID_ENUM"; break;
+      case GL_INVALID_VALUE:     s = "GL_INVALID_VALUE"; break;
+      case GL_INVALID_OPERATION: s = "GL_INVALID_OPERATION"; break;
+      case GL_STACK_OVERFLOW:    s = "GL_STACK_OVERFLOW"; break;
+      case GL_STACK_UNDERFLOW:   s = "GL_STACK_UNDERFLOW"; break;
+      case GL_OUT_OF_MEMORY:     s = "GL_OUT_OF_MEMORY"; break;
+      case GL_TABLE_TOO_LARGE:   s = "GL_TABLE_TOO_LARGE"; break;
+      case GL_VERTEX_SHADER:     s = "GL_VERTEX_SHADER"; break;
+      case GL_GEOMETRY_SHADER:   s = "GL_GEOMETRY_SHADER"; break;
+      case GL_FRAGMENT_SHADER:   s = "GL_FRAGMENT_SHADER"; break;
+
+      default:
+        break;
+    }
+    return s;
 }
