@@ -1,5 +1,3 @@
-SUBDIRS = . motif pixmaps
-
 noinst_LIBRARIES = libr9_client.a
 
 dtddir = @datadir@/$(PACKAGE)/dtd
