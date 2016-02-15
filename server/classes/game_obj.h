@@ -1,6 +1,6 @@
-/* game_obj.h                                               -*- C++ -*-
+/* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 08:05:41 tquirk
+ *   last updated 05 Feb 2016, 14:00:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk

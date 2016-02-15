@@ -1,6 +1,6 @@
-/* sockaddr.h                                           -*- C++ -*-
+/* sockaddr.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Nov 2015, 16:28:26 tquirk
+ *   last updated 05 Feb 2016, 14:02:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk

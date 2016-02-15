@@ -1,6 +1,6 @@
-/* library.h                                                -*- C++ -*-
+/* library.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2014, 15:48:23 tquirk
+ *   last updated 05 Feb 2016, 14:00:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
