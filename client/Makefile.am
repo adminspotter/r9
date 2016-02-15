@@ -1,10 +1,11 @@
-noinst_LIBRARIES = libr9_client.a
+bin_PROGRAMS = r9client
 
 dtddir = @datadir@/$(PACKAGE)/dtd
 
-libr9_client_a_SOURCES = comm.cc client_core.cc \
+r9client_SOURCES = client.cc comm.cc client_core.cc \
 	configdata.cc cache.h dtdresolver.h object.h comm.h \
 	client_core.h configdata.h l10n.h
-libr9_client_a_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
+r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 	-DDTD_PATH=\"$(dtddir)/\" -DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \
 	-DGL_GLEXT_PROTOTYPES
+r9client_LDADD = ../proto/libr9_proto.la $(CLIENT_LDLIBS)

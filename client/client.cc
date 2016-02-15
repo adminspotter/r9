@@ -10,6 +10,9 @@
 #include "client_core.h"
 #include "l10n.h"
 
+void setup_comm(struct addrinfo *, const char *, const char *, const char *);
+void cleanup_comm(void);
+
 std::vector<Comm *> comm;
 ConfigData config;
 

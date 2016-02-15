@@ -193,6 +193,17 @@ XMLPlatformUtils::Terminate();
   AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
   AC_CHECK_FUNCS([setlocale])
 
+  # OpenGL libs
+  AC_SEARCH_LIBS([glBindVertexArray], [GL],
+      [CLIENT_LDLIBS="$ac_cv_search_glBindVertexArray $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([libGL not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
+  AC_SEARCH_LIBS([gluPerspective], [GLU],
+      [CLIENT_LDLIBS="$ac_cv_search_gluPerspective $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([libGLU not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
   # Check for GLM headers
   GLM_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
@@ -205,7 +216,7 @@ XMLPlatformUtils::Terminate();
   AC_CHECK_HEADERS([GLFW/glfw3.h], [], [AC_MSG_NOTICE([no valid GLFW headers found, can not continue])])
   CPPFLAGS="$GLFW_CPPFLAGS_SAVE"
   AC_SEARCH_LIBS([glfwInit], [glfw],
-      [CLIENT_LDLIBS="$ac_cv_search_ $CLIENT_LDLIBS"],
+      [CLIENT_LDLIBS="$ac_cv_search_glfwInit $CLIENT_LDLIBS"],
       [AC_MSG_ERROR([ not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
