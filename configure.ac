@@ -27,6 +27,9 @@ LT_INIT([pic-only])
 LT_LANG([C++])
 LT_SYS_MODULE_EXT
 
+# Set the host type for OSX-specific flags
+AC_CANONICAL_HOST
+
 # Check for c++11 language support
 AX_CXX_COMPILE_STDCXX_11
 
@@ -194,15 +197,22 @@ XMLPlatformUtils::Terminate();
   AC_CHECK_FUNCS([setlocale])
 
   # OpenGL libs
-  AC_SEARCH_LIBS([glBindVertexArray], [GL],
-      [CLIENT_LDLIBS="$ac_cv_search_glBindVertexArray $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libGL not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
+  case $host_os in
+    darwin*)
+      CLIENT_LDLIBS="$CLIENT_LDLIBS -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo"
+      ;;
+    *)
+      AC_SEARCH_LIBS([glBindVertexArray], [GL],
+          [CLIENT_LDLIBS="$ac_cv_search_glBindVertexArray $CLIENT_LDLIBS"],
+          [AC_MSG_ERROR([libGL not valid, can not build client program.])],
+          [$CLIENT_LDFLAGS])
 
-  AC_SEARCH_LIBS([gluPerspective], [GLU],
-      [CLIENT_LDLIBS="$ac_cv_search_gluPerspective $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libGLU not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
+      AC_SEARCH_LIBS([gluPerspective], [GLU],
+          [CLIENT_LDLIBS="$ac_cv_search_gluPerspective $CLIENT_LDLIBS"],
+          [AC_MSG_ERROR([libGLU not valid, can not build client program.])],
+          [$CLIENT_LDFLAGS])
+      ;;
+  esac
 
   # Check for GLM headers
   GLM_CPPFLAGS_SAVE="$CPPFLAGS"
