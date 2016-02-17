@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_GL_3
 #include <GLFW/glfw3.h>
 
+#include <iostream>
 #include <vector>
 
 #include "configdata.h"
@@ -10,6 +11,7 @@
 #include "client_core.h"
 #include "l10n.h"
 
+void error_callback(int, const char *);
 void setup_comm(struct addrinfo *, const char *, const char *, const char *);
 void cleanup_comm(void);
 
@@ -28,7 +30,12 @@ int main(int argc, char **argv)
 
     config.parse_command_line(argc, argv);
 
-    glfwInit();
+    if (glfwInit() == GL_FALSE)
+    {
+        std::cout << _("failed to initialize GLFW") << std::endl;
+        return -1;
+    }
+    glfwSetErrorCallback(error_callback);
 
     /* We need at least an OpenGL 3.3 context, since that's when
      * geometry shaders first appeared.
@@ -36,8 +43,11 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+    /* OSX blows up without this */
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    if ((w = glfwCreateWindow(800, 600, "R9", NULL, NULL)) == 0)
+    if ((w = glfwCreateWindow(800, 600, "R9", NULL, NULL)) == NULL)
     {
         glfwTerminate();
         return -1;
@@ -59,6 +69,11 @@ int main(int argc, char **argv)
     glfwTerminate();
 
     return 0;
+}
+
+void error_callback(int err, const char *desc)
+{
+    std::cout << "glfw error: " << desc << " (" << err << ')' << std::endl;
 }
 
 void setup_comm(struct addrinfo *ai,
