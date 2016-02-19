@@ -1,9 +1,9 @@
 /* signals.cc
- *   by Trinity Quirk <tquirk@io.com>
- *   last updated 01 Aug 2015, 09:48:27 tquirk
+ *   by Trinity Quirk <tquirk@ymb.net>
+ *   last updated 19 Feb 2016, 13:34:29 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -55,6 +55,7 @@ static void sighup_handler(int);
 static void sigusr1_handler(int);
 static void sigusr2_handler(int);
 static void sigterm_handler(int);
+static void sigint_handler(int);
 static void sigsegv_handler(int);
 
 /* Set up our special signal handlers. */
@@ -73,40 +74,37 @@ void setup_signals(void)
     sa.sa_mask = ss;
     sa.sa_flags = 0;
     if (sigaction(SIGHUP, &sa, NULL) == -1)
-    {
         std::clog << syslogErr << "couldn't set SIGHUP handler: "
-                  << strerror(errno) << "(" << errno << ")" << std::endl;
-    }
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
     /* SIGHUP - reread the configuration files. */
     sa.sa_handler = sigusr1_handler;
     if (sigaction(SIGUSR1, &sa, NULL) == -1)
-    {
         std::clog << syslogErr << "couldn't set SIGUSR1 handler: "
-                  << strerror(errno) << "(" << errno << ")" << std::endl;
-    }
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
     /* SIGUSR2 - recreate the zone. */
     sa.sa_handler = sigusr2_handler;
     if (sigaction(SIGUSR2, &sa, NULL) == -1)
-    {
         std::clog << syslogErr << "couldn't set SIGUSR2 handler: "
-                  << strerror(errno) << "(" << errno << ")" << std::endl;
-    }
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
     /* SIGTERM - terminate the process normally. */
     sa.sa_handler = sigterm_handler;
     sigaddset(&ss, SIGTERM);
     sa.sa_mask = ss;
     if (sigaction(SIGTERM, &sa, NULL) == -1)
-    {
         std::clog << syslogErr << "couldn't set SIGTERM handler: "
-                  << strerror(errno) << "(" << errno << ")" << std::endl;
-    }
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
+    /* SIGINT - terminate the process normally. */
+    sa.sa_handler = sigint_handler;
+    sigaddset(&ss, SIGINT);
+    sa.sa_mask = ss;
+    if (sigaction(SIGINT, &sa, NULL) == -1)
+        std::clog << syslogErr << "couldn't set SIGINT handler: "
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
     /* SIGSEGV - clean up and terminate the process. */
     sa.sa_handler = sigsegv_handler;
     if (sigaction(SIGSEGV, &sa, NULL) == -1)
-    {
         std::clog << syslogErr << "couldn't set SIGSEGV handler: "
-                  << strerror(errno) << "(" << errno << ")" << std::endl;
-    }
+                  << strerror(errno) << " (" << errno << ")" << std::endl;
 }
 
 /* Reset the signal handlers to the default actions. */
@@ -125,6 +123,7 @@ void cleanup_signals(void)
     sigaction(SIGUSR2, &sa, NULL);
     sigaction(SIGSEGV, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
 }
 
 static void sighup_handler(int sig)
@@ -153,6 +152,12 @@ static void sigusr2_handler(int sig)
 static void sigterm_handler(int sig)
 {
     std::clog << syslogInfo << "received SIGTERM, terminating" << std::endl;
+    set_exit_flag();
+}
+
+static void sigint_handler(int sig)
+{
+    std::clog << syslogInfo << "received SIGINT, terminating" << std::endl;
     set_exit_flag();
 }
 
