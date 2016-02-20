@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Dec 2015, 18:31:46 tquirk
+ *   last updated 20 Feb 2016, 09:44:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -94,15 +94,14 @@ access_list;
 class action_rec
 {
   public:
-    char *name;
+    std::string name;
     int (*action)(GameObject *, int, GameObject *, Eigen::Vector3d &);
     uint16_t def;                 /* The "default" skill to use */
     int lower, upper;             /* The bounds for skill levels */
     bool valid;                   /* Is this action valid on this server? */
 
-    inline action_rec()
+    inline action_rec() : name()
         {
-            this->name = NULL;
             this->action = NULL;
             this->def = 0;
             this->lower = 0;
@@ -111,8 +110,6 @@ class action_rec
         };
     inline ~action_rec()
         {
-            if (this->name != NULL)
-                free(this->name);
         };
 };
 typedef int attribute;

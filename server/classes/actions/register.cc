@@ -1,9 +1,9 @@
 /* register.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 12:28:47 tquirk
+ *   last updated 20 Feb 2016, 10:12:44 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,7 +41,13 @@ extern "C"
         int i;
 
         for (i = 0; i < ENTRIES(actions); ++i)
-            am[actions[i].action_number].action = actions[i].action_routine;
+        {
+            action_rec& ar = am[actions[i].action_number];
+
+            ar.action = actions[i].action_routine;
+            if (ar.name.empty())
+                ar.name = actions[i].action_name;
+        }
     }
 
     void actions_unregister(std::map<uint16_t, action_rec> &am)

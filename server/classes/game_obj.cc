@@ -1,9 +1,9 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 08:05:39 tquirk
+ *   last updated 19 Feb 2016, 15:45:01 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -63,7 +63,7 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
         /* This clause is mostly for recreating an object from some
          * saved state.
          */
-        GameObject::max_id_value = std::max(GameObject::max_id_value, id_value);
+        GameObject::max_id_value = std::max(GameObject::max_id_value, newid);
     }
     pthread_mutex_unlock(&GameObject::max_mutex);
     this->id_value = newid;
@@ -71,6 +71,10 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
 
 GameObject::~GameObject()
 {
+    if (this->geometry != this->default_geometry && this->geometry != NULL)
+        delete this->geometry;
+    if (this->default_geometry != NULL)
+        delete this->default_geometry;
 }
 
 GameObject *GameObject::clone(void) const

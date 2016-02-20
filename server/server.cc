@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jan 2016, 13:00:01 tquirk
+ *   last updated 19 Feb 2016, 15:40:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -84,6 +84,7 @@ static void setup_sockets(void);
 static struct addrinfo *get_addr_info(int,
                                       const std::string&,
                                       const std::string&);
+static void free_addr_info(struct addrinfo *);
 static void setup_zone(void);
 static void setup_console(void);
 static void cleanup_console(void);
@@ -254,7 +255,7 @@ static void setup_sockets(void)
             }
             throw;
         }
-        freeaddrinfo(ai);
+        free_addr_info(ai);
         ++created;
     }
     if (created > 0)
@@ -310,6 +311,21 @@ static struct addrinfo *get_addr_info(int type,
         return NULL;
     }
     return ai;
+}
+
+void free_addr_info(struct addrinfo *ai)
+{
+    /* It wasn't clear whether freeaddrinfo was properly handling my
+     * AF_UNIX-hacked addrinfo structs, so we'll go ahead and wrap
+     * things to make sure they work correctly.
+     */
+    if (ai->ai_family == AF_UNIX)
+    {
+        delete ai->ai_addr;
+        delete ai;
+    }
+    else
+        freeaddrinfo(ai);
 }
 
 void set_exit_flag(void)
@@ -383,7 +399,7 @@ static void setup_console(void)
             }
             throw;
         }
-        freeaddrinfo(ai);
+        free_addr_info(ai);
         ++created;
     }
     if (created > 0)

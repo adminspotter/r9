@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Dec 2015, 08:47:41 tquirk
+ *   last updated 20 Feb 2016, 10:07:38 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -45,12 +45,6 @@ MySQL::MySQL(const std::string& host, const std::string& user,
              const std::string& pass, const std::string& db)
     : DB(host, user, pass, db)
 {
-    if (mysql_init(&(this->db_handle)) == NULL)
-    {
-        std::ostringstream s;
-        s << "couldn't init MySQL handle: " << mysql_error(&(this->db_handle));
-        throw std::runtime_error(s.str());
-    }
 }
 
 MySQL::~MySQL()
@@ -205,9 +199,7 @@ int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
         {
             uint64_t id = strtoull(row[1], NULL, 10);
 
-            if (actions[id].name != NULL)
-                free(actions[id].name);
-            actions[id].name = strdup(row[0]);
+            actions[id].name = row[0];
             actions[id].def = strtoull(row[2], NULL, 10);
             actions[id].lower = atoi(row[3]);
             actions[id].upper = atoi(row[4]);
@@ -240,12 +232,12 @@ int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
     {
         while ((row = mysql_fetch_row(res)) != NULL)
         {
-            uint64_t objid = strtoull(row[0], NULL, 10),
-                charid = strtoull(row[1], NULL, 10);
-            GameObject *go;
-            Geometry *geom = new Geometry();
+            uint64_t objid = strtoull(row[0], NULL, 10);
+            uint64_t charid = strtoull(row[1], NULL, 10);
 
-            go = new GameObject(geom, NULL, objid);
+            //Geometry *geom = new Geometry();
+            GameObject *go = new GameObject(NULL, NULL, objid);
+
             go->position[0] = atol(row[2]) / 100.0;
             go->position[1] = atol(row[3]) / 100.0;
             go->position[2] = atol(row[4]) / 100.0;
@@ -384,6 +376,7 @@ int MySQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 
 void MySQL::db_connect(void)
 {
+    mysql_init(&(this->db_handle));
     if (mysql_real_connect(&(this->db_handle), this->dbhost.c_str(),
                            this->dbuser.c_str(), this->dbpass.c_str(),
                            this->dbname.c_str(), 0, NULL, 0) == NULL)
@@ -418,17 +411,12 @@ void MySQL::db_connect(void)
 extern "C" DB *db_create(const std::string& a, const std::string& b,
                          const std::string& c, const std::string& d)
 {
-    static bool initialized = false;
-
-    if (!initialized)
-    {
-        mysql_library_init(0, NULL, NULL);
-        initialized = true;
-    }
+    mysql_library_init(0, NULL, NULL);
     return new MySQL(a, b, c, d);
 }
 
 extern "C" void db_destroy(DB *db)
 {
     delete db;
+    mysql_library_end();
 }
