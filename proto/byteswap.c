@@ -1,9 +1,9 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2015, 08:53:58 tquirk
+ *   last updated 22 Feb 2016, 16:47:05 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,22 +37,27 @@
 #if HAVE_BYTESWAP_H
 #include <byteswap.h>
 #endif /* HAVE_BYTESWAP_H */
+#if HAVE_ARCHITECTURE_BYTE_ORDER_H
+#include <architecture/byte_order.h>
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define htonll(x) __builtin_bswap64(x)
+#define ntohll(x) __builtin_bswap64(x)
+#endif /* __BYTE_ORDER__ */
+#endif /* HAVE_ARCHITECTURE_BYTE_ORDER_H */
 
-/* For some reason, Macs have htonll/ntohll as preprocessor
- * definitions, but configure doesn't find them. */
 #if !(HAVE_HTONLL) && !defined(htonll)
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define htonll(x) (x)
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define htonll(x) __bswap_64(x)
-#endif /* __BYTE_ORDER */
+#endif /* __BYTE_ORDER__ */
 #endif /* HAVE_HTONLL */
 #if !(HAVE_NTOHLL) && !defined(ntohll)
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define ntohll(x) (x)
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define ntohll(x) __bswap_64(x)
-#endif /* __BYTE_ORDER */
+#endif /* __BYTE_ORDER__ */
 #endif /* HAVE_NTOHLL */
 
 #include "proto.h"

@@ -7,6 +7,9 @@
 /* Define to the type of getnameinfo's flags argument */
 #undef GETNAMEINFO_FLAGS_TYPE
 
+/* Define to 1 if you have the <architecture/byte_order.h> header file. */
+#undef HAVE_ARCHITECTURE_BYTE_ORDER_H
+
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
