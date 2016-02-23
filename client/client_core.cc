@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Feb 2016, 10:33:10 tquirk
+ *   last updated 19 Feb 2016, 08:26:29 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -219,6 +219,8 @@ struct draw_object
 
             glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
 
+            if (o.vbo == -1)
+                glGenBuffers(1, &o.vbo);
             glBindBuffer(GL_ARRAY_BUFFER, o.vbo);
             if (o.dirty == true)
             {
@@ -255,17 +257,17 @@ void move_object(uint64_t objectid, uint16_t frame,
     /* If it's a new object, let's get things set up for it */
     if (oref.color[0] == 0.0 && oref.color[1] == 0.0 && oref.color[2] == 0.0)
     {
-        glGenBuffers(1, &oref.vbo);
+        oref.vbo = -1;
         /* Randomize a new color */
-        oref.color = {rand_r(&rand_seed),
-                      rand_r(&rand_seed),
-                      rand_r(&rand_seed)};
+        oref.color = {rand_r(&rand_seed) / (RAND_MAX * 1.0),
+                      rand_r(&rand_seed) / (RAND_MAX * 1.0),
+                      rand_r(&rand_seed) / (RAND_MAX * 1.0)};
     }
 
     /* Update the object's position */
-    oref.position[0] = xpos;
-    oref.position[1] = ypos;
-    oref.position[2] = zpos;
+    oref.position[0] = xpos * 100.0;
+    oref.position[1] = ypos * 100.0;
+    oref.position[2] = zpos * 100.0;
     oref.orientation[0] = xori;
     oref.orientation[1] = yori;
     oref.orientation[2] = zori;

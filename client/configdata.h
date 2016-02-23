@@ -1,6 +1,6 @@
 /* configdata.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 13:24:50 tquirk
+ *   last updated 19 Feb 2016, 07:04:54 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -44,7 +44,7 @@ class ConfigData
 
     std::string server_addr;
     uint16_t server_port;
-    std::string username, password, charname;
+    std::string username, charname;
 
     ConfigData();
     ~ConfigData();

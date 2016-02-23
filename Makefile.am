@@ -1,10 +1,6 @@
 SD = proto server
 SD_NO_TEST = proto server
 if WANT_CLIENT
-if WANT_BUNDLED_LIBGLW
-SD += glw
-SD_NO_TEST += glw
-endif
 SD += client
 SD_NO_TEST += client
 endif

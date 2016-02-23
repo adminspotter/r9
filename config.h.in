@@ -67,6 +67,9 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
 
+/* Define to 1 if you have the <GLFW/glfw3.h> header file. */
+#undef HAVE_GLFW_GLFW3_H
+
 /* Define to 1 if you have the <glm/gtc/matrix_transform.hpp> header file. */
 #undef HAVE_GLM_GTC_MATRIX_TRANSFORM_HPP
 
@@ -81,9 +84,6 @@
 
 /* Define to 1 if you have the <glm/vec3.hpp> header file. */
 #undef HAVE_GLM_VEC3_HPP
-
-/* Define to 1 if you have the <GL/GLwMDrawA.h> header file. */
-#undef HAVE_GL_GLWMDRAWA_H
 
 /* Define to 1 if you have the <grp.h> header file. */
 #undef HAVE_GRP_H
@@ -282,9 +282,6 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Enable editres support */
-#undef WANT_EDITRES
 
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE
