@@ -1,9 +1,9 @@
 /* object.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Feb 2016, 08:01:24 tquirk
+ *   last updated 26 Feb 2016, 16:14:58 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -47,7 +47,7 @@ struct object
 {
     glm::vec3 position, color;
     glm::fquat orientation;
-    GLuint vbo;
+    GLuint vao, vbo;
     bool dirty;
 };
 

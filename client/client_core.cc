@@ -1,9 +1,9 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Feb 2016, 08:26:29 tquirk
+ *   last updated 26 Feb 2016, 16:14:36 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -59,12 +59,15 @@ const static GLchar *vert_src = GLSL(
     in vec3 position;
     in vec3 color;
 
+    out vec4 location;
     out vec3 vcolor;
 
     // This will just be a point
-    void main() {
+    void main()
+    {
         vcolor = color;
-        gl_Position = vec4(position, 1.0);
+        location = vec4(position, 1.0);
+        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
     }
 );
 
@@ -72,57 +75,60 @@ const static GLchar *geom_src = GLSL(
     layout(points) in;
     layout(triangle_strip, max_vertices = 14) out;
 
+    in vec4 location[];
     in vec3 vcolor[];
-    out vec3 gcolor;
 
     uniform mat4 model;
     uniform mat4 view;
     uniform mat4 proj;
 
+    out vec3 gcolor;
+
     // Draw a cube at the input point
-    void main() {
-        mat4 pvm = proj * view * model;
-        vec4 pos = gl_in[0].gl_Position;
+    void main()
+    {
+        vec4 pos = location[0];
+        mat4 pv = proj * view;
         gcolor = vcolor[0];
 
         // Top
-        gl_Position = pvm * (pos + vec4(-0.5, 0.5, -0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(-0.5, 0.5, -0.5, 1.0)));
         EmitVertex();
-        gl_Position = pvm * (pos + vec4(0.5, 0.5, -0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(0.5, 0.5, -0.5, 1.0)));
         EmitVertex();
-        gl_Position = pvm * (pos + vec4(-0.5, 0.5, 0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(-0.5, 0.5, 0.5, 1.0)));
         EmitVertex();
-        gl_Position = pvm * (pos + vec4(0.5, 0.5, 0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(0.5, 0.5, 0.5, 1.0)));
         EmitVertex();
 
         // Right side
-        gl_Position = pvm * (pos + vec4(0.5, -0.5, 0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(0.5, -0.5, 0.5, 1.0)));
         EmitVertex();
-        gl_Position = pvm * (pos + vec4(0.5, 0.5, -0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(0.5, 0.5, -0.5, 1.0)));
         EmitVertex();
 
         // Back
-        gl_Position = pvm * (pos + vec4(0.5, -0.5, -0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(0.5, -0.5, -0.5, 1.0)));
         EmitVertex();
-        gl_Position = pvm * (pos + vec4(-0.5, 0.5, -0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(-0.5, 0.5, -0.5, 1.0)));
         EmitVertex();
 
         // Left side
-        gl_Position = pvm * (pos + vec4(-0.5, -0.5, -0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(-0.5, -0.5, -0.5, 1.0)));
         EmitVertex();
-        gl_Position = pvm * (pos + vec4(-0.5, 0.5, 0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(-0.5, 0.5, 0.5, 1.0)));
         EmitVertex();
 
         // Front
-        gl_Position = pvm * (pos + vec4(-0.5, -0.5, 0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(-0.5, -0.5, 0.5, 1.0)));
         EmitVertex();
-        gl_Position = pvm * (pos + vec4(0.5, -0.5, 0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(0.5, -0.5, 0.5, 1.0)));
         EmitVertex();
 
         // Bottom
-        gl_Position = pvm * (pos + vec4(-0.5, -0.5, -0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(-0.5, -0.5, -0.5, 1.0)));
         EmitVertex();
-        gl_Position = pvm * (pos + vec4(0.5, -0.5, -0.5, 1.0));
+        gl_Position = pv * (pos + (model * vec4(0.5, -0.5, -0.5, 1.0)));
         EmitVertex();
 
         EndPrimitive();
@@ -132,58 +138,56 @@ const static GLchar *geom_src = GLSL(
 const static GLchar *frag_src = GLSL(
     in vec3 gcolor;
 
-    out vec3 fcolor;
+    out vec4 fcolor;
 
-    void main() {
-        fcolor = gcolor;
+    void main()
+    {
+        fcolor = vec4(gcolor, 1.0);
     }
 );
 
 static GLuint create_shader(GLenum, const GLchar *);
-static GLuint create_program(void);
+static GLuint create_program(GLuint, GLuint, GLuint, const char *);
 std::string GLenum_to_string(GLenum);
 
 ObjectCache *obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
 GLuint model_loc, view_loc, proj_loc;
-GLuint vao;
 GLint position_attr, color_attr;
 glm::mat4 model, view, projection;
 unsigned int rand_seed;
 
 void init_client_core(void)
 {
-    std::clog << "initializing the client core" << std::endl;
     rand_seed = time(NULL);
 
     obj = new ObjectCache("object");
 
     std::clog << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
 
-    /* Set up the shaders, programs, and vbos */
+    /* Set up the shaders and programs */
     vert_shader = create_shader(GL_VERTEX_SHADER, vert_src);
     geom_shader = create_shader(GL_GEOMETRY_SHADER, geom_src);
     frag_shader = create_shader(GL_FRAGMENT_SHADER, frag_src);
-    shader_pgm = create_program();
+    shader_pgm = create_program(vert_shader,
+                                geom_shader,
+                                frag_shader,
+                                "fcolor");
+    glUseProgram(shader_pgm);
 
     model_loc = glGetUniformLocation(shader_pgm, "model");
     view_loc = glGetUniformLocation(shader_pgm, "view");
     proj_loc = glGetUniformLocation(shader_pgm, "proj");
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
     position_attr = glGetAttribLocation(shader_pgm, "position");
-    glEnableVertexAttribArray(position_attr);
-    glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(float) * 6,
-                          (void *)0);
     color_attr = glGetAttribLocation(shader_pgm, "color");
-    glEnableVertexAttribArray(color_attr);
-    glVertexAttribPointer(color_attr, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(float) * 6,
-                          (void *)(sizeof(float) * 3));
 
-    std::clog << "client core initialized" << std::endl;
+    view = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f),
+                       glm::vec3(100.0f, 100.0f, 100.0f),
+                       glm::vec3(0.0f, 1.0f, 0.0f));
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+
+    std::clog << "rendering core initialized" << std::endl;
 }
 
 void cleanup_client_core(void)
@@ -212,26 +216,45 @@ struct draw_object
 {
     void operator()(object& o)
         {
-            glm::mat4 trans = glm::translate(glm::mat4(1.0f), o.position);
+            /* We don't get a valid quaternion just yet */
+            /*glm::mat4 trans = glm::translate(glm::mat4(1.0f), o.position);
             model = glm::rotate(trans,
                                 glm::angle(o.orientation),
                                 glm::axis(o.orientation));
-
-            glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
+            glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));*/
 
             if (o.vbo == -1)
+            {
+                glGenVertexArrays(1, &o.vao);
+                glBindVertexArray(o.vao);
                 glGenBuffers(1, &o.vbo);
-            glBindBuffer(GL_ARRAY_BUFFER, o.vbo);
+                glBindBuffer(GL_ARRAY_BUFFER, o.vbo);
+                glEnableVertexAttribArray(position_attr);
+                glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE,
+                                      sizeof(float) * 6,
+                                      (void *)0);
+                glEnableVertexAttribArray(color_attr);
+                glVertexAttribPointer(color_attr, 3, GL_FLOAT, GL_FALSE,
+                                      sizeof(float) * 6,
+                                      (void *)(sizeof(float) * 3));
+            }
+            else
+            {
+                glBindVertexArray(o.vao);
+                glBindBuffer(GL_ARRAY_BUFFER, o.vbo);
+            }
             if (o.dirty == true)
             {
                 float buf[6];
 
                 memcpy(buf, glm::value_ptr(o.position), sizeof(float) * 3);
                 memcpy(&buf[3], glm::value_ptr(o.color), sizeof(float) * 3);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(buf), buf, GL_DYNAMIC_DRAW);
+                glBufferData(GL_ARRAY_BUFFER,
+                             sizeof(buf), buf,
+                             GL_DYNAMIC_DRAW);
                 o.dirty = false;
             }
-            glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, &o.vbo);
+            glDrawArrays(GL_POINTS, 0, 1);
         }
 };
 
@@ -240,10 +263,9 @@ void draw_objects(void)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+    model = glm::mat4(1.0);
+    glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
 
-    /* Brute force, baby - ya just can't beat it */
-    glUseProgram(shader_pgm);
     std::function<void(object&)> draw = draw_object();
     obj->each(draw);
 }
@@ -255,7 +277,7 @@ void move_object(uint64_t objectid, uint16_t frame,
     object& oref = (*obj)[objectid];
 
     /* If it's a new object, let's get things set up for it */
-    if (oref.color[0] == 0.0 && oref.color[1] == 0.0 && oref.color[2] == 0.0)
+    if (oref.color == glm::vec3(0.0, 0.0, 0.0))
     {
         oref.vbo = -1;
         /* Randomize a new color */
@@ -265,9 +287,9 @@ void move_object(uint64_t objectid, uint16_t frame,
     }
 
     /* Update the object's position */
-    oref.position[0] = xpos * 100.0;
-    oref.position[1] = ypos * 100.0;
-    oref.position[2] = zpos * 100.0;
+    oref.position[0] = xpos;
+    oref.position[1] = ypos;
+    oref.position[2] = zpos;
     oref.orientation[0] = xori;
     oref.orientation[1] = yori;
     oref.orientation[2] = zori;
@@ -278,8 +300,10 @@ void move_object(uint64_t objectid, uint16_t frame,
 
 void resize_window(int width, int height)
 {
-    /* A 50mm lens on a 35mm camera has a 39.6 degree horizontal FoV */
-    projection = glm::perspective(glm::radians(39.6f),
+    /* A 50mm lens on a 35mm camera has a 39.6° horizontal and a 27.0°
+     * vertical FoV.
+     */
+    projection = glm::perspective(glm::radians(27.0f),
                                   (float)width / (float)height,
                                   0.1f, 1000.0f);
     glUniformMatrix4fv(proj_loc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -327,7 +351,7 @@ GLuint create_shader(GLenum type, const GLchar *src)
     return shader;
 }
 
-GLuint create_program(void)
+GLuint create_program(GLuint vert, GLuint geom, GLuint frag, const char *out)
 {
     GLenum err;
     GLint res = GL_FALSE;
@@ -344,9 +368,12 @@ GLuint create_program(void)
     }
 
     glGetError();
-    glAttachShader(pgm, vert_shader);
-    glAttachShader(pgm, geom_shader);
-    glAttachShader(pgm, frag_shader);
+    if (vert)
+        glAttachShader(pgm, vert);
+    if (geom)
+        glAttachShader(pgm, geom);
+    if (frag)
+        glAttachShader(pgm, frag);
     if ((err = glGetError()) != GL_NO_ERROR)
     {
         s << "Could not attach shaders to the shader program: "
@@ -355,6 +382,7 @@ GLuint create_program(void)
         throw std::runtime_error(s.str());
     }
 
+    glBindFragDataLocation(pgm, 0, out);
     glLinkProgram(pgm);
 
     glGetProgramiv(pgm, GL_INFO_LOG_LENGTH, &len);

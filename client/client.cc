@@ -12,6 +12,8 @@
 #include "l10n.h"
 
 void error_callback(int, const char *);
+void key_callback(GLFWwindow *, int, int, int, int);
+void resize_callback(GLFWwindow *, int, int);
 void setup_comm(struct addrinfo *, const char *, const char *, const char *);
 void cleanup_comm(void);
 
@@ -44,6 +46,8 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
+    /* Pixel subsampling */
+    glfwWindowHint(GLFW_SAMPLES, 4);
     /* OSX blows up without this */
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
@@ -55,6 +59,12 @@ int main(int argc, char **argv)
 
     glfwMakeContextCurrent(w);
     init_client_core();
+
+    glfwSetKeyCallback(w, key_callback);
+    glfwSetWindowSizeCallback(w, resize_callback);
+
+    /* Set the initial projection matrix */
+    resize_callback(w, 800, 600);
 
     while (!glfwWindowShouldClose(w))
     {
@@ -74,6 +84,17 @@ int main(int argc, char **argv)
 void error_callback(int err, const char *desc)
 {
     std::cout << "glfw error: " << desc << " (" << err << ')' << std::endl;
+}
+
+void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(w, GL_TRUE);
+}
+
+void resize_callback(GLFWwindow *w, int width, int height)
+{
+    resize_window(width, height);
 }
 
 void setup_comm(struct addrinfo *ai,
