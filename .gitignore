@@ -13,7 +13,7 @@ TAGS
 old/
 server/r9d
 server/r9subserver
-client/motif/r9client
+client/r9client
 
 server/classes/modules/perlxsi.c
 

@@ -27,6 +27,9 @@ LT_INIT([pic-only])
 LT_LANG([C++])
 LT_SYS_MODULE_EXT
 
+# Set the host type for OSX-specific flags
+AC_CANONICAL_HOST
+
 # Check for c++11 language support
 AX_CXX_COMPILE_STDCXX_11
 
@@ -53,11 +56,6 @@ assert(f.code().value() == 5);
 
 
 # Arguments
-AC_ARG_ENABLE([editres],
-              AS_HELP_STRING([--enable-editres], [Enable Editres support]),
-              [],
-              [enable_editres="yes"])
-
 AC_ARG_WITH([tcl],
             AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
             [],
@@ -100,33 +98,6 @@ AC_ARG_WITH([xerces-includes],
 AC_ARG_WITH([xerces-libraries],
             AS_HELP_STRING([--with-xerces-libraries=<path>],
                            [Use libxerces-c libraries at <path>]))
-
-AC_ARG_WITH([GLw],
-            AS_HELP_STRING([--with-GLw=<path>],
-                           [Build using the system libGLw (default 'bundled')]),
-            [
-              if test "x$with_GLw_includes" == "x"
-              then
-                with_GLw_includes="${with_GLw}/include"
-              fi
-              if test "x$with_GLw_libraries" == "x"
-              then
-                with_GLw_libraries="${with_GLw}/lib"
-              fi
-            ],
-            [with_GLw="bundled"])
-AC_ARG_WITH([GLw-includes],
-            AS_HELP_STRING([--with-GLw-includes=<path>],
-                           [Use libGLw includes at <path>]))
-AC_ARG_WITH([GLw-libraries],
-            AS_HELP_STRING([--with-GLw-libraries=<path>],
-                           [Use libGLw libraries at <path>]))
-
-AC_ARG_WITH([eigen],
-            AS_HELP_STRING([--with-eigen=<path>],
-                           [Build using system Eigen installation at <path> (default 'bundled')]),
-            [],
-            [with_eigen="bundled"])
 
 # Client program
 if test "$with_client" == "yes"
@@ -220,121 +191,44 @@ XMLPlatformUtils::Terminate();
   CLIENT_LDFLAGS="$CLIENT_LDFLAGS $XERCES_LDFLAGS"
   CLIENT_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize $CLIENT_LDLIBS"
 
-  AC_PATH_X
-  if test "x$x_includes" != "x"
-  then
-    CLIENT_INCLUDES="$CLIENT_INCLUDES -I$x_includes"
-  fi
-  if test "x$x_libraries" != "x"
-  then
-    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$x_libraries"
-  fi
-
-  AC_SEARCH_LIBS([XpmReadFileToPixmap], [Xpm],
-      [CLIENT_LDLIBS="$ac_cv_search_XpmReadFileToPixmap $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libXpm not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([IceOpenConnection], [ICE],
-      [CLIENT_LDLIBS="$ac_cv_search_IceOpenConnection $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libICE not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([SmcOpenConnection], [SM],
-      [CLIENT_LDLIBS="$ac_cv_search_SmcOpenConnection $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libSM not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([XCreateWindow], [X11],
-      [CLIENT_LDLIBS="$ac_cv_search_XCreateWindow $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libX11 not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([XtCreateWidget], [Xt],
-      [CLIENT_LDLIBS="$ac_cv_search_XtCreateWidget $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libXt not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([XextAddDisplay], [Xext],
-      [CLIENT_LDLIBS="$ac_cv_search_XextAddDisplay $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libXext not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  if test "$enable_editres" == "yes"
-  then
-    AC_SEARCH_LIBS([_XEditResCheckMessages], [Xmu],
-        [
-            CLIENT_LDLIBS="$ac_cv_search__XEditResCheckMessages $CLIENT_LDLIBS"
-            AC_DEFINE(WANT_EDITRES, [1], [Enable editres support])
-        ],
-        [AC_MSG_ERROR([libXmu not valid, can not enable editres support.])],
-        [$CLIENT_LDFLAGS])
-  fi
-
-  AC_SEARCH_LIBS([XmCreateMainWindow], [Xm],
-      [CLIENT_LDLIBS="$ac_cv_search_XmCreateMainWindow $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libXm not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([glNewList], [GL],
-      [CLIENT_LDLIBS="$ac_cv_search_glNewList $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libGL not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([gluPerspective], [GLU],
-      [CLIENT_LDLIBS="$ac_cv_search_gluPerspective $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libGLU not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_SEARCH_LIBS([glutSolidSphere], [glut],
-      [CLIENT_LDLIBS="$ac_cv_search_glutSolidSphere $CLIENT_LDLIBS"],
-      [AC_MSG_ERROR([libglut not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
-  AC_MSG_NOTICE([checking for GLw])
-  case $with_GLw in
-    bundled)
-      use_bundled_GLw="yes"
-      ;;
-    *)
-      # Try to use the specified libGLw
-      GLW_CXXFLAGS_SAVE="$CXXFLAGS"
-      CXXFLAGS="$CLIENT_INCLUDES -I$with_GLw_includes"
-      AC_CHECK_HEADERS([GL/GLwMDrawA.h],
-          [],
-          [use_bundled_GLw="yes"],
-          [
-              #include <X11/Xlib.h>
-              #include <X11/StringDefs.h>
-              #include <X11/Intrinsic.h>
-          ])
-      CXXFLAGS="$GLW_CXXFLAGS_SAVE"
-      AC_SEARCH_LIBS([GLwDrawingAreaMakeCurrent], [GLw],
-          [],
-          [use_bundled_GLw="yes"],
-          [$CLIENT_LDFLAGS -L$with_GLw_libraries])
-  esac
-  if test "$use_bundled_GLw" == "yes"
-  then
-    AC_MSG_NOTICE([using bundled GLw])
-    subdirs="glw $subdirs"
-    ac_configure_args="$ac_configure_args --enable-motif --disable-shared"
-    AC_CONFIG_SUBDIRS([glw])
-    ABSOLUTE_SRCDIR=$(pwd)
-    CLIENT_INCLUDES="$CLIENT_INCLUDES -I${ABSOLUTE_SRCDIR}/glw"
-    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L${ABSOLUTE_SRCDIR}/glw"
-    CLIENT_LDLIBS="-lGLw $CLIENT_LDLIBS"
-  else
-    AC_MSG_NOTICE([GLw includes $with_GLw_includes, libraries $with_GLw_libraries])
-    CLIENT_INCLUDES="$CLIENT_INCLUDES -I$with_GLw_includes"
-    CLIENT_LDFLAGS="$CLIENT_LDFLAGS -L$with_GLw_libraries"
-    CLIENT_LDLIBS="$ac_cv_search_GLwDrawingAreaMakeCurrent $CLIENT_LDLIBS"
-  fi
-
   # We're currently only doing l10n in the client, so we'll check that
   # header here.
   AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
   AC_CHECK_FUNCS([setlocale])
+
+  # OpenGL libs
+  case $host_os in
+    darwin*)
+      CLIENT_LDLIBS="$CLIENT_LDLIBS -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo"
+      ;;
+    *)
+      AC_SEARCH_LIBS([glBindVertexArray], [GL],
+          [CLIENT_LDLIBS="$ac_cv_search_glBindVertexArray $CLIENT_LDLIBS"],
+          [AC_MSG_ERROR([libGL not valid, can not build client program.])],
+          [$CLIENT_LDFLAGS])
+
+      AC_SEARCH_LIBS([gluPerspective], [GLU],
+          [CLIENT_LDLIBS="$ac_cv_search_gluPerspective $CLIENT_LDLIBS"],
+          [AC_MSG_ERROR([libGLU not valid, can not build client program.])],
+          [$CLIENT_LDFLAGS])
+      ;;
+  esac
+
+  # Check for GLM headers
+  GLM_CPPFLAGS_SAVE="$CPPFLAGS"
+  CPPFLAGS="$CXXFLAGS"
+  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_NOTICE([no valid GLM installation found, can not continue])])
+  CPPFLAGS="$GLM_CPPFLAGS_SAVE"
+
+  # Check for GLFW
+  GLFW_CPPFLAGS_SAVE="$CPPFLAGS"
+  CPPFLAGS="$CXXFLAGS"
+  AC_CHECK_HEADERS([GLFW/glfw3.h], [], [AC_MSG_NOTICE([no valid GLFW headers found, can not continue])])
+  CPPFLAGS="$GLFW_CPPFLAGS_SAVE"
+  AC_SEARCH_LIBS([glfwInit], [glfw],
+      [CLIENT_LDLIBS="$ac_cv_search_glfwInit $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([ not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
 
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
   AC_MSG_NOTICE([using CLIENT_INCLUDES=$CLIENT_INCLUDES])
@@ -350,7 +244,6 @@ XMLPlatformUtils::Terminate();
   AC_SUBST(CLIENT_LDFLAGS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
-AM_CONDITIONAL([WANT_BUNDLED_LIBGLW], [test "x$use_bundled_libGLw" == "xyes"])
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
 AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" == "xyes"])
 
@@ -443,10 +336,13 @@ if test "$with_eigen" != ""
 then
   EIGEN_INCLUDES="-I$with_eigen"
 fi
+EIGEN_CPPFLAGS_SAVE="$CPPFLAGS"
 EIGEN_CXXFLAGS_SAVE="$CXXFLAGS"
+CPPFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
 CXXFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
 AC_CHECK_HEADERS([Eigen/Core], [],
     [AC_MSG_NOTICE([no valid Eigen installation found, can not continue])])
+CPPFLAGS="$EIGEN_CPPFLAGS_SAVE"
 CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
 
 AC_CONFIG_SUBDIRS([test/gmock-1.7.0])
@@ -515,11 +411,6 @@ CXXFLAGS="$GETNAMEINFO_CXXFLAGS_SAVE"
 
 AC_CONFIG_FILES([Makefile
                  client/Makefile
-                 client/motif/Makefile
-                 client/motif/app-defaults/Makefile
-                 client/pixmaps/Makefile
-                 client/geometry/Makefile
-                 client/texture/Makefile
                  po/Makefile.in
                  proto/Makefile
                  server/Makefile

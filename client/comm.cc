@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Dec 2015, 06:55:32 tquirk
+ *   last updated 20 Dec 2015, 13:15:59 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -249,12 +249,13 @@ void Comm::handle_posupd(packet& p)
 
     move_object(u.object_id,
                 u.frame_number,
-                (double)u.x_pos / 100.0,
-                (double)u.y_pos / 100.0,
-                (double)u.z_pos / 100.0,
-                (double)u.x_orient / 100.0,
-                (double)u.y_orient / 100.0,
-                (double)u.z_orient / 100.0);
+                (float)u.x_pos / 100.0,
+                (float)u.y_pos / 100.0,
+                (float)u.z_pos / 100.0,
+                (float)u.x_orient / 100.0,
+                (float)u.y_orient / 100.0,
+                (float)u.z_orient / 100.0,
+                (float)u.w_orient / 100.0);
 }
 
 void Comm::handle_srvnot(packet& p)

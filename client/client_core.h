@@ -1,6 +1,6 @@
 /* client_core.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Dec 2015, 06:55:37 tquirk
+ *   last updated 20 Dec 2015, 13:14:56 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,11 +33,10 @@
 void init_client_core(void);
 void cleanup_client_core(void);
 
-void draw_texture(uint64_t);
-void draw_geometry(uint64_t, uint16_t);
-
 void draw_objects(void);
 void move_object(uint64_t, uint16_t,
-                 double, double, double, double, double, double);
+                 float, float, float, float, float, float, float);
+
+void resize_window(int, int);
 
 #endif /* __INC_R9CLIENT_CORE_H__ */

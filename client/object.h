@@ -1,9 +1,9 @@
-/* object.h                                            -*- C++ -*-
+/* object.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 22:41:37 tquirk
+ *   last updated 26 Feb 2016, 16:14:58 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,6 +22,8 @@
  *
  * This file contains the object cache class declaration.  An "object"
  * is a geometry, combined with position, rotation, and frame number.
+ * For the time being, however, we're eliminating the geometry and
+ * frame number, and focusing on the position and orientation ONLY.
  *
  * Things to do
  *
@@ -36,13 +38,17 @@
 
 #include <GL/gl.h>
 
+#include <glm/vec3.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 #include "cache.h"
 
 struct object
 {
-    uint64_t geometry_id;
-    uint16_t frame_number;
-    GLdouble position[3], orientation[3];
+    glm::vec3 position, color;
+    glm::fquat orientation;
+    GLuint vao, vbo;
+    bool dirty;
 };
 
 typedef BasicCache<object> ObjectCache;

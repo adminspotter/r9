@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Dec 2015, 10:18:44 tquirk
+ *   last updated 19 Feb 2016, 07:04:50 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -90,7 +90,7 @@ handlers[] =
 
 ConfigData::ConfigData()
     : argv(), config_dir(), config_fname(),
-      server_addr(ConfigData::SERVER_ADDR), username(), password()
+      server_addr(ConfigData::SERVER_ADDR), username(), charname()
 {
     this->set_defaults();
 }
@@ -109,7 +109,7 @@ void ConfigData::set_defaults(void)
     this->server_addr  = ConfigData::SERVER_ADDR;
     this->server_port  = ConfigData::SERVER_PORT;
     this->username     = "";
-    this->password     = "";
+    this->charname     = "";
 }
 
 void ConfigData::parse_command_line(int count, char **args)
