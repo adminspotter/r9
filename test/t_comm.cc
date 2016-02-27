@@ -105,7 +105,7 @@ TEST(CommSendTest, SendBadHton)
     Comm *comm = NULL;
     struct addrinfo ai;
 
-    /* send will delete this */
+    /* send_worker will delete this */
     packet *pkt = new packet;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
