@@ -1,4 +1,4 @@
-bin_PROGRAMS = r9client r9test
+bin_PROGRAMS = r9client
 
 dtddir = @datadir@/$(PACKAGE)/dtd
 
@@ -9,7 +9,3 @@ r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 	-DDTD_PATH=\"$(dtddir)/\" -DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \
 	-DGL_GLEXT_PROTOTYPES
 r9client_LDADD = ../proto/libr9_proto.la $(CLIENT_LDLIBS)
-
-r9test_SOURCES = test.cc
-r9test_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) -DGL_GLEXT_PROTOTYPES
-r9test_LDADD = $(CLIENT_LDLIBS)

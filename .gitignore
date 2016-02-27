@@ -14,7 +14,6 @@ old/
 server/r9d
 server/r9subserver
 client/r9client
-client/r9test
 
 server/classes/modules/perlxsi.c
 
