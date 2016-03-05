@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Feb 2016, 16:14:36 tquirk
+ *   last updated 04 Mar 2016, 14:36:05 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -53,103 +53,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#define GLSL(src) "#version 330 core\n" #src
-
-const static GLchar *vert_src = GLSL(
-    in vec3 position;
-    in vec3 color;
-
-    out vec4 location;
-    out vec3 vcolor;
-
-    // This will just be a point
-    void main()
-    {
-        vcolor = color;
-        location = vec4(position, 1.0);
-        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
-    }
-);
-
-const static GLchar *geom_src = GLSL(
-    layout(points) in;
-    layout(triangle_strip, max_vertices = 14) out;
-
-    in vec4 location[];
-    in vec3 vcolor[];
-
-    uniform mat4 model;
-    uniform mat4 view;
-    uniform mat4 proj;
-
-    out vec3 gcolor;
-
-    // Draw a cube at the input point
-    void main()
-    {
-        vec4 pos = location[0];
-        mat4 pv = proj * view;
-        gcolor = vcolor[0];
-
-        // Top
-        gl_Position = pv * (pos + (model * vec4(-0.5, 0.5, -0.5, 1.0)));
-        EmitVertex();
-        gl_Position = pv * (pos + (model * vec4(0.5, 0.5, -0.5, 1.0)));
-        EmitVertex();
-        gl_Position = pv * (pos + (model * vec4(-0.5, 0.5, 0.5, 1.0)));
-        EmitVertex();
-        gl_Position = pv * (pos + (model * vec4(0.5, 0.5, 0.5, 1.0)));
-        EmitVertex();
-
-        // Right side
-        gl_Position = pv * (pos + (model * vec4(0.5, -0.5, 0.5, 1.0)));
-        EmitVertex();
-        gl_Position = pv * (pos + (model * vec4(0.5, 0.5, -0.5, 1.0)));
-        EmitVertex();
-
-        // Back
-        gl_Position = pv * (pos + (model * vec4(0.5, -0.5, -0.5, 1.0)));
-        EmitVertex();
-        gl_Position = pv * (pos + (model * vec4(-0.5, 0.5, -0.5, 1.0)));
-        EmitVertex();
-
-        // Left side
-        gl_Position = pv * (pos + (model * vec4(-0.5, -0.5, -0.5, 1.0)));
-        EmitVertex();
-        gl_Position = pv * (pos + (model * vec4(-0.5, 0.5, 0.5, 1.0)));
-        EmitVertex();
-
-        // Front
-        gl_Position = pv * (pos + (model * vec4(-0.5, -0.5, 0.5, 1.0)));
-        EmitVertex();
-        gl_Position = pv * (pos + (model * vec4(0.5, -0.5, 0.5, 1.0)));
-        EmitVertex();
-
-        // Bottom
-        gl_Position = pv * (pos + (model * vec4(-0.5, -0.5, -0.5, 1.0)));
-        EmitVertex();
-        gl_Position = pv * (pos + (model * vec4(0.5, -0.5, -0.5, 1.0)));
-        EmitVertex();
-
-        EndPrimitive();
-    }
-);
-
-const static GLchar *frag_src = GLSL(
-    in vec3 gcolor;
-
-    out vec4 fcolor;
-
-    void main()
-    {
-        fcolor = vec4(gcolor, 1.0);
-    }
-);
-
-static GLuint create_shader(GLenum, const GLchar *);
-static GLuint create_program(GLuint, GLuint, GLuint, const char *);
-std::string GLenum_to_string(GLenum);
-
 ObjectCache *obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
 GLuint model_loc, view_loc, proj_loc;
@@ -166,9 +69,12 @@ void init_client_core(void)
     std::clog << "OpenGL version " << glGetString(GL_VERSION) << std::endl;
 
     /* Set up the shaders and programs */
-    vert_shader = create_shader(GL_VERTEX_SHADER, vert_src);
-    geom_shader = create_shader(GL_GEOMETRY_SHADER, geom_src);
-    frag_shader = create_shader(GL_FRAGMENT_SHADER, frag_src);
+    vert_shader = load_shader(GL_VERTEX_SHADER,
+                              SHADER_SRC_PATH "/vertex.glsl");
+    geom_shader = load_shader(GL_GEOMETRY_SHADER,
+                              SHADER_SRC_PATH "/geometry.glsl");
+    frag_shader = load_shader(GL_FRAGMENT_SHADER,
+                              SHADER_SRC_PATH "/fragment.glsl");
     shader_pgm = create_program(vert_shader,
                                 geom_shader,
                                 frag_shader,
@@ -307,126 +213,4 @@ void resize_window(int width, int height)
                                   (float)width / (float)height,
                                   0.1f, 1000.0f);
     glUniformMatrix4fv(proj_loc, 1, GL_FALSE, glm::value_ptr(projection));
-}
-
-GLuint create_shader(GLenum type, const GLchar *src)
-{
-    GLint res = GL_FALSE;
-    int len = 0;
-    std::ostringstream s;
-    GLuint shader = glCreateShader(type);
-
-    s << GLenum_to_string(type) << ": ";
-
-    if (shader == 0)
-    {
-        s << "could not create shader: " << GLenum_to_string(glGetError());
-        throw std::runtime_error(s.str());
-    }
-
-    glShaderSource(shader, 1, &src, NULL);
-    glCompileShader(shader);
-
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-    if (len > 0)
-    {
-        GLchar message[len + 1];
-
-        memset(message, 0, len + 1);
-        glGetShaderInfoLog(shader, len, NULL, message);
-
-        s << message;
-    }
-
-    /* Delete the shader and throw an exception on failure */
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &res);
-    if (res == GL_FALSE)
-    {
-        glDeleteShader(shader);
-        throw std::runtime_error(s.str());
-    }
-
-    if (len > 0)
-        std::clog << s.str() << std::endl;
-    return shader;
-}
-
-GLuint create_program(GLuint vert, GLuint geom, GLuint frag, const char *out)
-{
-    GLenum err;
-    GLint res = GL_FALSE;
-    int len = 0;
-    std::ostringstream s;
-    GLuint pgm = glCreateProgram();
-
-    s << "GL program: ";
-
-    if (pgm == 0)
-    {
-        s << "could not create GL program: " << GLenum_to_string(glGetError());
-        throw std::runtime_error(s.str());
-    }
-
-    glGetError();
-    if (vert)
-        glAttachShader(pgm, vert);
-    if (geom)
-        glAttachShader(pgm, geom);
-    if (frag)
-        glAttachShader(pgm, frag);
-    if ((err = glGetError()) != GL_NO_ERROR)
-    {
-        s << "Could not attach shaders to the shader program: "
-          << GLenum_to_string(err);
-        glDeleteProgram(pgm);
-        throw std::runtime_error(s.str());
-    }
-
-    glBindFragDataLocation(pgm, 0, out);
-    glLinkProgram(pgm);
-
-    glGetProgramiv(pgm, GL_INFO_LOG_LENGTH, &len);
-    if (len > 0)
-    {
-        GLchar message[len + 1];
-
-        memset(message, 0, len + 1);
-        glGetProgramInfoLog(pgm, len, NULL, message);
-        s << message;
-    }
-
-    glGetProgramiv(pgm, GL_LINK_STATUS, &res);
-    if (res == GL_FALSE)
-    {
-        glDeleteProgram(pgm);
-        throw std::runtime_error(s.str());
-    }
-
-    if (len > 0)
-        std::clog << s.str() << std::endl;
-    return pgm;
-}
-
-std::string GLenum_to_string(GLenum e)
-{
-    std::string s;
-
-    switch (e)
-    {
-      case GL_NO_ERROR:          s = "GL_NO_ERROR"; break;
-      case GL_INVALID_ENUM:      s = "GL_INVALID_ENUM"; break;
-      case GL_INVALID_VALUE:     s = "GL_INVALID_VALUE"; break;
-      case GL_INVALID_OPERATION: s = "GL_INVALID_OPERATION"; break;
-      case GL_STACK_OVERFLOW:    s = "GL_STACK_OVERFLOW"; break;
-      case GL_STACK_UNDERFLOW:   s = "GL_STACK_UNDERFLOW"; break;
-      case GL_OUT_OF_MEMORY:     s = "GL_OUT_OF_MEMORY"; break;
-      case GL_TABLE_TOO_LARGE:   s = "GL_TABLE_TOO_LARGE"; break;
-      case GL_VERTEX_SHADER:     s = "GL_VERTEX_SHADER"; break;
-      case GL_GEOMETRY_SHADER:   s = "GL_GEOMETRY_SHADER"; break;
-      case GL_FRAGMENT_SHADER:   s = "GL_FRAGMENT_SHADER"; break;
-
-      default:
-        break;
-    }
-    return s;
 }

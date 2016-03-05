@@ -1,9 +1,9 @@
 /* client_core.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Dec 2015, 13:14:56 tquirk
+ *   last updated 04 Mar 2016, 14:19:41 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,6 +30,10 @@
 #ifndef __INC_R9CLIENT_CORE_H__
 #define __INC_R9CLIENT_CORE_H__
 
+#include <GL/gl.h>
+
+#include <string>
+
 void init_client_core(void);
 void cleanup_client_core(void);
 
@@ -38,5 +42,10 @@ void move_object(uint64_t, uint16_t,
                  float, float, float, float, float, float, float);
 
 void resize_window(int, int);
+
+GLuint load_shader(GLenum, const std::string&);
+GLuint create_shader(GLenum, const std::string&);
+GLuint create_program(GLuint, GLuint, GLuint, const char *);
+std::string GLenum_to_string(GLenum);
 
 #endif /* __INC_R9CLIENT_CORE_H__ */
