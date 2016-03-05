@@ -10,7 +10,7 @@ r9client_SOURCES = client.cc comm.cc client_core.cc shader.cc \
 	client_core.h configdata.h l10n.h
 r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 	-DDTD_PATH=\"$(dtddir)/\" \
-	-DSHADER_SRC_PATH=\"$(shaderdir)\"
+	-DSHADER_SRC_PATH=\"$(shaderdir)\" \
 	-DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \
-	-DGL_GLEXT_PROTOTYPES \
+	-DGL_GLEXT_PROTOTYPES
 r9client_LDADD = ../proto/libr9_proto.la $(CLIENT_LDLIBS)

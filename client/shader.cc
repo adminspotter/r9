@@ -1,10 +1,13 @@
 #include <string>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 
 #include <GL/gl.h>
 #include <GL/glext.h>
+
+#include "l10n.h"
 
 #include "client_core.h"
 
@@ -24,6 +27,7 @@ GLuint load_shader(GLenum type, const std::string& file)
     src.resize(infile.tellg());
     infile.seekg(0, std::ios::beg);
     infile.read(&src[0], src.size());
+    infile.close();
     return create_shader(type, src);
 }
 
@@ -32,6 +36,7 @@ GLuint create_shader(GLenum type, const std::string& src)
     GLint res = GL_FALSE;
     int len = 0;
     std::ostringstream s;
+    const char *src_chars = src.c_str();
     GLuint shader = glCreateShader(type);
 
     s << GLenum_to_string(type) << ": ";
@@ -42,7 +47,7 @@ GLuint create_shader(GLenum type, const std::string& src)
         throw std::runtime_error(s.str());
     }
 
-    glShaderSource(shader, 1, &src[0], NULL);
+    glShaderSource(shader, 1, &src_chars, NULL);
     glCompileShader(shader);
 
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
