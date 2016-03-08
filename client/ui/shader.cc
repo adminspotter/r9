@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -7,9 +9,9 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 
-#include "l10n.h"
+#include "../l10n.h"
 
-#include "client_core.h"
+#include "shader.h"
 
 GLuint load_shader(GLenum type, const std::string& file)
 {
