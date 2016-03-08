@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Mar 2016, 14:36:05 tquirk
+ *   last updated 05 Mar 2016, 07:37:35 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -123,11 +123,11 @@ struct draw_object
     void operator()(object& o)
         {
             /* We don't get a valid quaternion just yet */
-            /*glm::mat4 trans = glm::translate(glm::mat4(1.0f), o.position);
-            model = glm::rotate(trans,
-                                glm::angle(o.orientation),
-                                glm::axis(o.orientation));
-            glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));*/
+            glm::mat4 rot = /*glm::rotate(*/glm::mat4(1.0f)/*,
+                                        glm::angle(o.orientation),
+                                        glm::axis(o.orientation))*/;
+            model = glm::translate(rot, o.position);
+            glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
 
             if (o.vbo == -1)
             {
@@ -168,9 +168,6 @@ void draw_objects(void)
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    model = glm::mat4(1.0);
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
 
     std::function<void(object&)> draw = draw_object();
     obj->each(draw);
