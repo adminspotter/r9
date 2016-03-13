@@ -1,7 +1,6 @@
 #version 330 core
 
 in vec2 position;
-in vec2 normal;
 in vec4 color;
 
 out vec4 vcolor;
