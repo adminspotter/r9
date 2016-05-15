@@ -56,6 +56,11 @@ assert(f.code().value() == 5);
 
 
 # Arguments
+AC_ARG_WITH([server],
+            AS_HELP_STRING([--with-server], [Build the server program]),
+            [],
+            [with_server="no"])
+
 AC_ARG_WITH([tcl],
             AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
             [],
@@ -247,103 +252,118 @@ fi
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
 AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" == "xyes"])
 
-# We can use libwrap in the server console, if it's available
-WRAP_LIBS_SAVE="$LIBS"
-LIBS=""
-AC_CHECK_HEADERS([tcpd.h], [have_libwrap="yes"])
-AC_SEARCH_LIBS([hosts_ctl], [wrap], [have_libwrap="yes"])
+if test "$with_server" == "yes"
+then
+  AC_MSG_NOTICE([building with server enabled])
+
+  SERVER_LIBS_SAVE="$LIBS"
+  SERVER_LDLIBS=""
+
+  # We can use libwrap in the server console, if it's available
+  WRAP_LIBS_SAVE="$LIBS"
+  LIBS=""
+  AC_CHECK_HEADERS([tcpd.h], [have_libwrap="yes"])
+  AC_SEARCH_LIBS([hosts_ctl], [wrap], [have_libwrap="yes"])
+  if test "x$have_libwrap" == "xyes"
+  then
+    AC_DEFINE(HAVE_LIBWRAP, [1], [Enable libwrap support])
+    WRAP_LDLIBS="$LIBS"
+    AC_SUBST(WRAP_LDLIBS)
+  fi
+  LIBS="$WRAP_LIBS_SAVE"
+
+  # MySQL server module
+  if test "$with_mysql" == "yes"
+  then
+    MYSQL_LIBS_SAVE="$LIBS"
+    LIBS=""
+    AC_SEARCH_LIBS([mysql_init], [mysqlclient_r],
+        [
+            MYSQL_LDLIBS="$ac_cv_search_mysql_init"
+            AC_SUBST(MYSQL_LDLIBS)
+            want_mysql="yes"
+        ],
+        [AC_MSG_ERROR([libmysqlclient_r not valid, can not enable MySQL module.])])
+    LIBS="$MYSQL_LIBS_SAVE"
+  fi
+
+  # PostgreSQL server module
+  if test "$with_pgsql" == "yes"
+  then
+    PGSQL_LIBS_SAVE="$LIBS"
+    LIBS=""
+    AC_SEARCH_LIBS([PQsetdbLogin], [pq],
+        [
+            PGSQL_LDLIBS="$ac_cv_search_PQsetdbLogin"
+            AC_SUBST(PGSQL_LDLIBS)
+            want_pgsql="yes"
+        ],
+        [AC_MSG_ERROR([libpq not valid, can not enable PostgreSQL module.])])
+    LIBS="$PGSQL_LIBS_SAVE"
+  fi
+
+  # Tcl server module
+  if test "$with_tcl" == "yes"
+  then
+    TCL_LIBS_SAVE="$LIBS"
+    LIBS=""
+    AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
+        [
+            TCL_LDLIBS="$ac_cv_search_Tcl_CreateInterp"
+            AC_SUBST(TCL_LDLIBS)
+            want_tcl="yes"
+        ],
+        [AC_MSG_ERROR([libtcl not valid, can not enable Tcl module.])])
+    LIBS="$TCL_LIBS_SAVE"
+  fi
+
+  # Perl server module
+  if test "$with_perl" == "yes"
+  then
+    AX_PROG_PERL_MODULES([ExtUtils::Embed],
+        [
+            PERL_CFLAGS=$(perl -MExtUtils::Embed -e ccopts)
+	    PERL_LDFLAGS=$(perl -MExtUtils::Embed -e ldopts)
+            AC_SUBST(PERL_CFLAGS)
+            AC_SUBST(PERL_LDFLAGS)
+            want_perl="yes"
+        ],
+        [AC_MSG_ERROR([perl does not have ExtUtils::Embed available.  Can not embed it.])])
+  fi
+
+  AC_SEARCH_LIBS([dlopen], [dl],
+      [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen $LIBS"],
+      [AC_MSG_ERROR([can not build without dlopen.])])
+
+  if test "$with_eigen" != ""
+  then
+    EIGEN_INCLUDES="-I$with_eigen"
+  fi
+  EIGEN_CPPFLAGS_SAVE="$CPPFLAGS"
+  EIGEN_CXXFLAGS_SAVE="$CXXFLAGS"
+  CPPFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
+  CXXFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
+  AC_CHECK_HEADERS([Eigen/Core], [],
+      [AC_MSG_NOTICE([no valid Eigen installation found, can not continue])])
+  CPPFLAGS="$EIGEN_CPPFLAGS_SAVE"
+  CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
+
+  AC_MSG_NOTICE([using SERVER_LDLIBS=$SERVER_LDLIBS])
+
+  LIBS="$SERVER_LIBS_SAVE"
+
+  AC_SUBST(SERVER_LDLIBS)
+fi
+AM_CONDITIONAL([WANT_SERVER], [test "x$with_server" == "xyes"])
 AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
-if test "x$have_libwrap" == "xyes"
-then
-  AC_DEFINE(HAVE_LIBWRAP, [1], [Enable libwrap support])
-  WRAP_LDLIBS="$LIBS"
-  AC_SUBST(WRAP_LDLIBS)
-fi
-LIBS="$WRAP_LIBS_SAVE"
-
-# MySQL server module
-if test "$with_mysql" == "yes"
-then
-  MYSQL_LIBS_SAVE="$LIBS"
-  LIBS=""
-  AC_SEARCH_LIBS([mysql_init], [mysqlclient_r],
-      [
-          MYSQL_LDLIBS="$ac_cv_search_mysql_init"
-          AC_SUBST(MYSQL_LDLIBS)
-          want_mysql="yes"
-      ],
-      [AC_MSG_ERROR([libmysqlclient_r not valid, can not enable MySQL module.])])
-  LIBS="$MYSQL_LIBS_SAVE"
-fi
 AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
-
-# PostgreSQL server module
-if test "$with_pgsql" == "yes"
-then
-  PGSQL_LIBS_SAVE="$LIBS"
-  LIBS=""
-  AC_SEARCH_LIBS([PQsetdbLogin], [pq],
-      [
-          PGSQL_LDLIBS="$ac_cv_search_PQsetdbLogin"
-          AC_SUBST(PGSQL_LDLIBS)
-          want_pgsql="yes"
-      ],
-      [AC_MSG_ERROR([libpq not valid, can not enable PostgreSQL module.])])
-  LIBS="$PGSQL_LIBS_SAVE"
-fi
 AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
-
-# Tcl server module
-if test "$with_tcl" == "yes"
-then
-  TCL_LIBS_SAVE="$LIBS"
-  LIBS=""
-  AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
-      [
-          TCL_LDLIBS="$ac_cv_search_Tcl_CreateInterp"
-          AC_SUBST(TCL_LDLIBS)
-          want_tcl="yes"
-      ],
-      [AC_MSG_ERROR([libtcl not valid, can not enable Tcl module.])])
-  LIBS="$TCL_LIBS_SAVE"
-fi
 AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
-
-# Perl server module
-if test "$with_perl" == "yes"
-then
-  AX_PROG_PERL_MODULES([ExtUtils::Embed],
-      [
-          PERL_CFLAGS=$(perl -MExtUtils::Embed -e ccopts)
-	  PERL_LDFLAGS=$(perl -MExtUtils::Embed -e ldopts)
-          AC_SUBST(PERL_CFLAGS)
-          AC_SUBST(PERL_LDFLAGS)
-          want_perl="yes"
-      ],
-      [AC_MSG_ERROR([perl does not have ExtUtils::Embed available.  Can not embed it.])])
-fi
 AM_CONDITIONAL([WANT_PERL], [test "x$want_perl" == "xyes"])
 
 AC_SEARCH_LIBS([pthread_create], [pthread],
-    [CHECK_LDLIBS="$CHECK_LDLIBS $ac_cv_search_pthread_create"],
+    [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],
     [AC_MSG_ERROR([can not build without pthreads.])])
-
-AC_SEARCH_LIBS([dlopen], [dl],
-    [],
-    [AC_MSG_ERROR([can not build without dlopen.])])
-
-if test "$with_eigen" != ""
-then
-  EIGEN_INCLUDES="-I$with_eigen"
-fi
-EIGEN_CPPFLAGS_SAVE="$CPPFLAGS"
-EIGEN_CXXFLAGS_SAVE="$CXXFLAGS"
-CPPFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
-CXXFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
-AC_CHECK_HEADERS([Eigen/Core], [],
-    [AC_MSG_NOTICE([no valid Eigen installation found, can not continue])])
-CPPFLAGS="$EIGEN_CPPFLAGS_SAVE"
-CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
 
 AC_CONFIG_SUBDIRS([test/gmock-1.7.0])
 
