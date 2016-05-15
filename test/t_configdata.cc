@@ -75,6 +75,7 @@ void create_temp_config_file(std::string& fname)
     ofs << "ServerPort 12345   	       " << std::endl;
     ofs << "Username  		someuser" << std::endl;
     ofs << "   Charname    worstcharnameintheworld   " << std::endl;
+    ofs << "FontPaths /a/b/c:~/d/e/f:/g/h/i" << std::endl;
     ofs.close();
 }
 
@@ -122,6 +123,7 @@ TEST_F(ConfigdataTest, BasicCreateDelete)
     ASSERT_EQ(conf->config_fname, expected);
     ASSERT_EQ(conf->server_addr, ConfigData::SERVER_ADDR);
     ASSERT_EQ(conf->server_port, ConfigData::SERVER_PORT);
+    ASSERT_TRUE(conf->font_paths.size() > 0);
 
     ASSERT_NO_THROW(
         {
@@ -230,6 +232,13 @@ TEST_F(ConfigdataTest, ReadConfigFile)
     ASSERT_EQ(conf->username, expected);
     expected = "worstcharnameintheworld";
     ASSERT_EQ(conf->charname, expected);
+    ASSERT_TRUE(conf->font_paths.size() == 3);
+    expected = "/a/b/c";
+    ASSERT_EQ(conf->font_paths[0], expected);
+    expected = tmpdir + "/d/e/f";
+    ASSERT_EQ(conf->font_paths[1], expected);
+    expected = "/g/h/i";
+    ASSERT_EQ(conf->font_paths[2], expected);
 
     ASSERT_NO_THROW(
         {
@@ -255,6 +264,9 @@ TEST_F(ConfigdataTest, WriteConfigFile)
     conf->server_port = 9876;
     conf->username = "howdy";
     conf->charname = "anotherreallybadcharname";
+    conf->font_paths.clear();
+    conf->font_paths.push_back("/a/b/c");
+    conf->font_paths.push_back("~/d/e/f");
 
     ret = mkdir(conf->config_dir.c_str(), 0700);
     ASSERT_EQ(ret, 0);
@@ -281,6 +293,11 @@ TEST_F(ConfigdataTest, WriteConfigFile)
     ASSERT_EQ(conf->username, expected);
     expected = "anotherreallybadcharname";
     ASSERT_EQ(conf->charname, expected);
+    ASSERT_TRUE(conf->font_paths.size() == 2);
+    expected = "/a/b/c";
+    ASSERT_EQ(conf->font_paths[0], expected);
+    expected = tmpdir + "/d/e/f";
+    ASSERT_EQ(conf->font_paths[1], expected);
 
     ASSERT_NO_THROW(
         {
