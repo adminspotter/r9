@@ -9,7 +9,9 @@ GMOCK_LIBS = $(GMOCK_DIR)/lib/libgmock.la $(GTEST_LIBS)
 GTEST_MAIN_OBJ = $(GMOCK_DIR)/gtest/src/gtest_main.o
 GMOCK_MAIN_OBJ = $(GMOCK_DIR)/src/gmock_main.o
 
-TC = t_action_pool \
+TC =
+if WANT_SERVER
+  TC += t_action_pool \
 	t_basesock \
 	t_console \
 	t_library \
@@ -19,6 +21,7 @@ TC = t_action_pool \
 	t_subserver \
 	t_threadpool \
 	t_update_pool
+endif
 if WANT_PERL
   TC += t_perl
 endif
