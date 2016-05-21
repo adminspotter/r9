@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Dec 2015, 07:20:05 tquirk
+ *   last updated 21 May 2016, 09:17:48 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -76,18 +76,19 @@ struct noop_cleanup
 };
 
 template <typename obj_type,
-          typename cleanup = noop_cleanup<obj_type> >
+          typename cleanup = noop_cleanup<obj_type>,
+          typename key_type = uint64_t>
 class BasicCache
 {
   protected:
-    typedef BasicCache<obj_type, cleanup> _bct;
+    typedef BasicCache<obj_type, cleanup, key_type> _bct;
     typedef struct object_timeval_tag
     {
         struct timeval lastused;
         obj_type obj;
     }
     _bcos_t;
-    typedef std::unordered_map<uint64_t, typename _bct::_bcos_t> _bcom_t;
+    typedef std::unordered_map<key_type, typename _bct::_bcos_t> _bcom_t;
 
     struct bc_cleanup
     {
@@ -102,7 +103,7 @@ class BasicCache
     const static int PRUNE_INTERVAL = 600;
     const static int PRUNE_LIFETIME = 1200;
 
-    _bct::_bcom_t _bc_map;
+    typename _bct::_bcom_t _bc_map;
     std::string type;
     pthread_t prune_thread;
 
@@ -184,14 +185,14 @@ class BasicCache
             for (i = this->_bc_map.begin(); i != this->_bc_map.end(); ++i)
                 cleanup_func(i->second);
         };
-    virtual obj_type& operator[](uint64_t objid)
+    virtual obj_type& operator[](key_type objid)
         {
             _bcos_t& item = this->_bc_map[objid];
 
             gettimeofday(&(item.lastused), NULL);
             return item.obj;
         };
-    void erase(uint64_t objid)
+    void erase(key_type objid)
         {
             typename _bct::_bcom_t::iterator object = this->_bc_map.find(objid);
 
@@ -216,13 +217,14 @@ class BasicCache
 
 template <typename obj_type,
           typename parser_type,
-          typename cleanup = noop_cleanup<obj_type> >
-class ParsedCache : public BasicCache<obj_type, cleanup>
+          typename cleanup = noop_cleanup<obj_type>,
+          typename key_type = uint64_t>
+class ParsedCache : public BasicCache<obj_type, cleanup, key_type>
 {
   private:
     std::string store, cache;
 
-    bool parse_file(const std::string& fname, uint64_t objid)
+    bool parse_file(const std::string& fname, key_type objid)
         {
             bool retval = true;
             XNS::SAXParser *parser = NULL;
@@ -263,7 +265,7 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
 
   public:
     ParsedCache(const std::string type_name)
-        : BasicCache<obj_type, cleanup>(type_name), store(), cache()
+        : BasicCache<obj_type, cleanup, key_type>(type_name), store(), cache()
         {
             this->store = STORE_PREFIX;
             this->store += '/';
@@ -281,7 +283,7 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
 
             this->load(0LL);
         };
-    void load(uint64_t objid)
+    void load(key_type objid)
         {
             struct stat st;
 
@@ -319,14 +321,19 @@ class ParsedCache : public BasicCache<obj_type, cleanup>
              */
             /*send_object_request(objid);*/
         };
-    virtual obj_type& operator[](uint64_t objid)
+    virtual obj_type& operator[](key_type objid)
         {
-            try { return BasicCache<obj_type, cleanup>::operator[](objid); }
+            try
+            {
+                return BasicCache<obj_type,
+                                  cleanup,
+                                  key_type>::operator[](objid);
+            }
             catch (...)
             {
                 /* Maybe spawn another thread to do the load? */
                 this->load(objid);
-                return BasicCache<obj_type, cleanup>::operator[](0LL);
+                return BasicCache<obj_type, cleanup, key_type>::operator[](0);
             }
         };
 };
