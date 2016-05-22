@@ -1,9 +1,9 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 May 2016, 18:10:33 tquirk
+ *   last updated 22 May 2016, 09:06:24 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -324,12 +324,6 @@ static void read_paths(const std::string& key,
     std::vector<std::string> *element = (std::vector<std::string> *)ptr;
     std::string str = (std::string&)value;
     std::string::size_type loc;
-
-    /* Replace all ~ with the homedir */
-    std::string home = getenv("HOME");
-    if (home.size())
-        while ((loc = str.find('~')) != std::string::npos)
-            str.replace(loc, 1, home);
 
     /* Split things on : */
     element->clear();

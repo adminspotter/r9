@@ -235,7 +235,7 @@ TEST_F(ConfigdataTest, ReadConfigFile)
     ASSERT_TRUE(conf->font_paths.size() == 3);
     expected = "/a/b/c";
     ASSERT_EQ(conf->font_paths[0], expected);
-    expected = tmpdir + "/d/e/f";
+    expected = "~/d/e/f";
     ASSERT_EQ(conf->font_paths[1], expected);
     expected = "/g/h/i";
     ASSERT_EQ(conf->font_paths[2], expected);
@@ -296,7 +296,7 @@ TEST_F(ConfigdataTest, WriteConfigFile)
     ASSERT_TRUE(conf->font_paths.size() == 2);
     expected = "/a/b/c";
     ASSERT_EQ(conf->font_paths[0], expected);
-    expected = tmpdir + "/d/e/f";
+    expected = "~/d/e/f";
     ASSERT_EQ(conf->font_paths[1], expected);
 
     ASSERT_NO_THROW(
