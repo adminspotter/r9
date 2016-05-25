@@ -235,6 +235,16 @@ XMLPlatformUtils::Terminate();
       [AC_MSG_ERROR([ not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
+  # Check for Freetype2
+  FREETYPE_CPPFLAGS_SAVE="$CPPFLAGS"
+  CPPFLAGS="$CXXFLAGS"
+  AC_CHECK_HEADERS([ft2build.h], [], [AC_MSG_NOTICE([no valid Freetype2 headers found, can not continue])])
+  CPPFLAGS="$FREETYPE_CPPFLAGS_SAVE"
+  AC_SEARCH_LIBS([FT_Init_FreeType], [freetype],
+      [CLIENT_LDLIBS="$ac_cv_search_FT_Init_FreeType $CLIENT_LDLIBS"],
+      [AC_MSG_ERROR([ not valid, can not build client program.])],
+      [$CLIENT_LDFLAGS])
+
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
   AC_MSG_NOTICE([using CLIENT_INCLUDES=$CLIENT_INCLUDES])
   AC_MSG_NOTICE([using CLIENT_LDFLAGS=$CLIENT_LDFLAGS])
