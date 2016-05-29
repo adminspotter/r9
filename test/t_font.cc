@@ -26,8 +26,28 @@ TEST(FontTest, BasicCreateDelete)
         });
     ASSERT_TRUE(f != NULL);
 
+    delete f;
+}
+
+TEST(FontTest, GlyphAccess)
+{
+    std::string font_name = FONT_NAME;
+    Font *f = NULL;
+
     ASSERT_NO_THROW(
         {
-            delete f;
+            f = new Font(font_name, 30);
         });
+
+    Glyph &g = (*f)['g'];
+    ASSERT_GT(g.x_advance, 0);
+    ASSERT_EQ(g.y_advance, 0);
+    ASSERT_GT(g.width, 0);
+    ASSERT_GT(g.height, 0);
+    ASSERT_EQ(g.left, 0);
+    ASSERT_GT(g.top, 0);
+    ASSERT_GT(g.pitch, 0);
+    ASSERT_TRUE(g.bitmap != NULL);
+
+    delete f;
 }
