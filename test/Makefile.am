@@ -162,8 +162,7 @@ t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
 t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)
 
-t_font_SOURCES = t_font.cc ../client/ui/font.h ../client/ui/font.cc \
-	../client/configdata.h ../client/configdata.cc
+t_font_SOURCES = t_font.cc ../client/ui/font.h ../client/ui/font.cc
 t_font_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	$(GTEST_INCLUDES) \
 	-DSTORE_PREFIX=\"../client\"
