@@ -2,6 +2,7 @@
 
 in vec2 position;
 in vec4 color;
+in vec2 texture_uv;
 
 out vec4 vcolor;
 
