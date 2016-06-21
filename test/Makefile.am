@@ -9,7 +9,9 @@ GMOCK_LIBS = $(GMOCK_DIR)/lib/libgmock.la $(GTEST_LIBS)
 GTEST_MAIN_OBJ = $(GMOCK_DIR)/gtest/src/gtest_main.o
 GMOCK_MAIN_OBJ = $(GMOCK_DIR)/src/gmock_main.o
 
-TC = t_action_pool \
+TC =
+if WANT_SERVER
+  TC += t_action_pool \
 	t_basesock \
 	t_console \
 	t_library \
@@ -19,6 +21,7 @@ TC = t_action_pool \
 	t_subserver \
 	t_threadpool \
 	t_update_pool
+endif
 if WANT_PERL
   TC += t_perl
 endif
@@ -26,7 +29,10 @@ if WANT_TCL
   TC += t_tcl
 endif
 if WANT_CLIENT
-  TC += t_cache t_comm t_configdata
+  TC += t_cache \
+	t_comm \
+	t_configdata \
+	t_font
 endif
 
 TESTS = $(TC)
@@ -155,3 +161,9 @@ t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) $(CLIENT_LDLIBS) \
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
 t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)
+
+t_font_SOURCES = t_font.cc ../client/ui/font.h ../client/ui/font.cc
+t_font_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
+	$(GTEST_INCLUDES) \
+	-DSTORE_PREFIX=\"../client\"
+t_font_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)

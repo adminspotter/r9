@@ -1,9 +1,9 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Feb 2016, 07:04:50 tquirk
+ *   last updated 22 May 2016, 09:06:24 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2016  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -60,13 +60,29 @@
 
 const int ConfigData::SERVER_PORT    = 8500;
 const char ConfigData::SERVER_ADDR[] = "127.0.0.1";
+const char *ConfigData::FONT_PATHS[] = {
+#if defined(__APPLE__)
+    "~/Library/Fonts",
+    "/Library/Fonts",
+    "/Network/Library/Fonts",
+    "/System/Library/Fonts",
+    "/System/Folder/Fonts",
+#elif defined(__linux__)
+    "/usr/share/fonts",
+    "/usr/share/fonts/default/Type1",
+    "/usr/share/fonts/default/ttf",
+#endif
+    NULL
+};
 
 typedef void (*config_read_t)(const std::string&, const std::string&, void *);
 typedef void (*config_write_t)(std::ostream&, void *);
 
 static void read_string(const std::string&, const std::string&, void *);
+static void read_paths(const std::string&, const std::string&, void *);
 static void read_integer(const std::string&, const std::string&, void *);
 static void write_string(std::ostream&, void *);
+static void write_paths(std::ostream&, void *);
 static void write_integer(std::ostream&, void *);
 
 /* File-global variables */
@@ -84,7 +100,8 @@ handlers[] =
     { "ServerAddr", off(server_addr), &read_string,  &write_string  },
     { "ServerPort", off(server_port), &read_integer, &write_integer },
     { "Username",   off(username),    &read_string,  &write_string  },
-    { "Charname",   off(charname),    &read_string,  &write_string  }
+    { "Charname",   off(charname),    &read_string,  &write_string  },
+    { "FontPaths",  off(font_paths),  &read_paths,   &write_paths   }
 #undef off
 };
 
@@ -102,6 +119,9 @@ ConfigData::~ConfigData()
 
 void ConfigData::set_defaults(void)
 {
+    char **ptr = (char **)&(ConfigData::FONT_PATHS[0]);
+    std::string str;
+
     this->config_dir   = getenv("HOME");
     this->config_dir   += "/.r9";
     this->config_fname = this->config_dir + "/config";
@@ -110,6 +130,14 @@ void ConfigData::set_defaults(void)
     this->server_port  = ConfigData::SERVER_PORT;
     this->username     = "";
     this->charname     = "";
+
+    this->font_paths.clear();
+    while (*ptr != NULL)
+    {
+        str = *ptr;
+        this->font_paths.push_back(str);
+        ++ptr;
+    }
 }
 
 void ConfigData::parse_command_line(int count, char **args)
@@ -289,6 +317,24 @@ static void read_string(const std::string& key,
         *element = value;
 }
 
+static void read_paths(const std::string& key,
+                       const std::string& value,
+                       void *ptr)
+{
+    std::vector<std::string> *element = (std::vector<std::string> *)ptr;
+    std::string str = (std::string&)value;
+    std::string::size_type loc;
+
+    /* Split things on : */
+    element->clear();
+    while ((loc = str.find(':')) != std::string::npos)
+    {
+        element->push_back(str.substr(0, loc));
+        str.erase(0, loc + 1);
+    }
+    element->push_back(str);
+}
+
 static void read_integer(const std::string& key,
                          const std::string& value,
                          void *ptr)
@@ -301,6 +347,21 @@ static void read_integer(const std::string& key,
 static void write_string(std::ostream& os, void *ptr)
 {
     os << *((std::string *)ptr);
+}
+
+static void write_paths(std::ostream& os, void *ptr)
+{
+    std::vector<std::string> *element = (std::vector<std::string> *)ptr;
+    std::vector<std::string>::iterator i;
+    std::string str;
+
+    for (i = element->begin(); i != element->end(); ++i)
+    {
+        if (str.size())
+            str += ':';
+        str += *i;
+    }
+    os << str;
 }
 
 static void write_integer(std::ostream& os, void *ptr)

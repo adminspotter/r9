@@ -1,5 +1,9 @@
-SD = proto server
-SD_NO_TEST = proto server
+SD = proto
+SD_NO_TEST = proto
+if WANT_SERVER
+SD += server
+SD_NO_TEST += server
+endif
 if WANT_CLIENT
 SD += client
 SD_NO_TEST += client
