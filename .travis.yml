@@ -9,6 +9,8 @@ compiler:
 addons:
   apt:
     packages:
+    - autopoint
+    - gettext
     - tcl8.6-dev
     - libmysqlclient-dev
     - libpq-dev
