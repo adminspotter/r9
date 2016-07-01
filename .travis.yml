@@ -1,0 +1,21 @@
+language: cpp
+os:
+- linux
+sudo: required
+dist: trusty
+compiler:
+- clang
+- gcc
+addons:
+  apt:
+    packages:
+    - tcl8.6-dev
+    - libmysqlclient-dev
+    - libpq-dev
+    - libxerces-c-dev
+    - libglm-dev
+    - libglfw-dev
+script:
+- ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client
+- make
+- make check
