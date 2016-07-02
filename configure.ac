@@ -286,6 +286,8 @@ then
   # MySQL server module
   if test "$with_mysql" == "yes"
   then
+    AC_CHECK_HEADERS([mysql.h], [],
+        [AC_MSG_ERROR([no valid MySQL headers found, can not continue])])
     MYSQL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([mysql_init], [mysqlclient_r],
@@ -301,6 +303,8 @@ then
   # PostgreSQL server module
   if test "$with_pgsql" == "yes"
   then
+    AC_CHECK_HEADERS([postgresql/libpq-fe.h], [],
+        [AC_MSG_ERROR([no valid PostgreSQL headers found, can not continue])])
     PGSQL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([PQsetdbLogin], [pq],
@@ -316,6 +320,8 @@ then
   # Tcl server module
   if test "$with_tcl" == "yes"
   then
+    AC_CHECK_HEADERS([tcl.h], [],
+        [AC_MSG_ERROR([no valid Tcl headers found, can not continue])])
     TCL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
@@ -346,18 +352,8 @@ then
       [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen $LIBS"],
       [AC_MSG_ERROR([can not build without dlopen.])])
 
-  if test "$with_eigen" != ""
-  then
-    EIGEN_INCLUDES="-I$with_eigen"
-  fi
-  EIGEN_CPPFLAGS_SAVE="$CPPFLAGS"
-  EIGEN_CXXFLAGS_SAVE="$CXXFLAGS"
-  CPPFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
-  CXXFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
   AC_CHECK_HEADERS([Eigen/Core], [],
       [AC_MSG_ERROR([no valid Eigen installation found, can not continue])])
-  CPPFLAGS="$EIGEN_CPPFLAGS_SAVE"
-  CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
 
   AC_MSG_NOTICE([using SERVER_LDLIBS=$SERVER_LDLIBS])
 
