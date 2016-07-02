@@ -11,6 +11,7 @@ addons:
     packages:
     - autopoint
     - gettext
+    - libeigen3-dev
     - tcl8.6-dev
     - libmysqlclient-dev
     - libpq-dev
