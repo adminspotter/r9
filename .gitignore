@@ -40,5 +40,6 @@ ltmain.sh
 libtool.m4
 lt*.m4
 missing
-stamp-h*
+stamp-h
+stamp-h1
 test-driver
