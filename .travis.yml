@@ -20,6 +20,6 @@ addons:
     - libglfw-dev
 script:
 - ./autogen.sh
-- ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client
+- CFLAGS='-I/usr/include/eigen3' ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client
 - make
 - make check
