@@ -355,7 +355,7 @@ then
   CPPFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
   CXXFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
   AC_CHECK_HEADERS([Eigen/Core], [],
-      [AC_MSG_NOTICE([no valid Eigen installation found, can not continue])])
+      [AC_MSG_ERROR([no valid Eigen installation found, can not continue])])
   CPPFLAGS="$EIGEN_CPPFLAGS_SAVE"
   CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
 
