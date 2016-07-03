@@ -18,8 +18,9 @@ addons:
     - libxerces-c-dev
     - libglm-dev
     - libglfw-dev
+    - libfreetype6-dev
 script:
 - ./autogen.sh
-- CXXFLAGS='-I/usr/include/eigen3 -I/usr/include/mysql -I/usr/include/tcl8.6' ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client
+- CXXFLAGS='-I/usr/include/eigen3 -I/usr/include/mysql -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client
 - make
 - make check
