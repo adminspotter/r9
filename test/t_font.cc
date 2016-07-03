@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 /* This will be available on Macs, but probably nowhere else */
-#define FONT_NAME "Times New Roman.ttf"
+#define FONT_NAME "techover.ttf"
 
 std::vector<std::string> paths =
 {
@@ -22,6 +22,7 @@ std::vector<std::string> paths =
     "/usr/share/fonts/default/Type1",
     "/usr/share/fonts/default/ttf",
 #endif
+    ".",
 };
 
 TEST(FontTest, BasicCreateDelete)
