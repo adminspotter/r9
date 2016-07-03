@@ -50,10 +50,8 @@ install-exec-local:
 AM_CXXFLAGS = $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 
 CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
-CONSOLE_EXTRAS =
 if HAVE_LIBWRAP
   CONFIG_DEFS += -DHAVE_LIBWRAP=1
-  CONSOLE_EXTRAS += ../server/config_data.cc ../server/config_data.h
 endif
 
 libtest_la_SOURCES = libtest.cc libtest.h
@@ -87,7 +85,7 @@ t_console_SOURCES = t_console.cc \
 	../server/classes/modules/console.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
 	../server/log.cc ../server/log.h \
-	$(CONSOLE_EXTRAS)
+	../server/config_data.cc ../server/config_data.h
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_console_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(WRAP_LDLIBS)
 
