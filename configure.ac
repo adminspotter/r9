@@ -223,13 +223,13 @@ XMLPlatformUtils::Terminate();
   # Check for GLM headers
   GLM_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_NOTICE([no valid GLM installation found, can not continue])])
+  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_ERROR([no valid GLM installation found, can not continue])])
   CPPFLAGS="$GLM_CPPFLAGS_SAVE"
 
   # Check for GLFW
   GLFW_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([GLFW/glfw3.h], [], [AC_MSG_NOTICE([no valid GLFW headers found, can not continue])])
+  AC_CHECK_HEADERS([GLFW/glfw3.h], [], [AC_MSG_ERROR([no valid GLFW headers found, can not continue])])
   CPPFLAGS="$GLFW_CPPFLAGS_SAVE"
   AC_SEARCH_LIBS([glfwInit], [glfw],
       [CLIENT_LDLIBS="$ac_cv_search_glfwInit $CLIENT_LDLIBS"],
@@ -239,7 +239,7 @@ XMLPlatformUtils::Terminate();
   # Check for Freetype2
   FREETYPE_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([ft2build.h], [], [AC_MSG_NOTICE([no valid Freetype2 headers found, can not continue])])
+  AC_CHECK_HEADERS([ft2build.h], [], [AC_MSG_ERROR([no valid Freetype2 headers found, can not continue])])
   CPPFLAGS="$FREETYPE_CPPFLAGS_SAVE"
   AC_SEARCH_LIBS([FT_Init_FreeType], [freetype],
       [CLIENT_LDLIBS="$ac_cv_search_FT_Init_FreeType $CLIENT_LDLIBS"],
