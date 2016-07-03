@@ -66,13 +66,14 @@ t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/zone.cc ../server/classes/zone.h \
 	../server/classes/control.cc ../server/classes/control.h \
 	../server/classes/game_obj.cc ../server/classes/game_obj.h \
+	../server/classes/geometry.cc ../server/classes/geometry.h \
 	../server/classes/library.cc ../server/classes/library.h \
 	../server/classes/octree.cc ../server/classes/octree.h \
 	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
 t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_action_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
-	../proto/libr9_proto.la
+	../proto/libr9_proto.la $(SERVER_LDLIBS)
 
 t_basesock_SOURCES = t_basesock.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
@@ -92,7 +93,7 @@ t_console_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(WRAP_LDLIBS)
 
 t_library_SOURCES = t_library.cc \
 	../server/classes/library.cc ../server/classes/library.h
-t_library_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+t_library_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS)
 
 t_log_SOURCES = t_log.cc ../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
@@ -105,12 +106,14 @@ t_motion_pool_SOURCES = t_motion_pool.cc \
 	../server/classes/update_pool.cc ../server/classes/update_pool.h \
 	../server/classes/zone.cc ../server/classes/zone.h \
 	../server/classes/game_obj.cc ../server/classes/game_obj.h \
+	../server/classes/geometry.cc ../server/classes/geometry.h \
 	../server/classes/library.cc ../server/classes/library.h \
 	../server/classes/octree.cc ../server/classes/octree.h \
 	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
 t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_motion_pool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) ../proto/libr9_proto.la
+t_motion_pool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../proto/libr9_proto.la $(SERVER_LDLIBS)
 
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
@@ -131,6 +134,7 @@ t_update_pool_SOURCES = t_update_pool.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
 	../server/classes/control.cc ../server/classes/control.h \
 	../server/classes/game_obj.cc ../server/classes/game_obj.h \
+	../server/classes/geometry.cc ../server/classes/geometry.h \
 	../server/classes/library.cc ../server/classes/library.h \
 	../server/classes/octree.cc ../server/classes/octree.h \
 	../server/log.cc ../server/log.h \
@@ -138,15 +142,15 @@ t_update_pool_SOURCES = t_update_pool.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_update_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_update_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
-	../proto/libr9_proto.la
+	../proto/libr9_proto.la $(SERVER_LDLIBS)
 
 t_perl_SOURCES = t_perl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
-t_perl_LDADD = $(GTEST_LIBS)
+t_perl_LDADD = $(GTEST_LIBS) $(SERVER_LDLIBS)
 
 t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
-t_tcl_LDADD = $(GTEST_LIBS)
+t_tcl_LDADD = $(GTEST_LIBS) $(SERVER_LDLIBS)
 
 t_cache_SOURCES = t_cache.cc ../client/cache.h
 t_cache_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \

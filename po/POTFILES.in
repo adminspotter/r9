@@ -11,7 +11,6 @@ client/ui/button.cc
 client/ui/button.h
 client/ui/font.cc
 client/ui/font.h
-client/ui/fonttest.cc
 client/ui/label.cc
 client/ui/label.h
 client/ui/panel.cc
