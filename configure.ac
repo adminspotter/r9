@@ -194,8 +194,9 @@ XMLPlatformUtils::Terminate();
   AS_VAR_POPDEF([ac_Search])
   CXXFLAGS="$XERCES_CXXFLAGS_SAVE"
 
+  XERCES_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize"
   CLIENT_LDFLAGS="$CLIENT_LDFLAGS $XERCES_LDFLAGS"
-  CLIENT_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize $CLIENT_LDLIBS"
+  CLIENT_LDLIBS="$XERCES_LDLIBS $CLIENT_LDLIBS"
 
   # We're currently only doing l10n in the client, so we'll check that
   # header here.
@@ -242,7 +243,10 @@ XMLPlatformUtils::Terminate();
   AC_CHECK_HEADERS([ft2build.h], [], [AC_MSG_ERROR([no valid Freetype2 headers found, can not continue])])
   CPPFLAGS="$FREETYPE_CPPFLAGS_SAVE"
   AC_SEARCH_LIBS([FT_Init_FreeType], [freetype],
-      [CLIENT_LDLIBS="$ac_cv_search_FT_Init_FreeType $CLIENT_LDLIBS"],
+      [
+          FREETYPE_LDLIBS="$ac_cv_search_FT_Init_FreeType"
+          CLIENT_LDLIBS="$FREETYPE_LDLIBS $CLIENT_LDLIBS"
+      ],
       [AC_MSG_ERROR([ not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
@@ -258,6 +262,8 @@ XMLPlatformUtils::Terminate();
   AC_SUBST(CLIENT_CXXFLAGS)
   AC_SUBST(CLIENT_INCLUDES)
   AC_SUBST(CLIENT_LDFLAGS)
+  AC_SUBST(XERCES_LDLIBS)
+  AC_SUBST(FREETYPE_LDLIBS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])

@@ -154,18 +154,19 @@ t_cache_SOURCES = t_cache.cc ../client/cache.h
 t_cache_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	$(GTEST_INCLUDES) $(GMOCK_INCLUDES) \
 	-DSTORE_PREFIX=\"../client\"
-t_cache_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) $(CLIENT_LDLIBS)
+t_cache_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) $(XERCES_LDLIBS)
 
 t_comm_SOURCES = t_comm.cc ../client/comm.cc ../client/comm.h
-t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) $(CLIENT_LDLIBS) \
+t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
-t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)
+t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_font_SOURCES = t_font.cc ../client/ui/font.h ../client/ui/font.cc
 t_font_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	$(GTEST_INCLUDES) \
 	-DSTORE_PREFIX=\"../client\"
-t_font_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(CLIENT_LDLIBS)
+t_font_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	$(XERCES_LDLIBS) $(FREETYPE_LDLIBS)
