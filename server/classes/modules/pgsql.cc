@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 07:36:20 tquirk
+ *   last updated 02 Jul 2016, 09:52:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -57,7 +57,7 @@ uint64_t PgSQL::check_authentication(const std::string& user, const std::string&
              "WHERE username='%s' "
              "AND password='%s' "
              "AND suspended=0;",
-             user, pass);
+             user.c_str(), pass.c_str());
     this->db_connect();
 
     res = PQexec(this->db_handle, str);
@@ -72,6 +72,11 @@ uint64_t PgSQL::check_authentication(const std::string& user, const std::string&
 }
 
 int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
+{
+    return 0;
+}
+
+int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 {
     return 0;
 }
