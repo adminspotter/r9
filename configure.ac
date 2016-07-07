@@ -194,8 +194,9 @@ XMLPlatformUtils::Terminate();
   AS_VAR_POPDEF([ac_Search])
   CXXFLAGS="$XERCES_CXXFLAGS_SAVE"
 
+  XERCES_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize"
   CLIENT_LDFLAGS="$CLIENT_LDFLAGS $XERCES_LDFLAGS"
-  CLIENT_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize $CLIENT_LDLIBS"
+  CLIENT_LDLIBS="$XERCES_LDLIBS $CLIENT_LDLIBS"
 
   # We're currently only doing l10n in the client, so we'll check that
   # header here.
@@ -223,13 +224,13 @@ XMLPlatformUtils::Terminate();
   # Check for GLM headers
   GLM_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_NOTICE([no valid GLM installation found, can not continue])])
+  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_ERROR([no valid GLM installation found, can not continue])])
   CPPFLAGS="$GLM_CPPFLAGS_SAVE"
 
   # Check for GLFW
   GLFW_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([GLFW/glfw3.h], [], [AC_MSG_NOTICE([no valid GLFW headers found, can not continue])])
+  AC_CHECK_HEADERS([GLFW/glfw3.h], [], [AC_MSG_ERROR([no valid GLFW headers found, can not continue])])
   CPPFLAGS="$GLFW_CPPFLAGS_SAVE"
   AC_SEARCH_LIBS([glfwInit], [glfw],
       [CLIENT_LDLIBS="$ac_cv_search_glfwInit $CLIENT_LDLIBS"],
@@ -239,10 +240,13 @@ XMLPlatformUtils::Terminate();
   # Check for Freetype2
   FREETYPE_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([ft2build.h], [], [AC_MSG_NOTICE([no valid Freetype2 headers found, can not continue])])
+  AC_CHECK_HEADERS([ft2build.h], [], [AC_MSG_ERROR([no valid Freetype2 headers found, can not continue])])
   CPPFLAGS="$FREETYPE_CPPFLAGS_SAVE"
   AC_SEARCH_LIBS([FT_Init_FreeType], [freetype],
-      [CLIENT_LDLIBS="$ac_cv_search_FT_Init_FreeType $CLIENT_LDLIBS"],
+      [
+          FREETYPE_LDLIBS="$ac_cv_search_FT_Init_FreeType"
+          CLIENT_LDLIBS="$FREETYPE_LDLIBS $CLIENT_LDLIBS"
+      ],
       [AC_MSG_ERROR([ not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
@@ -258,6 +262,8 @@ XMLPlatformUtils::Terminate();
   AC_SUBST(CLIENT_CXXFLAGS)
   AC_SUBST(CLIENT_INCLUDES)
   AC_SUBST(CLIENT_LDFLAGS)
+  AC_SUBST(XERCES_LDLIBS)
+  AC_SUBST(FREETYPE_LDLIBS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
@@ -286,6 +292,8 @@ then
   # MySQL server module
   if test "$with_mysql" == "yes"
   then
+    AC_CHECK_HEADERS([mysql.h], [],
+        [AC_MSG_ERROR([no valid MySQL headers found, can not continue])])
     MYSQL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([mysql_init], [mysqlclient_r],
@@ -301,6 +309,8 @@ then
   # PostgreSQL server module
   if test "$with_pgsql" == "yes"
   then
+    AC_CHECK_HEADERS([postgresql/libpq-fe.h], [],
+        [AC_MSG_ERROR([no valid PostgreSQL headers found, can not continue])])
     PGSQL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([PQsetdbLogin], [pq],
@@ -316,6 +326,8 @@ then
   # Tcl server module
   if test "$with_tcl" == "yes"
   then
+    AC_CHECK_HEADERS([tcl.h], [],
+        [AC_MSG_ERROR([no valid Tcl headers found, can not continue])])
     TCL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
@@ -346,18 +358,8 @@ then
       [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen $LIBS"],
       [AC_MSG_ERROR([can not build without dlopen.])])
 
-  if test "$with_eigen" != ""
-  then
-    EIGEN_INCLUDES="-I$with_eigen"
-  fi
-  EIGEN_CPPFLAGS_SAVE="$CPPFLAGS"
-  EIGEN_CXXFLAGS_SAVE="$CXXFLAGS"
-  CPPFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
-  CXXFLAGS="$CXXFLAGS $EIGEN_INCLUDES"
   AC_CHECK_HEADERS([Eigen/Core], [],
-      [AC_MSG_NOTICE([no valid Eigen installation found, can not continue])])
-  CPPFLAGS="$EIGEN_CPPFLAGS_SAVE"
-  CXXFLAGS="$EIGEN_CXXFLAGS_SAVE"
+      [AC_MSG_ERROR([no valid Eigen installation found, can not continue])])
 
   AC_MSG_NOTICE([using SERVER_LDLIBS=$SERVER_LDLIBS])
 

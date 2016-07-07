@@ -1,6 +1,6 @@
 /* panel.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jun 2016, 19:03:18 tquirk
+ *   last updated 05 Jul 2016, 07:29:33 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -23,6 +23,10 @@
  * This file contains the basic panel object declaration and some
  * utility namespace definitions for the R9 UI widget set.
  *
+ * We have callback lists here, but for the most part they will be
+ * empty.  Once we get to the buttons and things, they'll start having
+ * default actions in some of the callback lists.
+ *
  * Things to do
  *
  */
@@ -35,13 +39,42 @@
 
 #include <glm/vec4.hpp>
 
+#include <list>
+
 #include "ui.h"
 
 namespace ui
 {
+    /* Forward declarations for multi-include problems */
+    class context;
+    class panel;
+
+    /* Callback function pointer */
+    typedef void (*cb_fptr)(panel *, void *, void *);
+
     class panel
     {
       protected:
+        typedef struct cb_list_tag
+        {
+            cb_fptr ptr;
+            void *client_data;
+
+            bool operator==(const struct cb_list_tag& p) const
+                {
+                    return (this->ptr == p.ptr
+                            && this->client_data == p.client_data);
+                };
+            void operator()(panel *p, void *call_data)
+                {
+                    this->ptr(p, call_data, this->client_data);
+                };
+        }
+        cb_list_elem;
+        std::list<cb_list_elem> enter_cb, leave_cb, down_cb, up_cb, motion_cb;
+
+        std::list<cb_list_elem>& which_cb_list(GLuint);
+
         context *parent;
         GLuint vao, vbo, ebo, vertex_count, element_count;
         GLuint width, height, xpos, ypos;
@@ -68,11 +101,16 @@ namespace ui
 
         virtual int get(GLuint, GLuint, void *);
         virtual void set(GLuint, GLuint, void *);
+        void get_va(GLuint, GLuint, void *, ...);
         void set_va(GLuint, GLuint, void *, ...);
 
         virtual void draw(void);
 
         void close(void);
+
+        virtual void add_callback(GLuint, cb_fptr, void *);
+        virtual void remove_callback(GLuint, cb_fptr, void *);
+        virtual void call_callbacks(GLuint);
 
         /* The context may change sizes, so it needs to be able to
          * call populate_buffers() in the event of a window resize.

@@ -1,6 +1,6 @@
 /* panel.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jun 2016, 00:17:18 tquirk
+ *   last updated 07 Jul 2016, 07:15:33 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -35,6 +35,19 @@
 
 #include "panel.h"
 
+std::list<ui::panel::cb_list_elem>& ui::panel::which_cb_list(GLuint which)
+{
+    switch (which)
+    {
+      case ui::callback::enter:   return this->enter_cb;
+      case ui::callback::leave:   return this->leave_cb;
+      default:
+      case ui::callback::down:    return this->down_cb;
+      case ui::callback::up:      return this->up_cb;
+      case ui::callback::motion:  return this->motion_cb;
+    }
+}
+
 int ui::panel::get_position(GLuint t, void *v)
 {
     int ret = 0;
@@ -57,6 +70,7 @@ void ui::panel::set_position(GLuint t, void *v)
       case ui::position::x: this->xpos = new_v; break;
       case ui::position::y: this->ypos = new_v; break;
     }
+    this->parent->move_child(this);
 }
 
 int ui::panel::get_size(GLuint t, void *v)
@@ -88,6 +102,7 @@ void ui::panel::set_size(GLuint d, void *v)
             + this->border[2] + this->margin[2] < new_v)
             this->width = new_v;
     }
+    this->parent->move_child(this);
 }
 
 int ui::panel::get_border(GLuint t, void *v)
@@ -439,12 +454,12 @@ void ui::panel::populate_buffers(void)
 }
 
 ui::panel::panel(ui::context *c, GLuint w, GLuint h)
-    : foreground(1.0f, 1.0f, 1.0f, 1.0f), background(0.5f, 0.5f, 0.5f, 1.0f)
+    : foreground(1.0f, 1.0f, 1.0f, 1.0f), background(0.5f, 0.5f, 0.5f, 1.0f),
+      enter_cb(), leave_cb(), down_cb(), up_cb(), motion_cb()
 {
     GLuint pos_attr, color_attr, texture_attr, temp, x, y;
 
     this->parent = c;
-    this->parent->add_child(this);
 
     this->width = w;
     this->height = h;
@@ -459,6 +474,8 @@ ui::panel::panel(ui::context *c, GLuint w, GLuint h)
     c->get(ui::element::size, ui::size::height, &y);
     this->xpos = x / 2 - (w / 2);
     this->ypos = y / 2 - (h / 2);
+
+    this->parent->add_child(this);
 
     c->get(ui::element::attribute, ui::attribute::position, &pos_attr);
     c->get(ui::element::attribute, ui::attribute::color, &color_attr);
@@ -519,6 +536,23 @@ void ui::panel::set(GLuint s, GLuint m, void *v)
     this->populate_buffers();
 }
 
+void ui::panel::get_va(GLuint s, GLuint m, void *v, ...)
+{
+    va_list args;
+    GLuint item[2];
+    void *ptr;
+
+    this->get(s, m, v);
+    va_start(args, v);
+    while ((item[0] = va_arg(args, GLuint)) != 0)
+    {
+        item[1] = va_arg(args, GLuint);
+        ptr = va_arg(args, void *);
+        this->get(item[0], item[1], ptr);
+    }
+    va_end(args);
+}
+
 void ui::panel::set_va(GLuint s, GLuint m, void *v, ...)
 {
     va_list args;
@@ -547,4 +581,30 @@ void ui::panel::draw(void)
 void ui::panel::close(void)
 {
     delete this;
+}
+
+void ui::panel::add_callback(GLuint cb_list, ui::cb_fptr funcptr, void *client)
+{
+    std::list<ui::panel::cb_list_elem>& l = this->which_cb_list(cb_list);
+    cb_list_elem new_elem = {funcptr, client};
+
+    l.push_back(new_elem);
+}
+
+void ui::panel::remove_callback(GLuint cb_list, ui::cb_fptr funcptr, void *client)
+{
+    std::list<cb_list_elem>& l = this->which_cb_list(cb_list);
+    cb_list_elem old_elem = {funcptr, client};
+
+    l.remove(old_elem);
+}
+
+void ui::panel::call_callbacks(GLuint cb_list)
+{
+    std::list<cb_list_elem>& l = this->which_cb_list(cb_list);
+    std::list<cb_list_elem>::iterator i;
+    void *call_data = NULL;
+
+    for (i = l.begin(); i != l.end(); ++i)
+        (*i)(this, call_data);
 }

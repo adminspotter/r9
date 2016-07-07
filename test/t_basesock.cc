@@ -1,5 +1,7 @@
 #include "../server/classes/basesock.h"
 
+#include <stdlib.h>
+
 #include <stdexcept>
 #include <typeinfo>
 
@@ -44,23 +46,26 @@ TEST(BasesockTest, CreateDelete)
     delete(base);
     freeaddrinfo(ai);
 
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET6;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    if (getenv("R9_TEST_USE_IPv6") != NULL)
+    {
+        memset(&hints, 0, sizeof(struct addrinfo));
+        hints.ai_family = AF_INET6;
+        hints.ai_socktype = SOCK_DGRAM;
+        hints.ai_flags = AI_PASSIVE;
+        ret = getaddrinfo("localhost", "1235", &hints, &ai);
+        ASSERT_EQ(ret, 0);
 
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_STREQ(base->sa->ntop(), "::1");
-    ASSERT_EQ(base->sa->port(), 1235);
-    ASSERT_GE(base->sock, 0);
+        ASSERT_NO_THROW(
+            {
+                base = new basesock(ai);
+            });
+        ASSERT_STREQ(base->sa->ntop(), "::1");
+        ASSERT_EQ(base->sa->port(), 1235);
+        ASSERT_GE(base->sock, 0);
 
-    delete(base);
-    freeaddrinfo(ai);
+        delete(base);
+        freeaddrinfo(ai);
+    }
 }
 
 TEST(BasesockTest, StartStop)
@@ -98,32 +103,35 @@ TEST(BasesockTest, StartStop)
     delete(base);
     freeaddrinfo(ai);
 
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET6;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    if (getenv("R9_TEST_USE_IPv6") != NULL)
+    {
+        memset(&hints, 0, sizeof(struct addrinfo));
+        hints.ai_family = AF_INET6;
+        hints.ai_socktype = SOCK_DGRAM;
+        hints.ai_flags = AI_PASSIVE;
+        ret = getaddrinfo("localhost", "1235", &hints, &ai);
+        ASSERT_EQ(ret, 0);
 
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_STREQ(base->sa->ntop(), "::1");
-    ASSERT_EQ(base->sa->port(), 1235);
-    ASSERT_GE(base->sock, 0);
+        ASSERT_NO_THROW(
+            {
+                base = new basesock(ai);
+            });
+        ASSERT_STREQ(base->sa->ntop(), "::1");
+        ASSERT_EQ(base->sa->port(), 1235);
+        ASSERT_GE(base->sock, 0);
 
-    base->listen_arg = base;
-    ASSERT_NO_THROW(
-        {
-            base->start(test_thread_worker);
-        });
+        base->listen_arg = base;
+        ASSERT_NO_THROW(
+            {
+                base->start(test_thread_worker);
+            });
 
-    ASSERT_NO_THROW(
-        {
-            base->stop();
-        });
+        ASSERT_NO_THROW(
+            {
+                base->stop();
+            });
 
-    delete(base);
-    freeaddrinfo(ai);
+        delete(base);
+        freeaddrinfo(ai);
+    }
 }
