@@ -27,9 +27,9 @@ TEST(MotionPoolTest, Operate)
     sleep(1);
     zone->motion_pool->stop();
 
-    ASSERT_GT(go->position.x(), 234.0);
-    ASSERT_GT(go->position.y(), 234.0);
-    ASSERT_GT(go->position.z(), 234.0);
+    ASSERT_GT(go->position.x, 234.0);
+    ASSERT_GT(go->position.y, 234.0);
+    ASSERT_GT(go->position.z, 234.0);
 
     delete zone;
 }
