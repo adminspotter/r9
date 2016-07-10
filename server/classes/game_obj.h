@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Feb 2016, 14:00:18 tquirk
+ *   last updated 10 Jul 2016, 10:23:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -38,7 +38,9 @@
 #include <map>
 #include <set>
 
-#include <Eigen/Dense>
+#include <glm/vec3.hpp>
+#include <glm/geometric.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 class GameObject;
 
@@ -63,8 +65,8 @@ class GameObject
     Control *master;
     struct timeval last_updated;
     /* These vectors are in meters/degrees per second */
-    Eigen::Vector3d position, movement, rotation, look;
-    Eigen::Quaterniond orient;
+    glm::dvec3 position, movement, rotation, look;
+    glm::dquat orient;
 
   public:
     static uint64_t reset_max_id(void);
@@ -79,7 +81,10 @@ class GameObject
     bool connect(Control *);
     void disconnect(Control *);
 
-    double distance_from(Eigen::Vector3d&);
+    inline double distance_from(glm::dvec3& pt)
+        {
+            return glm::distance(pt, this->position);
+        };
 };
 
 #endif /* __INC_GAME_OBJ_H__ */
