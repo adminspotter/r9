@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Feb 2016, 10:07:38 tquirk
+ *   last updated 10 Jul 2016, 08:42:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -96,9 +97,9 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
              "SELECT c.access_type "
              "FROM players AS a, characters AS b, server_access AS c, "
              "servers AS d "
-             "WHERE a.playerid=%lld "
+             "WHERE a.playerid=%" PRIu64 " "
              "AND a.playerid=b.owner "
-             "AND b.characterid=%lld "
+             "AND b.characterid=%" PRIu64 " "
              "AND b.characterid=c.characterid "
              "AND c.serverid=d.serverid "
              "AND d.ip='%s'",
@@ -127,7 +128,7 @@ int MySQL::check_authorization(uint64_t userid, const std::string& charname)
              "SELECT c.access_type "
              "FROM players AS a, characters AS b, server_access AS c, "
              "servers AS d "
-             "WHERE a.playerid=%lld "
+             "WHERE a.playerid=%" PRIu64 " "
              "AND a.playerid=b.owner "
              "AND b.charactername='%.*s' "
              "AND b.characterid=c.characterid "
@@ -271,9 +272,9 @@ int MySQL::get_player_server_skills(uint64_t userid,
              "UNIX_TIMESTAMP(e.last_increase) "
              "FROM players AS a, characters AS b, servers AS c, "
              "server_skills AS d, character_skills AS e "
-             "WHERE a.playerid=%lld "
+             "WHERE a.playerid=%" PRIu64 " "
              "AND a.playerid=b.owner "
-             "AND b.characterid=%lld "
+             "AND b.characterid=%" PRIu64 " "
              "AND b.characterid=e.characterid "
              "AND c.ip='%s' "
              "AND c.serverid=d.serverid "
@@ -310,7 +311,7 @@ int MySQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
     snprintf(str, sizeof(str),
              "INSERT INTO player_logins "
              "(playerid, characterid, serverid, src_ip, src_port) "
-             "VALUES (%lld,%lld,%lld,'%s',%d)",
+             "VALUES (%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",'%s',%d)",
              userid, charid, this->host_id, sa->hostname(), sa->port());
 
     if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0)
@@ -331,10 +332,10 @@ int MySQL::check_open_login(uint64_t userid, uint64_t charid)
              "SELECT COUNT(d.logout_time) "
              "FROM players AS a, characters AS b, servers AS c, "
              "player_logins AS d "
-             "WHERE a.playerid=%lld "
+             "WHERE a.playerid=%" PRIu64 " "
              "AND a.playerid=d.playerid "
              "AND a.playerid=b.owner "
-             "AND b.characterid=%lld "
+             "AND b.characterid=%" PRIu64 " "
              "AND b.characterid=d.characterid "
              "AND c.ip='%s' "
              "AND c.serverid=d.serverid "
@@ -363,8 +364,11 @@ int MySQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
     this->db_connect();
     snprintf(str, sizeof(str),
              "UPDATE player_logins SET logout_time=NOW() "
-             "WHERE playerid=%lld AND characterid=%lld AND "
-             "serverid=%lld AND src_ip='%s' AND src_port=%d "
+             "WHERE playerid=%lld "
+             "AND characterid=%" PRIu64 " "
+             "AND serverid=%" PRIu64 " "
+             "AND src_ip='%s' "
+             "AND src_port=%d "
              "AND logout_time IS NULL",
              userid, charid, this->host_id, sa->hostname(), sa->port());
 
