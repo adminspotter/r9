@@ -12,7 +12,6 @@ addons:
     - autopoint
     - gettext
     - cmake
-    - libeigen3-dev
     - tcl8.6-dev
     - libmysqlclient-dev
     - libpq-dev
@@ -26,7 +25,7 @@ before_script:
 - pushd glfw-3.2 && cmake -DBUILD_SHARED_LIBS=ON -DLIB_SUFFIX=64 -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF && make && sudo make install && popd && rm -rf glfw-3.2
 script:
 - ./autogen.sh
-- CXXFLAGS='-I/usr/include/eigen3 -I/usr/include/mysql -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client
+- CXXFLAGS='-I/usr/include/mysql -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client
 - make
 - make check
 after_script:
