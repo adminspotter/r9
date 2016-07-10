@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 08:42:34 tquirk
+ *   last updated 10 Jul 2016, 11:35:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -364,7 +364,7 @@ int MySQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
     this->db_connect();
     snprintf(str, sizeof(str),
              "UPDATE player_logins SET logout_time=NOW() "
-             "WHERE playerid=%lld "
+             "WHERE playerid=%" PRIu64 " "
              "AND characterid=%" PRIu64 " "
              "AND serverid=%" PRIu64 " "
              "AND src_ip='%s' "
