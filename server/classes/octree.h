@@ -1,6 +1,6 @@
 /* octree.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 12:15:47 tquirk
+ *   last updated 10 Jul 2016, 09:41:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -51,7 +51,8 @@
 #include <cstdint>
 #include <list>
 #include <set>
-#include <Eigen/Dense>
+
+#include <glm/vec3.hpp>
 
 #include "game_obj.h"
 
@@ -62,7 +63,7 @@ class Octree
     static const int MIN_DEPTH;
     static const int MAX_DEPTH;
 
-    Eigen::Vector3d min_point, center_point, max_point;
+    glm::dvec3 min_point, center_point, max_point;
     Octree *parent, *octants[8], *neighbor[6];
     uint8_t parent_index;
     int depth;
@@ -70,7 +71,7 @@ class Octree
     std::set<GameObject *> objects;
 
   private:
-    inline int which_octant(const Eigen::Vector3d& p)
+    inline int which_octant(const glm::dvec3& p)
         {
             return ((p[0] < this->center_point[0] ? 0 : 4)
                     | (p[1] < this->center_point[1] ? 0 : 2)
@@ -84,18 +85,18 @@ class Octree
                 return this->parent->neighbor[neigh];
             return this->parent->neighbor[neigh]->octants[oct];
         };
-    inline Eigen::Vector3d octant_min(int oct)
+    inline glm::dvec3 octant_min(int oct)
         {
-            Eigen::Vector3d mn;
+            glm::dvec3 mn;
 
             mn[0] = oct & 4 ? this->center_point[0] : this->min_point[0];
             mn[1] = oct & 2 ? this->center_point[1] : this->min_point[1];
             mn[2] = oct & 1 ? this->center_point[2] : this->min_point[2];
             return mn;
         };
-    inline Eigen::Vector3d octant_max(int oct)
+    inline glm::dvec3 octant_max(int oct)
         {
-            Eigen::Vector3d mx;
+            glm::dvec3 mx;
 
             mx[0] = oct & 4 ? this->max_point[0] : this->center_point[0];
             mx[1] = oct & 2 ? this->max_point[1] : this->center_point[1];
@@ -105,7 +106,7 @@ class Octree
     void compute_neighbors(void);
 
   public:
-    Octree(Octree *, Eigen::Vector3d&, Eigen::Vector3d&, uint8_t);
+    Octree(Octree *, glm::dvec3&, glm::dvec3&, uint8_t);
     ~Octree();
 
     bool empty(void);
