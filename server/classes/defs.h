@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Feb 2016, 09:44:29 tquirk
+ *   last updated 10 Jul 2016, 10:23:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,10 +33,11 @@
 #define __INC_DEFS_H__
 
 #include <cstdint>
+#include <string>
 #include <deque>
 #include <map>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+
+#include <glm/vec3.hpp>
 
 #include <stdlib.h>
 
@@ -95,7 +96,7 @@ class action_rec
 {
   public:
     std::string name;
-    int (*action)(GameObject *, int, GameObject *, Eigen::Vector3d &);
+    int (*action)(GameObject *, int, GameObject *, glm::dvec3 &);
     uint16_t def;                 /* The "default" skill to use */
     int lower, upper;             /* The bounds for skill levels */
     bool valid;                   /* Is this action valid on this server? */

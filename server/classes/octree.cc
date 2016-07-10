@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2015, 12:16:20 tquirk
+ *   last updated 10 Jul 2016, 11:42:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -43,6 +43,8 @@
  *     my first attempt was not good.
  *
  */
+
+#include <string.h>
 
 #include "octree.h"
 
@@ -136,8 +138,8 @@ void Octree::compute_neighbors(void)
 }
 
 Octree::Octree(Octree *parent,
-               Eigen::Vector3d& min,
-               Eigen::Vector3d& max,
+               glm::dvec3& min,
+               glm::dvec3& max,
                uint8_t index)
     : min_point(min), center_point((max - min) * 0.5), max_point(max),
       objects()
@@ -211,8 +213,8 @@ void Octree::build(std::list<GameObject *>& objs)
         {
             if (!obj_list[j].empty())
             {
-                Eigen::Vector3d mn = this->octant_min(j);
-                Eigen::Vector3d mx = this->octant_max(j);
+                glm::dvec3 mn = this->octant_min(j);
+                glm::dvec3 mx = this->octant_max(j);
                 this->octants[j] = new Octree(this, mn, mx, j);
                 this->octants[j]->build(obj_list[j]);
             }
@@ -239,8 +241,8 @@ void Octree::insert(GameObject *mot)
 
         if (this->octants[octant] == NULL)
         {
-            Eigen::Vector3d mn = this->octant_min(octant);
-            Eigen::Vector3d mx = this->octant_max(octant);
+            glm::dvec3 mn = this->octant_min(octant);
+            glm::dvec3 mx = this->octant_max(octant);
 
             this->octants[octant] = new Octree(this, mn, mx, octant);
             this->octants[octant]->compute_neighbors();

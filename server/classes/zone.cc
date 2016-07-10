@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2015, 08:24:02 tquirk
+ *   last updated 10 Jul 2016, 09:44:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -225,9 +225,8 @@ int Zone::execute_action(Control *con, action_request& req, size_t len)
 {
     Zone::actions_iterator i = this->actions.find(req.action_id);
     Control::actions_iterator j = con->actions.find(req.action_id);
-    Eigen::Vector3d vec;
+    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
 
-    vec << req.x_pos_dest, req.y_pos_dest, req.z_pos_dest;
     if (i != this->actions.end() && j != con->actions.end())
     {
         /* If it's not valid on this server, it should at least have

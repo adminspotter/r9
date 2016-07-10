@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Feb 2016, 15:45:01 tquirk
+ *   last updated 10 Jul 2016, 10:10:50 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -50,6 +50,7 @@ uint64_t GameObject::reset_max_id(void)
 }
 
 GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
+    : position(), movement(), rotation(), look(), orient()
 {
     this->default_master = this->master = c;
     this->default_geometry = this->geometry = g;
@@ -106,12 +107,4 @@ void GameObject::disconnect(Control *con)
      */
     if (this->master == con)
         master = default_master;
-}
-
-double GameObject::distance_from(Eigen::Vector3d& pt)
-{
-    Eigen::Vector3d dist;
-
-    dist = this->position.cwiseProduct(this->position) + pt.cwiseProduct(pt);
-    return sqrt(dist[0] + dist[1] + dist[2]);
 }

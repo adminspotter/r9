@@ -979,3 +979,6 @@
 
 2015-12-07 - TAQ
 	client/comm.h, client/comm.cc - We're using a jump-table to dispatch the incoming network traffic, instead of a giant switch tree.
+
+2016-07-10 - TAQ
+	server/classes/* - Since we already use GLM for our client-side vector math, and it's pretty lightweight and will do everything we want, we're converting the server to use it as well.

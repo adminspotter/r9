@@ -221,12 +221,6 @@ XMLPlatformUtils::Terminate();
       ;;
   esac
 
-  # Check for GLM headers
-  GLM_CPPFLAGS_SAVE="$CPPFLAGS"
-  CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_ERROR([no valid GLM installation found, can not continue])])
-  CPPFLAGS="$GLM_CPPFLAGS_SAVE"
-
   # Check for GLFW
   GLFW_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
@@ -358,9 +352,6 @@ then
       [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen $LIBS"],
       [AC_MSG_ERROR([can not build without dlopen.])])
 
-  AC_CHECK_HEADERS([Eigen/Core], [],
-      [AC_MSG_ERROR([no valid Eigen installation found, can not continue])])
-
   AC_MSG_NOTICE([using SERVER_LDLIBS=$SERVER_LDLIBS])
 
   LIBS="$SERVER_LIBS_SAVE"
@@ -373,6 +364,16 @@ AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
 AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
 AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
 AM_CONDITIONAL([WANT_PERL], [test "x$want_perl" == "xyes"])
+
+# We want GLM in either the client or the server
+if test "$with_client" = "yes" -o "$with_server" = "yes"
+then
+  GLM_CPPFLAGS_SAVE="$CPPFLAGS"
+  CPPFLAGS="$CXXFLAGS"
+  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_ERROR([no valid GLM installation found, can not continue])])
+  CPPFLAGS="$GLM_CPPFLAGS_SAVE"
+  CXXFLAGS="$CXXFLAGS -DGLM_FORCE_RADIANS"
+fi
 
 AC_SEARCH_LIBS([pthread_create], [pthread],
     [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],

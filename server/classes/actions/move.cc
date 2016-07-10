@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 09:18:13 tquirk
+ *   last updated 10 Jul 2016, 11:03:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -27,14 +27,14 @@
  *
  */
 
-#include <Eigen/Core>
+#include <glm/vec3.hpp>
 
 #include "../game_obj.h"
 
 int action_move(GameObject *source,
                 int intensity,
                 GameObject *target,
-                Eigen::Vector3d &direction)
+                glm::dvec3& direction)
 {
     return -1;
 }
@@ -42,7 +42,7 @@ int action_move(GameObject *source,
 int action_rotate(GameObject *source,
                   int intensity,
                   GameObject *target,
-                  Eigen::Vector3d &direction)
+                  glm::dvec3& direction)
 {
     return -1;
 }
