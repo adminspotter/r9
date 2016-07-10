@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 09:42:57 tquirk
+ *   last updated 10 Jul 2016, 11:42:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -43,6 +43,8 @@
  *     my first attempt was not good.
  *
  */
+
+#include <string.h>
 
 #include "octree.h"
 
