@@ -1,6 +1,6 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:52:39 tquirk
+ *   last updated 10 Jul 2016, 11:28:27 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -66,16 +66,16 @@ void *UpdatePool::update_pool_worker(void *arg)
         pkt.buf.pos.version = 1;
         /*pkt.buf.pos.sequence = ;*/
         pkt.buf.pos.object_id = req->get_object_id();
-        pkt.buf.pos.x_pos = (uint64_t)(req->position.x() * 100);
-        pkt.buf.pos.y_pos = (uint64_t)(req->position.y() * 100);
-        pkt.buf.pos.z_pos = (uint64_t)(req->position.z() * 100);
-        pkt.buf.pos.x_orient = (uint32_t)(req->orient.x() * 100);
-        pkt.buf.pos.y_orient = (uint32_t)(req->orient.y() * 100);
-        pkt.buf.pos.z_orient = (uint32_t)(req->orient.z() * 100);
-        pkt.buf.pos.w_orient = (uint32_t)(req->orient.w() * 100);
-        pkt.buf.pos.x_look = (uint32_t)(req->look.x() * 100);
-        pkt.buf.pos.y_look = (uint32_t)(req->look.y() * 100);
-        pkt.buf.pos.z_look = (uint32_t)(req->look.z() * 100);
+        pkt.buf.pos.x_pos = (uint64_t)(req->position.x * 100);
+        pkt.buf.pos.y_pos = (uint64_t)(req->position.y * 100);
+        pkt.buf.pos.z_pos = (uint64_t)(req->position.z * 100);
+        pkt.buf.pos.x_orient = (uint32_t)(req->orient.x * 100);
+        pkt.buf.pos.y_orient = (uint32_t)(req->orient.y * 100);
+        pkt.buf.pos.z_orient = (uint32_t)(req->orient.z * 100);
+        pkt.buf.pos.w_orient = (uint32_t)(req->orient.w * 100);
+        pkt.buf.pos.x_look = (uint32_t)(req->look.x * 100);
+        pkt.buf.pos.y_look = (uint32_t)(req->look.y * 100);
+        pkt.buf.pos.z_look = (uint32_t)(req->look.z * 100);
 
         /* Figure out who to send it to */
         /* Send to EVERYONE (for now) */
