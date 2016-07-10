@@ -372,6 +372,7 @@ then
   CPPFLAGS="$CXXFLAGS"
   AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_ERROR([no valid GLM installation found, can not continue])])
   CPPFLAGS="$GLM_CPPFLAGS_SAVE"
+  CXXFLAGS="$CXXFLAGS -DGLM_FORCE_RADIANS"
 fi
 
 AC_SEARCH_LIBS([pthread_create], [pthread],
