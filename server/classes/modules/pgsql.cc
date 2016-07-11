@@ -230,7 +230,41 @@ int PgSQL::get_player_server_skills(uint64_t userid,
                                     uint64_t charid,
                                     std::map<uint16_t, action_level>& actions)
 {
-    return 0;
+    PGresult *res;
+    char str[256];
+    int count = 0, num_tuples;
+
+    snprintf(str, sizeof(str),
+             "SELECT e.skillid, e.level, e.improvement, "
+             "UNIX_TIMESTAMP(e.last_increase) "
+             "FROM players AS a, characters AS b, servers AS c, "
+             "server_skills AS d, character_skills AS e "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.characterid=%" PRIu64 " "
+             "AND b.characterid=e.characterid "
+             "AND c.ip='%s' "
+             "AND c.serverid=d.serverid "
+             "AND d.skillid=e.skillid",
+             userid, charid, this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK)
+    {
+        num_tuples = PQntuples(res);
+        for (count = 0; count < num_tuples; ++count)
+        {
+            uint64_t id = strtoull(PQgetvalue(res, count, 0), NULL, 10);
+
+            actions[id].level = atoi(PQgetvalue(res, count, 1));
+            actions[id].improvement = atoi(PQgetvalue(res, count, 2));
+            actions[id].last_level = (time_t)atol(PQgetvalue(res, count, 3));
+        }
+    }
+    PQclear(res);
+    this->db_close();
+    return count;
 }
 
 int PgSQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
