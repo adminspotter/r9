@@ -269,7 +269,23 @@ int PgSQL::get_player_server_skills(uint64_t userid,
 
 int PgSQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 {
-    return 0;
+    PGresult *res;
+    char str[256];
+    int retval = 0;
+
+    this->db_connect();
+    snprintf(str, sizeof(str),
+             "INSERT INTO player_logins "
+             "(playerid, characterid, serverid, src_ip, src_port) "
+             "VALUES (%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",'%s',%d)",
+             userid, charid, this->host_id, sa->hostname(), sa->port());
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_COMMAND_OK)
+        retval = 1;
+    PQclear(res);
+    this->db_close();
+    return retval;
 }
 
 int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
@@ -279,7 +295,27 @@ int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
 
 int PgSQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 {
-    return 0;
+    PGresult *res;
+    char str[256];
+    int retval = 0;
+
+    this->db_connect();
+    snprintf(str, sizeof(str),
+             "UPDATE player_logins SET logout_time=NOW() "
+             "WHERE playerid=%" PRIu64 " "
+             "AND characterid=%" PRIu64 " "
+             "AND serverid=%" PRIu64 " "
+             "AND src_ip='%s' "
+             "AND src_port=%d "
+             "AND logout_time IS NULL",
+             userid, charid, this->host_id, sa->hostname(), sa->port());
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_COMMAND_OK)
+        retval = 1;
+    PQclear(res);
+    this->db_close();
+    return retval;
 }
 
 void PgSQL::db_connect(void)
