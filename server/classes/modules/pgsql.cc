@@ -152,12 +152,78 @@ uint64_t PgSQL::get_character_objectid(const std::string& charname)
 
 int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
 {
-    return 0;
+    PGresult *res;
+    char str[256];
+    int count = 0, num_tuples;
+
+    snprintf(str, sizeof(str),
+             "SELECT b.skillname, c.skillid, c.defaultid, c.lower, c.upper "
+             "FROM skills AS b, servers AS a, server_skills AS c "
+             "WHERE a.ip='%s' "
+             "AND a.serverid=c.serverid "
+             "AND b.skillid=c.skillid",
+             this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK)
+    {
+        num_tuples = PQntuples(res);
+        for (count = 0; count < num_tuples; ++count)
+        {
+            uint64_t id = strtoull(PQgetvalue(res, count, 1), NULL, 10);
+
+            actions[id].name = PQgetvalue(res, count, 0);
+            actions[id].def = strtoull(PQgetvalue(res, count, 2), NULL, 10);
+            actions[id].lower = atoi(PQgetvalue(res, count, 3));
+            actions[id].upper = atoi(PQgetvalue(res, count, 4));
+            actions[id].valid = true;
+        }
+    }
+    PQclear(res);
+    this->db_close();
+    return count;
 }
 
 int PgSQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 {
-    return 0;
+    PGresult *res;
+    char str[256];
+    int count = 0, num_tuples;
+
+    snprintf(str, sizeof(str),
+             "SELECT b.objectid, b.characterid, b.pos_x, b.pos_y, b.pos_z "
+             "FROM servers AS a, server_objects AS b "
+             "WHERE a.ip='%s' "
+             "AND a.serverid=b.serverid",
+             this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK)
+    {
+        num_tuples = PQntuples(res);
+        for (count = 0; count < num_tuples; ++count)
+        {
+            uint64_t objid = strtoull(PQgetvalue(res, count, 0), NULL, 10);
+            uint64_t charid = strtoull(PQgetvalue(res, count, 1), NULL, 10);
+
+            GameObject *go = new GameObject(NULL, NULL, objid);
+
+            go->position.x = atol(PQgetvalue(res, count, 2)) / 100.0;
+            go->position.y = atol(PQgetvalue(res, count, 3)) / 100.0;
+            go->position.z = atol(PQgetvalue(res, count, 4)) / 100.0;
+            if (charid != 0LL)
+            {
+                go->natures.insert("invisible");
+                go->natures.insert("non-interactive");
+            }
+            gomap[objid] = go;
+        }
+    }
+    PQclear(res);
+    this->db_close();
+    return count;
 }
 
 int PgSQL::get_player_server_skills(uint64_t userid,
