@@ -128,7 +128,26 @@ int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 
 uint64_t PgSQL::get_character_objectid(const std::string& charname)
 {
-    return 0LL;
+    PGresult *res;
+    char str[256];
+    uint64_t retval = 0;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.objectid "
+             "FROM characters AS a, servers AS b, server_objects AS c "
+             "WHERE a.charactername='%.*s' "
+             "AND a.characterid = c.characterid "
+             "AND b.serverid=c.serverid "
+             "AND b.ip='%s'",
+             DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
+    PQclear(res);
+    this->db_close();
+    return retval;
 }
 
 int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
