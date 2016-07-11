@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jul 2016, 09:52:46 tquirk
+ *   last updated 11 Jul 2016, 18:40:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -33,6 +33,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <inttypes.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -73,12 +74,56 @@ uint64_t PgSQL::check_authentication(const std::string& user, const std::string&
 
 int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
 {
-    return 0;
+    PGresult *res;
+    char str[256];
+    int retval = ACCESS_NONE;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.access_type "
+             "FROM players AS a, characters AS b, server_access AS c, "
+             "servers AS d "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.characterid=%" PRIu64 " "
+             "AND b.characterid=c.characterid "
+             "AND c.serverid=d.serverid "
+             "AND d.ip='%s'",
+             userid, charid, this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = atol(PQgetvalue(res, 0, 0));
+    PQclear(res);
+    this->db_close();
+    return retval;
 }
 
 int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 {
-    return 0;
+    PGresult *res;
+    char str[256];
+    int retval = ACCESS_NONE;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.access_type "
+             "FROM players AS a, characters AS b, server_access AS c, "
+             "servers AS d "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s' "
+             "AND b.characterid=c.characterid "
+             "AND c.serverid=d.serverid "
+             "AND d.ip='%s'",
+             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = atol(PQgetvalue(res, 0, 0), NULL, 10);
+    PQclear(res);
+    this->db_close();
+    return retval;
 }
 
 uint64_t PgSQL::get_character_objectid(const std::string& charname)
