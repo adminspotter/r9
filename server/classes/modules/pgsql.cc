@@ -290,7 +290,31 @@ int PgSQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 
 int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
 {
-    return 0;
+    PGresult *res;
+    char str[256];
+    int retval = 0;
+
+    snprintf(str, sizeof(str),
+             "SELECT COUNT(d.logout_time) "
+             "FROM players AS a, characters AS b, servers AS c, "
+             "player_logins AS d "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=d.playerid "
+             "AND a.playerid=b.owner "
+             "AND b.characterid=%" PRIu64 " "
+             "AND b.characterid=d.characterid "
+             "AND c.ip='%s' "
+             "AND c.serverid=d.serverid "
+             "AND d.logout_time IS NULL",
+             userid, charid, this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = atol(PQgetvalue(res, 0, 0), NULL, 10);
+    PQclear(res);
+    this->db_close();
+    return retval;
 }
 
 int PgSQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
