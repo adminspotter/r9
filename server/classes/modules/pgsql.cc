@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2016, 18:40:46 tquirk
+ *   last updated 11 Jul 2016, 19:06:43 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -39,6 +39,7 @@
 #include <stdexcept>
 
 #include "pgsql.h"
+#include "../game_obj.h"
 
 PgSQL::PgSQL(const std::string& host, const std::string& user,
              const std::string& pass, const std::string& db)
@@ -120,7 +121,7 @@ int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 
     res = PQexec(this->db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
-        retval = atol(PQgetvalue(res, 0, 0), NULL, 10);
+        retval = atol(PQgetvalue(res, 0, 0));
     PQclear(res);
     this->db_close();
     return retval;
@@ -311,7 +312,7 @@ int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
 
     res = PQexec(this->db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
-        retval = atol(PQgetvalue(res, 0, 0), NULL, 10);
+        retval = atol(PQgetvalue(res, 0, 0));
     PQclear(res);
     this->db_close();
     return retval;
