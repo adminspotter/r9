@@ -10,7 +10,7 @@ uniform uint use_text;
 
 void main()
 {
-    if (tex_coord != vec2(-1.0, -1.0))
+    if (tex_coord != vec2(-1000.0, -1000.0))
     {
         fcolor = texture(tex, tex_coord);
         if (use_text == 1u)
