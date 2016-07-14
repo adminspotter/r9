@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Dec 2015, 13:15:59 tquirk
+ *   last updated 10 Jul 2016, 08:29:45 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -206,9 +206,9 @@ void Comm::handle_pngpkt(packet& p)
 
 void Comm::handle_ackpkt(packet& p)
 {
-    char *access_type[] =
+    char access_type[5][12] =
         {
-            NULL,
+            "\0",
             "ACCESS_NONE",
             "ACCESS_VIEW",
             "ACCESS_MOVE",

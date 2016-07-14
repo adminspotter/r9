@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:17:07 tquirk
+ *   last updated 10 Jul 2016, 10:17:17 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -81,33 +81,33 @@ class Zone
     void load_actions(const std::string&);
     void create_thread_pools(void);
 
-    inline Octree *sector_contains(Eigen::Vector3d& pos)
+    inline Octree *sector_contains(glm::dvec3& pos)
         {
-            Eigen::Vector3i sec = this->which_sector(pos);
+            glm::ivec3 sec = this->which_sector(pos);
             Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
             if (oct == NULL)
             {
-                Eigen::Vector3i sec = this->which_sector(pos);
-                Eigen::Vector3d mn, mx;
+                glm::ivec3 sec = this->which_sector(pos);
+                glm::dvec3 mn, mx;
 
-                mn[0] = sec[0] * this->x_dim;
-                mn[1] = sec[1] * this->y_dim;
-                mn[2] = sec[2] * this->z_dim;
-                mx[0] = mn[0] + this->x_dim;
-                mx[1] = mn[1] + this->y_dim;
-                mx[2] = mn[2] + this->z_dim;
+                mn.x = sec.x * this->x_dim;
+                mn.y = sec.y * this->y_dim;
+                mn.z = sec.z * this->z_dim;
+                mx.x = mn.x + this->x_dim;
+                mx.y = mn.y + this->y_dim;
+                mx.z = mn.z + this->z_dim;
                 oct = new Octree(NULL, mn, mx, 0);
                 this->sectors[sec[0]][sec[1]][sec[2]] = oct;
             }
             return oct;
         };
-    inline Eigen::Vector3i which_sector(Eigen::Vector3d& pos)
+    inline glm::ivec3 which_sector(glm::dvec3& pos)
         {
-            Eigen::Vector3i sector;
+            glm::ivec3 sector;
 
-            sector[0] = pos[0] / this->x_dim;
-            sector[1] = pos[1] / this->y_dim;
-            sector[2] = pos[2] / this->z_dim;
+            sector.x = pos.x / this->x_dim;
+            sector.y = pos.y / this->y_dim;
+            sector.z = pos.z / this->z_dim;
             return sector;
         };
 

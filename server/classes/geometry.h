@@ -1,6 +1,6 @@
 /* geometry.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2015, 13:29:15 tquirk
+ *   last updated 10 Jul 2016, 09:48:17 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,13 +36,13 @@
 #ifndef __INC_GEOMETRY_H__
 #define __INC_GEOMETRY_H__
 
-#include <Eigen/Core>
+#include <glm/vec3.hpp>
 
 class Geometry
 {
   public:
     //std::vector< std::vector<sequence_element> > sequences;
-    Eigen::Vector3d center;
+    glm::dvec3 center;
     double radius;
 
   public:

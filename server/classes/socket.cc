@@ -15,6 +15,5 @@ listen_socket *socket_create(struct addrinfo *ai)
 
     if (ai->ai_socktype == SOCK_STREAM)
         return new stream_socket(ai);
-    else if (ai->ai_socktype == SOCK_DGRAM)
-        return new dgram_socket(ai);
+    return new dgram_socket(ai);
 }

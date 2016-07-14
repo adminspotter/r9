@@ -1,6 +1,6 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Dec 2015, 17:48:02 tquirk
+ *   last updated 10 Jul 2016, 11:03:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -35,7 +35,7 @@
  *
  */
 
-#include <Eigen/Core>
+#include <glm/vec3.hpp>
 
 #include "../game_obj.h"
 #include "../../server.h"
@@ -44,7 +44,7 @@
 int action_control_object(GameObject *source,
                           int intensity,
                           GameObject *target,
-                          Eigen::Vector3d &direction)
+                          glm::dvec3& direction)
 {
     /* Source will be a Control object ptr cast into a GameObject ptr */
     Control *src = (Control *)source;
@@ -75,7 +75,7 @@ int action_control_object(GameObject *source,
 int action_uncontrol_object(GameObject *source,
                             int intensity,
                             GameObject *target,
-                            Eigen::Vector3d &direction)
+                            glm::dvec3& direction)
 {
     /* Source will be a Control object ptr cast into a GameObject ptr */
     Control *src = (Control *)source;
