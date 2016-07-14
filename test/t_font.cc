@@ -28,11 +28,11 @@ std::vector<std::string> paths =
 TEST(FontTest, BasicCreateDelete)
 {
     std::string font_name = FONT_NAME;
-    Font *f = NULL;
+    ui::font *f = NULL;
 
     ASSERT_NO_THROW(
         {
-            f = new Font(font_name, 10, paths);
+            f = new ui::font(font_name, 10, paths);
         });
     ASSERT_TRUE(f != NULL);
 
@@ -42,14 +42,14 @@ TEST(FontTest, BasicCreateDelete)
 TEST(FontTest, GlyphAccess)
 {
     std::string font_name = FONT_NAME;
-    Font *f = NULL;
+    ui::font *f = NULL;
 
     ASSERT_NO_THROW(
         {
-            f = new Font(font_name, 30, paths);
+            f = new ui::font(font_name, 30, paths);
         });
 
-    Glyph &g = (*f)['g'];
+    ui::glyph &g = (*f)['g'];
     ASSERT_GT(g.x_advance, 0);
     ASSERT_EQ(g.y_advance, 0);
     ASSERT_GT(g.width, 0);

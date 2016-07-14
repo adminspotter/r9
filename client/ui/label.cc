@@ -1,6 +1,6 @@
 /* label.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2016, 18:17:48 tquirk
+ *   last updated 13 Jul 2016, 23:40:43 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -50,7 +50,7 @@ int ui::label::get_font(GLuint t, void *v)
 /* ARGSUSED */
 void ui::label::set_font(GLuint t, void *v)
 {
-    this->font = (Font *)v;
+    this->font = (ui::font *)v;
 }
 
 /* ARGSUSED */
@@ -64,37 +64,31 @@ int ui::label::get_string(GLuint t, void *v)
 void ui::label::set_string(GLuint t, void *v)
 {
     this->use_text = true;
-    if (this->image != NULL)
+    if (this->img.data != NULL)
     {
-        delete[] this->image;
-        this->image = NULL;
+        delete[] this->img.data;
+        this->img.data = NULL;
     }
     this->str = utf8tou32str(*((std::string *)v));
     if (this->font != NULL)
-        this->image = this->font->render_string(this->str,
-                                                this->width,
-                                                this->height);
+        this->img.data = this->font->render_string(this->str,
+                                                   this->img.width,
+                                                   this->img.height);
 }
 
 /* ARGSUSED */
 int ui::label::get_bgimage(GLuint t, void *v)
 {
-    v = (void *)this->image;
+    v = (void *)&this->img;
     return 0;
 }
 
 /* ARGSUSED */
 void ui::label::set_bgimage(GLuint t, void *v)
 {
-    if (this->width == 0 || this->height == 0)
-        throw std::runtime_error(_("Width and height must be set before assigning a background image"));
-
     this->use_text = false;
     this->str.clear();
-    if (this->image != NULL)
-        delete[] this->image;
-    this->image = new unsigned char[this->width * this->height * 4];
-    memcpy(this->image, v, this->width * this->height * 4);
+    this->img = *(ui::image *)v;
 }
 
 /* We need to be able to convert from UTF-8 representation to
@@ -105,7 +99,6 @@ void ui::label::set_bgimage(GLuint t, void *v)
  * Ref: http://www.cprogramming.com/tutorial/unicode.html
  * Ref: https://www.cl.cam.ac.uk/~mgk25/unicode.html
  */
-
 std::u32string ui::label::utf8tou32str(const std::string& str)
 {
     std::string::const_iterator i = str.begin();
@@ -214,16 +207,42 @@ std::string ui::label::u32strtoutf8(const std::u32string& str)
 
 void ui::label::populate_buffers(void)
 {
-    float vertex[160];
-    GLuint element[60];
-
-    if (this->image != NULL)
+    if (this->img.data != NULL)
     {
+        float vertex[160], pw, ph, m[4], b[4];
+        GLuint element[60], temp;
+
+        /* If there is a border, we want an extra pixel of space
+         * between the string and the border.
+         */
+        this->width = this->img.width
+            + this->margin[1] + this->margin[2]
+            + (this->border[1] > 0 ? this->border[1] + 1 : 0)
+            + (this->border[2] > 0 ? this->border[2] + 1 : 0);
+        this->height = this->img.height
+            + this->margin[0] + this->margin[3]
+            + (this->border[0] > 0 ? this->border[0] + 1 : 0)
+            + (this->border[3] > 0 ? this->border[3] + 1 : 0);
         this->panel::generate_points(vertex, element);
-        vertex[6]  = 0.0; vertex[7]  = 1.0;
-        vertex[14] = 1.0; vertex[15] = 1.0;
-        vertex[22] = 0.0; vertex[23] = 0.0;
-        vertex[30] = 1.0; vertex[31] = 0.0;
+        pw = 1.0f / (float)this->img.width;
+        ph = 1.0f / (float)this->img.height;
+        m[0] = this->margin[0] * ph;  b[0] = this->border[0] * ph;
+        m[1] = this->margin[1] * pw;  b[1] = this->border[1] * pw;
+        m[2] = this->margin[2] * pw;  b[2] = this->border[2] * pw;
+        m[3] = this->margin[3] * ph;  b[3] = this->border[3] * ph;
+
+        vertex[6]  = 0.0f - m[1] - b[1] - (this->border[1] > 0 ? pw : 0.0f);
+        vertex[7]  = 1.0f + m[0] + b[0] + (this->border[0] > 0 ? ph : 0.0f);
+
+        vertex[14] = 1.0f + m[2] + b[2] + (this->border[2] > 0 ? pw : 0.0f);
+        vertex[15] = vertex[7];
+
+        vertex[22] = vertex[6];
+        vertex[23] = 0.0f - m[3] - b[3] - (this->border[3] > 0 ? ph : 0.0f);
+
+        vertex[30] = vertex[14];
+        vertex[31] = vertex[23];
+
         memcpy(&vertex[2],
                glm::value_ptr(this->foreground), sizeof(float) * 4);
         memcpy(&vertex[10],
@@ -247,15 +266,15 @@ void ui::label::populate_buffers(void)
         {
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
-                         this->width, this->height, 0, GL_RED,
-                         GL_UNSIGNED_BYTE, this->image);
+                         this->img.width, this->img.height, 0, GL_RED,
+                         GL_UNSIGNED_BYTE, this->img.data);
         }
         else
         {
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                         this->width, this->height, 0, GL_RGBA,
-                         GL_UNSIGNED_BYTE, this->image);
+                         this->img.width, this->img.height, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, this->img.data);
         }
     }
 }
@@ -264,7 +283,7 @@ ui::label::label(ui::context *c, GLuint w, GLuint h)
     : ui::panel::panel(c, w, h), str()
 {
     this->use_text = true;
-    this->image = NULL;
+    this->img.data = NULL;
     this->font = NULL;
     glGenTextures(1, &this->tex);
     glBindTexture(GL_TEXTURE_2D, this->tex);
@@ -281,8 +300,8 @@ ui::label::label(ui::context *c, GLuint w, GLuint h)
 ui::label::~label()
 {
     glDeleteTextures(1, &this->tex);
-    if (this->image != NULL)
-        delete[] this->image;
+    if (this->img.data != NULL)
+        delete[] this->img.data;
     if (this->font != NULL)
         delete this->font;
 }
