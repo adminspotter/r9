@@ -1,5 +1,5 @@
 # r9 #
-[![Build Status](https://travis-ci.org/adminspotter/r9/r9.svg?branch=master)](https://travis-ci.org/adminspotter/r9)
+[![Build Status](https://travis-ci.org/adminspotter/r9.svg?branch=master)](https://travis-ci.org/adminspotter/r9)
 
 Revision IX (revision9, r9, etc.) is a client-server game engine in
 C++.
