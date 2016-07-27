@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Dec 2015, 07:46:34 tquirk
+ *   last updated 27 Jul 2016, 07:56:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -248,7 +248,8 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
         for (i = dgs->users.begin(); i != dgs->users.end(); ++i)
         {
             pthread_testcancel();
-            dgu = dynamic_cast<dgram_user *>((*i).second);
+            if ((dgu = dynamic_cast<dgram_user *>((*i).second)) == NULL)
+                continue;
             if (dgu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
             {
                 /* We'll consider the user link-dead */

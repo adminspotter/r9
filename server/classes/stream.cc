@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Dec 2015, 07:46:36 tquirk
+ *   last updated 27 Jul 2016, 07:56:38 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -455,7 +455,8 @@ void *stream_socket::stream_reaper_worker(void *arg)
         for (i = sts->users.begin(); i != sts->users.end(); ++i)
         {
             pthread_testcancel();
-            stu = dynamic_cast<stream_user *>((*i).second);
+            if ((stu = dynamic_cast<stream_user *>((*i).second)) == NULL)
+                continue;
             if (stu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
             {
                 /* We'll consider the user link-dead */
