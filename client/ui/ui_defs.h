@@ -1,6 +1,6 @@
 /* ui_defs.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Jul 2016, 08:01:18 tquirk
+ *   last updated 31 Jul 2016, 15:34:06 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -37,7 +37,8 @@ namespace ui
         const GLuint border = 3, margin = 4, color = 5, position = 6;
         const GLuint radius = 7;
         const GLuint font = 8, string = 9, bgimage = 10;
-        const GLuint arm = 11;
+        const GLuint active = 11, arm = 12;
+        const GLuint cursor = 13, max_size = 14;
     }
 
     namespace size
@@ -75,14 +76,35 @@ namespace ui
 
     namespace callback
     {
-        const GLuint enter = 1, leave = 2, down = 3, up = 4, motion = 5;
+        const GLuint enter = 1, leave = 2, btn_down = 3, btn_up = 4;
+        const GLuint motion = 5, key_down = 6, key_up = 7;
     }
 
-    namespace cursor
+    namespace mouse
     {
         const int button0 = 0, button1 = 1, button2 = 2, button3 = 3;
         const int button4 = 4, button5 = 5, button6 = 6, button7 = 7;
         const int down = 254, up = 255;
+    }
+
+    namespace key
+    {
+        const int no_key = 0;
+        const int l_arrow = 1, r_arrow = 2, u_arrow = 3, d_arrow = 4;
+        const int pg_up = 5, pg_down = 6, home = 7, end = 8;
+        const int bkspc = 9, del = 10;
+        const int down = 254, up = 255;
+    }
+
+    namespace key_mod
+    {
+        const int shift = 1, ctrl = 2, alt = 4, meta = 8;
+        const int super = 16, hyper = 32;
+    }
+
+    namespace cursor
+    {
+        const int position = 1, blink = 2;
     }
 }
 

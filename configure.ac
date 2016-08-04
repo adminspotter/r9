@@ -7,7 +7,7 @@ AC_CONFIG_SRCDIR([client/cache.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([-Wall subdir-objects])
+AM_INIT_AUTOMAKE([-Wall subdir-objects foreign])
 
 AC_GNU_SOURCE
 AC_SYS_LARGEFILE

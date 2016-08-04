@@ -1,6 +1,6 @@
 /* ui.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Jul 2016, 06:46:04 tquirk
+ *   last updated 31 Jul 2016, 15:42:07 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -45,6 +45,33 @@ namespace ui
     class quadtree;
     class panel;
 
+    /* Mouse motion callback routines */
+    typedef struct mouse_callback_call
+    {
+        glm::ivec2 location;
+    }
+    mouse_call_data;
+
+    /* Button press/release callback routines */
+    typedef struct btn_callback_call
+    {
+        glm::ivec2 location;
+        GLuint button;
+        GLuint state;
+    }
+    btn_call_data;
+
+    /* Key press/release callback routines */
+    typedef struct key_callback_call
+    {
+        glm::ivec2 location;
+        uint32_t character;
+        GLuint key;
+        GLuint state;
+        GLuint mods;
+    }
+    key_call_data;
+
     class context
     {
       private:
@@ -54,8 +81,8 @@ namespace ui
         std::list<panel *> children;
 
         quadtree *tree;
-        /* Previous cursor position and pointed-to child */
-        glm::ivec2 old_cursor;
+        /* Previous mouse position and pointed-to child */
+        glm::ivec2 old_mouse;
         panel *old_child;
 
         const static int tree_max_depth;
@@ -80,8 +107,9 @@ namespace ui
         context& remove_child(panel *);
         context& move_child(panel *);
 
-        void cursor_pos_callback(int, int);
-        void cursor_btn_callback(int, int);
+        void mouse_pos_callback(int, int);
+        void mouse_btn_callback(int, int);
+        void key_callback(int, uint32_t, int, int);
     };
 }
 

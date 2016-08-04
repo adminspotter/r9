@@ -1,6 +1,6 @@
 /* label.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2016, 23:17:37 tquirk
+ *   last updated 31 Jul 2016, 13:13:43 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -73,13 +73,14 @@ namespace ui
         int get_font(GLuint, void *);
         void set_font(GLuint, void *);
         int get_string(GLuint, void *);
-        void set_string(GLuint, void *);
+        virtual void set_string(GLuint, void *);
         int get_bgimage(GLuint, void *);
-        void set_bgimage(GLuint, void *);
+        virtual void set_bgimage(GLuint, void *);
 
         static std::u32string utf8tou32str(const std::string&);
         static std::string u32strtoutf8(const std::u32string&);
 
+        void generate_string_image(void);
         virtual void populate_buffers(void);
 
       public:

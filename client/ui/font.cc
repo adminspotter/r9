@@ -1,6 +1,6 @@
 /* font.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2016, 07:20:26 tquirk
+ *   last updated 03 Aug 2016, 19:24:15 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -59,6 +59,7 @@
 #include <algorithm>
 
 #include "font.h"
+#include FT_GLYPH_H
 
 #include "../configdata.h"
 #include "../l10n.h"
@@ -180,6 +181,70 @@ void ui::font::kern(FT_ULong a, FT_ULong b, FT_Vector *k)
 {
     if (FT_Get_Kerning(this->face, a, b, FT_KERNING_DEFAULT, k))
         k->x = k->y = 0;
+    /* Kerning in default mode is 26.6 format */
+    k->x >>= 6;
+    k->y >>= 6;
+}
+
+void ui::font::get_max_glyph_box(void)
+{
+    FT_ULong code;
+    FT_UInt index;
+    FT_Glyph g;
+    FT_BBox bbox;
+    FT_Pos w = 0, a = 0, d = 0;
+
+    code = FT_Get_First_Char(this->face, &index);
+    while (index != 0)
+    {
+        FT_Load_Glyph(this->face, index, FT_LOAD_DEFAULT);
+        FT_Get_Glyph(this->face->glyph, &g);
+        FT_Glyph_Get_CBox(g, FT_GLYPH_BBOX_TRUNCATE, &bbox);
+        w = std::max(w, bbox.xMax - bbox.xMin);
+        a = std::max(a, bbox.yMax);
+        d = std::min(d, bbox.yMin);
+        FT_Done_Glyph(g);
+        code = FT_Get_Next_Char(this->face, code, &index);
+    }
+    this->bbox_w = (int)w;
+    this->bbox_a = (int)a;
+    this->bbox_d = -((int)d);
+}
+
+ui::font::font(std::string& font_name,
+           int pixel_size,
+           std::vector<std::string>& paths)
+    : glyphs(font_name + " glyphs")
+{
+    FT_Library *lib = init_freetype();
+    std::string font_path = this->search_path(font_name, paths);
+
+    if (FT_New_Face(*lib, font_path.c_str(), 0, &this->face))
+        throw std::runtime_error(_("Could not load font ") + font_name);
+    FT_Set_Pixel_Sizes(this->face, 0, pixel_size);
+    this->get_max_glyph_box();
+}
+
+ui::font::~font()
+{
+    FT_Done_Face(this->face);
+    cleanup_freetype();
+}
+
+void ui::font::max_cell_size(std::vector<int>& v)
+{
+    v[0] = this->bbox_w;
+    v[1] = this->bbox_a;
+    v[2] = this->bbox_d;
+}
+
+struct ui::glyph& ui::font::operator[](FT_ULong code)
+{
+    ui::glyph& g = this->glyphs[code];
+
+    if (g.bitmap == NULL)
+        this->load_glyph(code);
+    return g;
 }
 
 /* This gets a little complicated, because a glyph which has no
@@ -217,41 +282,13 @@ void ui::font::get_string_size(const std::u32string& str,
         req_size[0] += kerning.x;
         if (i != str.begin())
             req_size[0] += g.left;
-        if (i + 1 == str.end())
+        if (i + 1 == str.end() && g.width != 0)
             req_size[0] += g.width;
         else
             req_size[0] += g.x_advance;
         req_size[1] = std::max(req_size[1], g.top);
         req_size[2] = std::max(req_size[2], g.height - g.top);
     }
-}
-
-ui::font::font(std::string& font_name,
-           int pixel_size,
-           std::vector<std::string>& paths)
-    : glyphs(font_name + " glyphs")
-{
-    FT_Library *lib = init_freetype();
-    std::string font_path = this->search_path(font_name, paths);
-
-    if (FT_New_Face(*lib, font_path.c_str(), 0, &this->face))
-        throw std::runtime_error(_("Could not load font ") + font_name);
-    FT_Set_Pixel_Sizes(this->face, 0, pixel_size);
-}
-
-ui::font::~font()
-{
-    FT_Done_Face(this->face);
-    cleanup_freetype();
-}
-
-struct ui::glyph& ui::font::operator[](FT_ULong code)
-{
-    ui::glyph& g = this->glyphs[code];
-
-    if (g.bitmap == NULL)
-        this->load_glyph(code);
-    return g;
 }
 
 unsigned char *ui::font::render_string(const std::u32string& str,

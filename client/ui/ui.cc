@@ -1,6 +1,6 @@
 /* ui.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Jul 2016, 06:46:24 tquirk
+ *   last updated 31 Jul 2016, 15:40:14 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -95,7 +95,7 @@ int ui::context::get_attribute(GLuint t, void *v)
 }
 
 ui::context::context(GLuint w, GLuint h)
-    : children(), old_cursor(0, 0)
+    : children(), old_mouse(0, 0)
 {
     glm::ivec2 ul = {0, 0}, lr = {w, h};
 
@@ -184,33 +184,76 @@ ui::context& ui::context::move_child(ui::panel *p)
     return *this;
 }
 
-void ui::context::cursor_pos_callback(int x, int y)
+void ui::context::mouse_pos_callback(int x, int y)
 {
-    glm::ivec2 pos = {x, y};
+    glm::ivec2 pos = {x, y}, obj;
+    ui::mouse_call_data call_data;
     ui::panel *p = this->tree->search(pos);
 
     if (p != NULL)
     {
+        p->get_va(ui::element::position, ui::position::x, &obj.x,
+                  ui::element::position, ui::position::y, &obj.y, 0);
+        call_data.location = pos - obj;
         if (this->old_child == NULL)
-            p->call_callbacks(ui::callback::enter);
-        p->call_callbacks(ui::callback::motion);
+            p->call_callbacks(ui::callback::enter, &call_data);
+        p->call_callbacks(ui::callback::motion, &call_data);
     }
     else if (this->old_child != NULL)
-        this->old_child->call_callbacks(ui::callback::leave);
+    {
+        this->old_child->get_va(ui::element::position, ui::position::x, &obj.x,
+                                ui::element::position, ui::position::y, &obj.y,
+                                0);
+        call_data.location = pos - obj;
+        this->old_child->call_callbacks(ui::callback::leave, &call_data);
+    }
 
     this->old_child = p;
-    this->old_cursor = pos;
+    this->old_mouse = pos;
 }
 
-void ui::context::cursor_btn_callback(int btn, int state)
+void ui::context::mouse_btn_callback(int btn, int state)
 {
-    glm::ivec2 pos = this->old_cursor;
-    ui::panel *p = this->tree->search(pos);
+    ui::panel *p = this->tree->search(this->old_mouse);
 
     if (p != NULL)
-        p->call_callbacks((state == ui::cursor::up
-                           ? ui::callback::up
-                           : ui::callback::down));
+    {
+        glm::ivec2 obj;
+        ui::btn_call_data call_data;
+
+        p->get_va(ui::element::position, ui::position::x, &obj.x,
+                  ui::element::position, ui::position::y, &obj.y, 0);
+        call_data.location = this->old_mouse - obj;
+        call_data.button = btn;
+        call_data.state = (state == ui::mouse::up
+                           ? ui::callback::btn_up
+                           : ui::callback::btn_down);
+        p->call_callbacks(call_data.state, &call_data);
+    }
+
+    this->old_child = p;
+}
+
+void ui::context::key_callback(int key, uint32_t c, int state, int mods)
+{
+    ui::panel *p = this->tree->search(this->old_mouse);
+
+    if (p != NULL)
+    {
+        glm::ivec2 obj;
+        ui::key_call_data call_data;
+
+        p->get_va(ui::element::position, ui::position::x, &obj.x,
+                  ui::element::position, ui::position::y, &obj.y, 0);
+        call_data.location = this->old_mouse - obj;
+        call_data.key = key;
+        call_data.character = c;
+        call_data.state = (state == ui::key::up
+                           ? ui::callback::key_up
+                           : ui::callback::key_down);
+        call_data.mods = mods;
+        p->call_callbacks(call_data.state, &call_data);
+    }
 
     this->old_child = p;
 }

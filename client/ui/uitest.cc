@@ -13,12 +13,14 @@
 #include "panel.h"
 #include "label.h"
 #include "button.h"
+#include "text_field.h"
 
 void error_callback(int, const char *);
 void window_size_callback(GLFWwindow *w, int, int);
 void mouse_position_callback(GLFWwindow *, double, double);
 void mouse_button_callback(GLFWwindow *, int, int, int);
 void key_callback(GLFWwindow *, int, int, int, int);
+void char_callback(GLFWwindow *, unsigned int, int);
 void create_image(int, int);
 void enter_callback(ui::panel *, void *, void *);
 void leave_callback(ui::panel *, void *, void *);
@@ -28,6 +30,7 @@ ui::context *ctx;
 ui::panel *p1;
 ui::label *l1;
 ui::button *b1, *b2;
+ui::text_field *t1;
 
 std::string font_name("techover.ttf"), greeting("Howdy!");
 std::vector<std::string> paths =
@@ -55,8 +58,9 @@ unsigned char img_data[72 * 48 * 4];
 int main(int argc, char **argv)
 {
     GLFWwindow *w;
-    GLuint border = 1, wid = 72, hei = 48, xpos, ypos;
+    GLuint border = 1, wid = 72, hei = 48, xpos, ypos, max_len;
     glm::vec4 fg1 = {1.0, 1.0, 1.0, 1.0}, fg2 = {0.0, 1.0, 1.0, 1.0};
+    glm::vec4 bg1 = {0.2, 0.2, 0.2, 1.0};
 
     if (glfwInit() == GL_FALSE)
     {
@@ -80,6 +84,7 @@ int main(int argc, char **argv)
     glfwMakeContextCurrent(w);
     glfwSetWindowSizeCallback(w, window_size_callback);
     glfwSetKeyCallback(w, key_callback);
+    glfwSetCharModsCallback(w, char_callback);
     glfwSetMouseButtonCallback(w, mouse_button_callback);
     glfwSetCursorPosCallback(w, mouse_position_callback);
 
@@ -112,18 +117,16 @@ int main(int argc, char **argv)
     std::cout << "creating button 1" << std::endl;
     b1 = new ui::button(ctx, 0, 0);
     std::cout << "doing setting" << std::endl;
-    border = 5;
+    border = 0;
     b1->set_va(ui::element::bgimage, 0, &img,
                ui::element::margin, ui::side::all, &border,
                ui::element::border, ui::side::all, &border,
                ui::element::color, ui::color::foreground, &fg1, 0);
-    std::cout << "callbacks" << std::endl;
-    b1->add_callback(ui::callback::enter, enter_callback, NULL);
-    b1->add_callback(ui::callback::leave, leave_callback, NULL);
     std::cout << "now for button 2" << std::endl;
     b2 = new ui::button(ctx, 0, 0);
     xpos = 100;
     ypos = 100;
+    border = 5;
     b2->set_va(ui::element::font, 0, new ui::font(font_name, 80, paths),
                ui::element::string, 0, &greeting,
                ui::element::margin, ui::side::all, &border,
@@ -131,10 +134,25 @@ int main(int argc, char **argv)
                ui::element::color, ui::color::foreground, &fg2,
                ui::element::position, ui::position::x, &xpos,
                ui::element::position, ui::position::y, &ypos, 0);
-    b2->add_callback(ui::callback::enter, enter_callback, NULL);
-    b2->add_callback(ui::callback::leave, leave_callback, NULL);
-    b2->add_callback(ui::callback::down, clicky_callback, NULL);
     std::cout << "ok, buttons made" << std::endl;
+    t1 = new ui::text_field(ctx, 0, 0);
+    xpos = 400;
+    ypos = 100;
+    border = 1;
+    max_len = 10;
+    t1->set_va(ui::element::font, 0, new ui::font(font_name, 30, paths),
+               ui::element::string, 0, &greeting,
+               ui::element::max_size, ui::size::width, &max_len,
+               ui::element::border, ui::side::all, &border,
+               ui::element::color, ui::color::foreground, &fg1,
+               ui::element::color, ui::color::background, &bg1,
+               ui::element::position, ui::position::x, &xpos,
+               ui::element::position, ui::position::y, &ypos, 0);
+    t1->add_callback(ui::callback::enter, enter_callback, NULL);
+    t1->add_callback(ui::callback::leave, leave_callback, NULL);
+    t1->get_va(ui::element::size, ui::size::width, &xpos,
+               ui::element::size, ui::size::height, &ypos, 0);
+    std::cout << "t1 size is " << xpos << ", " << ypos << std::endl;
 
     while (!glfwWindowShouldClose(w))
     {
@@ -166,13 +184,52 @@ void window_size_callback(GLFWwindow *w, int width, int height)
 
 void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
 {
+    int ui_key = 0, ui_state, ui_mods = 0;
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(w, GL_TRUE);
+    switch (key)
+    {
+      case GLFW_KEY_LEFT:       ui_key = ui::key::l_arrow;  break;
+      case GLFW_KEY_RIGHT:      ui_key = ui::key::r_arrow;  break;
+      case GLFW_KEY_UP:         ui_key = ui::key::u_arrow;  break;
+      case GLFW_KEY_DOWN:       ui_key = ui::key::d_arrow;  break;
+      case GLFW_KEY_HOME:       ui_key = ui::key::home;     break;
+      case GLFW_KEY_END:        ui_key = ui::key::end;      break;
+      case GLFW_KEY_BACKSPACE:  ui_key = ui::key::bkspc;    break;
+      case GLFW_KEY_DELETE:     ui_key = ui::key::del;      break;
+      default:              return;
+    }
+    ui_state = (action == GLFW_PRESS ? ui::key::down : ui::key::up);
+    if (mods & GLFW_MOD_SHIFT)
+        ui_mods |= ui::key_mod::shift;
+    if (mods & GLFW_MOD_CONTROL)
+        ui_mods |= ui::key_mod::ctrl;
+    if (mods & GLFW_MOD_ALT)
+        ui_mods |= ui::key_mod::alt;
+    if (mods & GLFW_MOD_SUPER)
+        ui_mods |= ui::key_mod::super;
+    ctx->key_callback(ui_key, 0, ui_state, ui_mods);
+}
+
+void char_callback(GLFWwindow *w, unsigned int c, int mods)
+{
+    int ui_mods = 0;
+
+    if (mods & GLFW_MOD_SHIFT)
+        ui_mods |= ui::key_mod::shift;
+    if (mods & GLFW_MOD_CONTROL)
+        ui_mods |= ui::key_mod::ctrl;
+    if (mods & GLFW_MOD_ALT)
+        ui_mods |= ui::key_mod::alt;
+    if (mods & GLFW_MOD_SUPER)
+        ui_mods |= ui::key_mod::super;
+    ctx->key_callback(ui::key::no_key, c, ui::key::down, mods);
 }
 
 void mouse_position_callback(GLFWwindow *w, double xpos, double ypos)
 {
-    ctx->cursor_pos_callback((int)xpos, (int)ypos);
+    ctx->mouse_pos_callback((int)xpos, (int)ypos);
 }
 
 void mouse_button_callback(GLFWwindow *w, int button, int action, int mods)
@@ -182,24 +239,24 @@ void mouse_button_callback(GLFWwindow *w, int button, int action, int mods)
     switch (button)
     {
       default:
-      case GLFW_MOUSE_BUTTON_1:  btn = ui::cursor::button0;  break;
-      case GLFW_MOUSE_BUTTON_2:  btn = ui::cursor::button1;  break;
-      case GLFW_MOUSE_BUTTON_3:  btn = ui::cursor::button2;  break;
-      case GLFW_MOUSE_BUTTON_4:  btn = ui::cursor::button3;  break;
-      case GLFW_MOUSE_BUTTON_5:  btn = ui::cursor::button4;  break;
-      case GLFW_MOUSE_BUTTON_6:  btn = ui::cursor::button5;  break;
-      case GLFW_MOUSE_BUTTON_7:  btn = ui::cursor::button6;  break;
-      case GLFW_MOUSE_BUTTON_8:  btn = ui::cursor::button7;  break;
+      case GLFW_MOUSE_BUTTON_1:  btn = ui::mouse::button0;  break;
+      case GLFW_MOUSE_BUTTON_2:  btn = ui::mouse::button1;  break;
+      case GLFW_MOUSE_BUTTON_3:  btn = ui::mouse::button2;  break;
+      case GLFW_MOUSE_BUTTON_4:  btn = ui::mouse::button3;  break;
+      case GLFW_MOUSE_BUTTON_5:  btn = ui::mouse::button4;  break;
+      case GLFW_MOUSE_BUTTON_6:  btn = ui::mouse::button5;  break;
+      case GLFW_MOUSE_BUTTON_7:  btn = ui::mouse::button6;  break;
+      case GLFW_MOUSE_BUTTON_8:  btn = ui::mouse::button7;  break;
     }
 
     switch (action)
     {
       default:
-      case GLFW_PRESS:    act = ui::cursor::down;  break;
-      case GLFW_RELEASE:  act = ui::cursor::up;    break;
+      case GLFW_PRESS:    act = ui::mouse::down;  break;
+      case GLFW_RELEASE:  act = ui::mouse::up;    break;
     }
 
-    ctx->cursor_btn_callback(btn, act);
+    ctx->mouse_btn_callback(btn, act);
 }
 
 void create_image(int width, int height)

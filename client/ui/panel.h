@@ -1,6 +1,6 @@
 /* panel.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2016, 07:51:15 tquirk
+ *   last updated 31 Jul 2016, 11:22:34 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -73,7 +73,9 @@ namespace ui
                 };
         }
         cb_list_elem;
-        std::list<cb_list_elem> enter_cb, leave_cb, down_cb, up_cb, motion_cb;
+        std::list<cb_list_elem> enter_cb, leave_cb, motion_cb;
+        std::list<cb_list_elem> btn_down_cb, btn_up_cb;
+        std::list<cb_list_elem> key_down_cb, key_up_cb;
 
         std::list<cb_list_elem>& which_cb_list(GLuint);
 
@@ -85,15 +87,16 @@ namespace ui
 
         int get_position(GLuint, void *);
         void set_position(GLuint, void *);
-        int get_size(GLuint, void *);
-        void set_size(GLuint, void *);
-        int get_border(GLuint, void *);
-        void set_border(GLuint, void *);
+        virtual int get_size(GLuint, void *);
+        virtual void set_size(GLuint, void *);
+        virtual int get_border(GLuint, void *);
+        virtual void set_border(GLuint, void *);
         virtual int get_margin(GLuint, void *);
         virtual void set_margin(GLuint, void *);
         int get_color(GLuint, void *);
         void set_color(GLuint, void *);
 
+        void prep_vao_vbo(GLuint *, GLuint *);
         virtual void generate_points(float *, GLuint *);
         virtual void populate_buffers(void);
 
@@ -112,7 +115,7 @@ namespace ui
 
         virtual void add_callback(GLuint, cb_fptr, void *);
         virtual void remove_callback(GLuint, cb_fptr, void *);
-        virtual void call_callbacks(GLuint);
+        virtual void call_callbacks(GLuint, void *);
 
         /* The context may change sizes, so it needs to be able to
          * call populate_buffers() in the event of a window resize.
