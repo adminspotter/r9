@@ -1,6 +1,6 @@
 /* text_field.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2016, 10:09:17 tquirk
+ *   last updated 08 Aug 2016, 08:53:29 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -71,8 +71,9 @@ namespace ui
         void remove_previous_char(void);
         void remove_next_char(void);
 
-        void generate_cursor(void);
-        void generate_string(void);
+        int get_cursor_pixel_pos(void);
+
+        void generate_cursor(int = -1);
         virtual void populate_buffers(void);
 
       public:

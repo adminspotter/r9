@@ -1,6 +1,6 @@
 /* text_field.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Aug 2016, 23:44:53 tquirk
+ *   last updated 08 Aug 2016, 08:55:42 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -27,6 +27,7 @@
  *
  */
 
+#include <algorithm>
 #include <ratio>
 
 #include <glm/gtc/type_ptr.hpp>
@@ -151,25 +152,25 @@ void ui::text_field::deactivate_cursor(void)
 void ui::text_field::first_char(void)
 {
     this->cursor_pos = 0;
-    this->generate_cursor();
+    this->populate_buffers();
 }
 
 void ui::text_field::previous_char(void)
 {
     this->cursor_pos = std::max(0u, this->cursor_pos - 1);
-    this->generate_cursor();
+    this->populate_buffers();
 }
 
 void ui::text_field::next_char(void)
 {
     this->cursor_pos = std::min((GLuint)this->str.size(), this->cursor_pos + 1);
-    this->generate_cursor();
+    this->populate_buffers();
 }
 
 void ui::text_field::last_char(void)
 {
     this->cursor_pos = this->str.size();
-    this->generate_cursor();
+    this->populate_buffers();
 }
 
 void ui::text_field::insert_char(uint32_t c)
@@ -195,11 +196,26 @@ void ui::text_field::remove_next_char(void)
     {
         this->str.erase(this->cursor_pos, 1);
         this->generate_string_image();
-        this->generate_string();
+        this->populate_buffers();
     }
 }
 
-void ui::text_field::generate_cursor(void)
+int ui::text_field::get_cursor_pixel_pos(void)
+{
+    int ret = 0;
+
+    if (this->font != NULL)
+    {
+        std::vector<int> req_size = {0, 0, 0};
+
+        this->font->get_string_size(this->str.substr(0, this->cursor_pos),
+                                    req_size);
+        ret = req_size[0];
+    }
+    return ret;
+}
+
+void ui::text_field::generate_cursor(int pixel_pos)
 {
     if (this->font != NULL)
     {
@@ -208,15 +224,14 @@ void ui::text_field::generate_cursor(void)
         float w = this->width, h = this->height;
         float pw, ph, sw, m[4], b[4];
         GLuint temp;
-        std::vector<int> req_size = {0, 0, 0};
+        if (pixel_pos < 0)
+            pixel_pos = this->get_cursor_pixel_pos();
 
-        this->font->get_string_size(this->str.substr(0, this->cursor_pos),
-                                    req_size);
         this->parent->get(ui::element::size, ui::size::width, &temp);
         pw = 2.0f / (float)temp;
         this->parent->get(ui::element::size, ui::size::height, &temp);
         ph = -2.0f / (float)temp;
-        sw = pw * (float)req_size[0];
+        sw = pw * (float)pixel_pos;
         m[0] = this->margin[0] * ph;  b[0] = this->border[0] * ph;
         m[1] = this->margin[1] * pw;  b[1] = this->border[1] * pw;
         m[2] = this->margin[2] * pw;  b[2] = this->border[2] * pw;
@@ -264,52 +279,61 @@ void ui::text_field::generate_cursor(void)
     }
 }
 
-void ui::text_field::generate_string(void)
+void ui::text_field::populate_buffers(void)
 {
     if (this->font != NULL)
     {
         float vertex[160], pw, ph, m[4], b[4];
         GLuint element[60];
         std::vector<int> font_max = {0, 0, 0}, string_max = {0, 0, 0};
+        ui::image tmp_img = this->img;
 
         this->font->max_cell_size(font_max);
         font_max[0] *= this->max_length;
+        this->font->get_string_size(this->str, string_max);
+        if (string_max[0] > font_max[0])
+        {
+            /* The chunk size is half the widget's width */
+            int chunk = font_max[0] / 2;
+            int pixel_pos = this->get_cursor_pixel_pos();
+            /* We'll keep the cursor in the second half of the widget */
+            int which = std::max((pixel_pos / chunk) - 1, 0);
+            int start = chunk * which;
 
-        /* The literal 2s are to provide an extra pixel of space
-         * between the edges of the border/margin/widget and the
-         * actual string.
-         */
-        this->width = font_max[0]
-            + this->margin[1] + this->margin[2]
-            + this->border[1] + this->border[2] + 2;
-        this->height = font_max[1] + font_max[2]
-            + this->margin[0] + this->margin[3]
-            + this->border[0] + this->border[3] + 2;
-        this->parent->move_child(this);
+            /* Take the appropriate portion of the string image */
+            tmp_img.width = std::min(font_max[0], string_max[0] - start);
+            delete[] tmp_img.data;
+            tmp_img.data = new unsigned char[tmp_img.width * tmp_img.height * tmp_img.per_pixel];
+            for (int r = 0; r < tmp_img.height; ++r)
+                memcpy(&tmp_img.data[r * tmp_img.width],
+                       &this->img.data[r * this->img.width + start],
+                       tmp_img.width);
+
+            /* Fix the cursor's position */
+            pixel_pos -= start;
+            this->generate_cursor(pixel_pos);
+        }
+        else
+            this->generate_cursor();
+
+        this->calculate_widget_size(font_max[0], font_max[1] + font_max[2]);
         this->panel::generate_points(vertex, element);
 
-        if (this->img.data != NULL)
+        if (tmp_img.data != NULL)
         {
-            pw = 1.0f / (float)this->img.width;
-            ph = 1.0f / (float)this->img.height;
+            pw = 1.0f / (float)tmp_img.width;
+            ph = 1.0f / (float)tmp_img.height;
             m[0] = this->margin[0] * ph;  b[0] = this->border[0] * ph;
             m[1] = this->margin[1] * pw;  b[1] = this->border[1] * pw;
             m[2] = this->margin[2] * pw;  b[2] = this->border[2] * pw;
             m[3] = this->margin[3] * ph;  b[3] = this->border[3] * ph;
-
-            this->font->get_string_size(this->str, string_max);
-
-            /* TODO:  the displayed string may be too long to fit in the
-             * panel that we have available.  We'll need to check for that
-             * and take a sub-image for display.
-             */
 
             vertex[6]  = 0.0f - m[1] - b[1] - pw;
             vertex[7]  = 1.0f + m[0] + b[0] + ph
                 + ((font_max[1] - string_max[1]) * ph);
 
             vertex[14] = 1.0f
-                + ((font_max[0] - string_max[0]) * pw)
+                + ((font_max[0] - tmp_img.width) * pw)
                 + m[2] + b[2] + pw;
             vertex[15] = vertex[7];
 
@@ -342,15 +366,9 @@ void ui::text_field::generate_string(void)
         glBindTexture(GL_TEXTURE_2D, this->tex);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
-                     this->img.width, this->img.height, 0, GL_RED,
-                     GL_UNSIGNED_BYTE, this->img.data);
+                     tmp_img.width, tmp_img.height, 0, GL_RED,
+                     GL_UNSIGNED_BYTE, tmp_img.data);
     }
-}
-
-void ui::text_field::populate_buffers(void)
-{
-    this->generate_string();
-    this->generate_cursor();
 }
 
 ui::text_field::text_field(ui::context *c, GLuint w, GLuint h)

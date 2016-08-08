@@ -1,6 +1,6 @@
 /* label.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2016, 13:21:11 tquirk
+ *   last updated 07 Aug 2016, 11:40:20 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -79,11 +79,6 @@ int ui::label::get_bgimage(GLuint t, void *v)
 void ui::label::set_bgimage(GLuint t, void *v)
 {
     this->use_text = false;
-    if (this->img.data != NULL)
-    {
-        delete[] this->img.data;
-        this->img.data = NULL;
-    }
     this->str.clear();
     this->img = *(ui::image *)v;
 }
@@ -205,13 +200,22 @@ std::string ui::label::u32strtoutf8(const std::u32string& str)
 void ui::label::generate_string_image(void)
 {
     if (this->use_text == true && this->font != NULL)
-    {
-        if (this->img.data != NULL)
-            delete[] this->img.data;
-        this->img.data = this->font->render_string(this->str,
-                                                   this->img.width,
-                                                   this->img.height);
-    }
+        this->font->render_string(this->str, this->img);
+}
+
+void ui::label::calculate_widget_size(int w, int h)
+{
+    /* We want an extra pixel of space between the string and each
+     * side, even if there is no border or margin, thus the
+     * literal 2s.
+     */
+    this->width = w
+        + this->margin[1] + this->margin[2]
+        + this->border[1] + this->border[2] + 2;
+    this->height = h
+        + this->margin[0] + this->margin[3]
+        + this->border[0] + this->border[3] + 2;
+    this->parent->move_child(this);
 }
 
 void ui::label::populate_buffers(void)
@@ -221,17 +225,7 @@ void ui::label::populate_buffers(void)
         float vertex[160], pw, ph, m[4], b[4];
         GLuint element[60], temp;
 
-        /* We want an extra pixel of space between the string and each
-         * side, even if there is no border or margin, thus the
-         * literal 2s.
-         */
-        this->width = this->img.width
-            + this->margin[1] + this->margin[2]
-            + this->border[1] + this->border[2] + 2;
-        this->height = this->img.height
-            + this->margin[0] + this->margin[3]
-            + this->border[0] + this->border[3] + 2;
-        this->parent->move_child(this);
+        this->calculate_widget_size(this->img.width, this->img.height);
         this->panel::generate_points(vertex, element);
         pw = 1.0f / (float)this->img.width;
         ph = 1.0f / (float)this->img.height;
@@ -289,18 +283,17 @@ void ui::label::populate_buffers(void)
 }
 
 ui::label::label(ui::context *c, GLuint w, GLuint h)
-    : ui::panel::panel(c, w, h), str()
+    : ui::panel::panel(c, w, h), str(), img()
 {
+    float black[4] = {0.0, 0.0, 0.0, 0.0};
+
     this->use_text = true;
-    this->img.data = NULL;
     this->font = NULL;
     glGenTextures(1, &this->tex);
     glBindTexture(GL_TEXTURE_2D, this->tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameterfv(GL_TEXTURE_2D,
-                     GL_TEXTURE_BORDER_COLOR,
-                     glm::value_ptr(this->background));
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, black);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     this->populate_buffers();
@@ -309,8 +302,6 @@ ui::label::label(ui::context *c, GLuint w, GLuint h)
 ui::label::~label()
 {
     glDeleteTextures(1, &this->tex);
-    if (this->img.data != NULL)
-        delete[] this->img.data;
     if (this->font != NULL)
         delete this->font;
 }
@@ -354,10 +345,14 @@ void ui::label::set(GLuint e, GLuint t, void *v)
 
 void ui::label::draw(void)
 {
-    GLuint text, val = (this->use_text ? 1 : 0);
+    GLuint text, bgnd, val = (this->use_text ? 1 : 0);
 
     this->parent->get(ui::element::attribute, ui::attribute::use_text, &text);
+    this->parent->get(ui::element::attribute, ui::attribute::text_bgnd, &bgnd);
     glUniform1ui(text, val);
+    glUniform4f(bgnd,
+                this->background.x, this->background.y,
+                this->background.z, this->background.a);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, this->tex);
     ui::panel::draw();
