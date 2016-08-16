@@ -1,6 +1,6 @@
 /* ui_defs.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2016, 08:25:17 tquirk
+ *   last updated 15 Aug 2016, 22:19:17 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -29,8 +29,39 @@
 #ifndef __INC_R9_UI_DEFS_H__
 #define __INC_R9_UI_DEFS_H__
 
+#include <GL/gl.h>
+
+#include <glm/vec2.hpp>
+
 namespace ui
 {
+    /* Mouse motion callback routines */
+    typedef struct mouse_callback_call
+    {
+        glm::ivec2 location;
+    }
+    mouse_call_data;
+
+    /* Button press/release callback routines */
+    typedef struct btn_callback_call
+    {
+        glm::ivec2 location;
+        GLuint button;
+        GLuint state;
+    }
+    btn_call_data;
+
+    /* Key press/release callback routines */
+    typedef struct key_callback_call
+    {
+        glm::ivec2 location;
+        uint32_t character;
+        GLuint key;
+        GLuint state;
+        GLuint mods;
+    }
+    key_call_data;
+
     namespace element
     {
         const GLuint size = 1, attribute = 2;
@@ -39,6 +70,8 @@ namespace ui
         const GLuint font = 8, string = 9, bgimage = 10;
         const GLuint active = 11, arm = 12;
         const GLuint cursor = 13, max_size = 14;
+        const GLuint transform = 15, pixel_size = 16, child_spacing = 17;
+        const GLuint resize = 18;
     }
 
     namespace size
@@ -49,7 +82,7 @@ namespace ui
     namespace attribute
     {
         const GLuint position = 1, normal = 2, color = 3, texture = 4;
-        const GLuint use_text = 5, text_bgnd = 6;
+        const GLuint use_text = 5, text_bgnd = 6, translate = 7;
     }
 
     namespace side
@@ -105,6 +138,16 @@ namespace ui
     namespace cursor
     {
         const int position = 1, blink = 2;
+    }
+
+    namespace transform
+    {
+        const GLuint translate = 1;
+    }
+
+    namespace resize
+    {
+        const GLuint none = 0, shrink = 1, grow = 2, all = 3;
     }
 }
 

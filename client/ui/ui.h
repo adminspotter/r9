@@ -1,6 +1,6 @@
 /* ui.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2016, 08:21:04 tquirk
+ *   last updated 12 Aug 2016, 07:22:06 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -20,8 +20,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the basic ui declarations and the base ui
- * utility namespace definitions for the R9 UI widget set.
+ * This file contains the declarations for the UI context, which loads
+ * and manages the GLSL program which the rest of the UI toolkit uses
+ * to draw its widgets.  It is a descendent of the composite object,
+ * which will allow the context to manage the top-level widgets.
  *
  * Things to do
  *
@@ -30,68 +32,27 @@
 #ifndef __INC_R9_UI_H__
 #define __INC_R9_UI_H__
 
-#include <GL/gl.h>
-
-#include <list>
-
-#include <glm/vec2.hpp>
-
 #include "ui_defs.h"
-#include "quadtree.h"
+#include "composite.h"
 
 namespace ui
 {
-    /* Forward declarations for multi-include problems */
-    class quadtree;
+    class composite;
     class panel;
 
-    /* Mouse motion callback routines */
-    typedef struct mouse_callback_call
-    {
-        glm::ivec2 location;
-    }
-    mouse_call_data;
-
-    /* Button press/release callback routines */
-    typedef struct btn_callback_call
-    {
-        glm::ivec2 location;
-        GLuint button;
-        GLuint state;
-    }
-    btn_call_data;
-
-    /* Key press/release callback routines */
-    typedef struct key_callback_call
-    {
-        glm::ivec2 location;
-        uint32_t character;
-        GLuint key;
-        GLuint state;
-        GLuint mods;
-    }
-    key_call_data;
-
-    class context
+    class context : public composite
     {
       private:
         GLuint vert_shader, frag_shader, shader_pgm;
         GLuint pos_attr, norm_attr, color_attr, texture_attr;
         GLuint use_text_uniform, text_bgnd_uniform;
-        std::list<panel *> children;
+        GLuint translate_uniform;
 
-        quadtree *tree;
         /* Previous mouse position and pointed-to child */
         glm::ivec2 old_mouse;
         panel *old_child;
 
-        const static int tree_max_depth;
-
       protected:
-        GLuint width, height;
-
-        int get_size(GLuint, void *);
-        void set_size(GLuint, void *);
         int get_attribute(GLuint, void *);
 
       public:
@@ -99,17 +60,8 @@ namespace ui
         ~context();
 
         int get(GLuint, GLuint, void *);
-        void set(GLuint, GLuint, void *);
 
         void draw(void);
-
-        context& add_child(panel *);
-        context& remove_child(panel *);
-        context& move_child(panel *);
-
-        void mouse_pos_callback(int, int);
-        void mouse_btn_callback(int, int);
-        void key_callback(int, uint32_t, int, int);
     };
 }
 

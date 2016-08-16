@@ -1,6 +1,6 @@
 /* panel.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2016, 11:22:34 tquirk
+ *   last updated 13 Aug 2016, 08:14:26 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -41,12 +41,12 @@
 
 #include <list>
 
-#include "ui.h"
+#include "composite.h"
 
 namespace ui
 {
     /* Forward declarations for multi-include problems */
-    class context;
+    class composite;
     class panel;
 
     /* Callback function pointer */
@@ -79,14 +79,14 @@ namespace ui
 
         std::list<cb_list_elem>& which_cb_list(GLuint);
 
-        context *parent;
+        composite *parent;
         GLuint vao, vbo, ebo, vertex_count, element_count;
         GLuint width, height, xpos, ypos;
         GLuint margin[4], border[4];
         glm::vec4 foreground, background;
 
-        int get_position(GLuint, void *);
-        void set_position(GLuint, void *);
+        virtual int get_position(GLuint, void *);
+        virtual void set_position(GLuint, void *);
         virtual int get_size(GLuint, void *);
         virtual void set_size(GLuint, void *);
         virtual int get_border(GLuint, void *);
@@ -101,7 +101,7 @@ namespace ui
         virtual void populate_buffers(void);
 
       public:
-        panel(context *, GLuint, GLuint);
+        panel(composite *, GLuint, GLuint);
         virtual ~panel();
 
         virtual int get(GLuint, GLuint, void *);
@@ -117,10 +117,10 @@ namespace ui
         virtual void remove_callback(GLuint, cb_fptr, void *);
         virtual void call_callbacks(GLuint, void *);
 
-        /* The context may change sizes, so it needs to be able to
+        /* The composite may change sizes, so it needs to be able to
          * call populate_buffers() in the event of a window resize.
          */
-        friend class context;
+        friend class composite;
     };
 }
 

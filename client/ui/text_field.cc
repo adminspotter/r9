@@ -1,6 +1,6 @@
 /* text_field.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Aug 2016, 17:47:18 tquirk
+ *   last updated 15 Aug 2016, 19:19:29 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -32,6 +32,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "ui_defs.h"
 #include "text_field.h"
 
 int ui::text_field::get_cursor_pos(GLuint t, void *v)
@@ -230,10 +231,9 @@ void ui::text_field::generate_cursor(int pixel_pos)
         if (pixel_pos < 0)
             pixel_pos = this->get_cursor_pixel_pos();
 
-        this->parent->get(ui::element::size, ui::size::width, &temp);
-        pw = 2.0f / (float)temp;
-        this->parent->get(ui::element::size, ui::size::height, &temp);
-        ph = -2.0f / (float)temp;
+        this->parent->get(ui::element::pixel_size, ui::size::width, &pw);
+        this->parent->get(ui::element::pixel_size, ui::size::height, &ph);
+        ph = -ph;
         sw = pw * (float)pixel_pos;
         m[0] = this->margin[0] * ph;  b[0] = this->border[0] * ph;
         m[1] = this->margin[1] * pw;  b[1] = this->border[1] * pw;
@@ -374,7 +374,7 @@ void ui::text_field::populate_buffers(void)
     }
 }
 
-ui::text_field::text_field(ui::context *c, GLuint w, GLuint h)
+ui::text_field::text_field(ui::composite *c, GLuint w, GLuint h)
     : ui::label::label(c, w, h)
 {
     this->cursor_pos = 0;

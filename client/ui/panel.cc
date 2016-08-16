@@ -1,6 +1,6 @@
 /* panel.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2016, 11:26:05 tquirk
+ *   last updated 14 Aug 2016, 07:12:58 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -33,6 +33,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "ui_defs.h"
 #include "panel.h"
 
 const float ui::panel::no_texture = -1000.0;
@@ -258,10 +259,9 @@ void ui::panel::generate_points(float *vertex, GLuint *element)
     float pw, ph, m[4], b[4];
     GLuint vert_count = 0, temp;
 
-    this->parent->get(ui::element::size, ui::size::width, &temp);
-    pw = 2.0f / (float)temp;
-    this->parent->get(ui::element::size, ui::size::height, &temp);
-    ph = -2.0f / (float)temp;
+    this->parent->get(ui::element::pixel_size, ui::size::width, &pw);
+    this->parent->get(ui::element::pixel_size, ui::size::height, &ph);
+    ph = -ph;
     m[0] = this->margin[0] * ph;  b[0] = this->border[0] * ph;
     m[1] = this->margin[1] * pw;  b[1] = this->border[1] * pw;
     m[2] = this->margin[2] * pw;  b[2] = this->border[2] * pw;
@@ -483,7 +483,7 @@ void ui::panel::populate_buffers(void)
                  GL_DYNAMIC_DRAW);
 }
 
-ui::panel::panel(ui::context *c, GLuint w, GLuint h)
+ui::panel::panel(ui::composite *c, GLuint w, GLuint h)
     : foreground(1.0f, 1.0f, 1.0f, 1.0f), background(0.5f, 0.5f, 0.5f, 1.0f),
       enter_cb(), leave_cb(), motion_cb(), btn_down_cb(), btn_up_cb(),
       key_down_cb(), key_up_cb()
@@ -501,8 +501,8 @@ ui::panel::panel(ui::context *c, GLuint w, GLuint h)
     }
 
     /* Put the panel in the middle of the screen to start */
-    c->get(ui::element::size, ui::size::width, &x);
-    c->get(ui::element::size, ui::size::height, &y);
+    this->parent->get(ui::element::size, ui::size::width, &x);
+    this->parent->get(ui::element::size, ui::size::height, &y);
     this->xpos = x / 2 - (w / 2);
     this->ypos = y / 2 - (h / 2);
 

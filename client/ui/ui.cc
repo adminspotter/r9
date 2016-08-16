@@ -1,6 +1,6 @@
 /* ui.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Aug 2016, 12:34:06 tquirk
+ *   last updated 14 Aug 2016, 07:20:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -30,43 +30,11 @@
 #include <string>
 #include <algorithm>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "ui.h"
 #include "panel.h"
 #include "shader.h"
-
-/* We'll use this for our quadtree default max depth */
-const int ui::context::tree_max_depth = 4;
-
-int ui::context::get_size(GLuint t, void *v)
-{
-    int ret = 0;
-
-    switch (t)
-    {
-      case ui::size::width:   *((GLuint *)v) = this->width;  break;
-      case ui::size::height:  *((GLuint *)v) = this->height; break;
-      default:                ret = 1;                       break;
-    }
-    return ret;
-}
-
-void ui::context::set_size(GLuint d, void *v)
-{
-    GLuint new_v = *((GLuint *)v);
-
-    switch (d)
-    {
-      case ui::size::width:  this->width = new_v;  break;
-      case ui::size::height: this->height = new_v; break;
-    }
-
-    /* Regenerate our search tree */
-    glm::ivec2 ul = {0, 0}, lr = {this->width, this->height};
-    delete this->tree;
-    this->tree = new ui::quadtree(NULL, ul, lr, ui::context::tree_max_depth);
-    for (auto i = this->children.begin(); i != this->children.end(); ++i)
-        this->tree->insert(*i);
-}
 
 int ui::context::get_attribute(GLuint t, void *v)
 {
@@ -92,20 +60,17 @@ int ui::context::get_attribute(GLuint t, void *v)
       case ui::attribute::text_bgnd:
         *((GLuint *)v) = this->text_bgnd_uniform;
         break;
+      case ui::attribute::translate:
+        *((GLuint *)v) = this->translate_uniform;
+        break;
       default: ret = 1; break;
     }
     return ret;
 }
 
 ui::context::context(GLuint w, GLuint h)
-    : children(), old_mouse(0, 0)
+    : ui::composite::composite(NULL, w, h), old_mouse(0, 0)
 {
-    glm::ivec2 ul = {0, 0}, lr = {w, h};
-
-    this->width = w;
-    this->height = h;
-
-    this->tree = new quadtree(NULL, ul, lr, ui::context::tree_max_depth);
     this->old_child = NULL;
 
     this->vert_shader = load_shader(GL_VERTEX_SHADER,
@@ -120,6 +85,7 @@ ui::context::context(GLuint w, GLuint h)
     this->texture_attr = glGetAttribLocation(shader_pgm, "texture_uv");
     this->use_text_uniform = glGetUniformLocation(shader_pgm, "use_text");
     this->text_bgnd_uniform = glGetUniformLocation(shader_pgm, "text_bgnd");
+    this->translate_uniform = glGetUniformLocation(shader_pgm, "translate");
 }
 
 ui::context::~context()
@@ -128,139 +94,21 @@ ui::context::~context()
     glDeleteShader(this->frag_shader);
     glUseProgram(0);
     glDeleteProgram(this->shader_pgm);
-
-    delete this->tree;
-
-    while (!this->children.empty())
-        delete this->children.front();
 }
 
 int ui::context::get(GLuint e, GLuint t, void *v)
 {
-    int ret;
-
-    switch (e)
-    {
-      case ui::element::size:       ret = this->get_size(t, v);      break;
-      case ui::element::attribute:  ret = this->get_attribute(t, v); break;
-      default:                      ret = 1;                         break;
-    }
-    return ret;
-}
-
-void ui::context::set(GLuint e, GLuint t, void *v)
-{
-    switch (e)
-    {
-      case ui::element::size: this->set_size(t, v); break;
-    }
-    for (auto i = this->children.begin(); i != this->children.end(); ++i)
-        (*i)->populate_buffers();
+    if (e == ui::element::attribute)
+        return this->get_attribute(t, v);
+    return ui::composite::get(e, t, v);
 }
 
 void ui::context::draw(void)
 {
+    glUniformMatrix4fv(this->translate_uniform,
+                       1, GL_FALSE,
+                       glm::value_ptr(this->translate));
     glUseProgram(this->shader_pgm);
     for (auto i = this->children.begin(); i != this->children.end(); ++i)
         (*i)->draw();
-}
-
-ui::context& ui::context::add_child(ui::panel *p)
-{
-    auto found = std::find(this->children.begin(), this->children.end(), p);
-    if (found == this->children.end())
-    {
-        this->children.push_back(p);
-        this->tree->insert(p);
-    }
-    return *this;
-}
-
-ui::context& ui::context::remove_child(ui::panel *p)
-{
-    this->children.remove(p);
-    this->tree->remove(p);
-    return *this;
-}
-
-ui::context& ui::context::move_child(ui::panel *p)
-{
-    /* This is pretty brute-force, but it's at least simple to understand */
-    this->tree->remove(p);
-    this->tree->insert(p);
-    return *this;
-}
-
-void ui::context::mouse_pos_callback(int x, int y)
-{
-    glm::ivec2 pos = {x, y}, obj;
-    ui::mouse_call_data call_data;
-    ui::panel *p = this->tree->search(pos);
-
-    if (p != NULL)
-    {
-        p->get_va(ui::element::position, ui::position::x, &obj.x,
-                  ui::element::position, ui::position::y, &obj.y, 0);
-        call_data.location = pos - obj;
-        if (this->old_child == NULL)
-            p->call_callbacks(ui::callback::enter, &call_data);
-        p->call_callbacks(ui::callback::motion, &call_data);
-    }
-    else if (this->old_child != NULL)
-    {
-        this->old_child->get_va(ui::element::position, ui::position::x, &obj.x,
-                                ui::element::position, ui::position::y, &obj.y,
-                                0);
-        call_data.location = pos - obj;
-        this->old_child->call_callbacks(ui::callback::leave, &call_data);
-    }
-
-    this->old_child = p;
-    this->old_mouse = pos;
-}
-
-void ui::context::mouse_btn_callback(int btn, int state)
-{
-    ui::panel *p = this->tree->search(this->old_mouse);
-
-    if (p != NULL)
-    {
-        glm::ivec2 obj;
-        ui::btn_call_data call_data;
-
-        p->get_va(ui::element::position, ui::position::x, &obj.x,
-                  ui::element::position, ui::position::y, &obj.y, 0);
-        call_data.location = this->old_mouse - obj;
-        call_data.button = btn;
-        call_data.state = (state == ui::mouse::up
-                           ? ui::callback::btn_up
-                           : ui::callback::btn_down);
-        p->call_callbacks(call_data.state, &call_data);
-    }
-
-    this->old_child = p;
-}
-
-void ui::context::key_callback(int key, uint32_t c, int state, int mods)
-{
-    ui::panel *p = this->tree->search(this->old_mouse);
-
-    if (p != NULL)
-    {
-        glm::ivec2 obj;
-        ui::key_call_data call_data;
-
-        p->get_va(ui::element::position, ui::position::x, &obj.x,
-                  ui::element::position, ui::position::y, &obj.y, 0);
-        call_data.location = this->old_mouse - obj;
-        call_data.key = key;
-        call_data.character = c;
-        call_data.state = (state == ui::key::up
-                           ? ui::callback::key_up
-                           : ui::callback::key_down);
-        call_data.mods = mods;
-        p->call_callbacks(call_data.state, &call_data);
-    }
-
-    this->old_child = p;
 }
