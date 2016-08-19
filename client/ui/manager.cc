@@ -1,6 +1,6 @@
 /* manager.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Aug 2016, 22:35:42 tquirk
+ *   last updated 18 Aug 2016, 09:09:31 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -77,6 +77,17 @@ void ui::manager::set_resize(GLuint t, void *v)
         this->set_desired_size();
 }
 
+int ui::manager::get_size(GLuint t, void *v)
+{
+    return this->composite::get_size(t, v);
+}
+
+void ui::manager::set_size(GLuint t, void *v)
+{
+    this->composite::set_size(t, v);
+    this->panel::set_size(t, v);
+}
+
 void ui::manager::set_position(GLuint t, void *v)
 {
     this->panel::set_position(t, v);
@@ -108,13 +119,9 @@ int ui::manager::get_pixel_size(GLuint t, void *v)
     return 1;
 }
 
-void ui::manager::set_desired_size(void)
+glm::ivec2 ui::manager::calculate_max_point(void)
 {
-    glm::ivec2 ds(0, 0);
-    GLuint zero = 0;
-
-    if (this->resize == ui::resize::none)
-        return;
+    glm::ivec2 max_pt(0, 0);
 
     for (auto i = this->children.begin(); i != this->children.end(); ++i)
     {
@@ -124,13 +131,25 @@ void ui::manager::set_desired_size(void)
                      ui::element::size, ui::size::height, &ch,
                      ui::element::position, ui::position::x, &cx,
                      ui::element::position, ui::position::y, &cy, 0);
-        ds.x = std::max(ds.x, (int)(cx + cw));
-        ds.y = std::max(ds.y, (int)(cy + ch));
+        max_pt.x = std::max(max_pt.x, (int)(cx + cw));
+        max_pt.y = std::max(max_pt.y, (int)(cy + ch));
     }
-    ds.x += this->margin[1] + this->margin[2]
+    return max_pt;
+}
+
+void ui::manager::set_desired_size(void)
+{
+    glm::ivec2 max_pt(0, 0);
+    GLuint zero = 0;
+
+    if (this->resize == ui::resize::none)
+        return;
+
+    max_pt = this->calculate_max_point();
+    max_pt.x += this->margin[1] + this->margin[2]
         + this->border[1] + this->border[2]
         + this->child_spacing.x;
-    ds.y += this->margin[0] + this->margin[3]
+    max_pt.y += this->margin[0] + this->margin[3]
         + this->border[0] + this->border[3]
         + this->child_spacing.y;
 
@@ -139,17 +158,17 @@ void ui::manager::set_desired_size(void)
      */
     if (this->resize & ui::resize::shrink)
     {
-        if (ds.x < this->width)
-            this->width = this->dim.x = ds.x;
-        if (ds.y < this->height)
-            this->height = this->dim.y = ds.y;
+        if (max_pt.x < this->width)
+            this->width = this->dim.x = max_pt.x;
+        if (max_pt.y < this->height)
+            this->height = this->dim.y = max_pt.y;
     }
     if (this->resize & ui::resize::grow)
     {
-        if (ds.x > this->width)
-            this->width = this->dim.x = ds.x;
-        if (ds.y > this->height)
-            this->height = this->dim.y = ds.y;
+        if (max_pt.x > this->width)
+            this->width = this->dim.x = max_pt.x;
+        if (max_pt.y > this->height)
+            this->height = this->dim.y = max_pt.y;
     }
     this->composite::set_size(0, &zero);
     this->populate_buffers();
@@ -302,7 +321,6 @@ void ui::manager::remove_child(ui::panel *p)
 
 void ui::manager::move_child(ui::panel *p)
 {
-    this->composite::remove_child(p);
-    this->composite::add_child(p);
+    this->composite::move_child(p);
     this->set_desired_size();
 }
