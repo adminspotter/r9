@@ -18,6 +18,7 @@
 #include "password.h"
 #include "manager.h"
 #include "row_column.h"
+#include "popupmenu.h"
 
 void error_callback(int, const char *);
 void window_size_callback(GLFWwindow *w, int, int);
@@ -26,9 +27,9 @@ void mouse_button_callback(GLFWwindow *, int, int, int);
 void key_callback(GLFWwindow *, int, int, int, int);
 void char_callback(GLFWwindow *, unsigned int, int);
 void create_image(int, int);
-void enter_callback(ui::panel *, void *, void *);
-void leave_callback(ui::panel *, void *, void *);
-void clicky_callback(ui::panel *, void *, void *);
+void enter_callback(ui::event_target *, void *, void *);
+void leave_callback(ui::event_target *, void *, void *);
+void clicky_callback(ui::event_target *, void *, void *);
 
 ui::context *ctx;
 ui::panel *p1;
@@ -38,6 +39,7 @@ ui::text_field *t1;
 ui::password *pw1;
 ui::manager *m1;
 ui::row_column *r1;
+ui::popupmenu *pu1;
 
 std::string font_name("techover.ttf"), greeting("Howdy!");
 std::vector<std::string> paths =
@@ -69,6 +71,8 @@ int main(int argc, char **argv)
     glm::vec4 fg1 = {1.0, 1.0, 1.0, 1.0}, fg2 = {0.0, 1.0, 1.0, 1.0};
     glm::vec4 bg1 = {0.2, 0.2, 0.2, 1.0}, bg2 = {0.2, 0.2, 0.2, 0.2};
     ui::font *std_font = new ui::font(font_name, 30, paths);
+    ui::font *tiny_font = new ui::font(font_name, 15, paths);
+    int button;
 
     if (glfwInit() == GL_FALSE)
     {
@@ -208,7 +212,7 @@ int main(int argc, char **argv)
     r1->add_callback(ui::callback::leave, leave_callback, NULL);
     for (int q = 0; q < 7; ++q)
     {
-        std::cout << "creating child " << q << std::endl;
+        std::cout << "  creating child " << q << std::endl;
         std::ostringstream s;
         ui::button *b = new ui::button(r1, 0, 0);
 
@@ -221,6 +225,27 @@ int main(int argc, char **argv)
         b->add_callback(ui::callback::enter, enter_callback, NULL);
         b->add_callback(ui::callback::leave, leave_callback, NULL);
     }
+    std::cout << "creating popup 1" << std::endl;
+    pu1 = new ui::popupmenu(ctx, 200, 125);
+    border = 1;
+    button = ui::mouse::button0;
+    pu1->set_va(ui::element::border, ui::side::outer, &border,
+                ui::element::margin, ui::side::outer, &border,
+                ui::element::border, ui::side::inner, &border,
+                ui::element::popup, ui::popup::button, &button, 0);
+    for (int q = 0; q < 7; ++q)
+    {
+        std::cout << "  creating child " << q << std::endl;
+        std::ostringstream s;
+        ui::label *pul = new ui::label(pu1, 0, 0);
+
+        s << (char)('a' + q);
+        std::string str = s.str();
+        pul->set_va(ui::element::font, ui::ownership::shared, tiny_font,
+                    ui::element::string, 0, &str, 0);
+        pul->add_callback(ui::callback::enter, enter_callback, NULL);
+        pul->add_callback(ui::callback::leave, leave_callback, NULL);
+    }
     std::cout << "done creating things" << std::endl;
 
     while (!glfwWindowShouldClose(w))
@@ -232,6 +257,7 @@ int main(int argc, char **argv)
         glfwPollEvents();
     }
     delete ctx;
+    delete tiny_font;
     delete std_font;
     glfwTerminate();
     return 0;
@@ -344,19 +370,19 @@ void create_image(int width, int height)
 }
 
 /* ARGSUSED */
-void enter_callback(ui::panel *p, void *client, void *call)
+void enter_callback(ui::event_target *p, void *client, void *call)
 {
     std::cout << "we're in!" << std::endl;
 }
 
 /* ARGSUSED */
-void leave_callback(ui::panel *p, void *client, void *call)
+void leave_callback(ui::event_target *p, void *client, void *call)
 {
     std::cout << "out, baby!" << std::endl;
 }
 
 /* ARGSUSED */
-void clicky_callback(ui::panel *p, void *client, void *call)
+void clicky_callback(ui::event_target *p, void *client, void *call)
 {
     std::cout << "clicky clicky!" << std::endl;
 }

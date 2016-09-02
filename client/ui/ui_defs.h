@@ -1,6 +1,6 @@
 /* ui_defs.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Aug 2016, 07:46:25 tquirk
+ *   last updated 24 Aug 2016, 07:56:55 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -73,6 +73,7 @@ namespace ui
         const GLuint transform = 15, pixel_size = 16, child_spacing = 17;
         const GLuint resize = 18;
         const GLuint order = 19;
+        const GLuint popup = 20;
     }
 
     namespace size
@@ -90,6 +91,7 @@ namespace ui
     namespace side
     {
         const GLuint top = 1, left = 2, right = 4, bottom = 8, all = 15;
+        const GLuint outer = 1, inner = 8;
     }
 
     namespace corner
@@ -160,6 +162,11 @@ namespace ui
     namespace ownership
     {
         const GLuint shared = 1, owned = 2;
+    }
+
+    namespace popup
+    {
+        const GLuint visible = 1, button = 2, menu = 3;
     }
 }
 

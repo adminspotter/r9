@@ -17,6 +17,7 @@ fonttest_LDFLAGS = $(CLIENT_LDFLAGS)
 fonttest_LDADD = libr9_client_ui.la $(CLIENT_LDLIBS)
 
 libr9_client_ui_la_SOURCES = ui_defs.h shader.cc image.h \
+	callback.cc callback.h \
 	ui.cc ui.h \
 	quadtree.cc quadtree.h \
 	panel.cc panel.h \
@@ -27,7 +28,8 @@ libr9_client_ui_la_SOURCES = ui_defs.h shader.cc image.h \
 	label.cc label.h \
 	button.cc button.h \
 	text_field.cc text_field.h \
-	password.cc password.h
+	password.cc password.h \
+	popupmenu.cc popupmenu.h
 libr9_client_ui_la_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	-DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \
 	-DSHADER_SRC_PATH=\"$(shaderdir)\" \

@@ -1,6 +1,6 @@
 /* ui.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Aug 2016, 07:20:51 tquirk
+ *   last updated 26 Aug 2016, 08:06:44 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -98,9 +98,11 @@ ui::context::~context()
 
 int ui::context::get(GLuint e, GLuint t, void *v)
 {
-    if (e == ui::element::attribute)
-        return this->get_attribute(t, v);
-    return ui::composite::get(e, t, v);
+    switch (e)
+    {
+      case ui::element::attribute:  return this->get_attribute(t, v);
+      default:                      return this->composite::get(e, t, v);
+    }
 }
 
 void ui::context::draw(void)
@@ -111,4 +113,25 @@ void ui::context::draw(void)
     glUseProgram(this->shader_pgm);
     for (auto i = this->children.begin(); i != this->children.end(); ++i)
         (*i)->draw();
+}
+
+void ui::context::mouse_btn_callback(int btn, int state)
+{
+    ui::panel *p = this->tree->search(this->old_pos);
+
+    if (p == NULL)
+    {
+        ui::btn_call_data call_data;
+        GLuint which = (state == ui::mouse::up
+                        ? ui::callback::btn_up
+                        : ui::callback::btn_down);
+
+        call_data.location = this->old_pos;
+        call_data.button = btn;
+        call_data.state = state;
+        this->call_callbacks(which, &call_data);
+        this->old_child = p;
+    }
+    else
+        this->composite::mouse_btn_callback(btn, state);
 }

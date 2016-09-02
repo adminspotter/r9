@@ -1,6 +1,6 @@
 /* ui.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Aug 2016, 07:22:06 tquirk
+ *   last updated 26 Aug 2016, 08:01:33 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -34,13 +34,14 @@
 
 #include "ui_defs.h"
 #include "composite.h"
+#include "callback.h"
 
 namespace ui
 {
     class composite;
     class panel;
 
-    class context : public composite
+    class context : public composite, public event_target
     {
       private:
         GLuint vert_shader, frag_shader, shader_pgm;
@@ -62,6 +63,8 @@ namespace ui
         int get(GLuint, GLuint, void *);
 
         void draw(void);
+
+        void mouse_btn_callback(int, int);
     };
 }
 
