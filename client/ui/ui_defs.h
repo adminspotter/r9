@@ -1,6 +1,6 @@
 /* ui_defs.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Aug 2016, 07:56:55 tquirk
+ *   last updated 05 Sep 2016, 07:08:07 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -67,9 +67,9 @@ namespace ui
         const GLuint size = 1, attribute = 2;
         const GLuint border = 3, margin = 4, color = 5, position = 6;
         const GLuint radius = 7;
-        const GLuint font = 8, string = 9, bgimage = 10;
-        const GLuint active = 11, arm = 12;
-        const GLuint cursor = 13, max_size = 14;
+        const GLuint font = 8, string = 9, image = 10;
+        const GLuint state = 11;
+        const GLuint cursor = 13;
         const GLuint transform = 15, pixel_size = 16, child_spacing = 17;
         const GLuint resize = 18;
         const GLuint order = 19;
@@ -80,6 +80,7 @@ namespace ui
     {
         const GLuint width = 1, height = 2, all = 3;
         const GLuint rows = 4, columns = 5, grid = 6;
+        const GLuint max_width = 7, max_height = 8, max = 9;
     }
 
     namespace attribute
@@ -167,6 +168,11 @@ namespace ui
     namespace popup
     {
         const GLuint visible = 1, button = 2, menu = 3;
+    }
+
+    namespace state
+    {
+        const GLuint active = 1, armed = 2;
     }
 }
 
