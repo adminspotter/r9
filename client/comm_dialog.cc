@@ -36,7 +36,9 @@
 
 #include "ui/ui.h"
 #include "ui/row_column.h"
+#include "ui/label.h"
 #include "ui/text_field.h"
+#include "ui/password.h"
 #include "ui/button.h"
 
 static ui::font *dialog_font;
@@ -49,6 +51,7 @@ void create_login_dialog(ui::context *ctx)
     int packing = ui::order::row, border = 1, max_sz = 10;
 
     ui::button *b;
+    ui::label *l;
     std::string str;
 
     dialog_font = new ui::font(config.font_name, 20, config.font_paths);
@@ -58,6 +61,37 @@ void create_login_dialog(ui::context *ctx)
                    ui::element::order, 0, &packing,
                    ui::element::child_spacing, ui::size::all, &spacing,
                    ui::element::size, ui::size::grid, &grid, 0);
+
+    l = new ui::label(dialog, 0, 0);
+    str = _("Username");
+    l->set_va(ui::element::font, ui::ownership::shared, dialog_font,
+              ui::element::string, 0, &str, 0);
+    user = new ui::text_field(dialog, 0, 0);
+    str = config.username;
+    user->set_va(ui::element::font, ui::ownership::shared, dialog_font,
+                 ui::element::size, ui::size::max_width, &max_sz,
+                 ui::element::border, ui::side::all, &border,
+                 ui::element::string, 0, &str, 0);
+
+    l = new ui::label(dialog, 0, 0);
+    str = _("Password");
+    l->set_va(ui::element::font, ui::ownership::shared, dialog_font,
+              ui::element::string, 0, &str, 0);
+    pass = new ui::password(dialog, 0, 0);
+    pass->set_va(ui::element::font, ui::ownership::shared, dialog_font,
+                 ui::element::size, ui::size::max_width, &max_sz,
+                 ui::element::border, ui::side::all, &border, 0);
+
+    l = new ui::label(dialog, 0, 0);
+    str = _("Server");
+    l->set_va(ui::element::font, ui::ownership::shared, dialog_font,
+              ui::element::string, 0, &str, 0);
+    host = new ui::text_field(dialog, 0, 0);
+    str = config.server_addr;
+    host->set_va(ui::element::font, ui::ownership::shared, dialog_font,
+                 ui::element::size, ui::size::max_width, &max_sz,
+                 ui::element::border, ui::side::all, &border,
+                 ui::element::string, 0, &str, 0);
 
     b = new ui::button(dialog, 0, 0);
     str = _("OK");
