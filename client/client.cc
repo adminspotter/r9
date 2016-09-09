@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Sep 2016, 08:15:32 tquirk
+ *   last updated 09 Sep 2016, 07:36:32 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -36,6 +36,7 @@
 
 #include <glm/vec2.hpp>
 
+#include "client.h"
 #include "configdata.h"
 #include "comm.h"
 #include "client_core.h"
@@ -46,8 +47,6 @@
 void error_callback(int, const char *);
 void key_callback(GLFWwindow *, int, int, int, int);
 void resize_callback(GLFWwindow *, int, int);
-void setup_comm(struct addrinfo *, const char *, const char *, const char *);
-void cleanup_comm(void);
 
 std::vector<Comm *> comm;
 ConfigData config;
