@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Feb 2016, 16:28:41 tquirk
+ *   last updated 08 Sep 2016, 08:15:32 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -34,10 +34,14 @@
 #include <iostream>
 #include <vector>
 
+#include <glm/vec2.hpp>
+
 #include "configdata.h"
 #include "comm.h"
 #include "client_core.h"
 #include "l10n.h"
+
+#include "ui/ui.h"
 
 void error_callback(int, const char *);
 void key_callback(GLFWwindow *, int, int, int, int);
@@ -47,6 +51,7 @@ void cleanup_comm(void);
 
 std::vector<Comm *> comm;
 ConfigData config;
+ui::context *ctx;
 
 int main(int argc, char **argv)
 {
@@ -91,12 +96,15 @@ int main(int argc, char **argv)
     glfwSetKeyCallback(w, key_callback);
     glfwSetWindowSizeCallback(w, resize_callback);
 
+    ctx = new ui::context(800, 600);
+
     /* Set the initial projection matrix */
     resize_callback(w, 800, 600);
 
     while (!glfwWindowShouldClose(w))
     {
         draw_objects();
+        ctx->draw();
         glfwSwapBuffers(w);
         glfwPollEvents();
     }
@@ -122,6 +130,9 @@ void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
 
 void resize_callback(GLFWwindow *w, int width, int height)
 {
+    glm::ivec2 sz(width, height);
+
+    ctx->set(ui::element::size, ui::size::all, &sz);
     resize_window(width, height);
 }
 
