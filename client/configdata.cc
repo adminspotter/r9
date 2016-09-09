@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 May 2016, 09:06:24 tquirk
+ *   last updated 08 Sep 2016, 19:29:38 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -101,6 +101,7 @@ handlers[] =
     { "ServerPort", off(server_port), &read_integer, &write_integer },
     { "Username",   off(username),    &read_string,  &write_string  },
     { "Charname",   off(charname),    &read_string,  &write_string  },
+    { "FontName",   off(font_name),   &read_string,  &write_string  },
     { "FontPaths",  off(font_paths),  &read_paths,   &write_paths   }
 #undef off
 };
