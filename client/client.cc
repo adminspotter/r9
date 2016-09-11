@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Sep 2016, 07:36:32 tquirk
+ *   last updated 10 Sep 2016, 12:50:52 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -46,6 +46,8 @@
 
 void error_callback(int, const char *);
 void key_callback(GLFWwindow *, int, int, int, int);
+void mouse_position_callback(GLFWwindow *, double, double);
+void mouse_button_callback(GLFWwindow *, int, int, int);
 void resize_callback(GLFWwindow *, int, int);
 
 std::vector<Comm *> comm;
@@ -91,11 +93,12 @@ int main(int argc, char **argv)
 
     glfwMakeContextCurrent(w);
     init_client_core();
+    ctx = new ui::context(800, 600);
 
     glfwSetKeyCallback(w, key_callback);
     glfwSetWindowSizeCallback(w, resize_callback);
-
-    ctx = new ui::context(800, 600);
+    glfwSetMouseButtonCallback(w, mouse_button_callback);
+    glfwSetCursorPosCallback(w, mouse_position_callback);
 
     /* Set the initial projection matrix */
     resize_callback(w, 800, 600);
@@ -125,6 +128,38 @@ void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(w, GL_TRUE);
+}
+
+void mouse_position_callback(GLFWwindow *w, double xpos, double ypos)
+{
+    ctx->mouse_pos_callback((int)xpos, (int)ypos);
+}
+
+void mouse_button_callback(GLFWwindow *w, int button, int action, int mods)
+{
+    int btn, act;
+
+    switch (button)
+    {
+      default:
+      case GLFW_MOUSE_BUTTON_1:  btn = ui::mouse::button0;  break;
+      case GLFW_MOUSE_BUTTON_2:  btn = ui::mouse::button1;  break;
+      case GLFW_MOUSE_BUTTON_3:  btn = ui::mouse::button2;  break;
+      case GLFW_MOUSE_BUTTON_4:  btn = ui::mouse::button3;  break;
+      case GLFW_MOUSE_BUTTON_5:  btn = ui::mouse::button4;  break;
+      case GLFW_MOUSE_BUTTON_6:  btn = ui::mouse::button5;  break;
+      case GLFW_MOUSE_BUTTON_7:  btn = ui::mouse::button6;  break;
+      case GLFW_MOUSE_BUTTON_8:  btn = ui::mouse::button7;  break;
+    }
+
+    switch (action)
+    {
+      default:
+      case GLFW_PRESS:    act = ui::mouse::down;  break;
+      case GLFW_RELEASE:  act = ui::mouse::up;    break;
+    }
+
+    ctx->mouse_btn_callback(btn, act);
 }
 
 void resize_callback(GLFWwindow *w, int width, int height)
