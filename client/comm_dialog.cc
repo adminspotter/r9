@@ -1,6 +1,6 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Sep 2016, 07:45:33 tquirk
+ *   last updated 11 Sep 2016, 12:11:47 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -33,6 +33,8 @@
 #include <iostream>
 
 #include "client.h"
+#include "configdata.h"
+#include "l10n.h"
 
 #include "ui/ui.h"
 #include "ui/row_column.h"
@@ -44,6 +46,9 @@
 static ui::font *dialog_font;
 static ui::text_field *user, *pass, *host;
 
+void setup_comm_callback(ui::event_target *, void *, void *);
+void close_dialog_callback(ui::event_target *, void *, void *);
+
 void create_login_dialog(ui::context *ctx)
 {
     ui::row_column *dialog;
@@ -54,7 +59,7 @@ void create_login_dialog(ui::context *ctx)
     ui::label *l;
     std::string str;
 
-    dialog_font = new ui::font(config.font_name, 20, config.font_paths);
+    dialog_font = new ui::font(config.font_name, 10, config.font_paths);
 
     dialog = new ui::row_column(ctx, 0, 0);
     dialog->set_va(ui::element::border, ui::side::all, &border,
@@ -98,21 +103,23 @@ void create_login_dialog(ui::context *ctx)
     b->set_va(ui::element::font, ui::ownership::shared, dialog_font,
               ui::element::border, ui::side::all, &border,
               ui::element::string, 0, &str, 0);
-    b->add_callback(setup_comm_callback, NULL);
-    b->add_callback(close_dialog_callback, dialog);
+    b->add_callback(ui::callback::btn_up, setup_comm_callback, NULL);
+    b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 
     b = new ui::button(dialog, 0, 0);
     str = _("Cancel");
     b->set_va(ui::element::font, ui::ownership::shared, dialog_font,
               ui::element::border, ui::side::all, &border,
               ui::element::string, 0, &str, 0);
-    b->add_callback(close_dialog_callback, dialog);
+    b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 }
 
 void setup_comm_callback(ui::event_target *t, void *call, void *client)
 {
+    char portstr[16];
     struct addrinfo hints, *ai;
     std::string host_str, user_str, pass_str;
+    int ret;
 
     if (host->get(ui::element::string, 0, &host_str) != 0
         || user->get(ui::element::string, 0, &user_str) != 0
@@ -129,7 +136,7 @@ void setup_comm_callback(ui::event_target *t, void *call, void *client)
         std::cout << "Couldn't find host " << host_str
                   << ": " << gai_strerror(ret) << " (" << ret << ')'
                   << std::endl;
-        return -1;
+        return;
     }
     setup_comm(ai, user_str.c_str(), pass_str.c_str(), config.charname.c_str());
 }
@@ -138,6 +145,6 @@ void close_dialog_callback(ui::event_target *t, void *call, void *client)
 {
     ui::manager *dialog = (ui::manager *)client;
 
-    delete dialog_font;
     dialog->close();
+    delete dialog_font;
 }
