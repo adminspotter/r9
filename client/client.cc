@@ -105,6 +105,9 @@ int main(int argc, char **argv)
     /* Set the initial projection matrix */
     resize_callback(w, 800, 600);
 
+    /* Let's try to login immediately */
+    create_login_dialog(ctx);
+
     while (!glfwWindowShouldClose(w))
     {
         draw_objects();

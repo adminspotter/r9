@@ -1,6 +1,6 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Sep 2016, 07:36:37 tquirk
+ *   last updated 10 Sep 2016, 07:51:21 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -34,7 +34,11 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include "ui/ui.h"
+
 void setup_comm(struct addrinfo *, const char *, const char *, const char *);
 void cleanup_comm(void);
+
+void create_login_dialog(ui::context *);
 
 #endif /* __INC_R9CLIENT_H__ */
