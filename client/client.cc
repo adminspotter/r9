@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Sep 2016, 12:50:52 tquirk
+ *   last updated 11 Sep 2016, 12:05:34 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -46,6 +46,7 @@
 
 void error_callback(int, const char *);
 void key_callback(GLFWwindow *, int, int, int, int);
+void char_callback(GLFWwindow *, unsigned int, int);
 void mouse_position_callback(GLFWwindow *, double, double);
 void mouse_button_callback(GLFWwindow *, int, int, int);
 void resize_callback(GLFWwindow *, int, int);
@@ -95,8 +96,9 @@ int main(int argc, char **argv)
     init_client_core();
     ctx = new ui::context(800, 600);
 
-    glfwSetKeyCallback(w, key_callback);
     glfwSetWindowSizeCallback(w, resize_callback);
+    glfwSetKeyCallback(w, key_callback);
+    glfwSetCharModsCallback(w, char_callback);
     glfwSetMouseButtonCallback(w, mouse_button_callback);
     glfwSetCursorPosCallback(w, mouse_position_callback);
 
@@ -126,8 +128,47 @@ void error_callback(int err, const char *desc)
 
 void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
 {
+    int ui_key = 0, ui_state, ui_mods = 0;
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(w, GL_TRUE);
+    switch (key)
+    {
+      case GLFW_KEY_LEFT:       ui_key = ui::key::l_arrow;  break;
+      case GLFW_KEY_RIGHT:      ui_key = ui::key::r_arrow;  break;
+      case GLFW_KEY_UP:         ui_key = ui::key::u_arrow;  break;
+      case GLFW_KEY_DOWN:       ui_key = ui::key::d_arrow;  break;
+      case GLFW_KEY_HOME:       ui_key = ui::key::home;     break;
+      case GLFW_KEY_END:        ui_key = ui::key::end;      break;
+      case GLFW_KEY_BACKSPACE:  ui_key = ui::key::bkspc;    break;
+      case GLFW_KEY_DELETE:     ui_key = ui::key::del;      break;
+      default:              return;
+    }
+    ui_state = (action == GLFW_PRESS ? ui::key::down : ui::key::up);
+    if (mods & GLFW_MOD_SHIFT)
+        ui_mods |= ui::key_mod::shift;
+    if (mods & GLFW_MOD_CONTROL)
+        ui_mods |= ui::key_mod::ctrl;
+    if (mods & GLFW_MOD_ALT)
+        ui_mods |= ui::key_mod::alt;
+    if (mods & GLFW_MOD_SUPER)
+        ui_mods |= ui::key_mod::super;
+    ctx->key_callback(ui_key, 0, ui_state, ui_mods);
+}
+
+void char_callback(GLFWwindow *w, unsigned int c, int mods)
+{
+    int ui_mods = 0;
+
+    if (mods & GLFW_MOD_SHIFT)
+        ui_mods |= ui::key_mod::shift;
+    if (mods & GLFW_MOD_CONTROL)
+        ui_mods |= ui::key_mod::ctrl;
+    if (mods & GLFW_MOD_ALT)
+        ui_mods |= ui::key_mod::alt;
+    if (mods & GLFW_MOD_SUPER)
+        ui_mods |= ui::key_mod::super;
+    ctx->key_callback(ui::key::no_key, c, ui::key::down, mods);
 }
 
 void mouse_position_callback(GLFWwindow *w, double xpos, double ypos)
