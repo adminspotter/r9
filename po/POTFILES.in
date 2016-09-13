@@ -1,9 +1,12 @@
 # List of source files which contain translatable strings.
 client/cache.h
+client/client.cc
+client/client.h
 client/client_core.cc
 client/client_core.h
 client/comm.cc
 client/comm.h
+client/comm_dialog.cc
 client/configdata.cc
 client/configdata.h
 client/object.h

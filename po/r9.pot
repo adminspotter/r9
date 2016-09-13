@@ -1,0 +1,78 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Trinity Annabelle Quirk
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: r9 0.1\n"
+"Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
+"POT-Creation-Date: 2016-09-09 08:26-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: client/client.cc:69
+msgid "failed to initialize GLFW"
+msgstr ""
+
+#: client/comm_dialog.cc:66
+msgid "Username"
+msgstr ""
+
+#: client/comm_dialog.cc:77
+msgid "Password"
+msgstr ""
+
+#: client/comm_dialog.cc:86
+msgid "Server"
+msgstr ""
+
+#: client/comm_dialog.cc:97
+msgid "OK"
+msgstr ""
+
+#: client/comm_dialog.cc:105
+msgid "Cancel"
+msgstr ""
+
+#: client/configdata.cc:202
+msgid "Skipping bad config line: "
+msgstr ""
+
+#: client/ui/font.cc:149
+msgid "Could not find home directory"
+msgstr ""
+
+#: client/ui/font.cc:156
+msgid "Could not find font "
+msgstr ""
+
+#: client/ui/font.cc:223
+msgid "Could not load font "
+msgstr ""
+
+#: client/ui/font.cc:277
+msgid "This font is not supported."
+msgstr ""
+
+#: client/ui/shader.cc:54
+msgid "could not open file "
+msgstr ""
+
+#: client/ui/shader.cc:77
+msgid "could not create shader: "
+msgstr ""
+
+#: client/ui/shader.cc:120
+msgid "could not create GL program: "
+msgstr ""
+
+#: client/ui/shader.cc:134
+msgid "Could not attach shaders to the shader program: "
+msgstr ""

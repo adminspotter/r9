@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Mar 2016, 07:37:35 tquirk
+ *   last updated 07 Sep 2016, 19:17:52 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -166,6 +166,7 @@ struct draw_object
 
 void draw_objects(void)
 {
+    glUseProgram(shader_pgm);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -206,6 +207,7 @@ void resize_window(int width, int height)
     /* A 50mm lens on a 35mm camera has a 39.6° horizontal and a 27.0°
      * vertical FoV.
      */
+    glUseProgram(shader_pgm);
     projection = glm::perspective(glm::radians(27.0f),
                                   (float)width / (float)height,
                                   0.1f, 1000.0f);
