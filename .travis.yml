@@ -7,6 +7,8 @@ compiler:
 - clang
 - gcc
 addons:
+  code_climate:
+    repo_token: a9c9c35be3c4efac3ab63a3c4927af7c079ec3b8e8fd9addba101f9c932272d9
   apt:
     packages:
     - autopoint
