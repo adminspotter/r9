@@ -1,5 +1,6 @@
 # r9 #
-[![Build Status](https://travis-ci.org/adminspotter/r9.svg?branch=master)](https://travis-ci.org/adminspotter/r9)
+
+[![Build Status](https://travis-ci.org/adminspotter/r9.svg?branch=master)](https://travis-ci.org/adminspotter/r9) [![Code Climate](https://codeclimate.com/github/adminspotter/r9/badges/gpa.svg)](https://codeclimate.com/github/adminspotter/r9)
 
 Revision IX (revision9, r9, etc.) is a client-server game engine in
 C++.
@@ -63,9 +64,9 @@ love to collaborate on.
 
 r9 has been built and tested on:
 
-  * CentOS Linux 6/7
-  * Ubuntu GNU/Linux Trusty (via [Travis CI](https://travis-ci.org))
-  * MacOS X Mavericks - ElCapitan
+* CentOS Linux 6/7
+* Ubuntu GNU/Linux Trusty (via [Travis CI](https://travis-ci.org))
+* MacOS X Mavericks - ElCapitan
 
 As long as your platform contains the typical POSIX libraries, you
 should at least be in the ballpark.  Most other Linuxes should be
@@ -75,12 +76,12 @@ any platform-specific stuff to its own files.
 
 ## Build dependencies ##
 
-  * A C++11 compiler
-  * OpenGL 3.2 support
-  * The GNU autotools
-  * [glm](http://glm.g-truc.net/)
-  * [GLFW](http://www.glfw.org/) 3.2
-  * [Xerces-C++](https://xerces.apache.org/xerces-c/)
+* A C++11 compiler
+* OpenGL 3.2 support
+* The GNU autotools
+* [glm](http://glm.g-truc.net/)
+* [GLFW](http://www.glfw.org/) 3.2
+* [Xerces-C++](https://xerces.apache.org/xerces-c/)
 
 ## Contributing ##
 
