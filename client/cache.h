@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 May 2016, 09:17:48 tquirk
+ *   last updated 19 Sep 2016, 18:35:40 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -118,7 +118,7 @@ class BasicCache
             for (;;)
             {
                 sleep(_bct::PRUNE_INTERVAL);
-                if (!gettimeofday(&limit, NULL))
+                if (gettimeofday(&limit, NULL))
                 {
                     std::clog << bc->type
                               << " reaper thread couldn't get time of day: "
