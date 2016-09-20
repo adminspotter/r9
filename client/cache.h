@@ -1,6 +1,6 @@
 /* cache.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Sep 2016, 18:35:40 tquirk
+ *   last updated 20 Sep 2016, 07:04:07 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -42,10 +42,6 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
-#include <time.h>
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif /* HAVE_SYS_TIME_H */
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif /* HAVE_SYS_STAT_H */
@@ -66,6 +62,7 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
+#include <chrono>
 
 #include "dtdresolver.h"
 
@@ -82,9 +79,11 @@ class BasicCache
 {
   protected:
     typedef BasicCache<obj_type, cleanup, key_type> _bct;
+    typedef std::chrono::steady_clock _bc_time;
+    typedef std::chrono::time_point<typename _bct::_bc_time> _bc_tpoint;
     typedef struct object_timeval_tag
     {
-        struct timeval lastused;
+        _bc_tpoint lastused;
         obj_type obj;
     }
     _bcos_t;
@@ -110,7 +109,8 @@ class BasicCache
     static void *prune_worker(void *arg)
         {
             _bct *bc = (_bct *)arg;
-            struct timeval limit;
+            _bc_tpoint limit;
+            std::chrono::seconds obj_lifetime(_bct::PRUNE_LIFETIME);
             typename _bct::_bcom_t::iterator i;
             std::vector<typename _bct::_bcom_t::iterator> old_elems;
             typename std::vector<typename _bct::_bcom_t::iterator>::iterator j;
@@ -118,19 +118,10 @@ class BasicCache
             for (;;)
             {
                 sleep(_bct::PRUNE_INTERVAL);
-                if (gettimeofday(&limit, NULL))
-                {
-                    std::clog << bc->type
-                              << " reaper thread couldn't get time of day: "
-                              << strerror(errno) << " (" << errno << ")"
-                              << std::endl;
-                    continue;
-                }
-                limit.tv_sec -= _bct::PRUNE_LIFETIME;
+                limit = _bc_time::now() - obj_lifetime;
                 old_elems.clear();
                 for (i = bc->_bc_map.begin(); i != bc->_bc_map.end(); ++i)
-                    if (i->first != 0LL
-                        && i->second.lastused.tv_sec >= limit.tv_sec)
+                    if (i->first != 0LL && i->second.lastused >= limit)
                         old_elems.push_back(i);
 
                 if (old_elems.size() > 0)
@@ -189,7 +180,7 @@ class BasicCache
         {
             _bcos_t& item = this->_bc_map[objid];
 
-            gettimeofday(&(item.lastused), NULL);
+            item.lastused = _bc_time::now();
             return item.obj;
         };
     void erase(key_type objid)
