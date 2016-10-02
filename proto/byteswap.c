@@ -1,6 +1,6 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Feb 2016, 16:47:05 tquirk
+ *   last updated 02 Oct 2016, 07:53:42 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -261,9 +261,6 @@ static int hton_server_notice(packet *sn, size_t s)
 {
     if (s < sizeof(server_notice))
         return 0;
-    if (sn->srv.ipproto == 4)
-        sn->srv.srv.v4.s_addr = htonl(sn->srv.srv.v4.s_addr);
-    /* No need to convert ipv6 addresses - they're always in network order */
     sn->srv.port = htons(sn->srv.port);
     return 1;
 }
@@ -273,9 +270,6 @@ static int ntoh_server_notice(packet *sn, size_t s)
 {
     if (s < sizeof(server_notice))
         return 0;
-    if (sn->srv.ipproto == 4)
-        sn->srv.srv.v4.s_addr = ntohl(sn->srv.srv.v4.s_addr);
-    /* No need to convert ipv6 addresses - they're always in network order */
     sn->srv.port = ntohs(sn->srv.port);
     return 1;
 }

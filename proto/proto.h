@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:34:28 tquirk
+ *   last updated 02 Oct 2016, 07:52:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -76,6 +76,9 @@
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif /* HAVE_NETINET_IN_H */
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif /* HAVE_ARPA_INET_H */
 
 /* Some defines for packet types. */
 #define TYPE_ACKPKT 0        /* Acknowledgement packet */
@@ -180,12 +183,7 @@ typedef struct server_notice_tag
     uint8_t version;        /* protocol version number */
     uint64_t sequence;      /* timestamp / sequence number */
     uint8_t ipproto;        /* 4 or 6 */
-    union srv_tag
-    {
-        struct in_addr v4;
-        struct in6_addr v6;
-    }
-    srv;
+    char addr[INET6_ADDRSTRLEN];
     in_port_t port;
     uint8_t direction;      /* where the neighbor is */
 } __attribute__ ((__packed__))

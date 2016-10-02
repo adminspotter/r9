@@ -1,6 +1,6 @@
 /* subserver.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2015, 11:07:39 tquirk
+ *   last updated 02 Oct 2016, 08:01:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -266,7 +266,7 @@ int main(int argc, char **argv)
 static int handle_client(int fd)
 {
     int retval;
-    /* FIXME:  make sure this buf is long enough for all our protocol */
+    /* As of 2016-10-02, max size of the protocol is 202 bytes. */
     unsigned char buf[1024];
 
     /* We index into the buffer by sizeof(int) because we only want to
