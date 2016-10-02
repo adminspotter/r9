@@ -1,6 +1,6 @@
 /* sockaddr.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2016, 09:54:58 tquirk
+ *   last updated 02 Oct 2016, 10:07:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -252,7 +252,7 @@ class Sockaddr_in6 : public Sockaddr
         };
     Sockaddr_in6(const struct sockaddr& s)
         {
-            struct sockaddr_in6 *si
+            const struct sockaddr_in6 *si
                 = reinterpret_cast<const struct sockaddr_in6&>(s);
             this->sin6 = (struct sockaddr_in6 *)&ss;
             this->sin6->sin6_family = si->sin6_family;
@@ -341,7 +341,7 @@ class Sockaddr_un : public Sockaddr
         };
     Sockaddr_un(const struct sockaddr& s)
         {
-            struct sockaddr_un *su
+            const struct sockaddr_un *su
                 = reinterpret_cast<const struct sockaddr_un&>(s);
             this->sun = (struct sockaddr_un *)&ss;
             this->sun->sun_family = su->sun_family;
