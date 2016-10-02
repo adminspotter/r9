@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2016, 07:36:36 tquirk
+ *   last updated 02 Oct 2016, 09:57:53 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -474,7 +474,12 @@ static void cleanup_log(void)
 
     /* Close the system log gracefully. */
     if (config.daemonize)
-        dynamic_cast<Log *>(std::clog.rdbuf())->close();
+    {
+        Log *l = dynamic_cast<Log *>(std::clog.rdbuf());
+
+        if (l != NULL)
+            l->close();
+    }
 }
 
 static void cleanup_daemon(void)

@@ -1,6 +1,6 @@
 /* sockaddr.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Feb 2016, 14:02:35 tquirk
+ *   last updated 02 Oct 2016, 09:54:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -22,6 +22,14 @@
  *
  * This file contains a wrapper around the struct sockaddr family, so that we
  * can use them in a more straightforward manner.
+ *
+ * There are a few instances in which we do a dynamic_cast here on a
+ * reference, and don't bother to handle any possible exceptions; this
+ * is by design.  All of those instances are in constructors, and this
+ * provides the correct behaviour per RAII principles.  Further, the
+ * factory function will throw an exception if the struct type is not
+ * recognized, so the exceptions will all come from largely the same
+ * source.
  *
  * Things to do
  *
@@ -244,7 +252,8 @@ class Sockaddr_in6 : public Sockaddr
         };
     Sockaddr_in6(const struct sockaddr& s)
         {
-            struct sockaddr_in6 *si = (struct sockaddr_in6 *)(&s);
+            struct sockaddr_in6 *si
+                = reinterpret_cast<const struct sockaddr_in6&>(s);
             this->sin6 = (struct sockaddr_in6 *)&ss;
             this->sin6->sin6_family = si->sin6_family;
             this->sin6->sin6_port = si->sin6_port;
@@ -332,7 +341,8 @@ class Sockaddr_un : public Sockaddr
         };
     Sockaddr_un(const struct sockaddr& s)
         {
-            struct sockaddr_un *su = (struct sockaddr_un *)(&s);
+            struct sockaddr_un *su
+                = reinterpret_cast<const struct sockaddr_un&>(s);
             this->sun = (struct sockaddr_un *)&ss;
             this->sun->sun_family = su->sun_family;
             memcpy(this->sun->sun_path,
