@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Feb 2016, 15:40:51 tquirk
+ *   last updated 02 Oct 2016, 07:36:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -137,7 +137,9 @@ int main(int argc, char **argv)
     /* Since all our stuff is running in other threads, we'll just
      * wait until the exit flag gets waved.
      *
-     * FIXME: do some error checking here
+     * If we have errors with the exit flag here, we should just go
+     * ahead and continue execution through to the exit.  Error
+     * checking is kind of a moot point.
      */
     pthread_mutex_lock(&exit_mutex);
     pthread_cond_wait(&exit_flag, &exit_mutex);
