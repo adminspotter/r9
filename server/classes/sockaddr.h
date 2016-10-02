@@ -1,6 +1,6 @@
 /* sockaddr.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2016, 10:07:21 tquirk
+ *   last updated 02 Oct 2016, 10:17:59 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -252,16 +252,16 @@ class Sockaddr_in6 : public Sockaddr
         };
     Sockaddr_in6(const struct sockaddr& s)
         {
-            const struct sockaddr_in6 *si
+            const struct sockaddr_in6& si
                 = reinterpret_cast<const struct sockaddr_in6&>(s);
             this->sin6 = (struct sockaddr_in6 *)&ss;
-            this->sin6->sin6_family = si->sin6_family;
-            this->sin6->sin6_port = si->sin6_port;
-            this->sin6->sin6_flowinfo = si->sin6_flowinfo;
+            this->sin6->sin6_family = si.sin6_family;
+            this->sin6->sin6_port = si.sin6_port;
+            this->sin6->sin6_flowinfo = si.sin6_flowinfo;
             memcpy(&(this->sin6->sin6_addr),
-                   &(si->sin6_addr),
+                   &(si.sin6_addr),
                    sizeof(struct in6_addr));
-            this->sin6->sin6_scope_id = si->sin6_scope_id;
+            this->sin6->sin6_scope_id = si.sin6_scope_id;
             memset(this->ip_str, 0, sizeof(this->ip_str));
         };
     ~Sockaddr_in6()
@@ -341,12 +341,12 @@ class Sockaddr_un : public Sockaddr
         };
     Sockaddr_un(const struct sockaddr& s)
         {
-            const struct sockaddr_un *su
+            const struct sockaddr_un& su
                 = reinterpret_cast<const struct sockaddr_un&>(s);
             this->sun = (struct sockaddr_un *)&ss;
-            this->sun->sun_family = su->sun_family;
+            this->sun->sun_family = su.sun_family;
             memcpy(this->sun->sun_path,
-                   su->sun_path,
+                   su.sun_path,
                    sizeof(this->sun->sun_path));
         };
     ~Sockaddr_un()
