@@ -145,6 +145,7 @@ void close_dialog_callback(ui::active *t, void *call, void *client)
 {
     ui::manager *dialog = (ui::manager *)client;
 
-    dialog->close();
+    //dialog->close();
+    delete dialog;
     delete dialog_font;
 }
