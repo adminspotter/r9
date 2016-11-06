@@ -1,6 +1,6 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Oct 2016, 08:22:14 tquirk
+ *   last updated 06 Nov 2016, 10:10:57 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -145,7 +145,6 @@ void close_dialog_callback(ui::active *t, void *call, void *client)
 {
     ui::manager *dialog = (ui::manager *)client;
 
-    //dialog->close();
-    delete dialog;
+    dialog->close();
     delete dialog_font;
 }
