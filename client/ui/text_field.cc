@@ -1,6 +1,6 @@
 /* text_field.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Sep 2016, 07:51:45 tquirk
+ *   last updated 12 Nov 2016, 08:17:00 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <ratio>
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "ui_defs.h"
@@ -39,12 +40,8 @@ int ui::text_field::get_size(GLuint t, void *v)
 {
     switch (t)
     {
-      case ui::size::max_width:
-        *((GLuint *)v) = this->max_length;
-        return 0;
-
-      default:
-        return this->label::get_size(t, v);
+      case ui::size::max_width:  *((GLuint *)v) = this->max_length;  return 0;
+      default:                   return this->label::get_size(t, v);
     }
 }
 
@@ -52,37 +49,46 @@ void ui::text_field::set_size(GLuint t, void *v)
 {
     switch (t)
     {
-      case ui::size::max_width:  this->max_length = *(int *)v;  break;
+      case ui::size::max_width:  this->max_length = *(int *)v;
+                                 this->calculate_widget_size();
+                                 this->populate_buffers();
+                                 this->reset_cursor();  break;
       default:                   this->label::set_size(t, v);   break;
     }
 }
 
-int ui::text_field::get_cursor_pos(GLuint t, void *v)
+int ui::text_field::get_cursor(GLuint t, void *v)
 {
-    *((GLuint *)v) = this->cursor_pos;
-    return 0;
+    GLuint *val = (GLuint *)v;
+
+    switch (t)
+    {
+      case ui::cursor::position:  return this->get_cursor_pos(val);
+      case ui::cursor::blink:     return this->get_cursor_blink(val);
+      default:                    return 1;
+    }
 }
 
-void ui::text_field::set_cursor_pos(GLuint t, void *v)
+void ui::text_field::set_cursor(GLuint t, void *v)
 {
-    GLuint new_v = *((GLuint *)v);
+    GLuint val = *(GLuint *)v;
 
-    if (new_v > this->str.size())
-        new_v = this->str.size();
-    this->cursor_pos = new_v;
+    switch (t)
+    {
+      case ui::cursor::position:  this->set_cursor_pos(val);    break;
+      case ui::cursor::blink:     this->set_cursor_blink(val);  break;
+    }
+    this->generate_string_image();
     this->reset_cursor();
 }
 
-/* The cursor blink rate is in milliseconds.  Zero will turn blinking off. */
-int ui::text_field::get_cursor_blink(GLuint t, void *v)
+void ui::text_field::set_font(GLuint t, void *v)
 {
-    *((GLuint *)v) = this->blink;
-    return 0;
-}
+    this->label::set_font(t, v);
 
-void ui::text_field::set_cursor_blink(GLuint t, void *v)
-{
-    this->blink = *((GLuint *)v);
+    this->calculate_widget_size();
+    this->generate_cursor();
+    this->generate_string_image();
     this->reset_cursor();
 }
 
@@ -90,6 +96,7 @@ void ui::text_field::set_string(GLuint t, void *v)
 {
     this->label::set_string(t, v);
     this->cursor_pos = this->str.size();
+    this->generate_string_image();
     this->reset_cursor();
 }
 
@@ -98,31 +105,31 @@ void ui::text_field::set_image(GLuint t, void *v)
     /* Don't do anything; this doesn't make sense in this widget. */
 }
 
-void ui::text_field::enter_callback(ui::event_target *p,
+void ui::text_field::enter_callback(ui::active *a,
                                     void *call,
                                     void *client)
 {
-    ui::text_field *t = dynamic_cast<ui::text_field *>(p);
+    ui::text_field *t = dynamic_cast<ui::text_field *>(a);
 
     if (t != NULL)
         t->activate_cursor();
 }
 
-void ui::text_field::leave_callback(ui::event_target *p,
+void ui::text_field::leave_callback(ui::active *a,
                                     void *call,
                                     void *client)
 {
-    ui::text_field *t = dynamic_cast<ui::text_field *>(p);
+    ui::text_field *t = dynamic_cast<ui::text_field *>(a);
 
     if (t != NULL)
         t->deactivate_cursor();
 }
 
-void ui::text_field::key_callback(ui::event_target *p,
+void ui::text_field::key_callback(ui::active *a,
                                   void *call,
                                   void *client)
 {
-    ui::text_field *t = dynamic_cast<ui::text_field *>(p);
+    ui::text_field *t = dynamic_cast<ui::text_field *>(a);
     ui::key_call_data *c = (ui::key_call_data *)call;
 
     if (t != NULL)
@@ -140,6 +147,33 @@ void ui::text_field::key_callback(ui::event_target *p,
               case ui::key::del:      t->remove_next_char();      break;
             }
     }
+}
+
+int ui::text_field::get_cursor_pos(GLuint *v)
+{
+    *v = this->cursor_pos;
+    return 0;
+}
+
+void ui::text_field::set_cursor_pos(GLuint v)
+{
+    if (v > this->str.size())
+        v = this->str.size();
+    this->cursor_pos = v;
+    this->reset_cursor();
+}
+
+/* The cursor blink rate is in milliseconds.  Zero will turn blinking off. */
+int ui::text_field::get_cursor_blink(GLuint *v)
+{
+    *v = this->blink;
+    return 0;
+}
+
+void ui::text_field::set_cursor_blink(GLuint v)
+{
+    this->blink = v;
+    this->reset_cursor();
 }
 
 void ui::text_field::reset_cursor(void)
@@ -162,6 +196,7 @@ void ui::text_field::deactivate_cursor(void)
 void ui::text_field::first_char(void)
 {
     this->cursor_pos = 0;
+    this->generate_string_image();
     this->populate_buffers();
 }
 
@@ -170,19 +205,25 @@ void ui::text_field::previous_char(void)
     if (this->cursor_pos > 0)
     {
         --this->cursor_pos;
+        this->generate_string_image();
         this->populate_buffers();
     }
 }
 
 void ui::text_field::next_char(void)
 {
-    this->cursor_pos = std::min((GLuint)this->str.size(), this->cursor_pos + 1);
-    this->populate_buffers();
+    if (this->cursor_pos < this->str.size())
+    {
+        ++this->cursor_pos;
+        this->generate_string_image();
+        this->populate_buffers();
+    }
 }
 
 void ui::text_field::last_char(void)
 {
     this->cursor_pos = this->str.size();
+    this->generate_string_image();
     this->populate_buffers();
 }
 
@@ -220,7 +261,7 @@ void ui::text_field::get_string_size(const std::u32string& str,
         this->font->get_string_size(str, sz);
 }
 
-int ui::text_field::get_cursor_pixel_pos(void)
+int ui::text_field::get_raw_cursor_pos(void)
 {
     int ret = 0;
 
@@ -234,169 +275,186 @@ int ui::text_field::get_cursor_pixel_pos(void)
     return ret;
 }
 
-void ui::text_field::generate_cursor(int pixel_pos)
+void ui::text_field::set_cursor_transform(int pixel_pos)
+{
+    glm::vec3 dest;
+    glm::mat4 new_trans;
+
+    this->parent->get(ui::element::pixel_size, ui::size::all, &dest);
+    dest.x *= this->margin[1] + this->border[1] + 1 + pixel_pos;
+    dest.y = -(dest.y * (this->margin[0] + this->border[0] + 1));
+    this->cursor_transform = glm::translate(new_trans, dest);
+}
+
+int ui::text_field::calculate_field_length(void)
+{
+    /* We have an extra pixel on each side of the field, per
+     * ui::label::calculate_widget_size, thus the literal 2.
+     */
+    return this->dim.x - this->margin[1] - this->margin[2]
+        - this->border[1] - this->border[2] - 2;
+}
+
+void ui::text_field::generate_string_image(void)
+{
+    this->label::generate_string_image();
+
+    std::vector<int> string_max = {0, 0, 0};
+    int pixel_pos = this->get_raw_cursor_pos();
+    int field_len = this->calculate_field_length();
+
+    this->get_string_size(this->str, string_max);
+    if (string_max[0] > field_len)
+    {
+        /* The full string is too big to be displayed in its entirety.
+         * We'll chunk the image into half-widget-size pieces, and try
+         * to pick a starting chunk such that the cursor is in the
+         * second half of the widget.
+         */
+        ui::image tmp_img;
+        int chunk = field_len / 2;
+        int which = std::max((pixel_pos / chunk) - 1, 0);
+        int start = chunk * which;
+
+        /* Take the appropriate portion of the string image */
+        tmp_img.width = std::min(field_len, string_max[0] - start);
+        tmp_img.height = this->img.height;
+        tmp_img.per_pixel = this->img.per_pixel;
+        tmp_img.data = new unsigned char[tmp_img.width
+                                         * tmp_img.height
+                                         * tmp_img.per_pixel];
+        for (int r = 0; r < tmp_img.height; ++r)
+            memcpy(&tmp_img.data[r * tmp_img.width],
+                   &this->img.data[r * this->img.width + start],
+                   tmp_img.width);
+        this->img = tmp_img;
+
+        /* Fix the cursor's position */
+        pixel_pos -= start;
+    }
+
+    this->set_cursor_transform(pixel_pos);
+}
+
+void ui::text_field::calculate_widget_size(void)
+{
+    std::vector<int> font_max = {0, 0, 0};
+    glm::ivec2 size;
+
+    this->font->max_cell_size(font_max);
+    font_max[0] *= this->max_length;
+    size.x = font_max[0]
+        + this->border[1] + this->border[2]
+        + this->margin[1] + this->margin[2] + 2;
+    size.y = font_max[1] + font_max[2]
+        + this->border[0] + this->border[3]
+        + this->margin[0] + this->margin[3] + 2;
+    this->set_size(ui::size::all, &size);
+}
+
+void ui::text_field::generate_cursor(void)
 {
     if (this->font != NULL)
     {
-        float vertex[48];
-        float x = this->pos.x, y = this->pos.y, h = this->size.y;
-        float sw, m[4], b[4];
-        glm::vec2 ps;
-        GLuint temp;
-        if (pixel_pos < 0)
-            pixel_pos = this->get_cursor_pixel_pos();
+        ui::vertex_buffer *vb = new ui::vertex_buffer(32, 6);
+        float h, m[2], b[2];
+        glm::vec2 psz;
 
-        this->parent->get(ui::element::pixel_size, ui::size::all, &ps);
-        ps.y = -ps.y;
-        sw = ps.x * (float)pixel_pos;
-        m[0] = this->margin[0] * ps.y;  b[0] = this->border[0] * ps.y;
-        m[1] = this->margin[1] * ps.x;  b[1] = this->border[1] * ps.x;
-        m[2] = this->margin[2] * ps.x;  b[2] = this->border[2] * ps.x;
-        m[3] = this->margin[3] * ps.y;  b[3] = this->border[3] * ps.y;
+        this->parent->get(ui::element::pixel_size, ui::size::all, &psz);
+        psz.y = -psz.y;
+        h = ((float)this->dim.y) * psz.y;
+        m[0] = this->margin[0] * psz.y;  m[1] = this->margin[3] * psz.y;
+        b[0] = this->border[0] * psz.y;  b[1] = this->border[3] * psz.y;
 
-        vertex[0] = x * ps.x - 1.0f + m[1] + b[1] + sw + ps.x;
-        vertex[1] = y * ps.y + 1.0f + m[0] + b[0] + ps.y;
-        memcpy(&vertex[2],
-               glm::value_ptr(this->foreground), sizeof(float) * 4);
-        vertex[6] = vertex[7] = ui::panel::no_texture;
+        vb->generate_box(glm::vec2(-1.0f, 1.0f),
+                         glm::vec2(-1.0f + psz.x,
+                                   1.0f + h - m[0] - b[0] - m[1]
+                                   - b[1] - psz.y - psz.y),
+                         this->foreground);
 
-        vertex[8] = vertex[0];
-        vertex[9] = vertex[1] + (h * ps.y) - m[0] - b[0] - m[3] - b[3] - ps.y - ps.y;
-        memcpy(&vertex[10],
-               glm::value_ptr(this->foreground), sizeof(float) * 4);
-        vertex[14] = vertex[15] = ui::panel::no_texture;
-
-        vertex[16] = vertex[0] + ps.x;
-        vertex[17] = vertex[1];
-        memcpy(&vertex[18],
-               glm::value_ptr(this->foreground), sizeof(float) * 4);
-        vertex[22] = vertex[23] = ui::panel::no_texture;
-
-        vertex[24] = vertex[0];
-        vertex[25] = vertex[9];
-        memcpy(&vertex[26],
-               glm::value_ptr(this->foreground), sizeof(float) * 4);
-        vertex[30] = vertex[31] = ui::panel::no_texture;
-
-        vertex[32] = vertex[16];
-        vertex[33] = vertex[9];
-        memcpy(&vertex[34],
-               glm::value_ptr(this->foreground), sizeof(float) * 4);
-        vertex[38] = vertex[39] = ui::panel::no_texture;
-
-        vertex[40] = vertex[16];
-        vertex[41] = vertex[1];
-        memcpy(&vertex[42],
-               glm::value_ptr(this->foreground), sizeof(float) * 4);
-        vertex[46] = vertex[47] = ui::panel::no_texture;
-
+        this->cursor_element_count = vb->element_index;
         glBindVertexArray(this->cursor_vao);
         glBindBuffer(GL_ARRAY_BUFFER, this->cursor_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER,
+                     vb->vertex_size(), vb->vertex,
+                     GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->cursor_ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     vb->element_size(), vb->element,
+                     GL_DYNAMIC_DRAW);
+        delete vb;
     }
 }
 
-void ui::text_field::populate_buffers(void)
+/* The ui::label's generate_points() assumes that we want to wrap our
+ * images as tightly as possible.  In this widget we use the cell
+ * size, which is constant for any font, as the sizing for our widget,
+ * and we want the baselines for our strings to always be in the same
+ * place in the widget.  We only need to adjust the image s/t values
+ * along the y-axis.
+ */
+ui::vertex_buffer *ui::text_field::generate_points(void)
 {
-    if (this->font != NULL)
-    {
-        float vertex[160], pw, ph, m[4], b[4];
-        GLuint element[60];
-        std::vector<int> font_max = {0, 0, 0}, string_max = {0, 0, 0};
-        ui::image tmp_img = this->img;
+    ui::vertex_buffer *vb = this->label::generate_points();
+    std::vector<int> font_max = {0, 0, 0}, string_max = {0, 0, 0};
+    float ph;
 
-        this->font->max_cell_size(font_max);
-        font_max[0] *= this->max_length;
-        this->get_string_size(this->str, string_max);
-        if (string_max[0] > font_max[0])
-        {
-            /* The chunk size is half the widget's width */
-            int chunk = font_max[0] / 2;
-            int pixel_pos = this->get_cursor_pixel_pos();
-            /* We'll keep the cursor in the second half of the widget */
-            int which = std::max((pixel_pos / chunk) - 1, 0);
-            int start = chunk * which;
+    if (this->img.data == NULL)
+        return vb;
 
-            /* Take the appropriate portion of the string image */
-            tmp_img.width = std::min(font_max[0], string_max[0] - start);
-            delete[] tmp_img.data;
-            tmp_img.data = new unsigned char[tmp_img.width * tmp_img.height * tmp_img.per_pixel];
-            for (int r = 0; r < tmp_img.height; ++r)
-                memcpy(&tmp_img.data[r * tmp_img.width],
-                       &this->img.data[r * this->img.width + start],
-                       tmp_img.width);
+    this->font->max_cell_size(font_max);
+    this->get_string_size(this->str, string_max);
 
-            /* Fix the cursor's position */
-            pixel_pos -= start;
-            this->generate_cursor(pixel_pos);
-        }
-        else
-            this->generate_cursor();
+    ph = 1.0f / (float)this->img.height;
 
-        this->calculate_widget_size(font_max[0], font_max[1] + font_max[2]);
-        this->panel::generate_points(vertex, element);
+    vb->vertex[7] = 1.0f + ((this->margin[0] + this->border[0] + 1
+                             + font_max[1] - string_max[1]) * ph);
+    vb->vertex[15] = vb->vertex[7];
+    vb->vertex[23] = 0.0f - ((this->margin[3] + this->border[3] + 1
+                              + font_max[2] - string_max[2]) * ph);
+    vb->vertex[31] = vb->vertex[23];
 
-        if (tmp_img.data != NULL)
-        {
-            pw = 1.0f / (float)tmp_img.width;
-            ph = 1.0f / (float)tmp_img.height;
-            m[0] = this->margin[0] * ph;  b[0] = this->border[0] * ph;
-            m[1] = this->margin[1] * pw;  b[1] = this->border[1] * pw;
-            m[2] = this->margin[2] * pw;  b[2] = this->border[2] * pw;
-            m[3] = this->margin[3] * ph;  b[3] = this->border[3] * ph;
-
-            vertex[6]  = 0.0f - m[1] - b[1] - pw;
-            vertex[7]  = 1.0f + m[0] + b[0] + ph
-                + ((font_max[1] - string_max[1]) * ph);
-
-            vertex[14] = 1.0f
-                + ((font_max[0] - tmp_img.width) * pw)
-                + m[2] + b[2] + pw;
-            vertex[15] = vertex[7];
-
-            vertex[22] = vertex[6];
-            vertex[23] = 0.0f - m[3] - b[3] - ph
-                - ((font_max[2] - string_max[2]) * ph);
-
-            vertex[30] = vertex[14];
-            vertex[31] = vertex[23];
-
-            memcpy(&vertex[2],
-                   glm::value_ptr(this->foreground), sizeof(float) * 4);
-            memcpy(&vertex[10],
-                   glm::value_ptr(this->foreground), sizeof(float) * 4);
-            memcpy(&vertex[18],
-                   glm::value_ptr(this->foreground), sizeof(float) * 4);
-            memcpy(&vertex[26],
-                   glm::value_ptr(this->foreground), sizeof(float) * 4);
-        }
-        glBindVertexArray(this->vao);
-        glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-        glBufferData(GL_ARRAY_BUFFER,
-                     sizeof(float) * this->vertex_count, vertex,
-                     GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     sizeof(GLuint) * this->element_count, element,
-                     GL_DYNAMIC_DRAW);
-
-        glBindTexture(GL_TEXTURE_2D, this->tex);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
-                     tmp_img.width, tmp_img.height, 0, GL_RED,
-                     GL_UNSIGNED_BYTE, tmp_img.data);
-    }
+    return vb;
 }
 
 ui::text_field::text_field(ui::composite *c, GLuint w, GLuint h)
-    : ui::label::label(c, w, h)
+    : ui::label::label(c, w, h), ui::rect::rect(w, h), cursor_transform()
 {
+    GLuint pos_attr, color_attr, texture_attr;
+
     this->cursor_pos = 0;
     this->blink = 250;
     this->max_length = 20;
     this->cursor_clock = std::chrono::high_resolution_clock::now();
     this->cursor_visible = true;
     this->cursor_active = false;
+    this->cursor_element_count = 0;
+
+    this->parent->get_va(ui::element::attribute,
+                         ui::attribute::position,
+                         &pos_attr,
+                         ui::element::attribute,
+                         ui::attribute::color,
+                         &color_attr,
+                         ui::element::attribute,
+                         ui::attribute::texture,
+                         &texture_attr, 0);
+
+    glGenVertexArrays(1, &this->cursor_vao);
+    glBindVertexArray(this->cursor_vao);
+    glGenBuffers(1, &this->cursor_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, this->cursor_vbo);
+    glGenBuffers(1, &this->cursor_ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->cursor_ebo);
+    glEnableVertexAttribArray(pos_attr);
+    glVertexAttribPointer(pos_attr, 2, GL_FLOAT, GL_FALSE,
+                          sizeof(float) * 8, (void *)0);
+    glEnableVertexAttribArray(color_attr);
+    glVertexAttribPointer(color_attr, 4, GL_FLOAT, GL_FALSE,
+                          sizeof(float) * 8, (void *)(sizeof(float) * 2));
+    glEnableVertexAttribArray(texture_attr);
+    glVertexAttribPointer(texture_attr, 2, GL_FLOAT, GL_FALSE,
+                          sizeof(float) * 8, (void *)(sizeof(float) * 6));
 
     this->add_callback(ui::callback::enter,
                        ui::text_field::enter_callback,
@@ -408,12 +466,12 @@ ui::text_field::text_field(ui::composite *c, GLuint w, GLuint h)
                        ui::text_field::key_callback,
                        NULL);
 
-    this->prep_vao_vbo(&this->cursor_vao, &this->cursor_vbo);
     this->populate_buffers();
 }
 
 ui::text_field::~text_field()
 {
+    glDeleteBuffers(1, &this->cursor_ebo);
     glDeleteBuffers(1, &this->cursor_vbo);
     glDeleteVertexArrays(1, &this->cursor_vao);
 }
@@ -424,13 +482,8 @@ int ui::text_field::get(GLuint e, GLuint t, void *v)
 
     switch (e)
     {
-      case ui::element::cursor:
-        switch (t)
-        {
-          case ui::cursor::position:  return this->get_cursor_pos(t, v);
-          case ui::cursor::blink:     return this->get_cursor_blink(t, v);
-        }
-      default:                        return ui::label::get(e, t, v);
+      case ui::element::cursor:  return this->get_cursor(t, v);
+      default:                   return this->label::get(e, t, v);
     }
 }
 
@@ -438,24 +491,14 @@ void ui::text_field::set(GLuint e, GLuint t, void *v)
 {
     switch (e)
     {
-      case ui::element::cursor:
-        switch (t)
-        {
-          case ui::cursor::position:  this->set_cursor_pos(t, v);   break;
-          case ui::cursor::blink:     this->set_cursor_blink(t, v); break;
-        }
-        this->generate_cursor();
-        break;
-
-      default:
-        ui::label::set(e, t, v);
-        break;
+      case ui::element::cursor:  this->set_cursor(t, v);     break;
+      default:                   this->label::set(e, t, v);  break;
     }
 }
 
-void ui::text_field::draw(void)
+void ui::text_field::draw(GLuint trans_uniform, const glm::mat4& parent_trans)
 {
-    this->label::draw();
+    this->label::draw(trans_uniform, parent_trans);
     if (this->cursor_active)
     {
         if (this->blink > 0)
@@ -474,9 +517,16 @@ void ui::text_field::draw(void)
         }
         if (this->cursor_visible)
         {
+            glm::mat4 trans
+                = this->cursor_transform * this->pos_transform * parent_trans;
+
             glBindVertexArray(this->cursor_vao);
             glBindBuffer(GL_ARRAY_BUFFER, this->cursor_vbo);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->cursor_ebo);
+            glUniformMatrix4fv(trans_uniform, 1, GL_FALSE,
+                               glm::value_ptr(trans));
+            glDrawElements(GL_TRIANGLES, this->cursor_element_count,
+                           GL_UNSIGNED_INT, 0);
         }
     }
 }

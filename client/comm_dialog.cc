@@ -1,6 +1,6 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Sep 2016, 12:11:47 tquirk
+ *   last updated 06 Nov 2016, 10:10:57 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -46,8 +46,8 @@
 static ui::font *dialog_font;
 static ui::text_field *user, *pass, *host;
 
-void setup_comm_callback(ui::event_target *, void *, void *);
-void close_dialog_callback(ui::event_target *, void *, void *);
+void setup_comm_callback(ui::active *, void *, void *);
+void close_dialog_callback(ui::active *, void *, void *);
 
 void create_login_dialog(ui::context *ctx)
 {
@@ -114,7 +114,7 @@ void create_login_dialog(ui::context *ctx)
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 }
 
-void setup_comm_callback(ui::event_target *t, void *call, void *client)
+void setup_comm_callback(ui::active *t, void *call, void *client)
 {
     char portstr[16];
     struct addrinfo hints, *ai;
@@ -141,7 +141,7 @@ void setup_comm_callback(ui::event_target *t, void *call, void *client)
     setup_comm(ai, user_str.c_str(), pass_str.c_str(), config.charname.c_str());
 }
 
-void close_dialog_callback(ui::event_target *t, void *call, void *client)
+void close_dialog_callback(ui::active *t, void *call, void *client)
 {
     ui::manager *dialog = (ui::manager *)client;
 

@@ -1,6 +1,6 @@
 /* row_column.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Aug 2016, 09:36:22 tquirk
+ *   last updated 12 Nov 2016, 06:31:40 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -126,20 +126,18 @@ glm::ivec2 ui::row_column::calculate_grid_size(void)
 void ui::row_column::set_desired_size(void)
 {
     glm::ivec2 cell_size(0, 0), grid_size(0, 0);
-    GLuint zero = 0;
 
     cell_size = this->calculate_cell_size();
     grid_size = this->calculate_grid_size();
-    this->size.x = ((cell_size.x + this->child_spacing.x) * grid_size.x)
+    this->dim.x = ((cell_size.x + this->child_spacing.x) * grid_size.x)
         + this->child_spacing.x
         + this->margin[1] + this->margin[2]
         + this->border[1] + this->border[2];
-    this->size.y = ((cell_size.y + this->child_spacing.y) * grid_size.y)
+    this->dim.y = ((cell_size.y + this->child_spacing.y) * grid_size.y)
         + this->child_spacing.y
         + this->margin[0] + this->margin[3]
         + this->border[0] + this->border[3];
-    this->dim = this->size;
-    this->composite::set_size(0, &zero);
+    this->regenerate_search_tree();
     this->composite::parent->move_child(this);
     this->populate_buffers();
 
@@ -192,7 +190,7 @@ void ui::row_column::insert_column_major(glm::ivec2& grid, glm::ivec2& cell)
 }
 
 ui::row_column::row_column(ui::composite *c, GLuint w, GLuint h)
-    : ui::manager::manager(c, w, h), grid_sz(1, 0)
+    : ui::manager::manager(c, w, h), ui::rect::rect(w, h), grid_sz(1, 0)
 {
     this->pack_order = ui::order::row;
 }
@@ -212,7 +210,7 @@ void ui::row_column::set(GLuint e, GLuint t, void *v)
 /* The manager's move_child behaviour will put us into an infinite
  * recursion due to the set_desired_size call at the end.
  */
-void ui::row_column::move_child(ui::panel *p)
+void ui::row_column::move_child(ui::widget *w)
 {
-    this->composite::move_child(p);
+    this->composite::move_child(w);
 }

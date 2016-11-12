@@ -11,14 +11,14 @@
 
 #include "ui.h"
 #include "font.h"
-#include "panel.h"
+#include "widget.h"
 #include "label.h"
 #include "button.h"
 #include "text_field.h"
 #include "password.h"
 #include "manager.h"
 #include "row_column.h"
-#include "popupmenu.h"
+#include "pie_menu.h"
 #include "multi_label.h"
 
 void error_callback(int, const char *);
@@ -28,19 +28,19 @@ void mouse_button_callback(GLFWwindow *, int, int, int);
 void key_callback(GLFWwindow *, int, int, int, int);
 void char_callback(GLFWwindow *, unsigned int, int);
 void create_image(int, int);
-void enter_callback(ui::event_target *, void *, void *);
-void leave_callback(ui::event_target *, void *, void *);
-void clicky_callback(ui::event_target *, void *, void *);
+void enter_callback(ui::active *, void *, void *);
+void leave_callback(ui::active *, void *, void *);
+void clicky_callback(ui::active *, void *, void *);
 
 ui::context *ctx;
-ui::panel *p1;
+ui::widget *w1;
 ui::label *l1;
 ui::button *b1, *b2;
 ui::text_field *t1;
 ui::password *pw1;
 ui::manager *m1;
 ui::row_column *r1;
-ui::popupmenu *pu1;
+ui::pie_menu *pu1;
 ui::multi_label *ml1;
 
 std::string font_name("techover.ttf"), greeting("Howdy!");
@@ -108,12 +108,12 @@ int main(int argc, char **argv)
 
     std::cout << "creating context" << std::endl;
     ctx = new ui::context(800, 600);
-    std::cout << "creating panel 1" << std::endl;
-    p1 = new ui::panel(ctx, 50, 50);
+    std::cout << "creating widget 1" << std::endl;
+    w1 = new ui::widget(ctx, 50, 50);
     xpos = 50;
     ypos = 50;
     border = 2;
-    p1->set_va(ui::element::color, ui::color::foreground, &fg1,
+    w1->set_va(ui::element::color, ui::color::foreground, &fg1,
                ui::element::color, ui::color::background, &fg2,
                ui::element::border, ui::side::all, &border,
                ui::element::margin, ui::side::all, &border,
@@ -229,7 +229,7 @@ int main(int argc, char **argv)
         b->add_callback(ui::callback::leave, leave_callback, NULL);
     }
     std::cout << "creating popup 1" << std::endl;
-    pu1 = new ui::popupmenu(ctx, 200, 125);
+    pu1 = new ui::pie_menu(ctx, 200, 125);
     border = 1;
     button = ui::mouse::button0;
     pu1->set_va(ui::element::border, ui::side::outer, &border,
@@ -382,19 +382,19 @@ void create_image(int width, int height)
 }
 
 /* ARGSUSED */
-void enter_callback(ui::event_target *p, void *client, void *call)
+void enter_callback(ui::active *p, void *client, void *call)
 {
     std::cout << "we're in!" << std::endl;
 }
 
 /* ARGSUSED */
-void leave_callback(ui::event_target *p, void *client, void *call)
+void leave_callback(ui::active *p, void *client, void *call)
 {
     std::cout << "out, baby!" << std::endl;
 }
 
 /* ARGSUSED */
-void clicky_callback(ui::event_target *p, void *client, void *call)
+void clicky_callback(ui::active *p, void *client, void *call)
 {
     std::cout << "clicky clicky!" << std::endl;
 }

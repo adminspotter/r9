@@ -1,6 +1,6 @@
 /* ui.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Aug 2016, 08:01:33 tquirk
+ *   last updated 06 Nov 2016, 10:10:24 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -34,14 +34,10 @@
 
 #include "ui_defs.h"
 #include "composite.h"
-#include "callback.h"
 
 namespace ui
 {
-    class composite;
-    class panel;
-
-    class context : public composite, public event_target
+    class context : public composite
     {
       private:
         GLuint vert_shader, frag_shader, shader_pgm;
@@ -49,9 +45,7 @@ namespace ui
         GLuint use_text_uniform, text_bgnd_uniform;
         GLuint translate_uniform;
 
-        /* Previous mouse position and pointed-to child */
-        glm::ivec2 old_mouse;
-        panel *old_child;
+        std::list<widget *> to_close;
 
       protected:
         int get_attribute(GLuint, void *);
@@ -60,11 +54,11 @@ namespace ui
         context(GLuint, GLuint);
         ~context();
 
-        int get(GLuint, GLuint, void *);
+        virtual int get(GLuint, GLuint, void *) override;
+
+        virtual void close_child(widget *) override;
 
         void draw(void);
-
-        void mouse_btn_callback(int, int);
     };
 }
 

@@ -1,6 +1,6 @@
 /* manager.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Sep 2016, 11:45:35 tquirk
+ *   last updated 10 Nov 2016, 07:39:43 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -21,7 +21,7 @@
  *
  *
  * This file contains the method definitions for the manager object,
- * which combines the panel with the composite.
+ * which combines the widget with the composite.
  *
  * Things to do
  *
@@ -58,12 +58,9 @@ void ui::manager::set_child_spacing(GLuint t, void *v)
       case ui::size::width:   this->child_spacing.x = *(int *)v;       break;
       case ui::size::height:  this->child_spacing.y = *(int *)v;       break;
     }
-}
-
-int ui::manager::get_resize(GLuint t, void *v)
-{
-    *(GLuint *)v = this->resize;
-    return 0;
+    this->reposition_children();
+    this->regenerate_search_tree();
+    this->populate_buffers();
 }
 
 void ui::manager::set_resize(GLuint t, void *v)
@@ -73,8 +70,7 @@ void ui::manager::set_resize(GLuint t, void *v)
     if (new_v <= ui::resize::all)
         this->resize = new_v;
 
-    if (this->resize != ui::resize::none)
-        this->set_desired_size();
+    this->set_desired_size();
 }
 
 int ui::manager::get_size(GLuint t, void *v)
@@ -85,27 +81,7 @@ int ui::manager::get_size(GLuint t, void *v)
 void ui::manager::set_size(GLuint t, void *v)
 {
     this->composite::set_size(t, v);
-    this->panel::set_size(t, v);
-}
-
-void ui::manager::set_position(GLuint t, void *v)
-{
-    this->panel::set_position(t, v);
-    if (this->composite::parent != NULL)
-    {
-        glm::vec3 pixel_sz(0.0f, 0.0f, 0.0f);
-        glm::mat4 trans;
-
-        this->composite::parent->get(ui::element::transform,
-                                     ui::transform::translate,
-                                     &trans);
-        this->composite::parent->get(ui::element::pixel_size,
-                                     ui::size::all,
-                                     &pixel_sz);
-        pixel_sz.x *= this->pos.x;
-        pixel_sz.y = -(pixel_sz.y * this->pos.y);
-        this->translate = glm::translate(trans, pixel_sz);
-    }
+    this->widget::set_size(t, v);
 }
 
 int ui::manager::get_pixel_size(GLuint t, void *v)
@@ -135,7 +111,6 @@ glm::ivec2 ui::manager::calculate_max_point(void)
 void ui::manager::set_desired_size(void)
 {
     glm::ivec2 max_pt(0, 0);
-    GLuint zero = 0;
 
     if (this->resize == ui::resize::none)
         return;
@@ -153,33 +128,33 @@ void ui::manager::set_desired_size(void)
      */
     if (this->resize & ui::resize::shrink)
     {
-        if (max_pt.x < this->size.x)
-            this->size.x = this->dim.x = max_pt.x;
-        if (max_pt.y < this->size.y)
-            this->size.y = this->dim.y = max_pt.y;
+        if (max_pt.x < this->dim.x)
+            this->dim.x = max_pt.x;
+        if (max_pt.y < this->dim.y)
+            this->dim.y = max_pt.y;
     }
     if (this->resize & ui::resize::grow)
     {
-        if (max_pt.x > this->size.x)
-            this->size.x = this->dim.x = max_pt.x;
-        if (max_pt.y > this->size.y)
-            this->size.y = this->dim.y = max_pt.y;
+        if (max_pt.x > this->dim.x)
+            this->dim.x = max_pt.x;
+        if (max_pt.y > this->dim.y)
+            this->dim.y = max_pt.y;
     }
-    this->composite::set_size(0, &zero);
+    this->regenerate_search_tree();
     this->populate_buffers();
 }
 
-void ui::manager::leave_callback(event_target *p, void *call, void *client)
+void ui::manager::leave_callback(active *a, void *call, void *client)
 {
-    ui::manager *m = dynamic_cast<ui::manager *>(p);
+    ui::manager *m = dynamic_cast<ui::manager *>(a);
 
     if (m != NULL && m->old_child != NULL)
         m->old_child->call_callbacks(ui::callback::leave, NULL);
 }
 
-void ui::manager::motion_callback(event_target *p, void *call, void *client)
+void ui::manager::motion_callback(active *a, void *call, void *client)
 {
-    ui::manager *m = dynamic_cast<ui::manager *>(p);
+    ui::manager *m = dynamic_cast<ui::manager *>(a);
 
     if (m != NULL)
     {
@@ -189,9 +164,9 @@ void ui::manager::motion_callback(event_target *p, void *call, void *client)
     }
 }
 
-void ui::manager::button_callback(event_target *p, void *call, void *client)
+void ui::manager::button_callback(active *a, void *call, void *client)
 {
-    ui::manager *m = dynamic_cast<ui::manager *>(p);
+    ui::manager *m = dynamic_cast<ui::manager *>(a);
 
     if (m != NULL)
     {
@@ -201,9 +176,9 @@ void ui::manager::button_callback(event_target *p, void *call, void *client)
     }
 }
 
-void ui::manager::keypress_callback(event_target *p, void *call, void *client)
+void ui::manager::keypress_callback(active *a, void *call, void *client)
 {
-    ui::manager *m = dynamic_cast<ui::manager *>(p);
+    ui::manager *m = dynamic_cast<ui::manager *>(a);
 
     if (m != NULL)
     {
@@ -213,9 +188,20 @@ void ui::manager::keypress_callback(event_target *p, void *call, void *client)
     }
 }
 
+/* When the UI context resizes, the flow comes through this function,
+ * which is why we do our child regeneration.  It's not likely the
+ * ideal way to do it, as it seems a little bit magic, but we'll at
+ * least note it here, so somebody knows what's going on.
+ */
+void ui::manager::recalculate_transformation_matrix(void)
+{
+    this->widget::recalculate_transformation_matrix();
+    this->composite::regenerate_children();
+}
+
 ui::manager::manager(ui::composite *c, GLuint w, GLuint h)
-    : ui::panel::panel(c, w, h), ui::composite::composite(c, w, h),
-      child_spacing(0, 0)
+    : ui::widget::widget(c, w, h), ui::composite::composite(c, w, h),
+      ui::rect::rect(w, h), child_spacing(0, 0)
 {
     this->resize = ui::resize::all;
 
@@ -243,17 +229,14 @@ int ui::manager::get(GLuint e, GLuint t, void *v)
 {
     switch (e)
     {
+        /* Eventually, the context will be somebody's parent */
       case ui::element::attribute:
       case ui::element::pixel_size:
-        if (this->composite::parent != NULL)
-            /* Eventually, the context will be somebody's parent */
-            return this->composite::parent->get(e, t, v);
-        break;
+        return this->widget::parent->get(e, t, v);
 
-      case ui::element::transform:      return this->get_transform(t, v);
       case ui::element::child_spacing:  return this->get_child_spacing(t, v);
-      case ui::element::resize:         return this->get_resize(t, v);
-      default:                          return this->panel::get(e, t, v);
+      case ui::element::resize:         return this->composite::get(e, t, v);
+      default:                          return this->widget::get(e, t, v);
     }
     return 1;
 }
@@ -262,67 +245,39 @@ void ui::manager::set(GLuint e, GLuint t, void *v)
 {
     switch (e)
     {
-      case ui::element::child_spacing:
-        this->set_child_spacing(t, v);
-        this->populate_buffers();
-        break;
-
+      case ui::element::child_spacing:  this->set_child_spacing(t, v);  break;
       case ui::element::resize:
-        this->set_resize(t, v);
-        break;
-
-      case ui::element::size:
-        this->panel::set(e, t, v);
-        this->composite::set(e, t, v);
-        break;
-
-      default:
-        this->panel::set(e, t, v);
-        break;
+      case ui::element::pixel_size:     this->composite::set(e, t, v);  break;
+      default:                          this->widget::set(e, t, v);     break;
     }
 }
 
-void ui::manager::draw(void)
+void ui::manager::draw(GLuint trans_uniform, const glm::mat4& parent_trans)
 {
-    glm::mat4 t;
-    GLuint tu;
+    if (this->visible == true)
+    {
+        glm::mat4 trans = this->pos_transform * parent_trans;
 
-    this->panel::draw();
-
-    if (this->composite::parent == NULL)
-        return;
-
-    /* Our children need to be drawn in our coord space. */
-    this->composite::parent->get(ui::element::attribute,
-                                 ui::attribute::translate,
-                                 &tu);
-    glUniformMatrix4fv(tu, 1, GL_FALSE, glm::value_ptr(this->translate));
-    for (auto i = this->children.begin(); i != this->children.end(); ++i)
-        (*i)->draw();
-
-    /* Reset the uniform to what it was when we got here, in case
-     * we're not the only child of our parent.
-     */
-    this->composite::parent->get(ui::element::transform,
-                                 ui::transform::translate,
-                                 &t);
-    glUniformMatrix4fv(tu, 1, GL_FALSE, glm::value_ptr(t));
+        this->widget::draw(trans_uniform, parent_trans);
+        for (auto i = this->children.begin(); i != this->children.end(); ++i)
+            (*i)->draw(trans_uniform, trans);
+    }
 }
 
-void ui::manager::add_child(ui::panel *p)
+void ui::manager::add_child(ui::widget *w)
 {
-    this->composite::add_child(p);
+    this->composite::add_child(w);
     this->set_desired_size();
 }
 
-void ui::manager::remove_child(ui::panel *p)
+void ui::manager::remove_child(ui::widget *w)
 {
-    this->composite::remove_child(p);
+    this->composite::remove_child(w);
     this->set_desired_size();
 }
 
-void ui::manager::move_child(ui::panel *p)
+void ui::manager::move_child(ui::widget *w)
 {
-    this->composite::move_child(p);
+    this->composite::move_child(w);
     this->set_desired_size();
 }

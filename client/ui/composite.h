@@ -1,6 +1,6 @@
 /* composite.h                                             -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Sep 2016, 11:32:21 tquirk
+ *   last updated 10 Nov 2016, 07:38:03 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -32,47 +32,49 @@
 
 #include <list>
 
-#include <glm/mat4x4.hpp>
-
+#include "rect.h"
 #include "quadtree.h"
-#include "panel.h"
+#include "widget.h"
 
 namespace ui
 {
     class quadtree;
-    class panel;
+    class widget;
 
-    class composite
+    class composite : public virtual rect
     {
       protected:
-        glm::ivec2 dim;
         composite *parent;
-        std::list<panel *> children;
+        std::list<widget *> children;
         quadtree *tree;
-        glm::mat4 translate;
+        GLuint resize;
 
         glm::ivec2 old_pos;
-        panel *old_child;
+        widget *old_child;
 
         const static int tree_max_depth;
 
-        int get_size(GLuint, void *);
-        void set_size(GLuint, void *);
-        virtual int get_transform(GLuint, void *);
+        virtual int get_size(GLuint, void *) override;
+        virtual void set_size(GLuint, void *) override;
+        virtual int get_resize(GLuint, void *);
+        virtual void set_resize(GLuint, void *);
         virtual int get_pixel_size(GLuint, void *);
 
-        void close_pending(void);
+        void reposition_children(void);
+        void regenerate_children(void);
+        void regenerate_search_tree(void);
 
       public:
         composite(composite *, GLuint, GLuint);
         virtual ~composite();
 
-        virtual int get(GLuint, GLuint, void *);
-        virtual void set(GLuint, GLuint, void *);
+        virtual int get(GLuint, GLuint, void *) override;
+        virtual void set(GLuint, GLuint, void *) override;
 
-        virtual void add_child(panel *);
-        virtual void remove_child(panel *);
-        virtual void move_child(panel *);
+        virtual void add_child(widget *);
+        virtual void remove_child(widget *);
+        virtual void move_child(widget *);
+        virtual void close_child(widget *);
 
         void mouse_pos_callback(int, int);
         virtual void mouse_btn_callback(int, int);

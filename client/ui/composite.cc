@@ -1,6 +1,6 @@
 /* composite.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Sep 2016, 07:23:43 tquirk
+ *   last updated 10 Nov 2016, 07:38:07 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -21,7 +21,7 @@
  *
  *
  * This file contains the method definitions for the composite object.
- * It's a panel which can have children, which will then be
+ * It's a widget which can have children, which will then be
  * subclassable into more interesting manager widgets.
  *
  * Things to do
@@ -59,26 +59,22 @@ void ui::composite::set_size(GLuint d, void *v)
       case ui::size::width:   this->dim.x = *(int *)v;       break;
       case ui::size::height:  this->dim.y = *(int *)v;       break;
     }
-
-    /* Regenerate our search tree */
-    glm::ivec2 ul = {0, 0};
-    if (this->tree != NULL)
-        delete this->tree;
-    this->tree = new ui::quadtree(NULL,
-                                  ul, this->dim,
-                                  ui::composite::tree_max_depth);
-    for (auto i = this->children.begin(); i != this->children.end(); ++i)
-        this->tree->insert(*i);
+    this->regenerate_children();
+    this->regenerate_search_tree();
 }
 
-int ui::composite::get_transform(GLuint t, void *v)
+int ui::composite::get_resize(GLuint t, void *v)
 {
-    if (t == ui::transform::translate)
-    {
-        *((glm::mat4 *)v) = this->translate;
-        return 0;
-    }
-    return 1;
+    *(GLuint *)v = this->resize;
+    return 0;
+}
+
+void ui::composite::set_resize(GLuint t, void *v)
+{
+    GLuint new_v = *((GLuint *)v);
+
+    if (new_v <= ui::resize::all)
+        this->resize = new_v;
 }
 
 int ui::composite::get_pixel_size(GLuint t, void *v)
@@ -103,30 +99,42 @@ int ui::composite::get_pixel_size(GLuint t, void *v)
     return ret;
 }
 
-void ui::composite::close_pending(void)
+void ui::composite::reposition_children(void)
 {
-    auto child = this->children.begin();
+    for (auto i = this->children.begin(); i != this->children.end(); ++i)
+        (*i)->recalculate_transformation_matrix();
+}
 
-    while (child != this->children.end())
-        /* If we delete the pointer and erase(), we get an apparent
-         * double-free segfault, so it seems(?) that erase() actually
-         * deletes pointers that it owns?
-         */
-        if ((*child)->to_close == true)
-            child = this->children.erase(child);
-        else
-            ++child;
+void ui::composite::regenerate_children(void)
+{
+    for (auto i = this->children.begin(); i != this->children.end(); ++i)
+    {
+        (*i)->recalculate_transformation_matrix();
+        (*i)->populate_buffers();
+    }
+}
+
+void ui::composite::regenerate_search_tree(void)
+{
+    glm::ivec2 ul(0, 0);
+
+    if (this->tree != NULL)
+        delete this->tree;
+    this->tree = new ui::quadtree(NULL,
+                                  ul, this->dim,
+                                  ui::composite::tree_max_depth);
+    for (auto i = this->children.begin(); i != this->children.end(); ++i)
+        if ((*i)->visible == true)
+            this->tree->insert(*i);
 }
 
 ui::composite::composite(composite *c, GLuint w, GLuint h)
-    : dim((int)w, (int)h), children(), old_pos(0, 0), translate()
+    : ui::rect::rect(w, h), children(), old_pos(0, 0)
 {
-    int nothing = 0;
-
     this->parent = c;
     this->tree = NULL;
     this->old_child = NULL;
-    this->set_size(0, &nothing);
+    this->regenerate_search_tree();
 }
 
 ui::composite::~composite()
@@ -142,7 +150,7 @@ int ui::composite::get(GLuint e, GLuint t, void *v)
     switch (e)
     {
       case ui::element::size:        return this->get_size(t, v);
-      case ui::element::transform:   return this->get_transform(t, v);
+      case ui::element::resize:      return this->get_resize(t, v);
       case ui::element::pixel_size:  return this->get_pixel_size(t, v);
       default:                       return 1;
     }
@@ -150,64 +158,70 @@ int ui::composite::get(GLuint e, GLuint t, void *v)
 
 void ui::composite::set(GLuint e, GLuint t, void *v)
 {
-    if (e == ui::element::size)
+    switch (e)
     {
-        this->set_size(t, v);
-        for (auto i = this->children.begin(); i != this->children.end(); ++i)
-            (*i)->populate_buffers();
+      case ui::element::size:    this->set_size(t, v);    break;
+      case ui::element::resize:  this->set_resize(t, v);  break;
+      default:                   return;
     }
 }
 
-void ui::composite::add_child(ui::panel *p)
+void ui::composite::add_child(ui::widget *w)
 {
-    auto found = std::find(this->children.begin(), this->children.end(), p);
+    auto found = std::find(this->children.begin(), this->children.end(), w);
     if (found == this->children.end())
     {
-        this->children.push_back(p);
-        this->tree->insert(p);
+        this->children.push_back(w);
+        if (w->visible == true)
+            this->tree->insert(w);
     }
 }
 
-void ui::composite::remove_child(ui::panel *p)
+void ui::composite::remove_child(ui::widget *w)
 {
-    this->children.remove(p);
-    this->tree->remove(p);
+    this->children.remove(w);
+    this->tree->remove(w);
 }
 
-void ui::composite::move_child(ui::panel *p)
+void ui::composite::move_child(ui::widget *w)
 {
-    this->tree->remove(p);
-    this->tree->insert(p);
+    this->tree->remove(w);
+    if (w->visible == true)
+        this->tree->insert(w);
+}
+
+void ui::composite::close_child(ui::widget *w)
+{
+    this->remove_child(w);
+    /* The UI context will handle the collection and closing of children */
+    if (this->parent != NULL)
+        this->parent->close_child(w);
 }
 
 void ui::composite::mouse_pos_callback(int x, int y)
 {
     glm::ivec2 pos = {x, y}, obj;
     ui::mouse_call_data call_data;
-    ui::panel *p = this->tree->search(pos);
+    ui::widget *w = this->tree->search(pos);
 
-    if (p != NULL)
+    if (w != NULL)
     {
-        p->get(ui::element::position, ui::position::all, &obj);
+        w->get(ui::element::position, ui::position::all, &obj);
         call_data.location = pos - obj;
-        if (this->old_child != p)
-            p->call_callbacks(ui::callback::enter, &call_data);
-        if (this->old_child != NULL && this->old_child != p)
-        {
+        if (this->old_child != w)
+            w->call_callbacks(ui::callback::enter, &call_data);
+        if (this->old_child != NULL && this->old_child != w)
             this->old_child->call_callbacks(ui::callback::leave, &call_data);
-            this->close_pending();
-        }
-        p->call_callbacks(ui::callback::motion, &call_data);
+        w->call_callbacks(ui::callback::motion, &call_data);
     }
     else if (this->old_child != NULL)
     {
         this->old_child->get(ui::element::position, ui::position::all, &obj);
         call_data.location = pos - obj;
         this->old_child->call_callbacks(ui::callback::leave, &call_data);
-        this->close_pending();
     }
 
-    /* p might no longer exist at this position.  Let's search again,
+    /* w might no longer exist at this position.  Let's search again,
      * just to make sure.
      */
     this->old_child = this->tree->search(pos);
@@ -216,9 +230,9 @@ void ui::composite::mouse_pos_callback(int x, int y)
 
 void ui::composite::mouse_btn_callback(int btn, int state)
 {
-    ui::panel *p = this->tree->search(this->old_pos);
+    ui::widget *w = this->tree->search(this->old_pos);
 
-    if (p != NULL)
+    if (w != NULL)
     {
         glm::ivec2 obj;
         ui::btn_call_data call_data;
@@ -226,15 +240,14 @@ void ui::composite::mouse_btn_callback(int btn, int state)
                         ? ui::callback::btn_up
                         : ui::callback::btn_down);
 
-        p->get(ui::element::position, ui::position::all, &obj);
+        w->get(ui::element::position, ui::position::all, &obj);
         call_data.location = this->old_pos - obj;
         call_data.button = btn;
         call_data.state = state;
-        p->call_callbacks(which, &call_data);
-        this->close_pending();
+        w->call_callbacks(which, &call_data);
     }
 
-    /* p might no longer exist at this position.  Let's search again,
+    /* w might no longer exist at this position.  Let's search again,
      * just to make sure.
      */
     this->old_child = this->tree->search(this->old_pos);
@@ -242,9 +255,9 @@ void ui::composite::mouse_btn_callback(int btn, int state)
 
 void ui::composite::key_callback(int key, uint32_t c, int state, int mods)
 {
-    ui::panel *p = this->tree->search(this->old_pos);
+    ui::widget *w = this->tree->search(this->old_pos);
 
-    if (p != NULL)
+    if (w != NULL)
     {
         glm::ivec2 obj;
         ui::key_call_data call_data;
@@ -252,14 +265,13 @@ void ui::composite::key_callback(int key, uint32_t c, int state, int mods)
                         ? ui::callback::key_up
                         : ui::callback::key_down);
 
-        p->get(ui::element::position, ui::position::all, &obj);
+        w->get(ui::element::position, ui::position::all, &obj);
         call_data.location = this->old_pos - obj;
         call_data.key = key;
         call_data.character = c;
         call_data.state = state;
         call_data.mods = mods;
-        p->call_callbacks(which, &call_data);
-        this->close_pending();
+        w->call_callbacks(which, &call_data);
     }
 
     /* p might no longer exist at this position.  Let's search again,

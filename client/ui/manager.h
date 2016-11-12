@@ -1,6 +1,6 @@
 /* manager.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Sep 2016, 06:49:17 tquirk
+ *   last updated 29 Oct 2016, 11:50:06 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -31,46 +31,45 @@
 #ifndef __INC_R9_MANAGER_H__
 #define __INC_R9_MANAGER_H__
 
-#include "panel.h"
+#include "widget.h"
 #include "composite.h"
 
 namespace ui
 {
-    class manager : public panel, public composite
+    class manager : public widget, public composite
     {
       protected:
         glm::ivec2 child_spacing;
-        GLuint resize;
 
         int get_child_spacing(GLuint, void *);
         void set_child_spacing(GLuint, void *);
-        int get_resize(GLuint, void *);
-        virtual void set_resize(GLuint, void *);
-        virtual int get_size(GLuint, void *);
-        virtual void set_size(GLuint, void *);
-        virtual void set_position(GLuint, void *);
-        int get_pixel_size(GLuint, void *);
+        virtual void set_resize(GLuint, void *) override;
+        virtual int get_size(GLuint, void *) override;
+        virtual void set_size(GLuint, void *) override;
+        virtual int get_pixel_size(GLuint, void *) override;
 
         glm::ivec2 calculate_max_point(void);
         virtual void set_desired_size(void);
 
-        static void leave_callback(event_target *, void *, void *);
-        static void motion_callback(event_target *, void *, void *);
-        static void button_callback(event_target *, void *, void *);
-        static void keypress_callback(event_target *, void *, void *);
+        static void leave_callback(active *, void *, void *);
+        static void motion_callback(active *, void *, void *);
+        static void button_callback(active *, void *, void *);
+        static void keypress_callback(active *, void *, void *);
+
+        virtual void recalculate_transformation_matrix(void) override;
 
       public:
         manager(composite *, GLuint, GLuint);
         virtual ~manager();
 
-        virtual int get(GLuint, GLuint, void *);
-        virtual void set(GLuint, GLuint, void *);
+        virtual int get(GLuint, GLuint, void *) override;
+        virtual void set(GLuint, GLuint, void *) override;
 
-        virtual void draw(void);
+        virtual void draw(GLuint, const glm::mat4&) override;
 
-        virtual void add_child(panel *);
-        virtual void remove_child(panel *);
-        virtual void move_child(panel *);
+        virtual void add_child(widget *) override;
+        virtual void remove_child(widget *) override;
+        virtual void move_child(widget *) override;
     };
 }
 

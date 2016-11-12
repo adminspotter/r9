@@ -1,6 +1,6 @@
-/* password.h                                              -*- C++ -*-
+/* rect.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Oct 2016, 15:54:00 tquirk
+ *   last updated 09 Oct 2016, 14:24:09 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -20,35 +20,41 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the password field declaration.  We're
- * subclassing the text_field, since it already does most of what we
- * want here.  We'll display a set of asterisks, rather than the
- * actual string.
+ * This file contains the rect object declaration.  The rect has a
+ * size and the basic get and set methods.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_R9_PASSWORD_H__
-#define __INC_R9_PASSWORD_H__
+#ifndef __INC_R9_RECT_H__
+#define __INC_R9_RECT_H__
 
-#include "text_field.h"
+#include <stdarg.h>
+
+#include <GL/gl.h>
+
+#include <glm/vec2.hpp>
 
 namespace ui
 {
-    class password : public text_field
+    class rect
     {
       protected:
-        virtual void generate_string_image(void) override;
+        glm::ivec2 dim;
 
-        virtual void get_string_size(const std::u32string&,
-                                     std::vector<int>&) override;
-        virtual int get_raw_cursor_pos(void) override;
+        virtual int get_size(GLuint, void *);
+        virtual void set_size(GLuint, void *);
 
       public:
-        password(composite *, GLuint, GLuint);
-        virtual ~password();
+        rect(GLuint, GLuint);
+        virtual ~rect();
+
+        virtual int get(GLuint, GLuint, void *);
+        virtual void set(GLuint, GLuint, void *);
+        void get_va(GLuint, GLuint, void *, ...);
+        void set_va(GLuint, GLuint, void *, ...);
     };
 }
 
-#endif /* __INC_R9_PASSWORD_H__ */
+#endif /* __INC_R9_RECT_H__ */
