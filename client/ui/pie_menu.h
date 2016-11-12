@@ -1,6 +1,6 @@
-/* popupmenu.h                                             -*- C++ -*-
+/* pie_menu.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Aug 2016, 23:43:58 tquirk
+ *   last updated 24 Oct 2016, 07:38:28 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the declaration for the popup menu.  It is a
+ * This file contains the declaration for the popup pie menu.  It is a
  * composite subclass which will draw a round or oval popup window,
  * chopped into several segments.
  *
@@ -28,40 +28,39 @@
  *
  */
 
-#ifndef __INC_R9_POPUPMENU_H__
-#define __INC_R9_POPUPMENU_H__
+#ifndef __INC_R9_PIE_MENU_H__
+#define __INC_R9_PIE_MENU_H__
 
 #include "manager.h"
 
 namespace ui
 {
-    class popupmenu : public manager
+    class pie_menu : public manager
     {
       protected:
-        bool visible;
         int popup_button;
 
         int get_popup(GLuint, void *);
         void set_popup(GLuint, void *);
-        virtual void set_resize(GLuint, void *);
+        virtual void set_resize(GLuint, void *) override;
 
-        static void show(event_target *, void *, void *);
-        static void hide(event_target *, void *, void *);
+        static void show(active *, void *, void *);
+        static void hide(active *, void *, void *);
 
-        void populate_buffers(void);
+        virtual vertex_buffer *generate_points(void) override;
 
       public:
-        popupmenu(composite *, GLuint, GLuint);
-        virtual ~popupmenu();
+        pie_menu(composite *, GLuint, GLuint);
+        virtual ~pie_menu();
 
-        virtual int get(GLuint, GLuint, void *);
-        virtual void set(GLuint, GLuint, void *);
+        virtual int get(GLuint, GLuint, void *) override;
+        virtual void set(GLuint, GLuint, void *) override;
 
-        virtual void draw(void);
+        virtual void draw(GLuint, const glm::mat4&) override;
 
-        virtual void add_child(panel *);
-        virtual void remove_child(panel *);
+        virtual void add_child(widget *) override;
+        virtual void remove_child(widget *) override;
     };
 }
 
-#endif /* __INC_R9_POPUPMENU_H__ */
+#endif /* __INC_R9_PIE_MENU_H__ */

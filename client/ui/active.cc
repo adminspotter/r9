@@ -1,6 +1,6 @@
-/* callback.cc
+/* active.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Aug 2016, 00:25:32 tquirk
+ *   last updated 08 Oct 2016, 11:00:48 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -28,9 +28,9 @@
  */
 
 #include "ui_defs.h"
-#include "callback.h"
+#include "active.h"
 
-std::list<ui::cb_list_elem>& ui::event_target::which_cb_list(GLuint which)
+std::list<ui::cb_list_elem>& ui::active::which_cb_list(GLuint which)
 {
     switch (which)
     {
@@ -45,17 +45,18 @@ std::list<ui::cb_list_elem>& ui::event_target::which_cb_list(GLuint which)
     }
 }
 
-ui::event_target::event_target()
-    : enter_cb(), leave_cb(), motion_cb(), btn_down_cb(), btn_up_cb(),
+ui::active::active(GLuint w, GLuint h)
+    : ui::rect(w, h),
+      enter_cb(), leave_cb(), motion_cb(), btn_down_cb(), btn_up_cb(),
       key_down_cb(), key_up_cb()
 {
 }
 
-ui::event_target::~event_target()
+ui::active::~active()
 {
 }
 
-void ui::event_target::add_callback(GLuint cb_list,
+void ui::active::add_callback(GLuint cb_list,
                                     ui::cb_fptr funcptr,
                                     void *client)
 {
@@ -65,7 +66,7 @@ void ui::event_target::add_callback(GLuint cb_list,
     l.push_back(new_elem);
 }
 
-void ui::event_target::remove_callback(GLuint cb_list,
+void ui::active::remove_callback(GLuint cb_list,
                                        ui::cb_fptr funcptr,
                                        void *client)
 {
@@ -75,7 +76,7 @@ void ui::event_target::remove_callback(GLuint cb_list,
     l.remove(old_elem);
 }
 
-void ui::event_target::call_callbacks(GLuint cb_list, void *call_data)
+void ui::active::call_callbacks(GLuint cb_list, void *call_data)
 {
     std::list<ui::cb_list_elem>& l = this->which_cb_list(cb_list);
     std::list<ui::cb_list_elem>::iterator i;

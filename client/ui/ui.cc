@@ -1,6 +1,6 @@
 /* ui.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Aug 2016, 08:06:44 tquirk
+ *   last updated 06 Nov 2016, 10:12:15 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -33,7 +33,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "ui.h"
-#include "panel.h"
 #include "shader.h"
 
 int ui::context::get_attribute(GLuint t, void *v)
@@ -69,10 +68,8 @@ int ui::context::get_attribute(GLuint t, void *v)
 }
 
 ui::context::context(GLuint w, GLuint h)
-    : ui::composite::composite(NULL, w, h), old_mouse(0, 0)
+    : ui::composite::composite(NULL, w, h), ui::rect::rect(w, h)
 {
-    this->old_child = NULL;
-
     this->vert_shader = load_shader(GL_VERTEX_SHADER,
                                     SHADER_SRC_PATH "/ui_vertex.glsl");
     this->frag_shader = load_shader(GL_FRAGMENT_SHADER,
@@ -105,33 +102,24 @@ int ui::context::get(GLuint e, GLuint t, void *v)
     }
 }
 
-void ui::context::draw(void)
+void ui::context::close_child(ui::widget *w)
 {
-    glUniformMatrix4fv(this->translate_uniform,
-                       1, GL_FALSE,
-                       glm::value_ptr(this->translate));
-    glUseProgram(this->shader_pgm);
-    for (auto i = this->children.begin(); i != this->children.end(); ++i)
-        (*i)->draw();
+    this->composite::close_child(w);
+    this->to_close.push_back(w);
 }
 
-void ui::context::mouse_btn_callback(int btn, int state)
+void ui::context::draw(void)
 {
-    ui::panel *p = this->tree->search(this->old_pos);
+    glm::mat4 basic_trans;
 
-    if (p == NULL)
+    /* Clean up our to_close list */
+    while (!this->to_close.empty())
     {
-        ui::btn_call_data call_data;
-        GLuint which = (state == ui::mouse::up
-                        ? ui::callback::btn_up
-                        : ui::callback::btn_down);
-
-        call_data.location = this->old_pos;
-        call_data.button = btn;
-        call_data.state = state;
-        this->call_callbacks(which, &call_data);
-        this->old_child = p;
+        delete this->to_close.front();
+        this->to_close.pop_front();
     }
-    else
-        this->composite::mouse_btn_callback(btn, state);
+
+    glUseProgram(this->shader_pgm);
+    for (auto i = this->children.begin(); i != this->children.end(); ++i)
+        (*i)->draw(this->translate_uniform, basic_trans);
 }

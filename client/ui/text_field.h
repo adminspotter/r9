@@ -1,6 +1,6 @@
 /* text_field.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Sep 2016, 07:05:34 tquirk
+ *   last updated 12 Nov 2016, 07:21:25 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -25,8 +25,6 @@
  * adding keyboard handling and a moving cursor.
  *
  * Things to do
- *   - Determine if we want to add a 'password' flag here, to display
- *     things as asterisks, or have that in a subclass.
  *
  */
 
@@ -43,23 +41,27 @@ namespace ui
     {
       protected:
         GLuint cursor_pos, blink, max_length;
-        GLuint cursor_vao, cursor_vbo;
+        GLuint cursor_vao, cursor_vbo, cursor_ebo, cursor_element_count;
+        glm::mat4 cursor_transform;
         std::chrono::high_resolution_clock::time_point cursor_clock;
         bool cursor_visible, cursor_active;
 
-        virtual int get_size(GLuint, void *);
-        virtual void set_size(GLuint, void *);
-        int get_cursor_pos(GLuint, void *);
-        void set_cursor_pos(GLuint, void *);
-        int get_cursor_blink(GLuint, void *);
-        void set_cursor_blink(GLuint, void *);
-        void set_string(GLuint, void *);
-        void set_image(GLuint, void *);
+        virtual int get_size(GLuint, void *) override;
+        virtual void set_size(GLuint, void *) override;
+        virtual int get_cursor(GLuint, void *);
+        virtual void set_cursor(GLuint, void *);
+        virtual void set_font(GLuint, void *) override;
+        virtual void set_string(GLuint, void *) override;
+        virtual void set_image(GLuint, void *) final;
 
-        static void enter_callback(event_target *, void *, void *);
-        static void leave_callback(event_target *, void *, void *);
-        static void key_callback(event_target *, void *, void *);
+        static void enter_callback(active *, void *, void *);
+        static void leave_callback(active *, void *, void *);
+        static void key_callback(active *, void *, void *);
 
+        int get_cursor_pos(GLuint *);
+        void set_cursor_pos(GLuint);
+        int get_cursor_blink(GLuint *);
+        void set_cursor_blink(GLuint);
         void reset_cursor(void);
         void activate_cursor(void);
         void deactivate_cursor(void);
@@ -72,19 +74,23 @@ namespace ui
         void remove_next_char(void);
 
         virtual void get_string_size(const std::u32string&, std::vector<int>&);
-        virtual int get_cursor_pixel_pos(void);
+        virtual int get_raw_cursor_pos(void);
+        void set_cursor_transform(int);
+        int calculate_field_length(void);
 
-        void generate_cursor(int = -1);
-        virtual void populate_buffers(void);
+        virtual void generate_string_image(void) override;
+        virtual void calculate_widget_size(void) override;
+        void generate_cursor(void);
+        virtual vertex_buffer *generate_points(void) override;
 
       public:
         text_field(composite *, GLuint = 0, GLuint = 0);
         virtual ~text_field();
 
-        virtual int get(GLuint, GLuint, void *);
-        virtual void set(GLuint, GLuint, void *);
+        virtual int get(GLuint, GLuint, void *) override;
+        virtual void set(GLuint, GLuint, void *) override;
 
-        virtual void draw(void);
+        virtual void draw(GLuint, const glm::mat4&) override;
     };
 }
 

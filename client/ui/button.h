@@ -1,6 +1,6 @@
 /* button.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Aug 2016, 23:37:05 tquirk
+ *   last updated 17 Oct 2016, 21:52:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -40,28 +40,27 @@ namespace ui
     class button : public label
     {
       protected:
-        bool active, armed;
+        bool activated, armed;
 
-        int get_active_state(GLuint, void *);
-        void set_active_state(GLuint, void *);
-        int get_arm_state(GLuint, void *);
-        void set_arm_state(GLuint, void *);
-        void set_margin(GLuint, void *);
+        virtual int get_state(GLuint, void *) override;
+        virtual void set_state(GLuint, void *) override;
+        virtual void set_margin(GLuint, void *) override;
 
+        int get_active_state(bool *);
+        void set_active_state(bool);
+        int get_arm_state(bool *);
+        void set_arm_state(bool);
         void grow_border(void);
         void shrink_border(void);
 
-        static void activate(event_target *, void *, void *);
-        static void deactivate(event_target *, void *, void *);
-        static void arm(event_target *, void *, void *);
-        static void disarm(event_target *, void *, void *);
+        static void activate(active *, void *, void *);
+        static void deactivate(active *, void *, void *);
+        static void arm(active *, void *, void *);
+        static void disarm(active *, void *, void *);
 
       public:
         button(composite *, GLuint = 0, GLuint = 0);
         virtual ~button();
-
-        virtual int get(GLuint, GLuint, void *);
-        virtual void set(GLuint, GLuint, void *);
     };
 }
 

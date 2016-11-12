@@ -1,6 +1,6 @@
 /* label.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Sep 2016, 08:48:06 tquirk
+ *   last updated 28 Oct 2016, 07:55:12 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -36,12 +36,12 @@
 
 #include <string>
 
-#include "panel.h"
+#include "widget.h"
 #include "font.h"
 
 namespace ui
 {
-    class label : public panel
+    class label : public widget
     {
       protected:
         bool use_text, shared_font;
@@ -51,27 +51,30 @@ namespace ui
         GLuint tex;
 
         int get_font(GLuint, void *);
-        void set_font(GLuint, void *);
+        virtual void set_font(GLuint, void *);
         int get_string(GLuint, void *);
         virtual void set_string(GLuint, void *);
         int get_image(GLuint, void *);
         virtual void set_image(GLuint, void *);
+        virtual void set_border(GLuint, void *) override;
+        virtual void set_margin(GLuint, void *) override;
 
         static std::u32string utf8tou32str(const std::string&);
         static std::string u32strtoutf8(const std::u32string&);
 
         virtual void generate_string_image(void);
-        virtual void calculate_widget_size(int, int);
-        virtual void populate_buffers(void);
+        virtual void calculate_widget_size(void);
+        virtual vertex_buffer *generate_points(void) override;
+        virtual void populate_buffers(void) override;
 
       public:
         label(composite *, GLuint = 0, GLuint = 0);
         virtual ~label();
 
-        virtual int get(GLuint, GLuint, void *);
-        virtual void set(GLuint, GLuint, void *);
+        virtual int get(GLuint, GLuint, void *) override;
+        virtual void set(GLuint, GLuint, void *) override;
 
-        virtual void draw(void);
+        virtual void draw(GLuint, const glm::mat4&) override;
     };
 }
 

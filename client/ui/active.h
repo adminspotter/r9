@@ -1,6 +1,6 @@
-/* callback.h                                              -*- C++ -*-
+/* active.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Aug 2016, 23:34:43 tquirk
+ *   last updated 13 Oct 2016, 08:32:49 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -20,28 +20,27 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the basic callback role.  We need to factor the
- * callback lists out of everything, so they can be a role in
- * anything.
+ * This file adds the callback role to our rect class, to try to
+ * reduce multiple inheritance.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_R9_CALLBACK_H__
-#define __INC_R9_CALLBACK_H__
-
-#include <GL/gl.h>
+#ifndef __INC_R9_ACTIVE_H__
+#define __INC_R9_ACTIVE_H__
 
 #include <list>
+
+#include "rect.h"
 
 namespace ui
 {
     /* A forward declaration, to solve multi-include problems */
-    class event_target;
+    class active;
 
     /* Callback function pointer */
-    typedef void (*cb_fptr)(event_target *, void *, void *);
+    typedef void (*cb_fptr)(active *, void *, void *);
 
     typedef struct cb_list_tag
     {
@@ -53,14 +52,14 @@ namespace ui
                 return (this->ptr == p.ptr
                         && this->client_data == p.client_data);
             };
-        void operator()(event_target *p, void *call_data)
+        void operator()(active *p, void *call_data)
             {
                 this->ptr(p, call_data, this->client_data);
             };
     }
     cb_list_elem;
 
-    class event_target
+    class active : public virtual rect
     {
       protected:
         std::list<cb_list_elem> enter_cb, leave_cb, motion_cb;
@@ -70,8 +69,8 @@ namespace ui
         std::list<cb_list_elem>& which_cb_list(GLuint);
 
       public:
-        event_target();
-        ~event_target();
+        active(GLuint, GLuint);
+        ~active();
 
         virtual void add_callback(GLuint, cb_fptr, void *);
         virtual void remove_callback(GLuint, cb_fptr, void *);
@@ -79,4 +78,4 @@ namespace ui
     };
 }
 
-#endif /* __INC_R9_CALLBACK_H__ */
+#endif /* __INC_R9_ACTIVE_H__ */
