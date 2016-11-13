@@ -1,6 +1,6 @@
 /* logbuf.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2016, 08:12:55 tquirk
+ *   last updated 13 Nov 2016, 17:22:30 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -30,26 +30,48 @@
 
 #include "logbuf.h"
 
+#include <utility>
+
 logbuf::logbuf()
+    : buf(), fname(), entries()
 {
 }
 
 logbuf::logbuf(std::string f)
+    : buf(), fname(f), entries()
 {
 }
 
 logbuf::~logbuf()
 {
+    this->close();
 }
 
 void logbuf::close(void)
 {
+    this->entries.clear();
 }
 
 int logbuf::sync(void)
 {
+    if (this->buf.length())
+    {
+        _lb_entry e;
+
+        e.timestamp = logbuf::_lb_ts_time::now();
+        e.display_time = logbuf::_lb_wc_time::now();
+        e.entry = buf;
+        this->entries.push_back(std::move(e));
+        this->buf.erase();
+    }
+    return 0;
 }
 
 int logbuf::overflow(int c)
 {
+    if (c != EOF)
+        this->buf += static_cast<char>(c);
+    else
+        this->sync();
+    return c;
 }

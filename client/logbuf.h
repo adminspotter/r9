@@ -1,6 +1,6 @@
 /* logbuf.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2016, 11:05:21 tquirk
+ *   last updated 13 Nov 2016, 17:17:16 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -30,15 +30,37 @@
  * In the UI, we'll have one or more of these objects with a unified
  * log widget to display the entries, and age them out after a period
  * of time.
+ *
+ * Things to do
+ *
  */
 
 #ifndef __INC_R9CLIENT_LOGBUF_H__
 #define __INC_R9CLIENT_LOGBUF_H__
 
 #include <iostream>
+#include <chrono>
+#include <vector>
 
 class logbuf : public std::basic_streambuf<char, std::char_traits<char> >
 {
+  private:
+    typedef std::chrono::steady_clock _lb_ts_time;
+    typedef std::chrono::time_point<typename logbuf::_lb_ts_time> _lb_ts_point;
+    typedef std::chrono::system_clock _lb_wc_time;
+    typedef std::chrono::time_point<typename logbuf::_lb_wc_time> _lb_wc_point;
+    typedef struct log_entry_tag
+    {
+        _lb_ts_point timestamp;
+        _lb_wc_point display_time;
+        std::string entry;
+    }
+    _lb_entry;
+    typedef std::vector<typename logbuf::_lb_entry> _lb_vector;
+
+    typename logbuf::_lb_vector entries;
+    std::string buf, fname;
+
   public:
     explicit logbuf();
     explicit logbuf(std::string);
@@ -47,8 +69,8 @@ class logbuf : public std::basic_streambuf<char, std::char_traits<char> >
     void close(void);
 
   protected:
-    int sync(void);
-    int overflow(int);
+    int sync(void) override;
+    int overflow(int) override;
 };
 
 #endif /* __INC_R9CLIENT_LOGBUF_H__ */
