@@ -1,6 +1,6 @@
 /* logbuf.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2016, 17:17:16 tquirk
+ *   last updated 14 Nov 2016, 07:30:09 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -60,6 +60,8 @@ class logbuf : public std::basic_streambuf<char, std::char_traits<char> >
 
     typename logbuf::_lb_vector entries;
     std::string buf, fname;
+
+    void sync_to_file(void);
 
   public:
     explicit logbuf();

@@ -1,6 +1,6 @@
 /* logbuf.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Nov 2016, 17:22:30 tquirk
+ *   last updated 14 Nov 2016, 07:41:26 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -30,7 +30,30 @@
 
 #include "logbuf.h"
 
+#include <fstream>
+#include <ctime>
+#include <iomanip>
 #include <utility>
+
+void logbuf::sync_to_file(void)
+{
+    if (this->fname.length())
+    {
+        std::fstream fs(this->fname, std::ios::out | std::ios::ate);
+        std::time_t tt;
+
+        if (fs.is_open())
+        {
+            for (auto i = this->entries.begin(); i != this->entries.end(); ++i)
+            {
+                tt = logbuf::_lb_wc_time::to_time_t((*i).display_time);
+                fs << std::put_time(std::localtime(&tt), "%Y-%m-%d %H:%M:%S ")
+                   << (*i).entry << std::endl;
+                fs.close();
+            }
+        }
+    }
+}
 
 logbuf::logbuf()
     : buf(), fname(), entries()
@@ -49,6 +72,7 @@ logbuf::~logbuf()
 
 void logbuf::close(void)
 {
+    this->sync_to_file();
     this->entries.clear();
 }
 
