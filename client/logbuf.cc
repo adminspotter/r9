@@ -1,6 +1,6 @@
 /* logbuf.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2016, 07:41:26 tquirk
+ *   last updated 14 Nov 2016, 08:41:06 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -28,6 +28,8 @@
  *
  */
 
+#include <config.h>
+
 #include "logbuf.h"
 
 #include <fstream>
@@ -47,8 +49,10 @@ void logbuf::sync_to_file(void)
             for (auto i = this->entries.begin(); i != this->entries.end(); ++i)
             {
                 tt = logbuf::_lb_wc_time::to_time_t((*i).display_time);
+#if HAVE_STD_PUT_TIME
                 fs << std::put_time(std::localtime(&tt), "%Y-%m-%d %H:%M:%S ")
                    << (*i).entry << std::endl;
+#endif /* HAVE_STD_PUT_TIME */
                 fs.close();
             }
         }

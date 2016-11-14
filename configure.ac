@@ -55,6 +55,28 @@ assert(f.code().value() == 5);
     ],
     [AC_MSG_RESULT([no])])
 
+# Check for std::put_time existence
+AC_MSG_CHECKING([if std::put_time exists])
+AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM(
+        [
+#include <chrono>
+#include <ctime>
+#include <iostream>
+#include <iomanip>
+        ],
+        [
+std::time_t t = std::time(nullptr);
+
+std::cout << std::put_time(std::localtime(&t), "%c %Z") << std::endl;
+        ])
+    ],
+    [
+      AC_MSG_RESULT([yes])
+      AC_DEFINE(HAVE_STD_PUT_TIME, [1], [older versions of g++ do not provide std::put_time])
+    ],
+    [AC_MSG_RESULT([no])])
+
 
 # Arguments
 AC_ARG_WITH([server],
