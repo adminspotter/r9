@@ -1,6 +1,6 @@
 /* logbuf.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2016, 07:11:32 tquirk
+ *   last updated 15 Nov 2016, 07:53:18 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -41,7 +41,7 @@ void logbuf::sync_to_file(void)
 {
     if (this->fname.length())
     {
-        std::fstream fs(this->fname, std::ios::out | std::ios::ate);
+        std::fstream fs(this->fname, std::ios::app | std::ios::ate);
         std::time_t tt;
 #if !HAVE_STD_PUT_TIME
         char time_str[32];
@@ -61,8 +61,8 @@ void logbuf::sync_to_file(void)
                               "%Y-%m-%d %H:%M:%S ", std::localtime(&tt));
                 fs << time_str << (*i).entry << std::endl;
 #endif /* HAVE_STD_PUT_TIME */
-                fs.close();
             }
+            fs.close();
         }
     }
 }
@@ -97,6 +97,10 @@ int logbuf::sync(void)
         e.timestamp = logbuf::_lb_ts_time::now();
         e.display_time = logbuf::_lb_wc_time::now();
         e.entry = buf;
+
+        /* Strip trailing whitespace */
+        e.entry.erase(e.entry.find_last_not_of(" \n\r\t") + 1);
+
         this->entries.push_back(std::move(e));
         this->buf.erase();
     }
