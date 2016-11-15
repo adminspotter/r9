@@ -10,6 +10,7 @@ t_console
 t_font
 t_library
 t_log
+t_logbuf
 t_motion_pool
 t_perl
 t_sockaddr

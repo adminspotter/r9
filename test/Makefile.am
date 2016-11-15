@@ -32,7 +32,8 @@ if WANT_CLIENT
   TC += t_cache \
 	t_comm \
 	t_configdata \
-	t_font
+	t_font \
+	t_logbuf
 endif
 
 TESTS = $(TC)
@@ -170,3 +171,7 @@ t_font_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	-DSTORE_PREFIX=\"../client\"
 t_font_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	$(XERCES_LDLIBS) $(FREETYPE_LDLIBS)
+
+t_logbuf_SOURCES = t_logbuf.cc ../client/logbuf.h ../client/logbuf.cc
+t_logbuf_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(GTEST_INCLUDES)
+t_logbuf_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
