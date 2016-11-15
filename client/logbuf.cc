@@ -1,6 +1,6 @@
 /* logbuf.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2016, 08:41:06 tquirk
+ *   last updated 14 Nov 2016, 18:39:44 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -43,15 +43,25 @@ void logbuf::sync_to_file(void)
     {
         std::fstream fs(this->fname, std::ios::out | std::ios::ate);
         std::time_t tt;
+        std::tm *tp;
+#if !HAVE_STD_PUT_TIME
+        char time_str[32];
+#endif /* !HAVE_STD_PUT_TIME */
 
         if (fs.is_open())
         {
             for (auto i = this->entries.begin(); i != this->entries.end(); ++i)
             {
                 tt = logbuf::_lb_wc_time::to_time_t((*i).display_time);
+                tp = std::localtime(&tt);
+
 #if HAVE_STD_PUT_TIME
-                fs << std::put_time(std::localtime(&tt), "%Y-%m-%d %H:%M:%S ")
+                fs << std::put_time(tp, "%Y-%m-%d %H:%M:%S ")
                    << (*i).entry << std::endl;
+#else
+                std::strftime(time_str, sizeof(time_str),
+                              "%Y-%m-%d %H:%M:%S ", tp);
+                fs << time_str << (*i).entry << std::endl;
 #endif /* HAVE_STD_PUT_TIME */
                 fs.close();
             }
