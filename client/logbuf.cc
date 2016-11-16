@@ -1,6 +1,6 @@
 /* logbuf.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2016, 07:53:18 tquirk
+ *   last updated 15 Nov 2016, 19:25:30 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -41,7 +41,7 @@ void logbuf::sync_to_file(void)
 {
     if (this->fname.length())
     {
-        std::fstream fs(this->fname, std::ios::app | std::ios::ate);
+        std::ofstream fs(this->fname, std::ios::app | std::ios::ate);
         std::time_t tt;
 #if !HAVE_STD_PUT_TIME
         char time_str[32];
