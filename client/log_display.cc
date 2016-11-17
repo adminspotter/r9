@@ -1,6 +1,6 @@
-/* client.h
+/* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Nov 2016, 18:33:52 tquirk
+ *   last updated 16 Nov 2016, 18:33:09 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -20,27 +20,21 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the publically-available function prototypes
- * and structures for the main client program.
+ * This file contains the UI widgets to display log entries.  We'll
+ * have a mostly-stationary row-column, with individual multiline
+ * labels for each entry.  We'll age each entry out after a
+ * configurable time.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_R9CLIENT_H__
-#define __INC_R9CLIENT_H__
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-
 #include "ui/ui.h"
+#include "ui/row_column.h"
+#include "ui/multi_label.h"
 
-void setup_comm(struct addrinfo *, const char *, const char *, const char *);
-void cleanup_comm(void);
+static ui::row_column *log_window;
 
-void create_login_dialog(ui::context *);
-
-void create_log_window(ui::context *);
-
-#endif /* __INC_R9CLIENT_H__ */
+void create_log_window(ui::context *ctx)
+{
+}
