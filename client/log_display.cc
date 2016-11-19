@@ -41,6 +41,8 @@
 
 #define DISTANCE_FROM_BOTTOM 10
 
+static void context_resize_log_pos_callback(ui::active *, void *, void *);
+
 static ui::font *log_font;
 static ui::row_column *log_window;
 
@@ -58,4 +60,21 @@ void create_log_window(ui::context *ctx)
                        ui::element::child_spacing, ui::size::all, &spacing,
                        ui::element::size, ui::size::grid, &grid,
                        ui::element::position, ui::position::all, &pos, 0);
+    log_window->add_callback(ui::callback::resize,
+                             context_resize_log_pos_callback, NULL);
+}
+
+void context_resize_log_pos_callback(ui::active *a, void *call, void *client)
+{
+    ui::resize_call_data *call_data = (ui::resize_call_data *)call;
+    ui::row_column *lw = dynamic_cast<ui::row_column *>(a);
+
+    if (lw != NULL && lw == log_window)
+    {
+        int log_height;
+
+        lw->get(ui::element::size, ui::size::height, &log_height);
+        log_height = call_data->new_size.y - log_height - DISTANCE_FROM_BOTTOM;
+        lw->set(ui::element::position, ui::position::y, &log_height);
+    }
 }
