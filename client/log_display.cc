@@ -64,6 +64,21 @@ void create_log_window(ui::context *ctx)
                              context_resize_log_pos_callback, NULL);
 }
 
+void add_log_entry(const std::string& str)
+{
+    int border = 1, orig_pos, orig_height, new_height;
+    ui::multi_label *ml = new ui::multi_label(log_window, 150, 0);
+
+    log_window->get_va(ui::element::position, ui::position::y, &orig_pos,
+                       ui::element::size, ui::size::height, &orig_height, 0);
+    ml->set_va(ui::element::font, ui::ownership::shared, log_font,
+               ui::element::border, ui::side::all, &border,
+               ui::element::string, 0, &str, 0);
+    log_window->get(ui::element::size, ui::size::height, &new_height);
+    orig_pos -= new_height - orig_height;
+    log_window->set(ui::element::position, ui::position::y, &orig_pos);
+}
+
 void context_resize_log_pos_callback(ui::active *a, void *call, void *client)
 {
     ui::resize_call_data *call_data = (ui::resize_call_data *)call;
