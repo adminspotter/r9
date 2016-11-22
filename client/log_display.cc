@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Nov 2016, 10:44:34 tquirk
+ *   last updated 22 Nov 2016, 07:04:26 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -64,7 +64,7 @@ void create_log_window(ui::context *ctx)
                              context_resize_log_pos_callback, NULL);
 }
 
-void add_log_entry(const std::string& str)
+ui::widget *add_log_entry(const std::string& str)
 {
     int border = 1, orig_pos, orig_height, new_height;
     ui::multi_label *ml = new ui::multi_label(log_window, 150, 0);
@@ -77,6 +77,7 @@ void add_log_entry(const std::string& str)
     log_window->get(ui::element::size, ui::size::height, &new_height);
     orig_pos -= new_height - orig_height;
     log_window->set(ui::element::position, ui::position::y, &orig_pos);
+    return ml;
 }
 
 void context_resize_log_pos_callback(ui::active *a, void *call, void *client)
@@ -84,7 +85,7 @@ void context_resize_log_pos_callback(ui::active *a, void *call, void *client)
     ui::resize_call_data *call_data = (ui::resize_call_data *)call;
     ui::row_column *lw = dynamic_cast<ui::row_column *>(a);
 
-    if (lw != NULL && lw == log_window)
+    if (lw == log_window)
     {
         int log_height;
 

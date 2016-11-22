@@ -1,6 +1,6 @@
 /* logbuf.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2016, 07:30:09 tquirk
+ *   last updated 22 Nov 2016, 07:08:22 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -41,6 +41,9 @@
 #include <iostream>
 #include <chrono>
 #include <vector>
+#include <string>
+
+#include "ui/widget.h"
 
 class logbuf : public std::basic_streambuf<char, std::char_traits<char> >
 {
@@ -54,6 +57,7 @@ class logbuf : public std::basic_streambuf<char, std::char_traits<char> >
         _lb_ts_point timestamp;
         _lb_wc_point display_time;
         std::string entry;
+        ui::widget *ui_element;
     }
     _lb_entry;
     typedef std::vector<typename logbuf::_lb_entry> _lb_vector;

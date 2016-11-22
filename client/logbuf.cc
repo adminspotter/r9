@@ -1,6 +1,6 @@
 /* logbuf.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2016, 19:25:30 tquirk
+ *   last updated 22 Nov 2016, 07:13:43 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -36,6 +36,8 @@
 #include <ctime>
 #include <iomanip>
 #include <utility>
+
+#include "client.h"
 
 void logbuf::sync_to_file(void)
 {
@@ -100,6 +102,8 @@ int logbuf::sync(void)
 
         /* Strip trailing whitespace */
         e.entry.erase(e.entry.find_last_not_of(" \n\r\t") + 1);
+
+        e.ui_element = add_log_entry(e.entry);
 
         this->entries.push_back(std::move(e));
         this->buf.erase();
