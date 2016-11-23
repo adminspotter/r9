@@ -4,9 +4,17 @@
 #include <fstream>
 
 #include "../client/logbuf.h"
+#include "../client/ui/widget.h"
 #include <gtest/gtest.h>
 
 const char *fname = "./t_logbuf_test_file.txt";
+int add_count = 0;
+
+ui::widget *add_log_entry(const std::string& s)
+{
+    ++add_count;
+    return NULL;
+}
 
 TEST(LogbufTest, OutputFileCount)
 {
@@ -16,6 +24,8 @@ TEST(LogbufTest, OutputFileCount)
     std::clog << "This is another entry" << std::endl;
     std::clog << "Yet another one" << std::endl;
     std::clog << "OK, bye now" << std::endl;
+
+    ASSERT_EQ(add_count, 4);
 
     dynamic_cast<logbuf *>(std::clog.rdbuf())->close();
 
