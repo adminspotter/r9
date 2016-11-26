@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Sep 2016, 12:05:34 tquirk
+ *   last updated 25 Nov 2016, 17:27:04 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -93,8 +93,9 @@ int main(int argc, char **argv)
     }
 
     glfwMakeContextCurrent(w);
-    init_client_core();
     ctx = new ui::context(800, 600);
+    create_log_window(ctx);
+    init_client_core();
 
     glfwSetWindowSizeCallback(w, resize_callback);
     glfwSetKeyCallback(w, key_callback);
@@ -119,6 +120,7 @@ int main(int argc, char **argv)
     cleanup_comm();
     cleanup_client_core();
     config.write_config_file();
+    cleanup_log_window();
     glfwTerminate();
 
     return 0;
