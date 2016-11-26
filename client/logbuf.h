@@ -1,6 +1,6 @@
 /* logbuf.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Nov 2016, 07:08:22 tquirk
+ *   last updated 24 Nov 2016, 06:56:43 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -47,20 +47,21 @@
 
 class logbuf : public std::basic_streambuf<char, std::char_traits<char> >
 {
-  private:
-    typedef std::chrono::steady_clock _lb_ts_time;
-    typedef std::chrono::time_point<typename logbuf::_lb_ts_time> _lb_ts_point;
-    typedef std::chrono::system_clock _lb_wc_time;
-    typedef std::chrono::time_point<typename logbuf::_lb_wc_time> _lb_wc_point;
+  public:
+    typedef std::chrono::steady_clock lb_ts_time;
+    typedef std::chrono::time_point<typename logbuf::lb_ts_time> lb_ts_point;
+    typedef std::chrono::system_clock lb_wc_time;
+    typedef std::chrono::time_point<typename logbuf::lb_wc_time> lb_wc_point;
     typedef struct log_entry_tag
     {
-        _lb_ts_point timestamp;
-        _lb_wc_point display_time;
+        lb_ts_point timestamp;
+        lb_wc_point display_time;
         std::string entry;
-        ui::widget *ui_element;
     }
-    _lb_entry;
-    typedef std::vector<typename logbuf::_lb_entry> _lb_vector;
+    lb_entry;
+
+  private:
+    typedef std::vector<typename logbuf::lb_entry> _lb_vector;
 
     typename logbuf::_lb_vector entries;
     std::string buf, fname;
