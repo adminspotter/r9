@@ -1,6 +1,6 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Nov 2016, 07:05:30 tquirk
+ *   last updated 25 Nov 2016, 17:26:49 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -36,8 +36,8 @@
 
 #include <string>
 
+#include "logbuf.h"
 #include "ui/ui.h"
-#include "ui/widget.h"
 
 void setup_comm(struct addrinfo *, const char *, const char *, const char *);
 void cleanup_comm(void);
@@ -45,6 +45,6 @@ void cleanup_comm(void);
 void create_login_dialog(ui::context *);
 
 void create_log_window(ui::context *);
-ui::widget *add_log_entry(const std::string&);
+void add_log_entry(logbuf::lb_entry *);
 
 #endif /* __INC_R9CLIENT_H__ */

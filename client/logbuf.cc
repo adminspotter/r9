@@ -103,9 +103,8 @@ int logbuf::sync(void)
         /* Strip trailing whitespace */
         e.entry.erase(e.entry.find_last_not_of(" \n\r\t") + 1);
 
-        e.ui_element = add_log_entry(e.entry);
-
         this->entries.push_back(std::move(e));
+        add_log_entry(&this->entries.back());
         this->buf.erase();
     }
     return 0;

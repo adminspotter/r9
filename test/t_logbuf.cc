@@ -10,10 +10,9 @@
 const char *fname = "./t_logbuf_test_file.txt";
 int add_count = 0;
 
-ui::widget *add_log_entry(const std::string& s)
+void add_log_entry(logbuf::lb_entry *lbe)
 {
     ++add_count;
-    return NULL;
 }
 
 TEST(LogbufTest, OutputFileCount)

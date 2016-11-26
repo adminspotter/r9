@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Nov 2016, 07:04:26 tquirk
+ *   last updated 25 Nov 2016, 18:13:15 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -34,6 +34,7 @@
  */
 
 #include "configdata.h"
+#include "logbuf.h"
 
 #include "ui/ui.h"
 #include "ui/row_column.h"
@@ -41,8 +42,23 @@
 
 #define DISTANCE_FROM_BOTTOM 10
 
+typedef struct entry_tag
+{
+    logbuf::lb_entry *log_entry;
+    ui::widget *label;
+
+    const struct entry_tag& operator=(const struct entry_tag& et)
+        {
+            this->log_entry = et.log_entry;
+            this->label = et.label;
+            return *this;
+        }
+}
+entry;
+
 static void context_resize_log_pos_callback(ui::active *, void *, void *);
 
+static std::list<entry> entries;
 static ui::font *log_font;
 static ui::row_column *log_window;
 
@@ -64,20 +80,23 @@ void create_log_window(ui::context *ctx)
                              context_resize_log_pos_callback, NULL);
 }
 
-ui::widget *add_log_entry(const std::string& str)
+void add_log_entry(logbuf::lb_entry *lbe)
 {
+    entry ent;
     int border = 1, orig_pos, orig_height, new_height;
     ui::multi_label *ml = new ui::multi_label(log_window, 150, 0);
+
+    ent.log_entry = lbe;
+    ent.label = ml;
 
     log_window->get_va(ui::element::position, ui::position::y, &orig_pos,
                        ui::element::size, ui::size::height, &orig_height, 0);
     ml->set_va(ui::element::font, ui::ownership::shared, log_font,
                ui::element::border, ui::side::all, &border,
-               ui::element::string, 0, &str, 0);
+               ui::element::string, 0, &lbe->entry, 0);
     log_window->get(ui::element::size, ui::size::height, &new_height);
     orig_pos -= new_height - orig_height;
     log_window->set(ui::element::position, ui::position::y, &orig_pos);
-    return ml;
 }
 
 void context_resize_log_pos_callback(ui::active *a, void *call, void *client)
