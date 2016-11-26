@@ -33,6 +33,7 @@
  *
  */
 
+#include <unistd.h>
 #include <pthread.h>
 
 #include <sstream>
@@ -73,6 +74,7 @@ static bool exit_flag = false;
 static std::list<entry> entries;
 static ui::font *log_font;
 static ui::row_column *log_window;
+static const std::chrono::nanoseconds lifetime(ENTRY_LIFETIME);
 
 void create_log_window(ui::context *ctx)
 {
@@ -144,6 +146,33 @@ void add_log_entry(logbuf::lb_entry *lbe)
 /* ARGSUSED */
 void *clean_old_log_entries(void *arg)
 {
+    struct timespec ts;
+    std::chrono::nanoseconds d;
+
+    sleep(10);
+    for (;;)
+    {
+        pthread_mutex_lock(&log_lock);
+        while (entries.empty() && !exit_flag)
+            pthread_cond_wait(&log_not_empty, &log_lock);
+
+        if (exit_flag)
+        {
+            pthread_mutex_unlock(&log_lock);
+            pthread_exit(NULL);
+        }
+
+        d = lifetime + entries.front().log_entry->timestamp
+            - logbuf::lb_ts_time::now();
+        ts.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(d).count();
+        ts.tv_nsec = d.count() - (ts.tv_sec * 1000000000);
+        std::cout << "sleeping " << ts.tv_sec << " seconds, " << ts.tv_nsec << " nsec" << std::endl;
+        nanosleep(&ts, NULL);
+        entries.front().label->close();
+        entries.pop_front();
+        pthread_mutex_unlock(&log_lock);
+    }
+    return NULL;
 }
 
 void context_resize_log_pos_callback(ui::active *a, void *call, void *client)
