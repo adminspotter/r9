@@ -45,6 +45,7 @@ void cleanup_comm(void);
 void create_login_dialog(ui::context *);
 
 void create_log_window(ui::context *);
+void cleanup_log_window(void);
 void add_log_entry(logbuf::lb_entry *);
 
 #endif /* __INC_R9CLIENT_H__ */

@@ -33,14 +33,21 @@
  *
  */
 
+#include <pthread.h>
+
+#include <sstream>
+#include <stdexcept>
+
 #include "configdata.h"
 #include "logbuf.h"
+#include "l10n.h"
 
 #include "ui/ui.h"
 #include "ui/row_column.h"
 #include "ui/multi_label.h"
 
 #define DISTANCE_FROM_BOTTOM 10
+#define ENTRY_LIFETIME 10 * 1000000000
 
 typedef struct entry_tag
 {
@@ -56,8 +63,13 @@ typedef struct entry_tag
 }
 entry;
 
+static void *clean_old_log_entries(void *);
 static void context_resize_log_pos_callback(ui::active *, void *, void *);
 
+static pthread_t log_cleanup_thread;
+static pthread_mutex_t log_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t log_not_empty = PTHREAD_COND_INITIALIZER;
+static bool exit_flag = false;
 static std::list<entry> entries;
 static ui::font *log_font;
 static ui::row_column *log_window;
@@ -65,7 +77,7 @@ static ui::row_column *log_window;
 void create_log_window(ui::context *ctx)
 {
     glm::ivec2 grid(0, 1), spacing(15, 10), pos(10, 0);
-    int packing = ui::order::column;
+    int packing = ui::order::column, ret;
 
     log_font = new ui::font(config.font_name, 13, config.font_paths);
 
@@ -78,6 +90,30 @@ void create_log_window(ui::context *ctx)
                        ui::element::position, ui::position::all, &pos, 0);
     log_window->add_callback(ui::callback::resize,
                              context_resize_log_pos_callback, NULL);
+
+    if ((ret = pthread_create(&log_cleanup_thread, NULL,
+                              clean_old_log_entries, NULL)) != 0)
+    {
+        std::ostringstream s;
+        s << _("Could not create log cleanup thread.") << std::endl;
+        throw std::runtime_error(s.str());
+    }
+    std::clog.rdbuf(new logbuf());
+}
+
+void cleanup_log_window(void)
+{
+    int ret;
+
+    exit_flag = true;
+    pthread_cond_broadcast(&log_not_empty);
+    if ((ret = pthread_join(log_cleanup_thread, NULL)) != 0)
+    {
+        std::ostringstream s;
+        s << _("Could not join log cleanup thread.") << std::endl;
+        throw std::runtime_error(s.str());
+    }
+    log_window->close();
 }
 
 void add_log_entry(logbuf::lb_entry *lbe)
@@ -97,6 +133,17 @@ void add_log_entry(logbuf::lb_entry *lbe)
     log_window->get(ui::element::size, ui::size::height, &new_height);
     orig_pos -= new_height - orig_height;
     log_window->set(ui::element::position, ui::position::y, &orig_pos);
+
+    pthread_mutex_lock(&log_lock);
+    entries.push_back(std::move(ent));
+    if (entries.size() != 0)
+        pthread_cond_signal(&log_not_empty);
+    pthread_mutex_unlock(&log_lock);
+}
+
+/* ARGSUSED */
+void *clean_old_log_entries(void *arg)
+{
 }
 
 void context_resize_log_pos_callback(ui::active *a, void *call, void *client)
