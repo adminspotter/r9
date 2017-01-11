@@ -1,6 +1,6 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Nov 2016, 10:10:57 tquirk
+ *   last updated 11 Jan 2017, 08:04:53 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -52,7 +52,7 @@ void close_dialog_callback(ui::active *, void *, void *);
 void create_login_dialog(ui::context *ctx)
 {
     ui::row_column *dialog;
-    glm::ivec2 grid(2, 0), spacing(10, 10);
+    glm::ivec2 grid(2, 0), spacing(10, 10), size, dlg_size;
     int packing = ui::order::row, border = 1, max_sz = 10;
 
     ui::button *b;
@@ -112,6 +112,12 @@ void create_login_dialog(ui::context *ctx)
               ui::element::border, ui::side::all, &border,
               ui::element::string, 0, &str, 0);
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
+
+    ctx->get(ui::element::size, ui::size::all, &size);
+    dialog->get(ui::element::size, ui::size::all, &dlg_size);
+    size /= 2;
+    size -= dlg_size / 2;
+    dialog->set(ui::element::position, ui::position::all, &size);
 }
 
 void setup_comm_callback(ui::active *t, void *call, void *client)
