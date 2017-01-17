@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Nov 2016, 17:27:04 tquirk
+ *   last updated 05 Jan 2017, 08:37:06 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -43,6 +43,7 @@
 #include "l10n.h"
 
 #include "ui/ui.h"
+#include "log_display.h"
 
 void error_callback(int, const char *);
 void key_callback(GLFWwindow *, int, int, int, int);
@@ -54,6 +55,7 @@ void resize_callback(GLFWwindow *, int, int);
 std::vector<Comm *> comm;
 ConfigData config;
 ui::context *ctx;
+log_display *log_disp;
 
 int main(int argc, char **argv)
 {
@@ -94,7 +96,7 @@ int main(int argc, char **argv)
 
     glfwMakeContextCurrent(w);
     ctx = new ui::context(800, 600);
-    create_log_window(ctx);
+    log_disp = new log_display(ctx, 0, 0);
     init_client_core();
 
     glfwSetWindowSizeCallback(w, resize_callback);
@@ -120,7 +122,7 @@ int main(int argc, char **argv)
     cleanup_comm();
     cleanup_client_core();
     config.write_config_file();
-    cleanup_log_window();
+    log_disp->close();
     glfwTerminate();
 
     return 0;
