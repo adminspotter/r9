@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jan 2017, 08:37:06 tquirk
+ *   last updated 17 Jan 2017, 11:52:20 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -216,6 +216,15 @@ void resize_callback(GLFWwindow *w, int width, int height)
 
     ctx->set(ui::element::size, ui::size::all, &sz);
     resize_window(width, height);
+}
+
+/* This is to limit coupling between the logbuf and the log_display.
+ * It has a nice side-effect of making logbuf testing much easier to
+ * mock.
+ */
+void add_log_entry(logbuf::lb_entry *l)
+{
+    log_disp->add_entry(l);
 }
 
 void setup_comm(struct addrinfo *ai,

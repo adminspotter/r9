@@ -1,6 +1,6 @@
 /* logbuf.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jan 2017, 22:39:32 tquirk
+ *   last updated 17 Jan 2017, 11:59:39 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -103,7 +103,7 @@ int logbuf::sync(void)
         /* Strip trailing whitespace */
         e.entry.erase(e.entry.find_last_not_of(" \n\r\t") + 1);
         this->entries.push_back(std::move(e));
-        log_disp->add_entry(&this->entries.back());
+        add_log_entry(&this->entries.back());
         this->buf.erase();
     }
     return 0;
