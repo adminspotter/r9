@@ -31,9 +31,15 @@
 #ifndef __INC_R9CLIENT_LOG_DISPLAY_H__
 #define __INC_R9CLIENT_LOG_DISPLAY_H__
 
+#include <pthread.h>
+
+#include <iostream>
+#include <chrono>
+
 #include "logbuf.h"
 
 #include "ui/row_column.h"
+#include "ui/font.h"
 
 class log_display : public ui::row_column
 {
@@ -53,12 +59,22 @@ class log_display : public ui::row_column
     entry;
 
     std::list<entry> entries;
+    std::list<entry>::iterator created;
+    pthread_t cleanup_thread;
+    pthread_mutex_t queue_mutex;
+    std::chrono::seconds entry_lifetime;
+    ui::font *log_font;
+    std::streambuf *orig_rdbuf;
+
+    static void *cleanup_entries(void *);
 
   public:
     log_display(ui::composite *, GLuint, GLuint);
     virtual ~log_display();
 
     void add_entry(logbuf::lb_entry *);
+
+    void create_log_labels(void);
 
     virtual void draw(GLuint, const glm::mat4&) override;
 };
