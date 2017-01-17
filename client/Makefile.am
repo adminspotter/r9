@@ -10,7 +10,8 @@ r9client_SOURCES = client.cc client.h \
 	logbuf.cc logbuf.h \
 	client_core.cc client_core.h \
 	configdata.cc configdata.h \
-	comm_dialog.cc log_display.cc \
+	log_display.cc log_display.h \
+	comm_dialog.cc \
 	cache.h dtdresolver.h object.h l10n.h
 r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 	-DDTD_PATH=\"$(dtddir)/\" \
