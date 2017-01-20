@@ -107,16 +107,6 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
     int border = 1, ret;
 
     this->created = this->entries.end();
-    this->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
-    if ((ret = pthread_create(&(this->cleanup_thread), NULL,
-                              log_display::cleanup_entries, (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        s << "Couldn't start log display cleanup thread: "
-          << strerror(ret) << " (" << ret << ")";
-        throw std::runtime_error(s.str());
-    }
-
     this->grid_sz = glm::ivec2(1, 0);
     this->child_spacing = glm::ivec2(5, 10);
     this->pos = glm::ivec2(10, 0);
@@ -133,7 +123,17 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
     this->background = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
     this->add_callback(ui::callback::resize, resize_pos_callback, NULL);
+    this->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
     this->orig_rdbuf = std::clog.rdbuf(new logbuf());
+
+    if ((ret = pthread_create(&(this->cleanup_thread), NULL,
+                              log_display::cleanup_entries, (void *)this)) != 0)
+    {
+        std::ostringstream s;
+        s << "Couldn't start log display cleanup thread: "
+          << strerror(ret) << " (" << ret << ")";
+        throw std::runtime_error(s.str());
+    }
 }
 
 log_display::~log_display()
