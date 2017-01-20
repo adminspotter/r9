@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Jan 2017, 08:27:30 tquirk
+ *   last updated 17 Jan 2017, 11:59:49 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -51,14 +51,6 @@
 #define ENTRY_LIFETIME 10
 
 static void resize_pos_callback(ui::active *, void *, void *);
-
-std::ostream& operator<<(std::ostream& o, logbuf::lb_entry& l)
-{
-    o << "timestamp: " << l.timestamp.time_since_epoch().count() << std::endl;
-    o << "wall time: " << l.display_time.time_since_epoch().count() << std::endl;
-    o << "string:    " << l.entry << std::endl;
-    return o;
-}
 
 void *log_display::cleanup_entries(void *arg)
 {
