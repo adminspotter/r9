@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jan 2017, 11:59:49 tquirk
+ *   last updated 20 Jan 2017, 08:36:04 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -161,8 +161,6 @@ void log_display::add_entry(logbuf::lb_entry *lbe)
 {
     log_display::entry ent;
 
-    std::cout << "addr is " << std::hex << (void *)lbe << std::dec << std::endl;
-    std::cout << "entry is " << *lbe << std::endl;;
     ent.log_entry = lbe;
     ent.label = NULL;
     pthread_mutex_lock(&this->queue_mutex);
@@ -180,22 +178,13 @@ void log_display::create_log_labels(void)
     while (this->created != --this->entries.end())
     {
         if (this->created == this->entries.end())
-        {
-            std::cout << "setting begin" << std::endl;
             this->created = this->entries.begin();
-            std::cout << "front is " << *this->entries.front().log_entry << std::endl;
-        }
         else
-        {
-            std::cout << "incrmenting" << std::endl;
             ++this->created;
-        }
 
         int border = 2, orig_pos = this->pos.y, orig_height = this->dim.y;
         this->created->label = new ui::multi_label(this, LABEL_WIDTH, 0);
 
-        std::cout << "new addr is " << std::hex << (void *)(this->created->log_entry) << std::dec << std::endl;
-        std::cout << "new ent is " << *this->created->log_entry << std::endl;
         this->created->label->set_va(
             ui::element::font, ui::ownership::shared, this->log_font,
             ui::element::border, ui::side::all, &border,
