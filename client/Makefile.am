@@ -7,7 +7,6 @@ shaderdir = @datadir@/$(PACKAGE)/shaders
 
 r9client_SOURCES = client.cc client.h \
 	comm.cc comm.h \
-	logbuf.cc logbuf.h \
 	client_core.cc client_core.h \
 	configdata.cc configdata.h \
 	log_display.cc log_display.h \
