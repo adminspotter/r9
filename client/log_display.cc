@@ -30,7 +30,7 @@
  * callback list now, that we can use for this purpose.
  *
  * Things to do
- *   - Make the lifetime and font size config items.
+ *   - Make the lifetime, font size, and log filename config items.
  *
  */
 
