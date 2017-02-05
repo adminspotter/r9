@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Feb 2017, 09:26:53 tquirk
+ *   last updated 05 Feb 2017, 09:46:34 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -80,6 +80,31 @@ void log_display::sync_to_file(void)
             }
             fs.close();
         }
+    }
+}
+
+void log_display::create_log_labels(void)
+{
+    if (this->entries.size() == 0
+        || (this->created != this->entries.end()
+            && this->created == --this->entries.end()))
+        return;
+
+    while (this->created != --this->entries.end())
+    {
+        if (this->created == this->entries.end())
+            this->created = this->entries.begin();
+        else
+            ++this->created;
+
+        int border = 2, orig_pos = this->pos.y, orig_height = this->dim.y;
+        this->created->label = new ui::multi_label(this, LABEL_WIDTH, 0);
+        this->created->label->set_va(
+            ui::element::font, ui::ownership::shared, this->log_font,
+            ui::element::border, ui::side::all, &border,
+            ui::element::string, 0, &this->created->log_entry, 0);
+        orig_pos -= this->dim.y - orig_height;
+        this->set_position(ui::position::y, &orig_pos);
     }
 }
 
@@ -189,31 +214,6 @@ log_display::~log_display()
                   << strerror(ret) << " (" << ret << ")" << std::endl;
 
     this->sync_to_file();
-}
-
-void log_display::create_log_labels(void)
-{
-    if (this->entries.size() == 0
-        || (this->created != this->entries.end()
-            && this->created == --this->entries.end()))
-        return;
-
-    while (this->created != --this->entries.end())
-    {
-        if (this->created == this->entries.end())
-            this->created = this->entries.begin();
-        else
-            ++this->created;
-
-        int border = 2, orig_pos = this->pos.y, orig_height = this->dim.y;
-        this->created->label = new ui::multi_label(this, LABEL_WIDTH, 0);
-        this->created->label->set_va(
-            ui::element::font, ui::ownership::shared, this->log_font,
-            ui::element::border, ui::side::all, &border,
-            ui::element::string, 0, &this->created->log_entry, 0);
-        orig_pos -= this->dim.y - orig_height;
-        this->set_position(ui::position::y, &orig_pos);
-    }
 }
 
 void log_display::draw(GLuint trans_uniform, const glm::mat4& parent_trans)

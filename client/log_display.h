@@ -78,6 +78,7 @@ class log_display : public ui::row_column,
 
     void sync_to_file(void);
 
+    void create_log_labels(void);
     static void *cleanup_entries(void *);
 
   public:
