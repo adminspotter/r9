@@ -1,6 +1,6 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jan 2017, 11:52:09 tquirk
+ *   last updated 24 Jan 2017, 08:34:46 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -43,7 +43,5 @@ void setup_comm(struct addrinfo *, const char *, const char *, const char *);
 void cleanup_comm(void);
 
 void create_login_dialog(ui::context *);
-
-void add_log_entry(logbuf::lb_entry *);
 
 #endif /* __INC_R9CLIENT_H__ */

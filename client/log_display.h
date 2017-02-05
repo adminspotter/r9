@@ -1,6 +1,6 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jan 2017, 08:40:43 tquirk
+ *   last updated 24 Jan 2017, 08:33:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -81,8 +81,6 @@ class log_display : public ui::row_column,
   public:
     log_display(ui::composite *, GLuint, GLuint);
     virtual ~log_display();
-
-    void add_entry(logbuf::lb_entry *);
 
     virtual void draw(GLuint, const glm::mat4&) override;
 

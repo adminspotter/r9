@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jan 2017, 08:36:04 tquirk
+ *   last updated 05 Feb 2017, 09:26:53 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -156,17 +156,6 @@ log_display::~log_display()
     if ((ret = pthread_mutex_destroy(&this->queue_mutex)) != 0)
         std::clog << "Couldn't destroy log display mutex: "
                   << strerror(ret) << " (" << ret << ")" << std::endl;
-}
-
-void log_display::add_entry(logbuf::lb_entry *lbe)
-{
-    log_display::entry ent;
-
-    ent.log_entry = lbe;
-    ent.label = NULL;
-    pthread_mutex_lock(&this->queue_mutex);
-    this->entries.push_back(ent);
-    pthread_mutex_unlock(&this->queue_mutex);
 }
 
 void log_display::create_log_labels(void)
