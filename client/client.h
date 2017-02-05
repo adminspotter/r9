@@ -1,6 +1,6 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jan 2017, 08:34:46 tquirk
+ *   last updated 05 Feb 2017, 11:09:09 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -36,7 +36,6 @@
 
 #include <string>
 
-#include "logbuf.h"
 #include "ui/ui.h"
 
 void setup_comm(struct addrinfo *, const char *, const char *, const char *);
