@@ -35,22 +35,31 @@
 
 #include <iostream>
 #include <chrono>
-
-#include "logbuf.h"
+#include <list>
+#include <string>
 
 #include "ui/row_column.h"
 #include "ui/font.h"
 
-class log_display : public ui::row_column
+class log_display : public ui::row_column,
+                    public std::basic_streambuf<char, std::char_traits<char> >
 {
   protected:
+    typedef std::chrono::steady_clock ld_ts_time;
+    typedef std::chrono::time_point<ld_ts_time> ld_ts_point;
+    typedef std::chrono::system_clock ld_wc_time;
+    typedef std::chrono::time_point<ld_wc_time> ld_wc_point;
     typedef struct entry_tag
     {
-        logbuf::lb_entry *log_entry;
+        ld_ts_point timestamp;
+        ld_wc_point display_time;
+        std::string log_entry;
         ui::widget *label;
 
         const struct entry_tag& operator=(const struct entry_tag& et)
             {
+                this->timestamp = et.timestamp;
+                this->display_time = et.display_time;
                 this->log_entry = et.log_entry;
                 this->label = et.label;
                 return *this;
@@ -65,6 +74,7 @@ class log_display : public ui::row_column
     std::chrono::seconds entry_lifetime;
     ui::font *log_font;
     std::streambuf *orig_rdbuf;
+    std::string buf;
 
     static void *cleanup_entries(void *);
 
@@ -74,9 +84,11 @@ class log_display : public ui::row_column
 
     void add_entry(logbuf::lb_entry *);
 
-    void create_log_labels(void);
-
     virtual void draw(GLuint, const glm::mat4&) override;
+
+  protected:
+    int sync(void) override;
+    int overflow(int) override;
 };
 
 #endif /* __INC_R9CLIENT_LOG_DISPLAY_H__ */

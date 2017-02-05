@@ -101,7 +101,7 @@ void *log_display::cleanup_entries(void *arg)
 }
 
 log_display::log_display(ui::composite *p, GLuint w, GLuint h)
-    : ui::row_column(p, w, h), ui::rect(w, h), entries(),
+    : ui::row_column(p, w, h), ui::rect(w, h), buf(), entries(),
       entry_lifetime(ENTRY_LIFETIME)
 {
     int border = 1, ret;
@@ -124,7 +124,6 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
 
     this->add_callback(ui::callback::resize, resize_pos_callback, NULL);
     this->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
-    this->orig_rdbuf = std::clog.rdbuf(new logbuf());
 
     if ((ret = pthread_create(&(this->cleanup_thread), NULL,
                               log_display::cleanup_entries, (void *)this)) != 0)
@@ -134,6 +133,8 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
           << strerror(ret) << " (" << ret << ")";
         throw std::runtime_error(s.str());
     }
+
+    this->orig_rdbuf = std::clog.rdbuf(this);
 }
 
 log_display::~log_display()
@@ -143,7 +144,7 @@ log_display::~log_display()
     /* Set std::clog's rdbuf back to a normal state, in case we need
      * to emit some errors to it.
      */
-    delete std::clog.rdbuf(this->orig_rdbuf);
+    std::clog.rdbuf(this->orig_rdbuf);
 
     if ((ret = pthread_cancel(this->cleanup_thread)) != 0)
         std::clog << "Couldn't cancel log display cleanup thread: "
@@ -184,11 +185,10 @@ void log_display::create_log_labels(void)
 
         int border = 2, orig_pos = this->pos.y, orig_height = this->dim.y;
         this->created->label = new ui::multi_label(this, LABEL_WIDTH, 0);
-
         this->created->label->set_va(
             ui::element::font, ui::ownership::shared, this->log_font,
             ui::element::border, ui::side::all, &border,
-            ui::element::string, 0, &this->created->log_entry->entry, 0);
+            ui::element::string, 0, &this->created->log_entry, 0);
         orig_pos -= this->dim.y - orig_height;
         this->set_position(ui::position::y, &orig_pos);
     }
@@ -204,6 +204,36 @@ void log_display::draw(GLuint trans_uniform, const glm::mat4& parent_trans)
     this->create_log_labels();
     this->row_column::draw(trans_uniform, parent_trans);
     pthread_mutex_unlock(&this->queue_mutex);
+}
+
+int log_display::sync(void)
+{
+    if (this->buf.length())
+    {
+        entry e;
+
+        e.timestamp = log_display::ld_ts_time::now();
+        e.display_time = log_display::ld_wc_time::now();
+        e.log_entry = buf;
+        e.label = NULL;
+
+        /* Strip trailing whitespace */
+        e.log_entry.erase(e.log_entry.find_last_not_of(" \n\r\t") + 1);
+        pthread_mutex_lock(&this->queue_mutex);
+        this->entries.push_back(std::move(e));
+        pthread_mutex_unlock(&this->queue_mutex);
+        this->buf.erase();
+    }
+    return 0;
+}
+
+int log_display::overflow(int c)
+{
+    if (c != EOF)
+        this->buf += static_cast<char>(c);
+    else
+        this->sync();
+    return c;
 }
 
 /* ARGSUSED */
