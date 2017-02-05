@@ -111,47 +111,54 @@ void log_display::create_log_labels(void)
 void *log_display::cleanup_entries(void *arg)
 {
     log_display *ld = (log_display *)arg;
-    logbuf::lb_ts_point now;
+    std::list<log_display::entry>::iterator last_closed, next_closed;
+    log_display::ld_ts_point now;
     std::chrono::duration<float> ftime;
     float ftime_val;
     struct timespec ts;
 
+    last_closed = next_closed = ld->entries.end();
+
     for (;;)
     {
-        if (ld->entries.size() == 0)
+        if (ld->entries.size() == 0
+            || (last_closed != ld->entries.end()
+                && next_closed == ld->entries.end()))
             sleep(ENTRY_LIFETIME);
         else
         {
-            /* Do a nanosleep until the head entry expires. */
-            ftime = ld->entries.front().log_entry->timestamp
-                + ld->entry_lifetime - logbuf::lb_ts_time::now();
-            ftime_val = ftime.count();
-            if (ftime_val > 0.0f)
+            if (last_closed == ld->entries.end())
+                next_closed = ld->entries.begin();
+
+            if (next_closed != ld->entries.end())
             {
-                ts.tv_sec = (int)truncf(ftime_val);
-                ftime_val -= (float)ts.tv_sec;
-                ts.tv_nsec = (int)truncf(ftime_val * 1000000000);
-                nanosleep(&ts, NULL);
+                /* Do a nanosleep until the next entry expires. */
+                ftime = next_closed->timestamp
+                    + ld->entry_lifetime - log_display::ld_ts_time::now();
+                ftime_val = ftime.count();
+                if (ftime_val > 0.0f)
+                {
+                    ts.tv_sec = (int)truncf(ftime_val);
+                    ftime_val -= (float)ts.tv_sec;
+                    ts.tv_nsec = (int)truncf(ftime_val * 1000000000);
+                    nanosleep(&ts, NULL);
+                }
             }
         }
 
         /* See if anything needs closing */
-        if (ld->entries.size() == 0)
+        if (next_closed == ld->entries.end())
             continue;
 
-        now = logbuf::lb_ts_time::now();
-        while (now >= (ld->entries.front().log_entry->timestamp
-                       + ld->entry_lifetime))
+        now = log_display::ld_ts_time::now();
+        while (next_closed != ld->entries.end()
+               && now >= (next_closed->timestamp + ld->entry_lifetime))
         {
             pthread_mutex_lock(&ld->queue_mutex);
-
-            ld->entries.front().label->close();
-            ld->entries.pop_front();
-
-            if (ld->entries.size() == 0)
-                ld->created = ld->entries.end();
-
+            next_closed->label->close();
+            next_closed->label = NULL;
             pthread_mutex_unlock(&ld->queue_mutex);
+            last_closed = next_closed++;
         }
     }
 }
