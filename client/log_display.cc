@@ -36,6 +36,7 @@
 
 #include <math.h>
 
+#include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -51,6 +52,36 @@
 #define ENTRY_LIFETIME 10
 
 static void resize_pos_callback(ui::active *, void *, void *);
+
+void log_display::sync_to_file(void)
+{
+    if (this->fname.length())
+    {
+        std::ofstream fs(this->fname, std::ios::app | std::ios::ate);
+        std::time_t tt;
+#if !HAVE_STD_PUT_TIME
+        char time_str[32];
+#endif /* !HAVE_STD_PUT_TIME */
+
+        if (fs.is_open())
+        {
+            for (auto i = this->entries.begin(); i != this->entries.end(); ++i)
+            {
+                tt = log_display::ld_wc_time::to_time_t((*i).display_time);
+
+#if HAVE_STD_PUT_TIME
+                fs << std::put_time(std::localtime(&tt), "%Y-%m-%d %H:%M:%S ")
+                   << (*i).log_entry << std::endl;
+#else
+                std::strftime(time_str, sizeof(time_str),
+                              "%Y-%m-%d %H:%M:%S ", std::localtime(&tt));
+                fs << time_str << (*i).log_entry << std::endl;
+#endif /* HAVE_STD_PUT_TIME */
+            }
+            fs.close();
+        }
+    }
+}
 
 void *log_display::cleanup_entries(void *arg)
 {
@@ -101,7 +132,7 @@ void *log_display::cleanup_entries(void *arg)
 }
 
 log_display::log_display(ui::composite *p, GLuint w, GLuint h)
-    : ui::row_column(p, w, h), ui::rect(w, h), buf(), entries(),
+    : ui::row_column(p, w, h), ui::rect(w, h), buf(), fname(), entries(),
       entry_lifetime(ENTRY_LIFETIME)
 {
     int border = 1, ret;
@@ -156,6 +187,8 @@ log_display::~log_display()
     if ((ret = pthread_mutex_destroy(&this->queue_mutex)) != 0)
         std::clog << "Couldn't destroy log display mutex: "
                   << strerror(ret) << " (" << ret << ")" << std::endl;
+
+    this->sync_to_file();
 }
 
 void log_display::create_log_labels(void)

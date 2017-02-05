@@ -74,7 +74,9 @@ class log_display : public ui::row_column,
     std::chrono::seconds entry_lifetime;
     ui::font *log_font;
     std::streambuf *orig_rdbuf;
-    std::string buf;
+    std::string buf, fname;
+
+    void sync_to_file(void);
 
     static void *cleanup_entries(void *);
 
