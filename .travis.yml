@@ -20,6 +20,7 @@ addons:
     - libxerces-c-dev
     - libglm-dev
     - libfreetype6-dev
+    - libwrap0-dev
     - xorg-dev
 before_script:
 - wget https://github.com/glfw/glfw/releases/download/3.2/glfw-3.2.zip -O /tmp/glfw-3.2.zip
