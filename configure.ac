@@ -106,6 +106,15 @@ AC_ARG_WITH([pgsql],
             [],
             [with_pgsql="no"])
 
+AC_ARG_WITH([python],
+            AS_HELP_STRING([--with-python], [Build the Python server module]),
+            [],
+            [with_python="no"])
+AC_ARG_WITH([tcl],
+            AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
+            [],
+            [with_tcl="no"])
+
 AC_ARG_WITH([client],
             AS_HELP_STRING([--with-client], [Build the client program]),
             [],
@@ -282,6 +291,21 @@ then
     LIBS="$PGSQL_LIBS_SAVE"
   fi
 
+  # Python server module
+  if test "$with_python" == "yes"
+  then
+    AC_CHECK_PROG(PYTHON3_CONFIG_CHECK, [python3-config], [yes])
+    if test "x$PYTHON3_CONFIG_CHECK" != "xyes"
+    then
+      AC_MSG_ERROR([No python3-config script found, can not continue])
+    fi
+    PYTHON_CFLAGS=$(python3-config --cflags)
+    PYTHON_LDFLAGS=$(python3-config --ldflags)
+    AC_SUBST(PYTHON_CFLAGS)
+    AC_SUBST(PYTHON_LDFLAGS)
+    want_python="yes"
+  fi
+
   # Tcl server module
   if test "$with_tcl" == "yes"
   then
@@ -315,6 +339,7 @@ AM_CONDITIONAL([WANT_SERVER], [test "x$with_server" == "xyes"])
 AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
 AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
 AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
+AM_CONDITIONAL([WANT_PYTHON], [test "x$want_python" == "xyes"])
 AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
 
 # We want GLM in either the client or the server
