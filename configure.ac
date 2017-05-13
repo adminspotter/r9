@@ -57,6 +57,11 @@ assert(f.code().value() == 5);
 
 
 # Arguments
+AC_ARG_ENABLE([debug],
+              AS_HELP_STRING([--enable-debug], [Build binaries with debugging symbols]),
+              [],
+              [enable_debug="no"])
+
 AC_ARG_WITH([server],
             AS_HELP_STRING([--with-server], [Build the server program]),
             [],
@@ -104,6 +109,16 @@ AC_ARG_WITH([xerces-includes],
 AC_ARG_WITH([xerces-libraries],
             AS_HELP_STRING([--with-xerces-libraries=<path>],
                            [Use libxerces-c libraries at <path>]))
+
+# Debug flag
+if test "$enable_debug" == "yes"
+then
+  DEBUG_CXXFLAGS="-g"
+  DEBUG_LDFLAGS="-g"
+fi
+
+CXXFLAGS="$DEBUG_CXXFLAGS $CXXFLAGS"
+LDFLAGS="$DEBUG_LDFLAGS $LDFLAGS"
 
 # Client program
 if test "$with_client" == "yes"
