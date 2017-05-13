@@ -38,3 +38,6 @@ libr9_perl_la_LDFLAGS = $(PERL_LDFLAGS) -module
 
 libr9_tcl_la_SOURCES = tcl.cc r9tcl.h language.cc language.h
 libr9_tcl_la_LIBADD = $(TCL_LDLIBS)
+
+clean-local:
+	rm -f *.gcno *.gcda *.gcov
