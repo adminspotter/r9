@@ -14,3 +14,6 @@ r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 	-DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \
 	-DGL_GLEXT_PROTOTYPES
 r9client_LDADD = ui/libr9_client_ui.la ../proto/libr9_proto.la $(CLIENT_LDLIBS)
+
+clean-local:
+	rm -f *.gcno *.gcda *.gcov

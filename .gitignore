@@ -2,6 +2,9 @@
 *.l[ao]
 *.so
 *.dylib
+*.gcda
+*.gcno
+*.gcov
 #*#
 .#*
 .DS_Store
