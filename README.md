@@ -1,6 +1,6 @@
 # r9 #
 
-[![Build Status](https://travis-ci.org/adminspotter/r9.svg?branch=master)](https://travis-ci.org/adminspotter/r9) [![Code Climate](https://codeclimate.com/github/adminspotter/r9/badges/gpa.svg)](https://codeclimate.com/github/adminspotter/r9)
+[![Build Status](https://travis-ci.org/adminspotter/r9.svg?branch=master)](https://travis-ci.org/adminspotter/r9) [![Code Climate](https://codeclimate.com/github/adminspotter/r9/badges/gpa.svg)](https://codeclimate.com/github/adminspotter/r9) [![codecov](https://codecov.io/gh/adminspotter/r9/branch/master/graph/badge.svg)](https://codecov.io/gh/adminspotter/r9)
 
 Revision IX (revision9, r9, etc.) is a client-server game engine in
 C++.
