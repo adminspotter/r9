@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Jul 2016, 07:56:38 tquirk
+ *   last updated 14 May 2017, 20:45:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -141,7 +141,7 @@ int stream_socket::create_subserver(void)
                 close(i);
 
         /* This call will never return */
-        execlp(SUBSERVER_PROG, NULL);
+        execl(SUBSERVER_PROG, "r9subserver", NULL);
 
         /* And in case it does... */
         close(STDIN_FILENO);
