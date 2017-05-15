@@ -117,18 +117,35 @@ AC_ARG_WITH([xerces-libraries],
 # Development flags (debugging, profiling)
 if test "$enable_debug" == "yes"
 then
+  AC_MSG_NOTICE([building with debug enabled])
   DEBUG_CXXFLAGS="-g"
   DEBUG_LDFLAGS="-g"
 fi
 
 if test "$enable_profile" == "yes"
 then
-  PROFILE_CXXFLAGS="-fprofile-arcs -ftest-coverage"
-  PROFILE_LDFLAGS="--coverage"
+  if test "$CXX" == "clang++"
+  then
+    AC_SEARCH_LIBS([llvm_start_basic_block_tracing], [profile_rt],
+        [
+          if test "x$ac_cv_search_llvm_start_basic_block_tracing" == "xnone required"
+          then
+            AC_MSG_NOTICE([libprofile_rt not needed])
+          else
+            PROFILE_LDLIBS="$ac_cv_search_llvm_start_basic_block_tracing"
+          fi
+          PROFILE_CXXFLAGS="-fprofile-arcs -ftest-coverage"
+          PROFILE_LDFLAGS="--coverage"
+          AC_MSG_NOTICE([building with profiling enabled])
+        ],
+        [AC_MSG_NOTICE([no libprofile_rt available, not enabling profiling])])
+  else
+    PROFILE_CXXFLAGS="-fprofile-arcs -ftest-coverage"
+    PROFILE_LDFLAGS="--coverage"
+    PROFILE_LDLIBS="-lgcov"
+    AC_MSG_NOTICE([building with profiling enabled])
+  fi
 fi
-
-CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
-LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
 
 # Client program
 if test "$with_client" == "yes"
@@ -269,6 +286,10 @@ XMLPlatformUtils::Terminate();
       [AC_MSG_ERROR([ not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
+  CLIENT_CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CLIENT_CXXFLAGS"
+  CLIENT_LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $CLIENT_LDFLAGS"
+  CLIENT_LDLIBS="$CLIENT_LDLIBS $PROFILE_LDLIBS"
+
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
   AC_MSG_NOTICE([using CLIENT_INCLUDES=$CLIENT_INCLUDES])
   AC_MSG_NOTICE([using CLIENT_LDFLAGS=$CLIENT_LDFLAGS])
@@ -377,6 +398,8 @@ then
       [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen $LIBS"],
       [AC_MSG_ERROR([can not build without dlopen.])])
 
+  SERVER_LDLIBS="$SERVER_LDLIBS $PROFILE_LDLIBS"
+
   AC_MSG_NOTICE([using SERVER_LDLIBS=$SERVER_LDLIBS])
 
   LIBS="$SERVER_LIBS_SAVE"
@@ -403,6 +426,10 @@ fi
 AC_SEARCH_LIBS([pthread_create], [pthread],
     [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],
     [AC_MSG_ERROR([can not build without pthreads.])])
+
+CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
+LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
+LIBS="$LIBS $PROFILE_LDLIBS"
 
 AC_CONFIG_SUBDIRS([test/gmock-1.7.0])
 
