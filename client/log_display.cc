@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Feb 2017, 09:46:34 tquirk
+ *   last updated 17 May 2017, 18:23:52 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -97,12 +97,13 @@ void log_display::create_log_labels(void)
         else
             ++this->created;
 
-        int border = 2, orig_pos = this->pos.y, orig_height = this->dim.y;
+        int border = 1, orig_pos = this->pos.y, orig_height = this->dim.y;
         this->created->label = new ui::multi_label(this, LABEL_WIDTH, 0);
         this->created->label->set_va(
             ui::element::font, ui::ownership::shared, this->log_font,
             ui::element::border, ui::side::all, &border,
             ui::element::string, 0, &this->created->log_entry, 0);
+        this->manage_children();
         orig_pos -= this->dim.y - orig_height;
         this->set_position(ui::position::y, &orig_pos);
     }

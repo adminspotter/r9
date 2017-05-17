@@ -1,6 +1,6 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jan 2017, 08:04:53 tquirk
+ *   last updated 17 May 2017, 18:20:56 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -112,6 +112,8 @@ void create_login_dialog(ui::context *ctx)
               ui::element::border, ui::side::all, &border,
               ui::element::string, 0, &str, 0);
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
+
+    dialog->manage_children();
 
     ctx->get(ui::element::size, ui::size::all, &size);
     dialog->get(ui::element::size, ui::size::all, &dlg_size);
