@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 May 2017, 16:43:30 tquirk
+ *   last updated 21 May 2017, 17:15:25 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -172,7 +172,7 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
 
     this->created = this->entries.end();
     this->grid_sz = glm::ivec2(1, 0);
-    this->child_spacing = glm::ivec2(5, 10);
+    this->child_spacing = glm::ivec2(5, 5);
     this->pos = glm::ivec2(10, 0);
 
     this->pack_order = ui::order::column;
