@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 May 2017, 18:23:52 tquirk
+ *   last updated 20 May 2017, 11:39:01 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -70,11 +70,11 @@ void log_display::sync_to_file(void)
                 tt = log_display::ld_wc_time::to_time_t((*i).display_time);
 
 #if HAVE_STD_PUT_TIME
-                fs << std::put_time(std::localtime(&tt), "%Y-%m-%d %H:%M:%S ")
+                fs << std::put_time(std::localtime(&tt), "%FT%T%z ")
                    << (*i).log_entry << std::endl;
 #else
                 std::strftime(time_str, sizeof(time_str),
-                              "%Y-%m-%d %H:%M:%S ", std::localtime(&tt));
+                              "%FT%T%z ", std::localtime(&tt));
                 fs << time_str << (*i).log_entry << std::endl;
 #endif /* HAVE_STD_PUT_TIME */
             }
