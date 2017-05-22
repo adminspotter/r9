@@ -20,6 +20,7 @@ addons:
     - libxerces-c-dev
     - libglm-dev
     - libfreetype6-dev
+    - libwrap0-dev
     - python3-pip
     - xorg-dev
 before_script:

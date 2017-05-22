@@ -1,6 +1,6 @@
 /* ui.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Nov 2016, 10:10:24 tquirk
+ *   last updated 16 Jan 2017, 21:24:15 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -45,8 +45,6 @@ namespace ui
         GLuint use_text_uniform, text_bgnd_uniform;
         GLuint translate_uniform;
 
-        std::list<widget *> to_close;
-
       protected:
         int get_attribute(GLuint, void *);
 
@@ -55,8 +53,6 @@ namespace ui
         ~context();
 
         virtual int get(GLuint, GLuint, void *) override;
-
-        virtual void close_child(widget *) override;
 
         void draw(void);
     };

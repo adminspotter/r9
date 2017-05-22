@@ -1,6 +1,6 @@
 /* manager.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Nov 2016, 07:39:43 tquirk
+ *   last updated 16 May 2017, 18:03:14 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -112,6 +112,8 @@ void ui::manager::set_desired_size(void)
 {
     glm::ivec2 max_pt(0, 0);
 
+    this->composite::set_desired_size();
+
     if (this->resize == ui::resize::none)
         return;
 
@@ -221,8 +223,6 @@ ui::manager::manager(ui::composite *c, GLuint w, GLuint h)
 
 ui::manager::~manager()
 {
-    while (this->children.size())
-        delete this->children.front();
 }
 
 int ui::manager::get(GLuint e, GLuint t, void *v)
@@ -254,6 +254,9 @@ void ui::manager::set(GLuint e, GLuint t, void *v)
 
 void ui::manager::draw(GLuint trans_uniform, const glm::mat4& parent_trans)
 {
+    if (this->dirty == true)
+        this->set_desired_size();
+
     if (this->visible == true)
     {
         glm::mat4 trans = this->pos_transform * parent_trans;
@@ -262,22 +265,4 @@ void ui::manager::draw(GLuint trans_uniform, const glm::mat4& parent_trans)
         for (auto i = this->children.begin(); i != this->children.end(); ++i)
             (*i)->draw(trans_uniform, trans);
     }
-}
-
-void ui::manager::add_child(ui::widget *w)
-{
-    this->composite::add_child(w);
-    this->set_desired_size();
-}
-
-void ui::manager::remove_child(ui::widget *w)
-{
-    this->composite::remove_child(w);
-    this->set_desired_size();
-}
-
-void ui::manager::move_child(ui::widget *w)
-{
-    this->composite::move_child(w);
-    this->set_desired_size();
 }

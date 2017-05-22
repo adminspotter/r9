@@ -55,6 +55,28 @@ assert(f.code().value() == 5);
     ],
     [AC_MSG_RESULT([no])])
 
+# Check for std::put_time existence
+AC_MSG_CHECKING([if std::put_time exists])
+AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM(
+        [
+#include <chrono>
+#include <ctime>
+#include <iostream>
+#include <iomanip>
+        ],
+        [
+std::time_t t = std::time(nullptr);
+
+std::cout << std::put_time(std::localtime(&t), "%c %Z") << std::endl;
+        ])
+    ],
+    [
+      AC_MSG_RESULT([yes])
+      AC_DEFINE(HAVE_STD_PUT_TIME, [1], [older versions of g++ do not provide std::put_time])
+    ],
+    [AC_MSG_RESULT([no])])
+
 
 # Arguments
 AC_ARG_ENABLE([debug],
@@ -452,7 +474,7 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 AC_FUNC_FORK
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday getrlimit htonll kill memset mkdir ntohll select socket strdup strerror strtoull])
+AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday getrlimit htonll kill memset mkdir nanosleep ntohll select socket strdup strerror strtoull])
 
 # One of the mocks in our test suite needs a possibly-different
 # prototype, depending on the system we're building on.

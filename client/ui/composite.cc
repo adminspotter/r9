@@ -1,6 +1,6 @@
 /* composite.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Nov 2016, 07:38:07 tquirk
+ *   last updated 17 May 2017, 18:20:14 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -32,7 +32,6 @@
 
 #include <glm/vec3.hpp>
 
-#include "ui_defs.h"
 #include "composite.h"
 
 const int ui::composite::tree_max_depth = 4;
@@ -53,6 +52,8 @@ int ui::composite::get_size(GLuint t, void *v)
 
 void ui::composite::set_size(GLuint d, void *v)
 {
+    ui::resize_call_data call_data;
+
     switch (d)
     {
       case ui::size::all:     this->dim = *(glm::ivec2 *)v;  break;
@@ -61,6 +62,9 @@ void ui::composite::set_size(GLuint d, void *v)
     }
     this->regenerate_children();
     this->regenerate_search_tree();
+    call_data.new_size = this->dim;
+    for (auto i = this->children.begin(); i != this->children.end(); ++i)
+        (*i)->call_callbacks(ui::callback::resize, &call_data);
 }
 
 int ui::composite::get_resize(GLuint t, void *v)
@@ -99,6 +103,11 @@ int ui::composite::get_pixel_size(GLuint t, void *v)
     return ret;
 }
 
+void ui::composite::set_desired_size(void)
+{
+    this->clear_removed_children();
+}
+
 void ui::composite::reposition_children(void)
 {
     for (auto i = this->children.begin(); i != this->children.end(); ++i)
@@ -128,21 +137,40 @@ void ui::composite::regenerate_search_tree(void)
             this->tree->insert(*i);
 }
 
+void ui::composite::clear_removed_children(void)
+{
+    if (this->dirty == true)
+    {
+        if (this->to_remove.size() != 0)
+        {
+            for (auto i = this->to_remove.begin();
+                 i != this->to_remove.end();
+                 ++i)
+            {
+                this->children.remove(*i);
+                this->tree->remove(*i);
+            }
+            this->to_remove.clear();
+        }
+    }
+}
+
 ui::composite::composite(composite *c, GLuint w, GLuint h)
-    : ui::rect::rect(w, h), children(), old_pos(0, 0)
+    : ui::rect::rect(w, h), children(), to_remove(), old_pos(0, 0)
 {
     this->parent = c;
     this->tree = NULL;
     this->old_child = NULL;
+    this->dirty = false;
     this->regenerate_search_tree();
 }
 
 ui::composite::~composite()
 {
     delete this->tree;
-
-    while (!this->children.empty())
-        delete this->children.front();
+    for (auto i = this->children.begin(); i != this->children.end(); ++i)
+        delete (*i);
+    this->children.clear();
 }
 
 int ui::composite::get(GLuint e, GLuint t, void *v)
@@ -174,13 +202,18 @@ void ui::composite::add_child(ui::widget *w)
         this->children.push_back(w);
         if (w->visible == true)
             this->tree->insert(w);
+        this->dirty = true;
     }
 }
 
 void ui::composite::remove_child(ui::widget *w)
 {
-    this->children.remove(w);
-    this->tree->remove(w);
+    auto found = std::find(this->children.begin(), this->children.end(), w);
+    if (found != this->children.end())
+    {
+        this->to_remove.push_back(w);
+        this->dirty = true;
+    }
 }
 
 void ui::composite::move_child(ui::widget *w)
@@ -188,14 +221,12 @@ void ui::composite::move_child(ui::widget *w)
     this->tree->remove(w);
     if (w->visible == true)
         this->tree->insert(w);
+    this->dirty = true;
 }
 
-void ui::composite::close_child(ui::widget *w)
+void ui::composite::manage_children(void)
 {
-    this->remove_child(w);
-    /* The UI context will handle the collection and closing of children */
-    if (this->parent != NULL)
-        this->parent->close_child(w);
+    this->set_desired_size();
 }
 
 void ui::composite::mouse_pos_callback(int x, int y)

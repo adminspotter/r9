@@ -131,6 +131,9 @@
 /* Define to 1 if you have the <mysql.h> header file. */
 #undef HAVE_MYSQL_H
 
+/* Define to 1 if you have the `nanosleep' function. */
+#undef HAVE_NANOSLEEP
+
 /* Define to 1 if you have the <netdb.h> header file. */
 #undef HAVE_NETDB_H
 
@@ -169,6 +172,9 @@
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
+
+/* older versions of g++ do not provide std::put_time */
+#undef HAVE_STD_PUT_TIME
 
 /* Define to 1 if you have the `strdup' function. */
 #undef HAVE_STRDUP

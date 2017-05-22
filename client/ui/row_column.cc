@@ -1,6 +1,6 @@
 /* row_column.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2016, 06:31:40 tquirk
+ *   last updated 16 May 2017, 18:12:00 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -110,10 +110,8 @@ glm::ivec2 ui::row_column::calculate_grid_size(void)
             && actual.x * actual.y >= num_children))
         return actual;
 
-    /* Check if we only have a prescribed number of columns, or are in
-     * column-major order and need to spill.
-     */
-    if (actual.x == 0 || this->pack_order == ui::order::column)
+    /* Check if we only have a prescribed number of columns. */
+    if (actual.x == 0)
         actual.x = (num_children / actual.y)
             + (num_children % actual.y > 0 ? 1 : 0);
     else
@@ -127,6 +125,8 @@ void ui::row_column::set_desired_size(void)
 {
     glm::ivec2 cell_size(0, 0), grid_size(0, 0);
 
+    this->composite::set_desired_size();
+
     cell_size = this->calculate_cell_size();
     grid_size = this->calculate_grid_size();
     this->dim.x = ((cell_size.x + this->child_spacing.x) * grid_size.x)
@@ -137,7 +137,6 @@ void ui::row_column::set_desired_size(void)
         + this->child_spacing.y
         + this->margin[0] + this->margin[3]
         + this->border[0] + this->border[3];
-    this->regenerate_search_tree();
     this->composite::parent->move_child(this);
     this->populate_buffers();
 
@@ -145,6 +144,7 @@ void ui::row_column::set_desired_size(void)
         this->insert_row_major(grid_size, cell_size);
     else
         this->insert_column_major(grid_size, cell_size);
+    this->dirty = false;
 }
 
 void ui::row_column::insert_row_major(glm::ivec2& grid, glm::ivec2& cell)
@@ -205,12 +205,4 @@ void ui::row_column::set(GLuint e, GLuint t, void *v)
         this->set_order(t, v);
     else
         this->manager::set(e, t, v);
-}
-
-/* The manager's move_child behaviour will put us into an infinite
- * recursion due to the set_desired_size call at the end.
- */
-void ui::row_column::move_child(ui::widget *w)
-{
-    this->composite::move_child(w);
 }

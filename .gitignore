@@ -46,3 +46,6 @@ missing
 stamp-h
 stamp-h1
 test-driver
+
+# Xcode
+*.xcodeproj/

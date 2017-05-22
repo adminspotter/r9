@@ -1,6 +1,6 @@
 /* label.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Nov 2016, 07:19:17 tquirk
+ *   last updated 21 May 2017, 16:18:21 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -52,8 +52,7 @@ void ui::label::set_font(GLuint t, void *v)
     else
         this->shared_font = false;
     this->font = (ui::font *)v;
-    if (this->str.size() > 0)
-        this->generate_string_image();
+    this->generate_string_image();
 }
 
 /* ARGSUSED */
@@ -68,14 +67,13 @@ void ui::label::set_string(GLuint t, void *v)
 {
     this->use_text = true;
     this->str = utf8tou32str(*((std::string *)v));
-    if (this->font != NULL)
-        this->generate_string_image();
+    this->generate_string_image();
 }
 
 /* ARGSUSED */
 int ui::label::get_image(GLuint t, void *v)
 {
-    v = (void *)&this->img;
+    *(ui::image *)v = this->img;
     return 0;
 }
 
@@ -216,26 +214,31 @@ std::string ui::label::u32strtoutf8(const std::u32string& str)
 
 void ui::label::generate_string_image(void)
 {
-    if (this->use_text == true && this->font != NULL)
+    if (this->use_text == true && this->font != NULL && this->str.size() > 0)
+    {
         this->font->render_string(this->str, this->img);
-    this->calculate_widget_size();
+        this->calculate_widget_size();
+    }
 }
 
 void ui::label::calculate_widget_size(void)
 {
     glm::ivec2 size;
 
-    /* We want an extra pixel of space between the string and each
-     * side, even if there is no border or margin, thus the
-     * literal 2s.
-     */
-    size.x = this->img.width
-        + this->margin[1] + this->margin[2]
-        + this->border[1] + this->border[2] + 2;
-    size.y = this->img.height
-        + this->margin[0] + this->margin[3]
-        + this->border[0] + this->border[3] + 2;
-    this->set_size(ui::size::all, &size);
+    if (this->img.width > 0 && this->img.height > 0)
+    {
+        /* We want an extra pixel of space between the string and each
+         * side, even if there is no border or margin, thus the
+         * literal 2s.
+         */
+        size.x = this->img.width
+            + this->margin[1] + this->margin[2]
+            + this->border[1] + this->border[2] + 2;
+        size.y = this->img.height
+            + this->margin[0] + this->margin[3]
+            + this->border[0] + this->border[3] + 2;
+        this->set_size(ui::size::all, &size);
+    }
 }
 
 ui::vertex_buffer *ui::label::generate_points(void)
