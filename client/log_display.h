@@ -1,6 +1,6 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jan 2017, 08:33:51 tquirk
+ *   last updated 22 May 2017, 07:38:26 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -44,7 +44,7 @@
 class log_display : public ui::row_column,
                     public std::basic_streambuf<char, std::char_traits<char> >
 {
-  protected:
+  public:
     typedef std::chrono::steady_clock ld_ts_time;
     typedef std::chrono::time_point<ld_ts_time> ld_ts_point;
     typedef std::chrono::system_clock ld_wc_time;
@@ -66,7 +66,9 @@ class log_display : public ui::row_column,
             };
     }
     entry;
+    typedef std::list<entry>::iterator ld_iter;
 
+  protected:
     std::list<entry> entries;
     std::list<entry>::iterator created;
     pthread_t cleanup_thread;

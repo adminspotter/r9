@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 May 2017, 17:15:25 tquirk
+ *   last updated 22 May 2017, 07:45:20 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -52,6 +52,7 @@
 #define ENTRY_LIFETIME 10
 
 static void resize_pos_callback(ui::active *, void *, void *);
+static log_display::ld_iter operator+(log_display::ld_iter, int);
 
 void log_display::sync_to_file(void)
 {
@@ -112,7 +113,7 @@ void log_display::create_log_labels(void)
 void *log_display::cleanup_entries(void *arg)
 {
     log_display *ld = (log_display *)arg;
-    std::list<log_display::entry>::iterator last_closed, next_closed;
+    log_display::ld_iter last_closed, next_closed;
     log_display::ld_ts_point now;
     std::chrono::duration<float> ftime;
     float ftime_val;
@@ -122,9 +123,9 @@ void *log_display::cleanup_entries(void *arg)
 
     for (;;)
     {
-        if (ld->entries.size() == 0
+        if (ld->entries.empty()
             || (last_closed != ld->entries.end()
-                && next_closed == ld->entries.end()))
+                && (next_closed = last_closed + 1) == ld->entries.end()))
             sleep(ENTRY_LIFETIME);
         else
         {
@@ -280,4 +281,18 @@ void resize_pos_callback(ui::active *a, void *call, void *client)
         log_height = call_data->new_size.y - log_height - DISTANCE_FROM_BOTTOM;
         ld->set(ui::element::position, ui::position::y, &log_height);
     }
+}
+
+/* We want to be able to say "hey, what's the next element in the
+ * list?", but there's no general-purpose "add X to our iterator"
+ * function.
+ */
+static log_display::ld_iter operator+(log_display::ld_iter iter, int interval)
+{
+    log_display::ld_iter tmp_iter = iter;
+
+    for (int i = 0; i < interval; ++i)
+        ++tmp_iter;
+
+    return tmp_iter;
 }
