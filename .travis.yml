@@ -21,15 +21,19 @@ addons:
     - libglm-dev
     - libfreetype6-dev
     - libwrap0-dev
+    - python3-pip
     - xorg-dev
 before_script:
 - wget https://github.com/glfw/glfw/releases/download/3.2/glfw-3.2.zip -O /tmp/glfw-3.2.zip
 - unzip /tmp/glfw-3.2.zip
 - pushd glfw-3.2 && cmake -DBUILD_SHARED_LIBS=ON -DLIB_SUFFIX=64 -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF && make && sudo make install && popd && rm -rf glfw-3.2
+- sudo pip3 install codecov
 script:
 - ./autogen.sh
-- CXXFLAGS='-I/usr/include/mysql -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client
+- CXXFLAGS='-I/usr/include/mysql -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client --enable-profile
 - make
 - make check
 after_script:
 - pushd test && grep -l FAIL *.trs | sed -e 's/trs$/log/' | xargs cat && popd
+after_success:
+- codecov

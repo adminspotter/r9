@@ -11,3 +11,6 @@ r9d_LDADD = classes/libr9_classes.la ../proto/libr9_proto.la $(SERVER_LDLIBS)
 
 r9subserver_SOURCES = subserver.cc log.cc log.h
 r9subserver_CXXFLAGS = -DIN_SUBSERVER
+
+clean-local:
+	rm -f *.gcno *.gcda *.gcov

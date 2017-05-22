@@ -16,3 +16,6 @@ libr9_classes_la_SOURCES = control.cc control.h \
 	defs.h thread_pool.h
 libr9_classes_la_CXXFLAGS = -DSUBSERVER_PROG=\"@libexecdir@/r9subserver\"
 libr9_classes_la_LIBADD = ../../proto/libr9_proto.la
+
+clean-local:
+	rm -f *.gcno *.gcda *.gcov

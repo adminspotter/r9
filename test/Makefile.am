@@ -170,3 +170,6 @@ t_font_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	-DSTORE_PREFIX=\"../client\"
 t_font_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	$(XERCES_LDLIBS) $(FREETYPE_LDLIBS)
+
+clean-local:
+	rm -f *.gcno *.gcda *.gcov
