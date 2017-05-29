@@ -38,7 +38,6 @@ endif
 TESTS = $(TC)
 
 check_PROGRAMS = $(TC)
-lib_LTLIBRARIES = libtest.la
 EXTRA_DIST = t_texture_parser.xml
 
 check: SUBDIRS =
@@ -53,9 +52,6 @@ CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
 if HAVE_LIBWRAP
   CONFIG_DEFS += -DHAVE_LIBWRAP=1
 endif
-
-libtest_la_SOURCES = libtest.cc libtest.h
-libtest_la_LDFLAGS = -module -rpath /nowhere
 
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
