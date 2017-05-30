@@ -173,4 +173,10 @@ TEST(CommTest, StartFailure)
     cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
         = create_calls = 0;
     delete obj;
+    ASSERT_EQ(cancel_calls, 1);
+    ASSERT_EQ(join_calls, 2);
+    ASSERT_EQ(cond_destroy_calls, 1);
+    ASSERT_EQ(mutex_destroy_calls, 1);
+    cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
+        = create_calls = 0;
 }
