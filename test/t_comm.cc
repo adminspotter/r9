@@ -276,6 +276,47 @@ TEST(CommSendTest, SendLogin)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
+TEST(CommSendTest, SendAck)
+{
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    Comm *comm = NULL;
+    struct addrinfo ai;
+
+    /* send_worker will delete this */
+    packet *pkt = new packet;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET6;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    ASSERT_NO_THROW(
+        {
+            comm = new Comm(&ai);
+            comm->start();
+        });
+    comm->send_ack(TYPE_LOGREQ);
+    sleep(1);
+    ASSERT_NO_THROW(
+        {
+            comm->stop();
+        });
+    delete comm;
+
+    ASSERT_EQ(packet_type, TYPE_ACKPKT);
+    ASSERT_STREQ(new_clog.str().c_str(), "");
+    std::clog.rdbuf(old_clog_rdbuf);
+}
+
 TEST(CommSendTest, SendActionReq)
 {
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
