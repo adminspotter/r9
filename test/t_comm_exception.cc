@@ -3,6 +3,9 @@
 #include <gtest/gtest.h>
 
 bool socket_error = false, mutex_error = false, cond_error = false;
+bool create_send_error = false, create_recv_error = false;
+int create_calls, cancel_calls, join_calls;
+int cond_destroy_calls, mutex_destroy_calls;
 
 void move_object(uint64_t a, uint16_t b,
                  float c, float d, float e,
@@ -50,6 +53,46 @@ int pthread_cond_init(pthread_cond_t *a, const pthread_condattr_t *b)
     return 0;
 }
 
+int pthread_create(pthread_t *a, const pthread_attr_t *b,
+                   void *(*c)(void *), void *d)
+{
+    ++create_calls;
+    if (create_send_error == true && create_calls == 1)
+        return EINVAL;
+    if (create_recv_error == true && create_calls == 2)
+        return EINVAL;
+    return 0;
+}
+
+int pthread_cancel(pthread_t a)
+{
+    ++cancel_calls;
+    return 0;
+}
+
+int pthread_join(pthread_t a, void **b)
+{
+    ++join_calls;
+    return 0;
+}
+
+int pthread_cond_destroy(pthread_cond_t *a)
+{
+    ++cond_destroy_calls;
+    return 0;
+}
+
+int pthread_mutex_destroy(pthread_mutex_t *a)
+{
+    ++mutex_destroy_calls;
+    return 0;
+}
+
+int pthread_cond_broadcast(pthread_cond_t *a)
+{
+    return 0;
+}
+
 TEST(CommTest, SocketFailure)
 {
     Comm *obj = NULL;
@@ -90,4 +133,44 @@ TEST(CommTest, CondFailure)
         },
         std::runtime_error);
     cond_error = false;
+}
+
+TEST(CommTest, StartFailure)
+{
+    Comm *obj = NULL;
+    struct addrinfo a;
+
+    create_send_error = true;
+    cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
+        = create_calls = 0;
+    ASSERT_NO_THROW(
+        {
+            obj = new Comm(&a);
+        });
+    ASSERT_THROW(
+        {
+            obj->start();
+        },
+        std::runtime_error);
+    ASSERT_EQ(cancel_calls, 0);
+    ASSERT_EQ(join_calls, 0);
+    ASSERT_EQ(cond_destroy_calls, 1);
+    ASSERT_EQ(mutex_destroy_calls, 1);
+    create_send_error = false;
+    create_recv_error = true;
+    cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
+        = create_calls = 0;
+    ASSERT_THROW(
+        {
+            obj->start();
+        },
+        std::runtime_error);
+    ASSERT_EQ(cancel_calls, 1);
+    ASSERT_EQ(join_calls, 1);
+    ASSERT_EQ(cond_destroy_calls, 1);
+    ASSERT_EQ(mutex_destroy_calls, 1);
+    create_recv_error = false;
+    cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
+        = create_calls = 0;
+    delete obj;
 }
