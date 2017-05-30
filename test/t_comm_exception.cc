@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-bool socket_error = false;
+bool socket_error = false, mutex_error = false, cond_error = false;
 
 void move_object(uint64_t a, uint16_t b,
                  float c, float d, float e,
@@ -36,6 +36,20 @@ int socket(int a, int b, int c)
     return 123;
 }
 
+int pthread_mutex_init(pthread_mutex_t *a, const pthread_mutexattr_t *b)
+{
+    if (mutex_error == true)
+        return EINVAL;
+    return 0;
+}
+
+int pthread_cond_init(pthread_cond_t *a, const pthread_condattr_t *b)
+{
+    if (cond_error == true)
+        return EINVAL;
+    return 0;
+}
+
 TEST(CommTest, SocketFailure)
 {
     Comm *obj = NULL;
@@ -48,4 +62,32 @@ TEST(CommTest, SocketFailure)
         },
         std::runtime_error);
     socket_error = false;
+}
+
+TEST(CommTest, MutexFailure)
+{
+    Comm *obj = NULL;
+    struct addrinfo a;
+
+    mutex_error = true;
+    ASSERT_THROW(
+        {
+            obj = new Comm(&a);
+        },
+        std::runtime_error);
+    mutex_error = false;
+}
+
+TEST(CommTest, CondFailure)
+{
+    Comm *obj = NULL;
+    struct addrinfo a;
+
+    cond_error = true;
+    ASSERT_THROW(
+        {
+            obj = new Comm(&a);
+        },
+        std::runtime_error);
+    cond_error = false;
 }
