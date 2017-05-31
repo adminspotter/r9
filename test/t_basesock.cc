@@ -194,6 +194,30 @@ TEST(BasesockTest, SocketRoot)
     am_root = false;
 }
 
+TEST(BasesockTest, BadListen)
+{
+    struct addrinfo hints, *ai;
+    int ret;
+    basesock *base;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
+    ret = getaddrinfo("localhost", "1235", &hints, &ai);
+    ASSERT_EQ(ret, 0);
+
+    bind_error = true;
+    ASSERT_THROW(
+        {
+            base = new basesock(ai);
+        },
+        std::runtime_error);
+
+    freeaddrinfo(ai);
+    bind_error = false;
+}
+
 TEST(BasesockTest, StartStop)
 {
     struct addrinfo hints, *ai;
