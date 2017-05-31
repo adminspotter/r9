@@ -437,3 +437,45 @@ TEST(BasesockTest, StopCancelFail)
     freeaddrinfo(ai);
     pthread_cancel_error = false;
 }
+
+TEST(BasesockTest, StopJoinFail)
+{
+    struct addrinfo hints, *ai;
+    int ret;
+    basesock *base;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
+    ret = getaddrinfo("localhost", "1235", &hints, &ai);
+    ASSERT_EQ(ret, 0);
+
+    ASSERT_NO_THROW(
+        {
+            base = new basesock(ai);
+        });
+    ASSERT_STREQ(base->sa->ntop(), "127.0.0.1");
+    ASSERT_EQ(base->sa->port(), 1235);
+    ASSERT_GE(base->sock, 0);
+
+    base->listen_arg = base;
+    ASSERT_NO_THROW(
+        {
+            base->start(test_thread_worker);
+        });
+
+    pthread_join_error = true;
+    ASSERT_THROW(
+        {
+            base->stop();
+        },
+        std::runtime_error);
+
+    ASSERT_NO_THROW(
+        {
+            delete(base);
+        });
+    freeaddrinfo(ai);
+    pthread_join_error = false;
+}
