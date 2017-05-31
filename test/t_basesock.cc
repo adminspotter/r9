@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 
 bool socket_error = false, socket_zero = false, bind_error = false;
+bool am_root = false;
+int seteuid_count, setegid_count;
 
 void *test_thread_worker(void *arg)
 {
@@ -45,6 +47,42 @@ int bind(int a, const struct sockaddr *b, socklen_t c)
         errno = EINVAL;
         return -1;
     }
+    return 0;
+}
+
+uid_t getuid(void)
+{
+    if (am_root == true)
+        return 0;
+    return 123;
+}
+
+uid_t geteuid(void)
+{
+    return 123;
+}
+
+int seteuid(uid_t a)
+{
+    ++seteuid_count;
+    return 0;
+}
+
+gid_t getgid(void)
+{
+    if (am_root == true)
+        return 0;
+    return 123;
+}
+
+gid_t getegid(void)
+{
+    return 123;
+}
+
+int setegid(gid_t a)
+{
+    ++setegid_count;
     return 0;
 }
 
@@ -117,6 +155,43 @@ TEST(BasesockTest, BadSocket)
         std::runtime_error);
     socket_error = false;
     freeaddrinfo(ai);
+}
+
+TEST(BasesockTest, SocketRoot)
+{
+    struct addrinfo hints, *ai;
+    int ret;
+    basesock *base;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
+    ret = getaddrinfo("localhost", "123", &hints, &ai);
+    ASSERT_EQ(ret, 0);
+
+    am_root = false;
+    seteuid_count = setegid_count = 0;
+    ASSERT_THROW(
+        {
+            base = new basesock(ai);
+        },
+        std::runtime_error);
+    ASSERT_EQ(seteuid_count, 0);
+    ASSERT_EQ(setegid_count, 0);
+
+    am_root = true;
+    ASSERT_NO_THROW(
+        {
+            base = new basesock(ai);
+        });
+    ASSERT_EQ(seteuid_count, 2);
+    ASSERT_EQ(setegid_count, 2);
+
+    delete base;
+    freeaddrinfo(ai);
+    seteuid_count = setegid_count = 0;
+    am_root = false;
 }
 
 TEST(BasesockTest, StartStop)
