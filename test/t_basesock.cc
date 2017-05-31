@@ -285,3 +285,34 @@ TEST(BasesockTest, StartStop)
         freeaddrinfo(ai);
     }
 }
+
+TEST(BasesockTest, StartBadSocket)
+{
+    struct addrinfo hints, *ai;
+    int ret;
+    basesock *base;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
+    ret = getaddrinfo("localhost", "1235", &hints, &ai);
+    ASSERT_EQ(ret, 0);
+
+    socket_zero = true;
+    ASSERT_NO_THROW(
+        {
+            base = new basesock(ai);
+        });
+
+    base->listen_arg = base;
+    ASSERT_THROW(
+        {
+            base->start(test_thread_worker);
+        },
+        std::runtime_error);
+
+    delete base;
+    freeaddrinfo(ai);
+    socket_zero = false;
+}
