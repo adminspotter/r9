@@ -8,21 +8,13 @@
 #include <gtest/gtest.h>
 
 bool socket_error = false, socket_zero = false, bind_error = false;
-bool am_root = false;
+bool am_root = false, pthread_create_error = false;
+bool pthread_cancel_error = false, pthread_join_error = false;
 int seteuid_count, setegid_count;
 
+/* This will never actually be run, so it doesn't need to do anything */
 void *test_thread_worker(void *arg)
 {
-    basesock *base = (basesock *)arg;
-    int what;
-
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &what);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &what);
-    for (;;)
-    {
-        pthread_testcancel();
-        sleep(1);
-    }
     return NULL;
 }
 
@@ -83,6 +75,28 @@ gid_t getegid(void)
 int setegid(gid_t a)
 {
     ++setegid_count;
+    return 0;
+}
+
+int pthread_create(pthread_t *a, const pthread_attr_t *b,
+                   void *(*c)(void *), void *d)
+{
+    if (pthread_create_error == true)
+        return EINVAL;
+    return 0;
+}
+
+int pthread_cancel(pthread_t a)
+{
+    if (pthread_cancel_error == true)
+        return EINVAL;
+    return 0;
+}
+
+int pthread_join(pthread_t a, void **b)
+{
+    if (pthread_join_error == true)
+        return EINVAL;
     return 0;
 }
 
