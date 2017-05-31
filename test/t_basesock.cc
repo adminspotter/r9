@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 
 bool socket_error = false, socket_zero = false, bind_error = false;
-bool am_root = false, pthread_create_error = false;
+bool am_root = false, listen_error = false, pthread_create_error = false;
 bool pthread_cancel_error = false, pthread_join_error = false;
 int seteuid_count, setegid_count;
 
@@ -37,6 +37,16 @@ int bind(int a, const struct sockaddr *b, socklen_t c)
     if (bind_error == true)
     {
         errno = EINVAL;
+        return -1;
+    }
+    return 0;
+}
+
+int listen(int a, int b)
+{
+    if (listen_error == true)
+    {
+        errno = ENOTSOCK;
         return -1;
     }
     return 0;
@@ -208,7 +218,7 @@ TEST(BasesockTest, SocketRoot)
     am_root = false;
 }
 
-TEST(BasesockTest, BadListen)
+TEST(BasesockTest, BadBind)
 {
     struct addrinfo hints, *ai;
     int ret;
@@ -230,6 +240,30 @@ TEST(BasesockTest, BadListen)
 
     freeaddrinfo(ai);
     bind_error = false;
+}
+
+TEST(BasesockTest, BadListen)
+{
+    struct addrinfo hints, *ai;
+    int ret;
+    basesock *base;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+    ret = getaddrinfo("localhost", "1235", &hints, &ai);
+    ASSERT_EQ(ret, 0);
+
+    listen_error = true;
+    ASSERT_THROW(
+        {
+            base = new basesock(ai);
+        },
+        std::runtime_error);
+
+    freeaddrinfo(ai);
+    listen_error = false;
 }
 
 TEST(BasesockTest, StartStop)
