@@ -180,7 +180,12 @@ TEST_F(ConfigdataTest, ParseCommandLine)
 {
     int ret;
     std::string conf_dir = tmpdir + "/haha";
-    char *args[4] = { "r9client", "-c", (char *)conf_dir.c_str(), NULL};
+    std::string conf_file = tmpdir + "/fake.conf";
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    char *args[7] = { "r9client", "-c", (char *)conf_dir.c_str(),
+                      "-f", (char *)conf_file.c_str(), "-q", NULL};
     struct stat st;
 
     ConfigData *conf;
@@ -190,9 +195,9 @@ TEST_F(ConfigdataTest, ParseCommandLine)
             conf = new ConfigData;
         });
 
-    conf->parse_command_line(3, args);
+    conf->parse_command_line(6, args);
 
-    ASSERT_EQ(conf->argv.size(), 3);
+    ASSERT_EQ(conf->argv.size(), 6);
 
     std::string expected = tmpdir + "/haha";
     ASSERT_EQ(conf->config_dir, expected);
@@ -200,8 +205,11 @@ TEST_F(ConfigdataTest, ParseCommandLine)
     ASSERT_EQ(ret, 0);
     ASSERT_EQ(S_ISDIR(st.st_mode), 1);
 
-    expected += "/config";
+    expected = tmpdir + "/fake.conf";
     ASSERT_EQ(conf->config_fname, expected);
+
+    ASSERT_EQ(new_clog.str(), "WARNING: Unknown option -q");
+    std::clog.rdbuf(old_clog_rdbuf);
 
     ASSERT_NO_THROW(
         {
