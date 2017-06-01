@@ -5,6 +5,7 @@ t_action_pool
 t_basesock
 t_cache
 t_comm
+t_comm_exception
 t_configdata
 t_console
 t_font

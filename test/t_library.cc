@@ -2,19 +2,50 @@
 #include <gtest/gtest.h>
 
 #include <config.h>
+#include <string.h>
 
-#include "libtest.h"
+bool error_fail = false;
+char *bad_news = "oh noes";
+char *good_lib = "goodlib.so";
 
-#define LIBTEST "./.libs/libtest" LT_MODULE_EXT
+extern "C" {
+    char *dlerror(void)
+    {
+        if (error_fail == true)
+            return bad_news;
+        return NULL;
+    }
+
+    void *dlopen(const char *a, int b)
+    {
+        if (strcmp(a, good_lib))
+            return NULL;
+        /* Doesn't matter what we return, as long as it's not NULL */
+        return (void *)good_lib;
+    }
+
+    int dlclose(void *a)
+    {
+        return 0;
+    }
+
+    void *dlsym(void *a, const char *b)
+    {
+        /* Again, doesn't matter what we return. */
+        return (void *)good_lib;
+    }
+}
 
 TEST(LibraryTest, BadConstructor)
 {
+    error_fail = true;
     ASSERT_THROW(
         {
-            std::string badname = "haha, this won't work";
+            std::string badname = "this doesn't exist";
             Library *lib1 = new Library(badname);
         },
         std::runtime_error);
+    error_fail = false;
 }
 
 TEST(LibraryTest, GoodConstructor)
@@ -22,19 +53,7 @@ TEST(LibraryTest, GoodConstructor)
     Library *lib1 = NULL;
     ASSERT_NO_THROW(
         {
-            std::string libname = LIBTEST;
-            lib1 = new Library(libname);
-        });
-    ASSERT_TRUE(lib1 != NULL);
-    delete lib1;
-}
-
-TEST(LibraryTest, Fixture)
-{
-    Library *lib1 = NULL;
-    ASSERT_NO_THROW(
-        {
-            std::string libname = LIBTEST;
+            std::string libname = good_lib;
             lib1 = new Library(libname);
         });
     ASSERT_TRUE(lib1 != NULL);
@@ -46,15 +65,17 @@ TEST(LibraryTest, MissingSymbol)
     Library *lib1 = NULL;
     ASSERT_NO_THROW(
         {
-            std::string libname = LIBTEST;
+            std::string libname = good_lib;
             lib1 = new Library(libname);
         });
     ASSERT_TRUE(lib1 != NULL);
+    error_fail = true;
     ASSERT_THROW(
         {
             lib1->symbol("symbol that doesn't exist");
         },
         std::runtime_error);
+    error_fail = false;
     delete lib1;
 }
 
@@ -63,52 +84,36 @@ TEST(LibraryTest, GoodSymbol)
     Library *lib1 = NULL;
     ASSERT_NO_THROW(
         {
-            std::string libname = LIBTEST;
+            std::string libname = good_lib;
             lib1 = new Library(libname);
         });
     ASSERT_TRUE(lib1 != NULL);
     void *sym1 = NULL;
     ASSERT_NO_THROW(
         {
-            sym1 = lib1->symbol("test_func");
+            sym1 = lib1->symbol("symbol that does exist");
         });
     ASSERT_TRUE(sym1 != NULL);
-
-    /* test_func takes an int and adds 2 */
-    int (*func1)(int) = (int (*)(int))sym1;
-    int x = func1(5);
-    ASSERT_EQ(x, 7);
     delete lib1;
 }
 
-TEST(LibraryTest, Factory)
+TEST(LibraryTest, BadClose)
 {
     Library *lib1 = NULL;
     ASSERT_NO_THROW(
         {
-            std::string libname = LIBTEST;
+            std::string libname = good_lib;
             lib1 = new Library(libname);
         });
     ASSERT_TRUE(lib1 != NULL);
 
-    Thingie *(*factory_create)(void)
-        = (Thingie *(*)(void))lib1->symbol("create_thingie");
-    void (*factory_destroy)(Thingie *)
-        = (void (*)(Thingie *))lib1->symbol("destroy_thingie");
-    std::string (*what_are_you)(Thingie *)
-        = (std::string (*)(Thingie *))lib1->symbol("what");
+    error_fail = true;
+    ASSERT_THROW(
+        {
+            lib1->close();
+        },
+        std::runtime_error);
 
-    ASSERT_TRUE(factory_create != NULL);
-    ASSERT_TRUE(factory_destroy != NULL);
-    ASSERT_TRUE(what_are_you != NULL);
-
-    Thingie *t;
-    ASSERT_NO_THROW({ t = factory_create(); });
-    ASSERT_TRUE(t != NULL);
-
-    std::string str;
-    ASSERT_NO_THROW({ str = what_are_you(t); });
-    ASSERT_STREQ(str.c_str(), "a thingie!");
-    ASSERT_NO_THROW(factory_destroy(t));
-    delete lib1;
+    ASSERT_NO_THROW(delete lib1);
+    error_fail = false;
 }

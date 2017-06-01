@@ -31,6 +31,7 @@ endif
 if WANT_CLIENT
   TC += t_cache \
 	t_comm \
+	t_comm_exception \
 	t_configdata \
 	t_font
 endif
@@ -38,7 +39,6 @@ endif
 TESTS = $(TC)
 
 check_PROGRAMS = $(TC)
-lib_LTLIBRARIES = libtest.la
 EXTRA_DIST = t_texture_parser.xml
 
 check: SUBDIRS =
@@ -53,9 +53,6 @@ CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
 if HAVE_LIBWRAP
   CONFIG_DEFS += -DHAVE_LIBWRAP=1
 endif
-
-libtest_la_SOURCES = libtest.cc libtest.h
-libtest_la_LDFLAGS = -module -rpath /nowhere
 
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
@@ -159,6 +156,10 @@ t_cache_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) $(XERCES_LDLIBS)
 t_comm_SOURCES = t_comm.cc ../client/comm.cc ../client/comm.h
 t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la
+
+t_comm_exception_SOURCES = t_comm_exception.cc ../client/comm.cc \
+	../client/comm.h
+t_comm_exception_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc

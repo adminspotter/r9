@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 08:29:45 tquirk
+ *   last updated 29 May 2017, 14:19:31 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -297,6 +297,8 @@ Comm::Comm(struct addrinfo *ai)
 Comm::~Comm()
 {
     this->stop();
+    pthread_cond_destroy(&(this->send_queue_not_empty));
+    pthread_mutex_destroy(&(this->send_lock));
 }
 
 void Comm::start(void)

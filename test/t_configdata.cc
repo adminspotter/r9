@@ -16,6 +16,7 @@
 #define TMP_ROOT "/tmp"
 
 std::string tmpdir;
+int mkdir_fail_index = 5, mkdir_count;
 
 char *getenv(const char *a)
 {
@@ -23,6 +24,17 @@ char *getenv(const char *a)
     if (!strcmp(a, "HOME"))
         return (char *)tmpdir.c_str();
     return NULL;
+}
+
+int mkdir(const char *a, mode_t b)
+{
+    ++mkdir_count;
+    if (mkdir_count == mkdir_fail_index)
+    {
+        errno = EACCES;
+        return -1;
+    }
+    return 0;
 }
 
 int clean_dir(const char *dir)
@@ -135,7 +147,6 @@ TEST_F(ConfigdataTest, MakeConfigDirs)
 {
     int ret;
     char *args[] = {};
-    struct stat st;
 
     ConfigData *conf;
 
@@ -147,28 +158,22 @@ TEST_F(ConfigdataTest, MakeConfigDirs)
     /* If there's nothing to parse, that won't get done, and if there
      * is no config file, nothing will happen there either.
      */
+    mkdir_count = 0;
+    mkdir_fail_index = 5;
     conf->parse_command_line(0, args);
 
-    /* Verify that our expected directories are created */
-    std::string expected_base = tmpdir + "/.r9";
-    ret = stat(expected_base.c_str(), &st);
-    ASSERT_EQ(ret, 0);
-    ASSERT_EQ(S_ISDIR(st.st_mode), 1);
-
-    std::string expected = expected_base + "/texture";
-    ret = stat(expected.c_str(), &st);
-    ASSERT_EQ(ret, 0);
-    ASSERT_EQ(S_ISDIR(st.st_mode), 1);
-
-    expected = expected_base + "/geometry";
-    ret = stat(expected.c_str(), &st);
-    ASSERT_EQ(ret, 0);
-    ASSERT_EQ(S_ISDIR(st.st_mode), 1);
-
-    expected = expected_base + "/sound";
-    ret = stat(expected.c_str(), &st);
-    ASSERT_EQ(ret, 0);
-    ASSERT_EQ(S_ISDIR(st.st_mode), 1);
+    ASSERT_EQ(mkdir_count, 4);
+    for (mkdir_fail_index = 1; mkdir_fail_index <= 4; ++mkdir_fail_index)
+    {
+        mkdir_count = 0;
+        ASSERT_THROW(
+            {
+                conf->parse_command_line(0, args);
+            },
+            std::runtime_error);
+    }
+    mkdir_count = 0;
+    mkdir_fail_index = 5;
 
     ASSERT_NO_THROW(
         {
@@ -180,7 +185,12 @@ TEST_F(ConfigdataTest, ParseCommandLine)
 {
     int ret;
     std::string conf_dir = tmpdir + "/haha";
-    char *args[4] = { "r9client", "-c", (char *)conf_dir.c_str(), NULL};
+    std::string conf_file = tmpdir + "/fake.conf";
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    char *args[7] = { "r9client", "-c", (char *)conf_dir.c_str(),
+                      "-f", (char *)conf_file.c_str(), "-q", NULL};
     struct stat st;
 
     ConfigData *conf;
@@ -190,18 +200,21 @@ TEST_F(ConfigdataTest, ParseCommandLine)
             conf = new ConfigData;
         });
 
-    conf->parse_command_line(3, args);
+    mkdir_count = 0;
+    mkdir_fail_index = 5;
+    conf->parse_command_line(6, args);
 
-    ASSERT_EQ(conf->argv.size(), 3);
+    ASSERT_EQ(conf->argv.size(), 6);
 
     std::string expected = tmpdir + "/haha";
     ASSERT_EQ(conf->config_dir, expected);
-    ret = stat(expected.c_str(), &st);
-    ASSERT_EQ(ret, 0);
-    ASSERT_EQ(S_ISDIR(st.st_mode), 1);
+    ASSERT_EQ(mkdir_count, 4);
 
-    expected += "/config";
+    expected = tmpdir + "/fake.conf";
     ASSERT_EQ(conf->config_fname, expected);
+
+    ASSERT_EQ(new_clog.str(), "WARNING: Unknown option -q");
+    std::clog.rdbuf(old_clog_rdbuf);
 
     ASSERT_NO_THROW(
         {
@@ -219,8 +232,8 @@ TEST_F(ConfigdataTest, ReadConfigFile)
             conf = new ConfigData;
         });
 
-    ret = mkdir(conf->config_dir.c_str(), 0700);
-    ASSERT_EQ(ret, 0);
+    conf->config_dir = tmpdir;
+    conf->config_fname = tmpdir + "/config";
     create_temp_config_file(conf->config_fname);
 
     conf->read_config_file();
@@ -268,8 +281,8 @@ TEST_F(ConfigdataTest, WriteConfigFile)
     conf->font_paths.push_back("/a/b/c");
     conf->font_paths.push_back("~/d/e/f");
 
-    ret = mkdir(conf->config_dir.c_str(), 0700);
-    ASSERT_EQ(ret, 0);
+    conf->config_dir = tmpdir;
+    conf->config_fname = tmpdir + "/the_big_test.conf";
 
     conf->write_config_file();
 
@@ -283,6 +296,9 @@ TEST_F(ConfigdataTest, WriteConfigFile)
         {
             conf = new ConfigData;
         });
+
+    conf->config_dir = tmpdir;
+    conf->config_fname = tmpdir + "/the_big_test.conf";
 
     conf->read_config_file();
 
