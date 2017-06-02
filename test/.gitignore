@@ -9,6 +9,7 @@ t_comm_exception
 t_configdata
 t_console
 t_font
+t_game_obj
 t_image
 t_library
 t_log
