@@ -103,3 +103,34 @@ TEST(GameObjTest, ConnectDisconnect)
     delete go;
     delete con;
 }
+
+TEST(GameObjTest, ResetId)
+{
+    GameObject *go = NULL;
+    Geometry *geom = new Geometry();
+    Control *con = new Control(1LL, NULL);
+
+    lock_count = unlock_count = 0;
+    go = new GameObject(geom, con, 123LL);
+    ASSERT_EQ(go->get_object_id(), 123LL);
+    ASSERT_TRUE(go->master == con);
+    ASSERT_TRUE(go->geometry == geom);
+    ASSERT_EQ(lock_count, unlock_count);
+
+    delete go;
+
+    geom = new Geometry();
+    go = new GameObject(geom, con);
+    ASSERT_EQ(go->get_object_id(), 124LL);
+
+    delete go;
+
+    GameObject::reset_max_id();
+
+    geom = new Geometry();
+    go = new GameObject(geom, con);
+    ASSERT_EQ(go->get_object_id(), 0LL);
+
+    delete go;
+    delete con;
+}
