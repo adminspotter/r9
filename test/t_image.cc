@@ -38,6 +38,12 @@ TEST(ImageTest, Assignment)
     img->data = new unsigned char[img->width * img->height * img->per_pixel];
 
     ui::image *new_img = new ui::image();
+    new_img->width = 5;
+    new_img->height = 5;
+    new_img->per_pixel = 1;
+    new_img->data = new unsigned char[new_img->width
+                                      * new_img->height
+                                      * new_img->per_pixel];
 
     *new_img = *img;
 
