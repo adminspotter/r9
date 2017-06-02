@@ -78,7 +78,11 @@ GameObject::~GameObject()
 
 GameObject *GameObject::clone(void) const
 {
-    return new GameObject(default_geometry, default_master);
+    /* Each object completely owns its geometry, so we need to make a
+     * new copy for the new object.
+     */
+    Geometry *new_geom = new Geometry(*this->default_geometry);
+    return new GameObject(new_geom, this->default_master);
 }
 
 uint64_t GameObject::get_object_id(void) const

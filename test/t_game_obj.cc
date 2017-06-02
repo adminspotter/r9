@@ -43,3 +43,26 @@ TEST(GameObjTest, CreateDelete)
     delete go;
     delete con;
 }
+
+TEST(GameObjTest, Clone)
+{
+    GameObject *go = NULL;
+    Geometry *geom = new Geometry();
+    Control *con = new Control(1LL, NULL);
+
+    lock_count = unlock_count = 0;
+    go = new GameObject(geom, con, 45LL);
+    ASSERT_EQ(go->get_object_id(), 45LL);
+    ASSERT_TRUE(go->master == con);
+    ASSERT_TRUE(go->geometry == geom);
+    ASSERT_EQ(lock_count, unlock_count);
+
+    GameObject *go2 = go->clone();
+    ASSERT_EQ(go2->get_object_id(), 46LL);
+    ASSERT_TRUE(go2->master == con);
+    ASSERT_TRUE(go2->geometry != geom);
+
+    delete go;
+    delete go2;
+    delete con;
+}
