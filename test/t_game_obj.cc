@@ -33,6 +33,7 @@ TEST(GameObjTest, CreateDelete)
     ASSERT_TRUE(go->master == con);
     ASSERT_TRUE(go->geometry == geom);
     ASSERT_EQ(lock_count, unlock_count);
+    ASSERT_GT(lock_count, 0);
 
     delete go;
 
@@ -56,6 +57,7 @@ TEST(GameObjTest, Clone)
     ASSERT_TRUE(go->master == con);
     ASSERT_TRUE(go->geometry == geom);
     ASSERT_EQ(lock_count, unlock_count);
+    ASSERT_GT(lock_count, 0);
 
     GameObject *go2 = go->clone();
     ASSERT_EQ(go2->get_object_id(), 46LL);
@@ -79,6 +81,7 @@ TEST(GameObjTest, ConnectDisconnect)
     ASSERT_TRUE(go->master == con);
     ASSERT_TRUE(go->geometry == geom);
     ASSERT_EQ(lock_count, unlock_count);
+    ASSERT_GT(lock_count, 0);
 
     Control *con2 = new Control(2LL, NULL);
 
@@ -116,6 +119,7 @@ TEST(GameObjTest, ResetId)
     ASSERT_TRUE(go->master == con);
     ASSERT_TRUE(go->geometry == geom);
     ASSERT_EQ(lock_count, unlock_count);
+    ASSERT_GT(lock_count, 0);
 
     delete go;
 
@@ -125,7 +129,10 @@ TEST(GameObjTest, ResetId)
 
     delete go;
 
+    lock_count = unlock_count = 0;
     GameObject::reset_max_id();
+    ASSERT_EQ(lock_count, unlock_count);
+    ASSERT_GT(lock_count, 0);
 
     geom = new Geometry();
     go = new GameObject(geom, con);
