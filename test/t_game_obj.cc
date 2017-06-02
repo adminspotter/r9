@@ -141,3 +141,25 @@ TEST(GameObjTest, ResetId)
     delete go;
     delete con;
 }
+
+TEST(GameObjTest, Distance)
+{
+    GameObject *go = NULL;
+    Geometry *geom = new Geometry();
+    Control *con = new Control(1LL, NULL);
+
+    lock_count = unlock_count = 0;
+    go = new GameObject(geom, con, 123LL);
+    ASSERT_EQ(go->get_object_id(), 123LL);
+    ASSERT_TRUE(go->master == con);
+    ASSERT_TRUE(go->geometry == geom);
+    ASSERT_EQ(lock_count, unlock_count);
+    ASSERT_GT(lock_count, 0);
+
+    glm::dvec3 pt = {0.0, 0.0, 0.0};
+    go->position.x = 1.0;
+    ASSERT_EQ(go->distance_from(pt), 1.0);
+
+    delete go;
+    delete con;
+}
