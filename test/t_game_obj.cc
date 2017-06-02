@@ -66,3 +66,40 @@ TEST(GameObjTest, Clone)
     delete go2;
     delete con;
 }
+
+TEST(GameObjTest, ConnectDisconnect)
+{
+    GameObject *go = NULL;
+    Geometry *geom = new Geometry();
+    Control *con = new Control(1LL, NULL);
+
+    lock_count = unlock_count = 0;
+    go = new GameObject(geom, con, 45LL);
+    ASSERT_EQ(go->get_object_id(), 45LL);
+    ASSERT_TRUE(go->master == con);
+    ASSERT_TRUE(go->geometry == geom);
+    ASSERT_EQ(lock_count, unlock_count);
+
+    Control *con2 = new Control(2LL, NULL);
+
+    ASSERT_TRUE(go->connect(con2));
+    ASSERT_TRUE(go->master == con2);
+
+    Control *con3 = new Control(3LL, NULL);
+
+    ASSERT_FALSE(go->connect(con3));
+    ASSERT_TRUE(go->master == con2);
+
+    delete con3;
+
+    /* Disconnect something that's not the current master, should be no-op. */
+    go->disconnect(con);
+    ASSERT_TRUE(go->master == con2);
+
+    go->disconnect(con2);
+    ASSERT_TRUE(go->master == con);
+
+    delete con2;
+    delete go;
+    delete con;
+}
