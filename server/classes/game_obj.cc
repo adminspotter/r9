@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 10:10:50 tquirk
+ *   last updated 02 Jun 2017, 09:16:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -56,16 +56,14 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
     this->default_geometry = this->geometry = g;
     pthread_mutex_lock(&GameObject::max_mutex);
     if (newid == 0LL)
-    {
         newid = GameObject::max_id_value++;
-    }
     else
-    {
         /* This clause is mostly for recreating an object from some
          * saved state.
          */
-        GameObject::max_id_value = std::max(GameObject::max_id_value, newid);
-    }
+        GameObject::max_id_value = std::max(GameObject::max_id_value,
+                                            newid + 1);
+
     pthread_mutex_unlock(&GameObject::max_mutex);
     this->id_value = newid;
 }
