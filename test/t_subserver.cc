@@ -51,7 +51,7 @@ class SubserverTest : public ::testing::Test
                     if (i != STDIN_FILENO)
                         close(i);
 
-                ret = execl(SUBSERVER, (char *)NULL);
+                ret = execl(SUBSERVER, "r9subserver", (char *)NULL);
 
                 /* If this returns, go ahead and blow up */
                 ASSERT_EQ(ret, 0);
