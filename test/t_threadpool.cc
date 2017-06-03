@@ -52,6 +52,25 @@ void *thread_worker(void *arg)
     return NULL;
 }
 
+TEST(ThreadPoolTest, CreateDelete)
+{
+    ThreadPool<int> *pool = NULL;
+
+    ASSERT_NO_THROW(
+        {
+            pool = new ThreadPool<int>("test", 1);
+        });
+    ASSERT_TRUE(pool->pool_size() == 0);
+    ASSERT_EQ(pool->clean_on_pop, false);
+    ASSERT_TRUE(pool->startup_arg == NULL);
+
+    cond_broadcast_count = mutex_destroy_count = cond_destroy_count = 0;
+    delete pool;
+    ASSERT_EQ(cond_broadcast_count, 1);
+    ASSERT_EQ(mutex_destroy_count, 1);
+    ASSERT_EQ(cond_destroy_count, 1);
+}
+
 TEST(ThreadPoolTest, StartStop)
 {
     ThreadPool<int> *pool;
