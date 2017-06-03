@@ -5,7 +5,9 @@
 #include <gtest/gtest.h>
 
 bool pthread_mutex_init_error = false, pthread_cond_init_error = false;
+bool pthread_create_error = false;
 int mutex_destroy_count, cond_broadcast_count, cond_destroy_count;
+int create_count, lock_count, unlock_count;
 
 int pthread_mutex_init(pthread_mutex_t *a, const pthread_mutexattr_t *b)
 {
@@ -27,6 +29,11 @@ int pthread_cond_init(pthread_cond_t *a, const pthread_condattr_t *b)
     return 0;
 }
 
+int pthread_cond_signal(pthread_cond_t *a)
+{
+    return 0;
+}
+
 int pthread_cond_broadcast(pthread_cond_t *a)
 {
     ++cond_broadcast_count;
@@ -36,6 +43,27 @@ int pthread_cond_broadcast(pthread_cond_t *a)
 int pthread_cond_destroy(pthread_cond_t *a)
 {
     ++cond_destroy_count;
+    return 0;
+}
+
+int pthread_create(pthread_t *a, const pthread_attr_t *b,
+                   void *(*c)(void *), void *d)
+{
+    ++create_count;
+    if (pthread_create_error == true)
+        return EINVAL;
+    return 0;
+}
+
+int pthread_mutex_lock(pthread_mutex_t *a)
+{
+    ++lock_count;
+    return 0;
+}
+
+int pthread_mutex_unlock(pthread_mutex_t *a)
+{
+    ++unlock_count;
     return 0;
 }
 
@@ -126,43 +154,36 @@ TEST(ThreadPoolTest, StartStop)
         });
 }
 
-TEST(ThreadPoolTest, ManyWorkers)
+TEST(ThreadPoolTest, Grow)
 {
-    ThreadPool<int> *pool = new ThreadPool<int>("many", 5);
-    int pool_size = 0, queue_size = 0, element;
-
-    for (element = 1; element < 4; ++element)
-        pool->push(element);
-    queue_size = pool->queue_size();
-    ASSERT_EQ(queue_size, 3);
+    ThreadPool<int> *pool = new ThreadPool<int>("grow", 5);
 
     pool->startup_arg = (void *)pool;
     pool->start(thread_worker);
-    pool_size = pool->pool_size();
-    ASSERT_EQ(pool_size, 5);
+    ASSERT_TRUE(pool->pool_size() == 5);
 
-    /* A race here, and could fail if the host is heavily loaded. */
-    sleep(1);
-    queue_size = pool->queue_size();
-    ASSERT_EQ(queue_size, 0);
+    pool->grow(8);
+    ASSERT_TRUE(pool->pool_size() == 8);
 
     delete pool;
 }
 
-TEST(ThreadPoolTest, Grow)
+TEST(ThreadPoolTest, PushPop)
 {
-    ThreadPool<int> *pool = new ThreadPool<int>("grow", 5);
-    int pool_size = 0;
+    ThreadPool<std::string> *pool = new ThreadPool<std::string>("push-pop", 1);
+    std::string req = "howdy", buf;
 
-    pool->startup_arg = (void *)pool;
-    pool->start(thread_worker);
-    pool_size = pool->pool_size();
-    ASSERT_EQ(pool_size, 5);
+    lock_count = unlock_count = 0;
+    pool->push(req);
+    ASSERT_EQ(lock_count, 1);
+    ASSERT_EQ(unlock_count, 1);
 
-    sleep(1);
-    pool->grow(8);
-    pool_size = pool->pool_size();
-    ASSERT_EQ(pool_size, 8);
+    lock_count = unlock_count = 0;
+    pool->clean_on_pop = true;
+    pool->pop(&buf);
+    ASSERT_EQ(lock_count, 1);
+    ASSERT_EQ(unlock_count, 1);
+    ASSERT_EQ(buf, req);
 
     delete pool;
 }
