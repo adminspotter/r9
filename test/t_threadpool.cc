@@ -71,6 +71,32 @@ TEST(ThreadPoolTest, CreateDelete)
     ASSERT_EQ(cond_destroy_count, 1);
 }
 
+TEST(ThreadPoolTest, MutexInitFailure)
+{
+    ThreadPool<int> *pool = NULL;
+
+    pthread_mutex_init_error = true;
+    ASSERT_THROW(
+        {
+            pool = new ThreadPool<int>("rut-roh", 1);
+        },
+        std::runtime_error);
+    pthread_mutex_init_error = false;
+}
+
+TEST(ThreadPoolTest, CondInitFailure)
+{
+    ThreadPool<int> *pool = NULL;
+
+    pthread_cond_init_error = true;
+    ASSERT_THROW(
+        {
+            pool = new ThreadPool<int>("oh-noes", 1);
+        },
+        std::runtime_error);
+    pthread_cond_init_error = false;
+}
+
 TEST(ThreadPoolTest, StartStop)
 {
     ThreadPool<int> *pool;
