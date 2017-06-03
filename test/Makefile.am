@@ -14,6 +14,7 @@ if WANT_SERVER
   TC += t_action_pool \
 	t_basesock \
 	t_console \
+	t_game_obj \
 	t_library \
 	t_log \
 	t_motion_pool \
@@ -33,7 +34,8 @@ if WANT_CLIENT
 	t_comm \
 	t_comm_exception \
 	t_configdata \
-	t_font
+	t_font \
+	t_image
 endif
 
 TESTS = $(TC)
@@ -85,6 +87,12 @@ t_console_SOURCES = t_console.cc \
 	../server/config_data.cc ../server/config_data.h
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_console_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(WRAP_LDLIBS)
+
+t_game_obj_SOURCES = t_game_obj.cc \
+	../server/classes/game_obj.cc ../server/classes/game_obj.h \
+	../server/classes/control.cc ../server/classes/control.h \
+	../server/classes/geometry.cc ../server/classes/geometry.h
+t_game_obj_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_library_SOURCES = t_library.cc \
 	../server/classes/library.cc ../server/classes/library.h
@@ -171,6 +179,9 @@ t_font_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	-DSTORE_PREFIX=\"../client\"
 t_font_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	$(XERCES_LDLIBS) $(FREETYPE_LDLIBS)
+
+t_image_SOURCES = t_image.cc ../client/ui/image.h
+t_image_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov
