@@ -4,6 +4,41 @@
 
 #include <gtest/gtest.h>
 
+bool pthread_mutex_init_error = false, pthread_cond_init_error = false;
+int mutex_destroy_count, cond_broadcast_count, cond_destroy_count;
+
+int pthread_mutex_init(pthread_mutex_t *a, const pthread_mutexattr_t *b)
+{
+    if (pthread_mutex_init_error == true)
+        return EINVAL;
+    return 0;
+}
+
+int pthread_mutex_destroy(pthread_mutex_t *a)
+{
+    ++mutex_destroy_count;
+    return 0;
+}
+
+int pthread_cond_init(pthread_cond_t *a, const pthread_condattr_t *b)
+{
+    if (pthread_cond_init_error == true)
+        return EINVAL;
+    return 0;
+}
+
+int pthread_cond_broadcast(pthread_cond_t *a)
+{
+    ++cond_broadcast_count;
+    return 0;
+}
+
+int pthread_cond_destroy(pthread_cond_t *a)
+{
+    ++cond_destroy_count;
+    return 0;
+}
+
 void *thread_worker(void *arg)
 {
     ThreadPool<int> *pool = (ThreadPool<int> *)arg;
