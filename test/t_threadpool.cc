@@ -100,30 +100,25 @@ TEST(ThreadPoolTest, CondInitFailure)
 TEST(ThreadPoolTest, StartStop)
 {
     ThreadPool<int> *pool;
-    int pool_size;
 
     ASSERT_NO_THROW(
         {
-            pool = new ThreadPool<int>("go_stop", 1);
+            pool = new ThreadPool<int>("go_stop", 2);
         });
-    /* Nothing should be started yet */
-    pool_size = pool->pool_size();
-    ASSERT_EQ(pool_size, 0);
+    ASSERT_TRUE(pool->pool_size() == 0);
 
     pool->startup_arg = (void *)pool;
     ASSERT_NO_THROW(
         {
             pool->start(thread_worker);
         });
-    pool_size = pool->pool_size();
-    ASSERT_EQ(pool_size, 1);
+    ASSERT_TRUE(pool->pool_size() == 2);
 
     ASSERT_NO_THROW(
         {
             pool->stop();
         });
-    pool_size = pool->pool_size();
-    ASSERT_EQ(pool_size, 0);
+    ASSERT_TRUE(pool->pool_size() == 0);
 
     ASSERT_NO_THROW(
         {
