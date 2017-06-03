@@ -24,7 +24,7 @@ int pthread_mutex_unlock(pthread_mutex_t *a)
 TEST(GameObjTest, CreateDelete)
 {
     GameObject *go = NULL;
-    Geometry *geom = new Geometry();
+    Geometry *geom = new Geometry(), *geom2 = new Geometry();
     Control *con = new Control(1LL, NULL);
 
     lock_count = unlock_count = 0;
@@ -39,6 +39,7 @@ TEST(GameObjTest, CreateDelete)
 
     geom = new Geometry();
     go = new GameObject(geom, con);
+    go->geometry = geom2;
     ASSERT_EQ(go->get_object_id(), 39LL);
 
     delete go;
