@@ -15,6 +15,9 @@ TEST(MotionPoolTest, Operate)
     GameObject *go1 = new GameObject(NULL, NULL, 9876LL);
     GameObject *go2 = new GameObject(NULL, NULL, 9877LL);
     GameObject *go3 = new GameObject(NULL, NULL, 9878LL);
+    GameObject *go4 = new GameObject(NULL, NULL, 12345LL);
+    GameObject *go5 = new GameObject(NULL, NULL, 12346LL);
+    GameObject *go6 = new GameObject(NULL, NULL, 12347LL);
 
     go1->position = { 234.0, 234.0, 234.0 };
     go1->movement = { 1.0, 1.0, 1.0 };
@@ -31,6 +34,21 @@ TEST(MotionPoolTest, Operate)
     gettimeofday(&go3->last_updated, NULL);
     pool->push(go3);
     ASSERT_EQ(pool->queue_size(), 3);
+    go4->position = { 0.0, 0.0, 0.0 };
+    go4->rotation = { 1.0, 0.0, 0.0 };
+    gettimeofday(&go4->last_updated, NULL);
+    pool->push(go4);
+    ASSERT_EQ(pool->queue_size(), 4);
+    go5->position = { 1.0, 1.0, 1.0 };
+    go5->rotation = { 0.0, 1.0, 0.0 };
+    gettimeofday(&go5->last_updated, NULL);
+    pool->push(go5);
+    ASSERT_EQ(pool->queue_size(), 5);
+    go6->position = { 2.0, 2.0, 2.0 };
+    go6->rotation = { 0.0, 0.0, 1.0 };
+    gettimeofday(&go6->last_updated, NULL);
+    pool->push(go6);
+    ASSERT_EQ(pool->queue_size(), 6);
 
     delete zone->motion_pool;
     zone->motion_pool = pool;
@@ -45,6 +63,9 @@ TEST(MotionPoolTest, Operate)
     ASSERT_GT(go2->position.y, 123.0);
     ASSERT_GT(go2->position.z, 123.0);
     ASSERT_GT(go3->position.z, 12.0);
+    /* Nothing happens with rotation yet, so no need to check anything
+     * for go4-6.
+     */
 
     delete zone;
 }
