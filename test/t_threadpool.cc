@@ -74,6 +74,9 @@ int pthread_mutex_unlock(pthread_mutex_t *a)
     return 0;
 }
 
+/* This should never actually be executed, so it'll just sort of sit
+ * there.
+ */
 void *thread_worker(void *arg)
 {
     ThreadPool<int> *pool = (ThreadPool<int> *)arg;
@@ -81,8 +84,7 @@ void *thread_worker(void *arg)
 
     for (;;)
     {
-        /* Eat whatever's in the queue */
-        pool->pop(&what);
+        sleep(1);
     }
     return NULL;
 }
@@ -160,13 +162,13 @@ TEST(ThreadPoolTest, StartStop)
     delete pool;
 }
 
-TEST(ThreadPoolTest, StartError)
+TEST(ThreadPoolTest, StartFailure)
 {
     ThreadPool<int> *pool;
 
     ASSERT_NO_THROW(
         {
-            pool = new ThreadPool<int>("go_stop", 2);
+            pool = new ThreadPool<int>("kaboom", 1);
         });
     ASSERT_TRUE(pool->pool_size() == 0);
 
@@ -190,6 +192,7 @@ TEST(ThreadPoolTest, Grow)
 {
     ThreadPool<int> *pool = new ThreadPool<int>("grow", 5);
 
+    pthread_create_error = false;
     pool->startup_arg = (void *)pool;
     pool->start(thread_worker);
     ASSERT_TRUE(pool->pool_size() == 5);
