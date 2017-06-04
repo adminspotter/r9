@@ -7,7 +7,7 @@
 bool pthread_mutex_init_error = false, pthread_cond_init_error = false;
 bool pthread_create_error = false;
 int mutex_destroy_count, cond_broadcast_count, cond_destroy_count;
-int create_count, lock_count, unlock_count;
+int create_count, join_count, lock_count, unlock_count;
 
 int pthread_mutex_init(pthread_mutex_t *a, const pthread_mutexattr_t *b)
 {
@@ -52,6 +52,12 @@ int pthread_create(pthread_t *a, const pthread_attr_t *b,
     ++create_count;
     if (pthread_create_error == true)
         return EINVAL;
+    return 0;
+}
+
+int pthread_join(pthread_t a, void **b)
+{
+    ++join_count;
     return 0;
 }
 
@@ -135,23 +141,22 @@ TEST(ThreadPoolTest, StartStop)
         });
     ASSERT_TRUE(pool->pool_size() == 0);
 
+    lock_count = unlock_count = 0;
     pool->startup_arg = (void *)pool;
     ASSERT_NO_THROW(
         {
             pool->start(thread_worker);
         });
     ASSERT_TRUE(pool->pool_size() == 2);
+    ASSERT_EQ(lock_count, 1);
+    ASSERT_EQ(unlock_count, 1);
 
-    ASSERT_NO_THROW(
-        {
-            pool->stop();
-        });
+    join_count = 0;
+    pool->stop();
     ASSERT_TRUE(pool->pool_size() == 0);
+    ASSERT_EQ(join_count, 2);
 
-    ASSERT_NO_THROW(
-        {
-            delete pool;
-        });
+    delete pool;
 }
 
 TEST(ThreadPoolTest, Grow)
