@@ -1,6 +1,6 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Jun 2017, 13:26:43 tquirk
+ *   last updated 04 Jun 2017, 08:33:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -151,6 +151,7 @@ class ThreadPool
                     s << "couldn't start a " << this->name << " thread: "
                       << strerror(ret) << " (" << ret << ")";
                     /* Something's messed up; stop all the threads */
+                    pthread_mutex_unlock(&(this->queue_lock));
                     this->stop();
                     throw std::runtime_error(s.str());
                 }

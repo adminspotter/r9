@@ -159,6 +159,32 @@ TEST(ThreadPoolTest, StartStop)
     delete pool;
 }
 
+TEST(ThreadPoolTest, StartError)
+{
+    ThreadPool<int> *pool;
+
+    ASSERT_NO_THROW(
+        {
+            pool = new ThreadPool<int>("go_stop", 2);
+        });
+    ASSERT_TRUE(pool->pool_size() == 0);
+
+    pthread_create_error = true;
+    lock_count = unlock_count = 0;
+    pool->startup_arg = (void *)pool;
+    ASSERT_THROW(
+        {
+            pool->start(thread_worker);
+        },
+        std::runtime_error);
+    ASSERT_TRUE(pool->pool_size() == 0);
+    ASSERT_EQ(lock_count, 1);
+    ASSERT_EQ(unlock_count, 1);
+
+    delete pool;
+    pthread_create_error = false;
+}
+
 TEST(ThreadPoolTest, Grow)
 {
     ThreadPool<int> *pool = new ThreadPool<int>("grow", 5);
