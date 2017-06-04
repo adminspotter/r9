@@ -7,7 +7,7 @@
 bool pthread_mutex_init_error = false, pthread_cond_init_error = false;
 bool pthread_create_error = false;
 int mutex_destroy_count, cond_broadcast_count, cond_destroy_count;
-int create_count, join_count, lock_count, unlock_count;
+int create_count, join_count, lock_count, unlock_count, signal_count;
 
 int pthread_mutex_init(pthread_mutex_t *a, const pthread_mutexattr_t *b)
 {
@@ -31,6 +31,7 @@ int pthread_cond_init(pthread_cond_t *a, const pthread_condattr_t *b)
 
 int pthread_cond_signal(pthread_cond_t *a)
 {
+    ++signal_count;
     return 0;
 }
 
@@ -199,14 +200,23 @@ TEST(ThreadPoolTest, Grow)
     delete pool;
 }
 
+typedef struct
+{
+    int foo;
+    char bar;
+    double baz;
+}
+test_type;
+
 TEST(ThreadPoolTest, PushPop)
 {
-    ThreadPool<std::string> *pool = new ThreadPool<std::string>("push-pop", 1);
-    std::string req = "howdy", buf;
+    ThreadPool<test_type> *pool = new ThreadPool<test_type>("push-pop", 1);
+    test_type req = {1, 'a', 1.234}, buf;
 
-    lock_count = unlock_count = 0;
+    lock_count = signal_count = unlock_count = 0;
     pool->push(req);
     ASSERT_EQ(lock_count, 1);
+    ASSERT_EQ(signal_count, 1);
     ASSERT_EQ(unlock_count, 1);
 
     lock_count = unlock_count = 0;
@@ -214,7 +224,9 @@ TEST(ThreadPoolTest, PushPop)
     pool->pop(&buf);
     ASSERT_EQ(lock_count, 1);
     ASSERT_EQ(unlock_count, 1);
-    ASSERT_EQ(buf, req);
+    ASSERT_EQ(buf.foo, 1);
+    ASSERT_EQ(buf.bar, 'a');
+    ASSERT_EQ(buf.baz, 1.234);
 
     delete pool;
 }
