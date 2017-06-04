@@ -1,6 +1,6 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 11:27:08 tquirk
+ *   last updated 04 Jun 2017, 08:33:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -97,13 +97,11 @@ class ThreadPool
         {
             int ret;
 
-            /* Initialize the elements of our pool */
             this->thread_count = pool_size;
             this->clean_on_pop = false;
             this->exit_flag = false;
             this->startup_arg = NULL;
 
-            /* Initialize the mutex and condition variables */
             if ((ret = pthread_mutex_init(&(this->queue_lock), NULL)) != 0)
             {
                 std::ostringstream s;
@@ -119,12 +117,16 @@ class ThreadPool
                 pthread_mutex_destroy(&(this->queue_lock));
                 throw std::runtime_error(s.str());
             }
-            /* We've moved the starting of the threads into the start() call */
         };
 
     virtual ~ThreadPool()
         {
             this->stop();
+
+            /* We won't throw exceptions out of a destructor, so no
+             * point in checking return values here.  There's nothing
+             * we can do anyway.
+             */
             pthread_cond_destroy(&(this->queue_not_empty));
             pthread_mutex_destroy(&(this->queue_lock));
         };
@@ -137,9 +139,7 @@ class ThreadPool
             pthread_mutex_lock(&(this->queue_lock));
             this->thread_pool.reserve(this->thread_count);
             this->startup_func = func;
-            /* Make sure we're ready to start */
             this->exit_flag = false;
-            /* Start up the actual threads */
             while (this->thread_pool.size() < this->thread_count)
             {
                 if ((ret = pthread_create(&thread,
@@ -147,11 +147,11 @@ class ThreadPool
                                           this->startup_func,
                                           this->startup_arg)) != 0)
                 {
-                    /* Error! */
                     std::ostringstream s;
                     s << "couldn't start a " << this->name << " thread: "
                       << strerror(ret) << " (" << ret << ")";
                     /* Something's messed up; stop all the threads */
+                    pthread_mutex_unlock(&(this->queue_lock));
                     this->stop();
                     throw std::runtime_error(s.str());
                 }
@@ -163,9 +163,7 @@ class ThreadPool
     void stop(void)
         {
             this->exit_flag = true;
-            /* Wake everybody up, in case they're sleeping */
             pthread_cond_broadcast(&(this->queue_not_empty));
-            /* Reap all our child threads */
             while (this->thread_pool.size() > 0)
             {
                 /* Give up our slice, so the children can die */
@@ -211,33 +209,26 @@ class ThreadPool
      */
     virtual void pop(T *buffer)
         {
-            /* Just in case */
             if (buffer == NULL)
                 return;
 
-            /* Lock the giant lock for all the thread pool activity */
             pthread_mutex_lock(&(this->queue_lock));
 
-            /* If there's nothing to do, wait until there is */
             while (this->request_queue.empty() && !this->exit_flag)
                 pthread_cond_wait(&(this->queue_not_empty),
                                   &(this->queue_lock));
 
-            /* If it's time to exit, go ahead and exit */
             if (this->exit_flag)
             {
                 pthread_mutex_unlock(&(this->queue_lock));
                 pthread_exit(NULL);
             }
 
-            /* Grab what's at the head of the queue */
             memcpy(buffer, &(this->request_queue.front()), sizeof(T));
-            /* If we need to clean on pop, do it */
             if (this->clean_on_pop)
                 memset(&(this->request_queue.front()), 0, sizeof(T));
             this->request_queue.pop();
 
-            /* We're done mangling the queue, so drop the giant lock */
             pthread_mutex_unlock(&(this->queue_lock));
         };
 };
