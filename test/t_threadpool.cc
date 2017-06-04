@@ -151,8 +151,9 @@ TEST(ThreadPoolTest, StartStop)
             pool->start(thread_worker);
         });
     ASSERT_TRUE(pool->pool_size() == 2);
-    ASSERT_EQ(lock_count, 1);
-    ASSERT_EQ(unlock_count, 1);
+    ASSERT_GT(lock_count, 0);
+    ASSERT_GT(unlock_count, 0);
+    ASSERT_EQ(lock_count, unlock_count);
 
     join_count = 0;
     pool->stop();
@@ -181,8 +182,9 @@ TEST(ThreadPoolTest, StartFailure)
         },
         std::runtime_error);
     ASSERT_TRUE(pool->pool_size() == 0);
-    ASSERT_EQ(lock_count, 1);
-    ASSERT_EQ(unlock_count, 1);
+    ASSERT_GT(lock_count, 0);
+    ASSERT_GT(unlock_count, 0);
+    ASSERT_EQ(lock_count, unlock_count);
 
     delete pool;
     pthread_create_error = false;
@@ -218,15 +220,17 @@ TEST(ThreadPoolTest, PushPop)
 
     lock_count = signal_count = unlock_count = 0;
     pool->push(req);
-    ASSERT_EQ(lock_count, 1);
+    ASSERT_GT(lock_count, 0);
+    ASSERT_GT(unlock_count, 0);
+    ASSERT_EQ(lock_count, unlock_count);
     ASSERT_EQ(signal_count, 1);
-    ASSERT_EQ(unlock_count, 1);
 
     lock_count = unlock_count = 0;
     pool->clean_on_pop = true;
     pool->pop(&buf);
-    ASSERT_EQ(lock_count, 1);
-    ASSERT_EQ(unlock_count, 1);
+    ASSERT_GT(lock_count, 0);
+    ASSERT_GT(unlock_count, 0);
+    ASSERT_EQ(lock_count, unlock_count);
     ASSERT_EQ(buf.foo, 1);
     ASSERT_EQ(buf.bar, 'a');
     ASSERT_EQ(buf.baz, 1.234);
