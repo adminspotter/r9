@@ -1,9 +1,9 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2016, 09:57:53 tquirk
+ *   last updated 05 Jun 2017, 18:49:23 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -343,9 +343,6 @@ static void setup_zone(void)
     db_create_t *db_create;
 
     std::clog << "in zone setup" << std::endl;
-    zone = new Zone(config.size.dim[0], config.size.dim[1],
-                    config.size.dim[2], config.size.steps[0],
-                    config.size.steps[1], config.size.steps[2]);
 
     /* Load up the database lib before we start the access thread pool */
     db_lib = new Library("libr9_" + config.db_type + LT_MODULE_EXT);
@@ -353,9 +350,11 @@ static void setup_zone(void)
 
     database = db_create(config.db_host, config.db_user,
                          config.db_pass, config.db_name);
-    database->get_server_skills(zone->actions);
-    database->get_server_objects(zone->game_objects);
 
+    zone = new Zone(config.size.dim[0], config.size.dim[1],
+                    config.size.dim[2], config.size.steps[0],
+                    config.size.steps[1], config.size.steps[2],
+                    database);
     zone->start();
     std::clog << "zone setup done" << std::endl;
 }

@@ -44,9 +44,12 @@ void ActionPool::load_actions(const std::string& libname)
     (*reg)(this->actions);
 }
 
-ActionPool::ActionPool(const std::string& libname, unsigned int pool_size)
+ActionPool::ActionPool(const std::string& libname,
+                       unsigned int pool_size,
+                       DB *database)
     : ThreadPool<packet_list>("action", pool_size), actions(),
 {
+    database->get_server_skills(this->actions);
     this->load_actions(libname);
 }
 

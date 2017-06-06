@@ -71,9 +71,9 @@ class Zone
     MotionPool *motion_pool;   /* Processes motion/collision */
     UpdatePool *update_pool;   /* Sends motion updates       */
 
-  private:
-    void init(void);
-    void create_thread_pools(void);
+  protected:
+    virtual void init(DB *);
+    virtual void create_thread_pools(DB *);
 
     inline Octree *sector_contains(glm::dvec3& pos)
         {
@@ -106,8 +106,8 @@ class Zone
         };
 
   public:
-    Zone(uint64_t, uint16_t);
-    Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t);
+    Zone(uint64_t, uint16_t, DB *);
+    Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t, DB *);
     ~Zone();
 
     void start(void);

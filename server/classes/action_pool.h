@@ -34,6 +34,8 @@
 #include "library.h"
 #include "defs.h"
 
+#include "modules/db.h"
+
 class ActionPool : public ThreadPool<packet_list>
 {
   private:
@@ -53,6 +55,8 @@ class ActionPool : public ThreadPool<packet_list>
 
 
     static void *action_pool_worker(void *);
+
+    void populate_server_actions(DB&);
 };
 
 #endif /* __INC_ACTION_POOL_H__ */
