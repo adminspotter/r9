@@ -56,6 +56,7 @@ class ActionPool : public ThreadPool<packet_list>
                std::map<uint64_t, GameObject *>&, DB *);
     ~ActionPool();
 
+    virtual void pop(packet_list *) override;
 
     static void *action_pool_worker(void *);
 

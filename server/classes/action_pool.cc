@@ -36,6 +36,8 @@
 #include "action_pool.h"
 #include "listensock.h"
 
+#include "../../proto/proto.h"
+
 void ActionPool::load_actions(const std::string& libname)
 {
     std::clog << "loading action routines" << std::endl;
@@ -109,11 +111,16 @@ ActionPool::~ActionPool()
     this->actions.clear();
 }
 
-/* Unfortunately since we depend on some other stuff in the zone, we
- * have to take it, rather than ourselves, as an argument.  For
- * testing purposes, we should be able to mock the zone out enough to
- * verify that we're operating correctly.
+/* pop() should return a ready-to-use item for the queue to process,
+ * so we'll handle the network-to-host translation here.  Once crypto
+ * is added, we'll take care of decrypting as well.
  */
+void ActionPool::pop(packet_list *req)
+{
+    this->ThreadPool::pop(req);
+    ntoh_packet(&(req->buf), sizeof(packet));
+}
+
 void *ActionPool::action_pool_worker(void *arg)
 {
     ActionPool *act = (ActionPool *)arg;
@@ -124,11 +131,7 @@ void *ActionPool::action_pool_worker(void *arg)
 
     for (;;)
     {
-        /* Grab the next packet off the queue */
         act->pop(&req);
-
-        /* Process the packet */
-        ntoh_packet(&req.buf, sizeof(packet));
 
         /* Make sure the action exists and is valid on this server,
          * and that the actual controller of the object is the one
