@@ -1,9 +1,9 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 10:01:07 tquirk
+ *   last updated 05 Jun 2017, 18:49:05 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,11 +34,6 @@ ActionPool::ActionPool(const char *pool_name, unsigned int pool_size)
 
 ActionPool::~ActionPool()
 {
-}
-
-void ActionPool::start(void *(*func)(void *))
-{
-    ThreadPool<packet_list>::start(func);
 }
 
 /* Unfortunately since we depend on some other stuff in the zone, we
