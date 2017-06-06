@@ -31,8 +31,9 @@
  *
  */
 
+#include <glm/vec3.hpp>
+
 #include "action_pool.h"
-#include "zone.h"
 #include "listensock.h"
 
 void ActionPool::load_actions(const std::string& libname)
@@ -44,10 +45,46 @@ void ActionPool::load_actions(const std::string& libname)
     (*reg)(this->actions);
 }
 
+int ActionPool::execute_action(Control *con, action_request& req, size_t len)
+{
+    ActionPool::actions_iterator i = this->actions.find(req.action_id);
+    Control::actions_iterator j = con->actions.find(req.action_id);
+    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
+
+    /* TODO:  if the user doesn't have the skill, but it is valid, we
+     * should add it at level 0 so they can start accumulating
+     * improvement points.
+     */
+
+    if (i != this->actions.end() && j != con->actions.end())
+    {
+        /* If it's not valid on this server, it should at least have
+         * a default.
+         */
+        if (!i->second.valid)
+        {
+            req.action_id = i->second.def;
+            i = this->actions.find(req.action_id);
+        }
+
+        req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
+        req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
+        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
+
+        return (*(i->second.action))(con->slave,
+                                     req.power_level,
+                                     this->game_objects[req.dest_object_id],
+                                     vec);
+    }
+    return -1;
+}
+
 ActionPool::ActionPool(const std::string& libname,
                        unsigned int pool_size,
+                       std::map<uint64_t, GameObject *>& game_obj,
                        DB *database)
     : ThreadPool<packet_list>("action", pool_size), actions(),
+      game_objects(game_obj)
 {
     database->get_server_skills(this->actions);
     this->load_actions(libname);
@@ -79,7 +116,8 @@ ActionPool::~ActionPool()
  */
 void *ActionPool::action_pool_worker(void *arg)
 {
-    Zone *zone = (Zone *)arg;
+    ActionPool *act = (ActionPool *)arg;
+    ActionPool::actions_iterator a;
     packet_list req;
     uint16_t skillid;
     int ret;
@@ -87,40 +125,46 @@ void *ActionPool::action_pool_worker(void *arg)
     for (;;)
     {
         /* Grab the next packet off the queue */
-        zone->action_pool->pop(&req);
+        act->pop(&req);
 
         /* Process the packet */
         ntoh_packet(&req.buf, sizeof(packet));
 
         /* Make sure the action exists and is valid on this server,
-         * before trying to do anything
+         * and that the actual controller of the object is the one
+         * trying to make the action request, before trying to do
+         * anything.
          */
         skillid = req.buf.act.action_id;
-        if (zone->actions.find(skillid) != zone->actions.end()
-            && zone->actions[skillid].valid == true)
+        if ((a = act->actions.find(skillid)) != act->actions.end()
+            && a->second.valid == true
+            && req.who->slave->get_object_id() == req.buf.act.object_id)
         {
-            /* Make the action call.
-             *
-             * The action routine will handle checking the environment
+            /* The action routine will handle checking the environment
              * and relevant skills of the target, and spawning of any
              * new needed subobjects.
              */
-            if (req.who->slave->get_object_id() == req.buf.act.object_id)
-                if ((ret = zone->execute_action(req.who,
-                                                req.buf.act,
-                                                sizeof(action_request))) > 0)
-                {
-                    packet_list pkt;
+            if ((ret = act->execute_action(req.who,
+                                           req.buf.act,
+                                           sizeof(action_request))) > 0)
+            {
+                /* TODO:  this should be a method in the listening
+                 * socket.  There's absolutely no reason for us to be
+                 * constructing packets here.
+                 *
+                 * req.parent->send_ack(req.who, request, misc);
+                 */
+                packet_list pkt;
 
-                    pkt.buf.ack.type = TYPE_ACKPKT;
-                    pkt.buf.ack.version = 1;
-                    /*pkt.buf.ack.sequence = ;*/
-                    pkt.buf.ack.request = skillid;
-                    pkt.buf.ack.misc = (uint8_t)ret;
-                    pkt.who = req.who;
+                pkt.buf.ack.type = TYPE_ACKPKT;
+                pkt.buf.ack.version = 1;
+                /*pkt.buf.ack.sequence = ;*/
+                pkt.buf.ack.request = skillid;
+                pkt.buf.ack.misc = (uint8_t)ret;
+                pkt.who = req.who;
 
-                    req.parent->send_pool->push(pkt);
-                }
+                req.parent->send_pool->push(pkt);
+            }
         }
     }
     return NULL;

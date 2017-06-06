@@ -47,6 +47,9 @@ class ActionPool : public ThreadPool<packet_list>
     actions_map actions;
 
     void load_actions(const std::string&);
+    int execute_action(Control *, action_request&, size_t);
+
+    std::map<uint64_t, GameObject *>& game_objects;
 
   public:
     ActionPool(const std::string&, unsigned int,

@@ -149,7 +149,7 @@ void Zone::start(void)
      * up the thread pools?
      */
 
-    this->action_pool->startup_arg = (void *)this;
+    this->action_pool->startup_arg = (void *)this->action_pool;
     this->action_pool->start(ActionPool::action_pool_worker);
 
     this->motion_pool->startup_arg = (void *)this;
@@ -189,33 +189,4 @@ void Zone::connect_game_object(Control *con, uint64_t objid)
         if (go->distance_from(gi->second->position) < 1000.0)
             this->update_pool->push(gi->second);
     }
-}
-
-int Zone::execute_action(Control *con, action_request& req, size_t len)
-{
-    Zone::actions_iterator i = this->actions.find(req.action_id);
-    Control::actions_iterator j = con->actions.find(req.action_id);
-    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
-
-    if (i != this->actions.end() && j != con->actions.end())
-    {
-        /* If it's not valid on this server, it should at least have
-         * a default.
-         */
-        if (!i->second.valid)
-        {
-            req.action_id = i->second.def;
-            i = this->actions.find(req.action_id);
-        }
-
-        req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
-        req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
-        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
-
-        return (*(i->second.action))(con->slave,
-                                     req.power_level,
-                                     this->game_objects[req.dest_object_id],
-                                     vec);
-    }
-    return -1;
 }

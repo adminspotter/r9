@@ -50,7 +50,6 @@
 #include "motion_pool.h"
 #include "update_pool.h"
 #include "octree.h"
-#include "../../proto/proto.h"
 
 class Zone
 {
@@ -114,7 +113,6 @@ class Zone
     void stop(void);
 
     virtual void connect_game_object(Control *, uint64_t);
-    virtual int execute_action(Control *, action_request&, size_t);
 };
 
 #endif /* __INC_ZONE_H__ */
