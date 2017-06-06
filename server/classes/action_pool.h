@@ -20,21 +20,35 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the action thread pool, a pretty thin wrapper
- * around the ThreadPool, to simplify the interface and allow
- * reasonable testing.
+ * This file contains the action thread pool, a wrapper around the
+ * ThreadPool which adds an actions map.
+ *
+ * Things to do
+ *
  */
 
 #ifndef __INC_ACTION_POOL_H__
 #define __INC_ACTION_POOL_H__
 
 #include "thread_pool.h"
+#include "library.h"
 #include "defs.h"
 
 class ActionPool : public ThreadPool<packet_list>
 {
+  private:
+    typedef std::map<uint16_t, action_rec> actions_map;
+    typedef actions_map::iterator actions_iterator;
+
+    Library *action_lib;
+
+    actions_map actions;
+
+    void load_actions(const std::string&);
+
   public:
-    ActionPool(const char *, unsigned int);
+    ActionPool(const std::string&, unsigned int,
+               std::map<uint64_t, GameObject *>&, DB *);
     ~ActionPool();
 
 

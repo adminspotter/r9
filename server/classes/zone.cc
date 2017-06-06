@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 09:44:34 tquirk
+ *   last updated 05 Jun 2017, 18:48:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -63,33 +63,17 @@ void Zone::init(void)
         this->sectors.push_back(y_row);
 }
 
-void Zone::load_actions(const std::string& libname)
-{
-    try
-    {
-        this->action_lib = new Library(libname);
-        action_reg_t *reg
-            = (action_reg_t *)this->action_lib->symbol("actions_register");
-        (*reg)(this->actions);
-    }
-    catch (std::exception& e)
-    {
-        std::clog << syslogErr
-                  << "error loading actions library: " << e.what() << std::endl;
-        this->action_lib = NULL;
-    }
-}
-
 void Zone::create_thread_pools(void)
 {
-    this->action_pool = new ActionPool("action", config.action_threads);
+    this->action_pool = new ActionPool(config.action_lib,
+                                       config.action_threads);
     this->motion_pool = new MotionPool("motion", config.motion_threads);
     this->update_pool = new UpdatePool("update", config.update_threads);
 }
 
 /* Public methods */
 Zone::Zone(uint64_t dim, uint16_t steps)
-    : sectors(), actions(), game_objects()
+    : sectors(), game_objects()
 {
     this->x_dim = this->y_dim = this->z_dim = dim;
     this->x_steps = this->y_steps = this->z_steps = steps;
@@ -98,7 +82,7 @@ Zone::Zone(uint64_t dim, uint16_t steps)
 
 Zone::Zone(uint64_t xd, uint64_t yd, uint64_t zd,
            uint16_t xs, uint16_t ys, uint16_t zs)
-    : sectors(), actions(), game_objects()
+    : sectors(), game_objects()
 {
     this->x_dim = xd;
     this->y_dim = yd;
@@ -154,22 +138,6 @@ Zone::~Zone()
         /* Maybe save the game objects' locations before deleting them? */
         this->game_objects.erase(this->game_objects.begin(),
                                  this->game_objects.end());
-    }
-
-    /* Unregister all the action routines. */
-    if (this->action_lib != NULL)
-    {
-        std::clog << "cleaning up action routines" << std::endl;
-        try
-        {
-            action_unreg_t *unreg
-                = (action_unreg_t *)this->action_lib->symbol("actions_unregister");
-            (*unreg)(this->actions);
-        }
-        catch (std::exception& e) { /* Do nothing */ }
-
-        /* Close the actions library */
-        delete this->action_lib;
     }
 }
 

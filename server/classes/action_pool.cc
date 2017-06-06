@@ -20,20 +20,53 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * The minimal implementation of the Action pool.
+ * The action pool takes action requests, decides if they're valid and
+ * available on the server, and dispatches them to the appropriate
+ * action routine.
+ *
+ * This object takes care of loading and unloading the actions from
+ * the action library, and handles the dispatch entirely internally.
+ *
+ * Things to do
+ *
  */
 
 #include "action_pool.h"
 #include "zone.h"
 #include "listensock.h"
 
-ActionPool::ActionPool(const char *pool_name, unsigned int pool_size)
-    : ThreadPool<packet_list>(pool_name, pool_size)
+void ActionPool::load_actions(const std::string& libname)
 {
+    std::clog << "loading action routines" << std::endl;
+    this->action_lib = new Library(libname);
+    action_reg_t *reg
+        = (action_reg_t *)this->action_lib->symbol("actions_register");
+    (*reg)(this->actions);
+}
+
+ActionPool::ActionPool(const std::string& libname, unsigned int pool_size)
+    : ThreadPool<packet_list>("action", pool_size), actions(),
+{
+    this->load_actions(libname);
 }
 
 ActionPool::~ActionPool()
 {
+    /* Unregister all the action routines. */
+    if (this->action_lib != NULL)
+    {
+        std::clog << "cleaning up action routines" << std::endl;
+        try
+        {
+            action_unreg_t *unreg
+                = (action_unreg_t *)this->action_lib->symbol("actions_unregister");
+            (*unreg)(this->actions);
+        }
+        catch (std::exception& e) { /* Destructors don't throw exceptions */ }
+
+        delete this->action_lib;
+    }
+    this->actions.clear();
 }
 
 /* Unfortunately since we depend on some other stuff in the zone, we

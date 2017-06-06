@@ -1,9 +1,9 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 10:17:17 tquirk
+ *   last updated 05 Jun 2017, 18:48:49 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -49,7 +49,6 @@
 #include "action_pool.h"
 #include "motion_pool.h"
 #include "update_pool.h"
-#include "library.h"
 #include "octree.h"
 #include "../../proto/proto.h"
 
@@ -63,13 +62,9 @@ class Zone
 
     std::vector< std::vector< std::vector<Octree *> > > sectors;
 
-    Library *action_lib;
-
   public:
-    std::map<uint16_t, action_rec> actions;
     std::map<uint64_t, GameObject *> game_objects;
 
-    typedef std::map<uint16_t, action_rec>::iterator actions_iterator;
     typedef std::map<uint64_t, GameObject *>::iterator objects_iterator;
 
     ActionPool *action_pool;   /* Takes action requests      */
@@ -78,7 +73,6 @@ class Zone
 
   private:
     void init(void);
-    void load_actions(const std::string&);
     void create_thread_pools(void);
 
     inline Octree *sector_contains(glm::dvec3& pos)
