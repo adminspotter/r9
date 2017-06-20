@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jun 2017, 18:48:11 tquirk
+ *   last updated 20 Jun 2017, 18:52:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -41,13 +41,13 @@
 #include "../log.h"
 
 /* Private methods */
-void Zone::init(DB *database)
+void Zone::init(Library *action_lib, DB *database)
 {
     int i;
     std::vector<Octree *> z_row;
     std::vector<std::vector<Octree *> > y_row;
 
-    this->create_thread_pools(database);
+    this->create_thread_pools(action_lib, database);
     database->get_server_objects(this->game_objects);
     std::clog << syslogNotice << "creating " << this->x_steps << 'x'
               << this->y_steps << 'x' << this->z_steps << " elements"
@@ -63,27 +63,28 @@ void Zone::init(DB *database)
         this->sectors.push_back(y_row);
 }
 
-void Zone::create_thread_pools(DB *database)
+void Zone::create_thread_pools(Library *action_lib, DB *database)
 {
-    this->action_pool = new ActionPool(config.action_lib,
-                                       config.action_threads,
+    this->action_pool = new ActionPool(config.action_threads,
                                        this->game_objects,
+                                       action_lib,
                                        database);
     this->motion_pool = new MotionPool("motion", config.motion_threads);
     this->update_pool = new UpdatePool("update", config.update_threads);
 }
 
 /* Public methods */
-Zone::Zone(uint64_t dim, uint16_t steps, DB *database)
+Zone::Zone(uint64_t dim, uint16_t steps, Library *action_lib, DB *database)
     : sectors(), game_objects()
 {
     this->x_dim = this->y_dim = this->z_dim = dim;
     this->x_steps = this->y_steps = this->z_steps = steps;
-    this->init(database);
+    this->init(action_lib, database);
 }
 
 Zone::Zone(uint64_t xd, uint64_t yd, uint64_t zd,
-           uint16_t xs, uint16_t ys, uint16_t zs, DB *database)
+           uint16_t xs, uint16_t ys, uint16_t zs,
+           Library *action_lib, DB *database)
     : sectors(), game_objects()
 {
     this->x_dim = xd;
@@ -92,7 +93,7 @@ Zone::Zone(uint64_t xd, uint64_t yd, uint64_t zd,
     this->x_steps = xs;
     this->y_steps = ys;
     this->z_steps = zs;
-    this->init(database);
+    this->init(action_lib, database);
 }
 
 Zone::~Zone()

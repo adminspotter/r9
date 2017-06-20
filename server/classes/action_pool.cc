@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jun 2017, 18:49:05 tquirk
+ *   last updated 20 Jun 2017, 18:43:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -38,13 +38,15 @@
 
 #include "../../proto/proto.h"
 
-void ActionPool::load_actions(const std::string& libname)
+void ActionPool::load_actions(void)
 {
-    std::clog << "loading action routines" << std::endl;
-    this->action_lib = new Library(libname);
-    action_reg_t *reg
-        = (action_reg_t *)this->action_lib->symbol("actions_register");
-    (*reg)(this->actions);
+    if (this->action_lib != NULL)
+    {
+        std::clog << "loading action routines" << std::endl;
+        action_reg_t *reg
+            = (action_reg_t *)this->action_lib->symbol("actions_register");
+        (*reg)(this->actions);
+    }
 }
 
 int ActionPool::execute_action(Control *con, action_request& req, size_t len)
@@ -81,15 +83,16 @@ int ActionPool::execute_action(Control *con, action_request& req, size_t len)
     return -1;
 }
 
-ActionPool::ActionPool(const std::string& libname,
-                       unsigned int pool_size,
+ActionPool::ActionPool(unsigned int pool_size,
                        std::map<uint64_t, GameObject *>& game_obj,
+                       Library *lib,
                        DB *database)
     : ThreadPool<packet_list>("action", pool_size), actions(),
       game_objects(game_obj)
 {
     database->get_server_skills(this->actions);
-    this->load_actions(libname);
+    this->action_lib = lib;
+    this->load_actions();
 }
 
 ActionPool::~ActionPool()

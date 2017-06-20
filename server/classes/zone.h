@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jun 2017, 18:48:49 tquirk
+ *   last updated 20 Jun 2017, 18:53:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -71,8 +71,8 @@ class Zone
     UpdatePool *update_pool;   /* Sends motion updates       */
 
   protected:
-    virtual void init(DB *);
-    virtual void create_thread_pools(DB *);
+    virtual void init(Library *, DB *);
+    virtual void create_thread_pools(Library *, DB *);
 
     inline Octree *sector_contains(glm::dvec3& pos)
         {
@@ -105,8 +105,9 @@ class Zone
         };
 
   public:
-    Zone(uint64_t, uint16_t, DB *);
-    Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t, DB *);
+    Zone(uint64_t, uint16_t, Library *, DB *);
+    Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t,
+         Library *, DB *);
     ~Zone();
 
     void start(void);

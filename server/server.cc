@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jun 2017, 18:49:23 tquirk
+ *   last updated 20 Jun 2017, 18:50:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -341,6 +341,7 @@ void set_exit_flag(void)
 static void setup_zone(void)
 {
     db_create_t *db_create;
+    Library *action_lib;
 
     std::clog << "in zone setup" << std::endl;
 
@@ -351,10 +352,15 @@ static void setup_zone(void)
     database = db_create(config.db_host, config.db_user,
                          config.db_pass, config.db_name);
 
+    /* Once this library gets into the hands of the action pool, it
+     * takes ownership, and cleans it up where necessary.
+     */
+    action_lib = new Library(config.action_lib);
+
     zone = new Zone(config.size.dim[0], config.size.dim[1],
                     config.size.dim[2], config.size.steps[0],
                     config.size.steps[1], config.size.steps[2],
-                    database);
+                    action_lib, database);
     zone->start();
     std::clog << "zone setup done" << std::endl;
 }
