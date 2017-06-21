@@ -1,9 +1,9 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2017, 18:52:35 tquirk
+ *   last updated 21 Jun 2017, 07:23:45 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -142,28 +142,6 @@ Zone::~Zone()
         this->game_objects.erase(this->game_objects.begin(),
                                  this->game_objects.end());
     }
-}
-
-void Zone::start(void)
-{
-    /* Do we want to load up all the game objects here, before we start
-     * up the thread pools?
-     */
-
-    this->action_pool->startup_arg = (void *)this->action_pool;
-    this->action_pool->start(ActionPool::action_pool_worker);
-
-    this->motion_pool->startup_arg = (void *)this;
-    this->motion_pool->start(MotionPool::motion_pool_worker);
-
-    this->update_pool->start();
-}
-
-void Zone::stop(void)
-{
-    this->action_pool->stop();
-    this->motion_pool->stop();
-    this->update_pool->stop();
 }
 
 void Zone::connect_game_object(Control *con, uint64_t objid)

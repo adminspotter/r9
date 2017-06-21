@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2017, 18:53:25 tquirk
+ *   last updated 21 Jun 2017, 07:32:59 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -109,9 +109,6 @@ class Zone
     Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t,
          Library *, DB *);
     ~Zone();
-
-    void start(void);
-    void stop(void);
 
     virtual void connect_game_object(Control *, uint64_t);
 };
