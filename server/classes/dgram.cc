@@ -1,9 +1,9 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Jul 2016, 07:56:00 tquirk
+ *   last updated 21 Jun 2017, 07:22:51 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -219,7 +219,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
             memcpy(&p.buf, &buf, len);
             p.who = found->second->control;
             p.parent = dgs;
-            zone->action_pool->push(p);
+            action_pool->push(p);
             break;
 
           default:
