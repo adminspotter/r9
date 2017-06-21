@@ -1,6 +1,6 @@
 /* action_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2017, 18:44:44 tquirk
+ *   last updated 21 Jun 2017, 07:39:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -55,6 +55,8 @@ class ActionPool : public ThreadPool<packet_list>
     ActionPool(unsigned int, std::map<uint64_t, GameObject *>&,
                Library *, DB *);
     ~ActionPool();
+
+    void start(void);
 
     virtual void pop(packet_list *) override;
 

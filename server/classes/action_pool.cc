@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2017, 18:43:23 tquirk
+ *   last updated 21 Jun 2017, 07:47:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -112,6 +112,17 @@ ActionPool::~ActionPool()
         delete this->action_lib;
     }
     this->actions.clear();
+}
+
+/* We will only use this thread pool in a very specific way, so making
+ * the caller handle stuff that it doesn't need to know about is
+ * inappropriate.  We'll set the required arg and start things up with
+ * the expected function.
+ */
+void ActionPool::start(void)
+{
+    this->startup_arg = (void *)this;
+    this->ThreadPool<packet_list>::start(ActionPool::action_pool_worker);
 }
 
 /* pop() should return a ready-to-use item for the queue to process,

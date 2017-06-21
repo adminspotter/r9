@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2017, 20:10:43 tquirk
+ *   last updated 21 Jun 2017, 07:41:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -378,8 +378,7 @@ static void setup_thread_pools(void)
     motion_pool = new MotionPool("motion", config.motion_threads);
     update_pool = new UpdatePool("update", config.update_threads);
 
-    action_pool->startup_arg = (void *)action_pool;
-    action_pool->start(ActionPool::action_pool_worker);
+    action_pool->start();
 
     motion_pool->startup_arg = (void *)zone;
     motion_pool->start(MotionPool::motion_pool_worker);
