@@ -46,10 +46,9 @@
 
 #include "defs.h"
 #include "control.h"
-#include "action_pool.h"
-#include "motion_pool.h"
-#include "update_pool.h"
 #include "octree.h"
+
+#include "modules/db.h"
 
 class Zone
 {
@@ -66,13 +65,8 @@ class Zone
 
     typedef std::map<uint64_t, GameObject *>::iterator objects_iterator;
 
-    ActionPool *action_pool;   /* Takes action requests      */
-    MotionPool *motion_pool;   /* Processes motion/collision */
-    UpdatePool *update_pool;   /* Sends motion updates       */
-
   protected:
-    virtual void init(Library *, DB *);
-    virtual void create_thread_pools(Library *, DB *);
+    virtual void init(DB *);
 
     inline Octree *sector_contains(glm::dvec3& pos)
         {
@@ -105,9 +99,8 @@ class Zone
         };
 
   public:
-    Zone(uint64_t, uint16_t, Library *, DB *);
-    Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t,
-         Library *, DB *);
+    Zone(uint64_t, uint16_t, DB *);
+    Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t, DB *);
     ~Zone();
 
     virtual void connect_game_object(Control *, uint64_t);
