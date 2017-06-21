@@ -86,8 +86,10 @@ static struct addrinfo *get_addr_info(int,
                                       const std::string&);
 static void free_addr_info(struct addrinfo *);
 static void setup_zone(void);
+static void setup_thread_pools(void);
 static void setup_console(void);
 static void cleanup_console(void);
+static void cleanup_thread_pools(void);
 static void cleanup_zone(void);
 static void cleanup_sockets(void);
 static void cleanup_log(void);
@@ -344,7 +346,6 @@ void set_exit_flag(void)
 static void setup_zone(void)
 {
     db_create_t *db_create;
-    Library *action_lib;
 
     std::clog << "in zone setup" << std::endl;
 
@@ -355,17 +356,35 @@ static void setup_zone(void)
     database = db_create(config.db_host, config.db_user,
                          config.db_pass, config.db_name);
 
+    zone = new Zone(config.size.dim[0], config.size.dim[1],
+                    config.size.dim[2], config.size.steps[0],
+                    config.size.steps[1], config.size.steps[2], database);
+
+    setup_thread_pools();
+    std::clog << "zone setup done" << std::endl;
+}
+
+static void setup_thread_pools(void)
+{
     /* Once this library gets into the hands of the action pool, it
      * takes ownership, and cleans it up where necessary.
      */
-    action_lib = new Library(config.action_lib);
+    Library *action_lib = new Library(config.action_lib);
 
-    zone = new Zone(config.size.dim[0], config.size.dim[1],
-                    config.size.dim[2], config.size.steps[0],
-                    config.size.steps[1], config.size.steps[2],
-                    action_lib, database);
-    zone->start();
-    std::clog << "zone setup done" << std::endl;
+    action_pool = new ActionPool(config.action_threads,
+                                 zone->game_objects,
+                                 action_lib,
+                                 database);
+    motion_pool = new MotionPool("motion", config.motion_threads);
+    update_pool = new UpdatePool("update", config.update_threads);
+
+    action_pool->startup_arg = (void *)action_pool;
+    action_pool->start(ActionPool::action_pool_worker);
+
+    motion_pool->startup_arg = (void *)zone;
+    motion_pool->start(MotionPool::motion_pool_worker);
+
+    update_pool->start();
 }
 
 static void setup_console(void)
@@ -443,8 +462,30 @@ static void cleanup_console(void)
     console_lib = NULL;
 }
 
+static void cleanup_thread_pools(void)
+{
+    std::clog << "deleting thread pools" << std::endl;
+    if (action_pool != NULL)
+    {
+        delete action_pool;
+        action_pool = NULL;
+    }
+    if (motion_pool != NULL)
+    {
+        delete motion_pool;
+        motion_pool = NULL;
+    }
+    if (update_pool != NULL)
+    {
+        delete update_pool;
+        update_pool = NULL;
+    }
+}
+
 static void cleanup_zone(void)
 {
+    cleanup_thread_pools();
+
     if (zone != NULL)
     {
         std::clog << "deleting zone" << std::endl;
