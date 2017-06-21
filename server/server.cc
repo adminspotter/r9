@@ -379,10 +379,7 @@ static void setup_thread_pools(void)
     update_pool = new UpdatePool("update", config.update_threads);
 
     action_pool->start();
-
-    motion_pool->startup_arg = (void *)zone;
-    motion_pool->start(MotionPool::motion_pool_worker);
-
+    motion_pool->start();
     update_pool->start();
 }
 
