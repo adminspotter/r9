@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2017, 18:50:03 tquirk
+ *   last updated 20 Jun 2017, 20:10:43 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -95,6 +95,9 @@ static void cleanup_daemon(void);
 
 int main_loop_exit_flag = 0;
 Zone *zone = NULL;
+ActionPool *action_pool = NULL;   /* Takes action requests      */
+MotionPool *motion_pool = NULL;   /* Processes motion/collision */
+UpdatePool *update_pool = NULL;   /* Sends motion updates       */
 DB *database = NULL;
 static Library *db_lib = NULL, *console_lib = NULL;
 std::vector<listen_socket *> sockets;
