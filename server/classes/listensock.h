@@ -1,9 +1,9 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Dec 2015, 07:29:37 tquirk
+ *   last updated 22 Jun 2017, 08:45:25 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -94,6 +94,8 @@ class listen_socket {
     virtual void logout_user(access_list&);
 
     virtual void do_login(uint64_t, Control *, access_list&, int) = 0;
+
+    virtual void send_ack(Control *, uint8_t, uint8_t);
 };
 
 #endif /* __INC_LISTENSOCK_H__ */

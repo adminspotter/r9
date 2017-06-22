@@ -1,9 +1,9 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Dec 2015, 07:50:22 tquirk
+ *   last updated 22 Jun 2017, 08:44:42 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -212,7 +212,9 @@ void listen_socket::logout_user(access_list& p)
     packet_list pkt;
     listen_socket::users_iterator found;
 
-    /* Most of this function is now handled by the reaper threads */
+    /* The reaper threads take care of the actual removing of the user
+     * and whatnot.  We just set the flag.
+     */
     if ((found = this->users.find(p.what.logout.who)) != this->users.end())
     {
         base_user *bu = found->second;
@@ -221,12 +223,23 @@ void listen_socket::logout_user(access_list& p)
                   << bu->control->username
                   << " (" << bu->control->userid << ")" << std::endl;
 
+        this->send_ack(bu->control, TYPE_LGTREQ, 0);
+    }
+}
+
+void listen_socket::send_ack(Control *con, uint8_t req, uint8_t misc)
+{
+    packet_list pkt;
+    listen_socket::users_iterator found;
+
+    if ((found = this->users.find(con->userid)) != this->users.end())
+    {
         pkt.buf.ack.type = TYPE_ACKPKT;
         pkt.buf.ack.version = 1;
-        pkt.buf.ack.sequence = bu->sequence++;
-        pkt.buf.ack.request = TYPE_LGTREQ;
-        pkt.buf.ack.misc = 0;
-        pkt.who = bu->control;
+        pkt.buf.ack.sequence = found->second->sequence++;
+        pkt.buf.ack.request = req;
+        pkt.buf.ack.misc = misc;
+        pkt.who = con;
         pkt.parent = this;
         this->send_pool->push(pkt);
     }
