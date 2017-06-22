@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2017, 07:47:00 tquirk
+ *   last updated 22 Jun 2017, 08:17:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -49,18 +49,22 @@ void ActionPool::load_actions(void)
     }
 }
 
-int ActionPool::execute_action(Control *con, action_request& req, size_t len)
+void ActionPool::execute_action(Control *con,
+                                action_request& req,
+                                listen_socket *parent)
 {
     ActionPool::actions_iterator i = this->actions.find(req.action_id);
     Control::actions_iterator j = con->actions.find(req.action_id);
     glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
+    int retval;
 
     /* TODO:  if the user doesn't have the skill, but it is valid, we
      * should add it at level 0 so they can start accumulating
      * improvement points.
      */
 
-    if (i != this->actions.end() && j != con->actions.end())
+    if (i != this->actions.end() && j != con->actions.end()
+        && con->slave->get_object_id() != req.object_id)
     {
         /* If it's not valid on this server, it should at least have
          * a default.
@@ -75,12 +79,12 @@ int ActionPool::execute_action(Control *con, action_request& req, size_t len)
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
         req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
 
-        return (*(i->second.action))(con->slave,
-                                     req.power_level,
-                                     this->game_objects[req.dest_object_id],
-                                     vec);
+        retval = (*(i->second.action))(con->slave,
+                                       req.power_level,
+                                       this->game_objects[req.dest_object_id],
+                                       vec);
+        parent->send_ack(con, TYPE_ACTREQ, (uint8_t)retval);
     }
-    return -1;
 }
 
 ActionPool::ActionPool(unsigned int pool_size,
@@ -138,51 +142,12 @@ void ActionPool::pop(packet_list *req)
 void *ActionPool::action_pool_worker(void *arg)
 {
     ActionPool *act = (ActionPool *)arg;
-    ActionPool::actions_iterator a;
     packet_list req;
-    uint16_t skillid;
-    int ret;
 
     for (;;)
     {
         act->pop(&req);
-
-        /* Make sure the action exists and is valid on this server,
-         * and that the actual controller of the object is the one
-         * trying to make the action request, before trying to do
-         * anything.
-         */
-        skillid = req.buf.act.action_id;
-        if ((a = act->actions.find(skillid)) != act->actions.end()
-            && a->second.valid == true
-            && req.who->slave->get_object_id() == req.buf.act.object_id)
-        {
-            /* The action routine will handle checking the environment
-             * and relevant skills of the target, and spawning of any
-             * new needed subobjects.
-             */
-            if ((ret = act->execute_action(req.who,
-                                           req.buf.act,
-                                           sizeof(action_request))) > 0)
-            {
-                /* TODO:  this should be a method in the listening
-                 * socket.  There's absolutely no reason for us to be
-                 * constructing packets here.
-                 *
-                 * req.parent->send_ack(req.who, request, misc);
-                 */
-                packet_list pkt;
-
-                pkt.buf.ack.type = TYPE_ACKPKT;
-                pkt.buf.ack.version = 1;
-                /*pkt.buf.ack.sequence = ;*/
-                pkt.buf.ack.request = skillid;
-                pkt.buf.ack.misc = (uint8_t)ret;
-                pkt.who = req.who;
-
-                req.parent->send_pool->push(pkt);
-            }
-        }
+        act->execute_action(req.who, req.buf.act, req.parent);
     }
     return NULL;
 }
