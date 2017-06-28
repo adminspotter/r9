@@ -104,19 +104,14 @@ t_log_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_log_LDADD = $(GTEST_LIBS)
 
 t_motion_pool_SOURCES = t_motion_pool.cc \
-	../server/classes/action_pool.cc ../server/classes/action_pool.h \
 	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
-	../server/classes/update_pool.cc ../server/classes/update_pool.h \
-	../server/classes/zone.cc ../server/classes/zone.h \
-	../server/classes/game_obj.cc ../server/classes/game_obj.h \
-	../server/classes/geometry.cc ../server/classes/geometry.h \
-	../server/classes/library.cc ../server/classes/library.h \
-	../server/classes/octree.cc ../server/classes/octree.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
 	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
-t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_motion_pool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
-	../proto/libr9_proto.la $(SERVER_LDLIBS)
+t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
