@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2017, 08:17:36 tquirk
+ *   last updated 30 Jun 2017, 08:36:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -64,7 +64,7 @@ void ActionPool::execute_action(Control *con,
      */
 
     if (i != this->actions.end() && j != con->actions.end()
-        && con->slave->get_object_id() != req.object_id)
+        && con->slave->get_object_id() == req.object_id)
     {
         /* If it's not valid on this server, it should at least have
          * a default.
