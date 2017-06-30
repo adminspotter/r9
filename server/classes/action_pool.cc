@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jun 2017, 08:36:00 tquirk
+ *   last updated 30 Jun 2017, 08:51:59 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -46,44 +46,6 @@ void ActionPool::load_actions(void)
         action_reg_t *reg
             = (action_reg_t *)this->action_lib->symbol("actions_register");
         (*reg)(this->actions);
-    }
-}
-
-void ActionPool::execute_action(Control *con,
-                                action_request& req,
-                                listen_socket *parent)
-{
-    ActionPool::actions_iterator i = this->actions.find(req.action_id);
-    Control::actions_iterator j = con->actions.find(req.action_id);
-    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
-    int retval;
-
-    /* TODO:  if the user doesn't have the skill, but it is valid, we
-     * should add it at level 0 so they can start accumulating
-     * improvement points.
-     */
-
-    if (i != this->actions.end() && j != con->actions.end()
-        && con->slave->get_object_id() == req.object_id)
-    {
-        /* If it's not valid on this server, it should at least have
-         * a default.
-         */
-        if (!i->second.valid)
-        {
-            req.action_id = i->second.def;
-            i = this->actions.find(req.action_id);
-        }
-
-        req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
-        req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
-        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
-
-        retval = (*(i->second.action))(con->slave,
-                                       req.power_level,
-                                       this->game_objects[req.dest_object_id],
-                                       vec);
-        parent->send_ack(con, TYPE_ACTREQ, (uint8_t)retval);
     }
 }
 
@@ -150,4 +112,42 @@ void *ActionPool::action_pool_worker(void *arg)
         act->execute_action(req.who, req.buf.act, req.parent);
     }
     return NULL;
+}
+
+void ActionPool::execute_action(Control *con,
+                                action_request& req,
+                                listen_socket *parent)
+{
+    ActionPool::actions_iterator i = this->actions.find(req.action_id);
+    Control::actions_iterator j = con->actions.find(req.action_id);
+    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
+    int retval;
+
+    /* TODO:  if the user doesn't have the skill, but it is valid, we
+     * should add it at level 0 so they can start accumulating
+     * improvement points.
+     */
+
+    if (i != this->actions.end() && j != con->actions.end()
+        && con->slave->get_object_id() == req.object_id)
+    {
+        /* If it's not valid on this server, it should at least have
+         * a default.
+         */
+        if (!i->second.valid)
+        {
+            req.action_id = i->second.def;
+            i = this->actions.find(req.action_id);
+        }
+
+        req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
+        req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
+        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
+
+        retval = (*(i->second.action))(con->slave,
+                                       req.power_level,
+                                       this->game_objects[req.dest_object_id],
+                                       vec);
+        parent->send_ack(con, TYPE_ACTREQ, (uint8_t)retval);
+    }
 }
