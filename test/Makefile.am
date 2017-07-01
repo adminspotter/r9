@@ -120,6 +120,7 @@ t_threadpool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 t_update_pool_SOURCES = t_update_pool.cc \
 	../server/classes/update_pool.cc ../server/classes/update_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
 t_update_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_update_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
