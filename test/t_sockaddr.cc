@@ -53,7 +53,7 @@ TEST(SockaddrInTest, CopyConstructor)
     sa->sin->sin_port = htons(1234);
     sa->sin->sin_addr.s_addr = ip_addr;
 
-    Sockaddr_in *sa2 = new Sockaddr_in(*sa);
+    Sockaddr_in *sa2 = new Sockaddr_in(*((Sockaddr *)sa));
 
     ASSERT_EQ(sa2->sin->sin_family, AF_INET);
     ASSERT_EQ(sa2->sin->sin_port, htons(1234));
@@ -258,7 +258,7 @@ TEST(SockaddrIn6Test, CopyConstructor)
     sa->sin6->sin6_port = htons(1234);
     memcpy(&sa->sin6->sin6_addr, &ip_addr, sizeof(struct in6_addr));
 
-    Sockaddr_in6 *sa2 = new Sockaddr_in6(*sa);
+    Sockaddr_in6 *sa2 = new Sockaddr_in6(*((const Sockaddr *)sa));
 
     ASSERT_EQ(sa2->sin6->sin6_family, AF_INET6);
     ASSERT_EQ(sa2->sin6->sin6_port, htons(1234));
@@ -468,7 +468,7 @@ TEST(SockaddrUnTest, CopyConstructor)
 
     strcpy(su->sun->sun_path, path);
 
-    Sockaddr_un *su2 = new Sockaddr_un(*su);
+    Sockaddr_un *su2 = new Sockaddr_un(*((const Sockaddr *)su));
 
     ASSERT_EQ(su2->sun->sun_family, AF_UNIX);
     ASSERT_STREQ(su2->sun->sun_path, path);
