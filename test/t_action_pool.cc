@@ -233,40 +233,36 @@ TEST_F(ActionPoolTest, WrongObjectId)
     delete action_pool;
 }
 
-TEST(ActionPoolTest, GoodObjectId)
+TEST_F(ActionPoolTest, GoodObjectId)
 {
-    mock_Zone *zone = new mock_Zone(1, 1);
-    ActionPool *pool = new ActionPool("t_action", 1);
-    action_rec rec;
-    GameObject *go = new GameObject(NULL, NULL, 9876LL);
-    Control *control = new Control(123LL, go);
-    packet_list pkt;
+    Control *control = new Control(123LL, (*game_objs)[9876LL]);
+    control->actions[789] = {789, 5, 0, 0};
+    (*game_objs)[9876LL]->connect(control);
 
-    EXPECT_CALL(*zone, execute_action(_, _, _));
+    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
+    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
+        .WillOnce(Return((void *)register_actions))
+        .WillOnce(Return((void *)unregister_actions));
+    EXPECT_CALL(*listensock, send_ack(control, TYPE_ACTREQ, 4))
+        .Times(1);
 
-    rec.valid = true;
-    zone->actions[12345] = rec;
+    action_pool = new ActionPool(1, *game_objs, lib, database);
 
-    memset(&pkt.buf, 0, sizeof(action_request));
-    pkt.buf.act.type = TYPE_ACTREQ;
-    pkt.buf.act.version = 1;
-    pkt.buf.act.sequence = 1LL;
-    pkt.buf.act.object_id = 9876LL;
-    pkt.buf.act.action_id = 12345;
-    pkt.buf.act.power_level = 5;
-    hton_packet(&pkt.buf, sizeof(action_request));
-    pkt.who = control;
+    action_request pkt;
+    memset(&pkt, 0, sizeof(action_request));
+    pkt.type = TYPE_ACTREQ;
+    pkt.version = 1;
+    pkt.sequence = 1LL;
+    pkt.object_id = 9876LL;
+    pkt.action_id = 789;
+    pkt.power_level = 5;
 
-    go->connect(control);
+    action_count = 0;
 
-    delete zone->action_pool;
-    zone->action_pool = pool;
-    zone->action_pool->push(pkt);
-    zone->action_pool->startup_arg = (void *)zone;
-    zone->action_pool->start(ActionPool::action_pool_worker);
-    sleep(1);
+    action_pool->execute_action(control, pkt, listensock);
+    ASSERT_EQ(action_count, 1);
 
-    go->disconnect(control);
+    (*game_objs)[9876LL]->disconnect(control);
     delete control;
-    delete zone;
+    delete action_pool;
 }
