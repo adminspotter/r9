@@ -1,27 +1,101 @@
 #include "../server/classes/action_pool.h"
-#include "../server/classes/zone.h"
-#include "../server/classes/modules/db.h"
+#include "../server/classes/game_obj.h"
 #include "../proto/proto.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mock_db.h"
+#include "mock_library.h"
+#include "mock_listensock.h"
+#include "mock_server_globals.h"
+
 using ::testing::_;
 
-std::vector<listen_socket *> sockets;
+void register_actions(std::map<uint16_t, action_rec>&);
+void unregister_actions(std::map<uint16_t, action_rec>&);
+int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 
-class mock_Zone : public Zone
+Library *lib;
+std::map<uint64_t, GameObject *> *game_objs;
+mock_listen_socket *listensock;
+int register_count, unregister_count, action_count;
+
+struct addrinfo *create_addrinfo(void)
 {
-  public:
-    mock_Zone(uint64_t a, uint16_t b) : Zone(a, b) {};
-    mock_Zone(uint64_t a, uint64_t b, uint64_t c,
-              uint16_t d, uint16_t e, uint16_t f) : Zone(a, b, c, d, e, f) {};
-    ~mock_Zone() {};
+    struct addrinfo hints, *addr = NULL;
+    int ret;
 
-    MOCK_METHOD3(execute_action, int(Control *a, action_request& b, size_t c));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_NUMERICSERV;
+    hints.ai_protocol = 0;
+    hints.ai_canonname = NULL;
+    hints.ai_addr = NULL;
+    hints.ai_next = NULL;
+
+    if ((ret = getaddrinfo(NULL, "9876", &hints, &addr)) != 0)
+    {
+        std::cerr << gai_strerror(ret) << std::endl;
+        throw std::runtime_error("getaddrinfo broke");
+    }
+
+    return addr;
+}
+
+void register_actions(std::map<uint16_t, action_rec>& a)
+{
+    ++register_count;
+
+    a[567].valid = false;
+    a[567].def = 789;
+
+    a[789].valid = true;
+    a[789].action = &fake_action;
+}
+
+void unregister_actions(std::map<uint16_t, action_rec>& a)
+{
+    ++unregister_count;
+
+    a.erase(567);
+    a.erase(789);
+}
+
+int fake_action(GameObject *a, int b, GameObject *c, glm::dvec3& d)
+{
+    ++action_count;
+
+    return 4;
+}
+
+class ActionPoolTest : public ::testing::Test
+{
+  protected:
+    void SetUp()
+        {
+            database = new mock_DB("a", "b", "c", "d");
+
+            lib = new mock_Library("doesn't matter");
+
+            game_objs = new std::map<uint64_t, GameObject *>();
+            (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
+
+            struct addrinfo *addr = create_addrinfo();
+            listensock = new mock_listen_socket(addr);
+            freeaddrinfo(addr);
+        };
+
+    void TearDown()
+        {
+            close(listensock->sock.sock);
+            delete listensock;
+            delete (*game_objs)[9876LL];
+            delete game_objs;
+            delete database;
+        };
 };
 
-DB *database;
 
 TEST(ActionPoolTest, NoSkill)
 {
