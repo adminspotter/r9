@@ -107,6 +107,10 @@ TEST(SockaddrInTest, EqualComparison)
     ASSERT_TRUE(*sa1 == (const struct sockaddr *)&sin);
     ASSERT_FALSE(*sa2 == (const struct sockaddr *)&sin);
 
+    Sockaddr_in6 sa6;
+
+    ASSERT_FALSE(*sa1 == *((Sockaddr *)&sa6));
+
     delete sa2;
     delete sa1;
 }
@@ -134,6 +138,10 @@ TEST(SockaddrInTest, LessComparison)
 
     ASSERT_FALSE(*sa1 < *sa2);
     ASSERT_FALSE(*sa1 < *((const struct sockaddr *)&sin));
+
+    Sockaddr_in6 sa6;
+
+    ASSERT_FALSE(*sa1 < *((Sockaddr *)&sa6));
 
     delete sa2;
     delete sa1;
@@ -317,6 +325,10 @@ TEST(SockaddrIn6Test, EqualComparison)
 
     ASSERT_FALSE(*sa1 == *sa2);
 
+    Sockaddr_in sain;
+
+    ASSERT_FALSE(*sa1 == *((Sockaddr *)&sain));
+
     delete sa2;
     delete sa1;
 }
@@ -345,6 +357,10 @@ TEST(SockaddrIn6Test, LessComparison)
 
     ASSERT_FALSE(*sa1 < *sa2);
     ASSERT_FALSE(*sa1 < *((const struct sockaddr *)&sin));
+
+    Sockaddr_in sain;
+
+    ASSERT_FALSE(*sa1 < *((Sockaddr *)&sain));
 
     delete sa2;
     delete sa1;
@@ -513,6 +529,10 @@ TEST(SockaddrUnTest, EqualComparison)
 
     ASSERT_FALSE(*su1 == *su2);
 
+    Sockaddr_in6 sa6;
+
+    ASSERT_FALSE(*su1 == *((Sockaddr *)&sa6));
+
     delete su2;
     delete su1;
 }
@@ -539,6 +559,10 @@ TEST(SockaddrUnTest, LessComparison)
 
     ASSERT_FALSE(*su1 < *((const struct sockaddr *)&sun));
     ASSERT_TRUE(*su2 < *((const struct sockaddr *)&sun));
+
+    Sockaddr_in6 sa6;
+
+    ASSERT_FALSE(*su1 < *((Sockaddr *)&sa6));
 
     delete su2;
     delete su1;
