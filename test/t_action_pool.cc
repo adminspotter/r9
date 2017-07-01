@@ -120,6 +120,22 @@ TEST_F(ActionPoolTest, CreateDelete)
     ASSERT_EQ(unregister_count, 1);
 }
 
+TEST_F(ActionPoolTest, StartStop)
+{
+    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
+    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
+        .WillOnce(Return((void *)register_actions))
+        .WillOnce(Return((void *)unregister_actions));
+
+    action_pool = new ActionPool(1, *game_objs, lib, database);
+    action_pool->start();
+    ASSERT_TRUE(action_pool->startup_arg == action_pool);
+    ASSERT_TRUE(action_pool->pool_size() == 1);
+    action_pool->stop();
+    ASSERT_TRUE(action_pool->pool_size() == 0);
+    delete action_pool;
+}
+
 TEST(ActionPoolTest, NoSkill)
 {
     mock_Zone *zone = new mock_Zone(1, 1);
