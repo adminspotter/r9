@@ -11,6 +11,7 @@
 #include "mock_server_globals.h"
 
 using ::testing::_;
+using ::testing::Return;
 
 void register_actions(std::map<uint16_t, action_rec>&);
 void unregister_actions(std::map<uint16_t, action_rec>&);
@@ -96,6 +97,28 @@ class ActionPoolTest : public ::testing::Test
         };
 };
 
+/* In testing the library itself, we know that it will throw an
+ * exception when it can't find a symbol, so that's not interesting to
+ * test in context of the ActionPool constructor.
+ */
+TEST_F(ActionPoolTest, CreateDelete)
+{
+    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
+    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
+        .WillOnce(Return((void *)register_actions))
+        .WillOnce(Return((void *)unregister_actions));
+
+    register_count = unregister_count = 0;
+
+    ASSERT_NO_THROW(
+        {
+            action_pool = new ActionPool(1, *game_objs, lib, database);
+        });
+    ASSERT_EQ(register_count, 1);
+
+    delete action_pool;
+    ASSERT_EQ(unregister_count, 1);
+}
 
 TEST(ActionPoolTest, NoSkill)
 {
