@@ -133,6 +133,7 @@ TEST(SockaddrInTest, LessComparison)
     sa1->sin->sin_addr.s_addr += htonl(10L);
 
     ASSERT_FALSE(*sa1 < *sa2);
+    ASSERT_FALSE(*sa1 < *((const struct sockaddr *)&sin));
 
     delete sa2;
     delete sa1;
@@ -343,6 +344,7 @@ TEST(SockaddrIn6Test, LessComparison)
     ++(sa1->sin6->sin6_addr.s6_addr[14]);
 
     ASSERT_FALSE(*sa1 < *sa2);
+    ASSERT_FALSE(*sa1 < *((const struct sockaddr *)&sin));
 
     delete sa2;
     delete sa1;
@@ -535,8 +537,8 @@ TEST(SockaddrUnTest, LessComparison)
 
     su2->sun->sun_path[2] = 'a';
 
-    ASSERT_FALSE(*su1 < (const struct sockaddr&)sun);
-    ASSERT_TRUE(*su2 < (const struct sockaddr&)sun);
+    ASSERT_FALSE(*su1 < *((const struct sockaddr *)&sun));
+    ASSERT_TRUE(*su2 < *((const struct sockaddr *)&sun));
 
     delete su2;
     delete su1;
