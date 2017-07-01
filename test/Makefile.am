@@ -58,19 +58,13 @@ endif
 
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
-	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
-	../server/classes/update_pool.cc ../server/classes/update_pool.h \
-	../server/classes/zone.cc ../server/classes/zone.h \
-	../server/classes/control.cc ../server/classes/control.h \
-	../server/classes/game_obj.cc ../server/classes/game_obj.h \
-	../server/classes/geometry.cc ../server/classes/geometry.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
 	../server/classes/library.cc ../server/classes/library.h \
-	../server/classes/octree.cc ../server/classes/octree.h \
-	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
 t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_action_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
-	../proto/libr9_proto.la $(SERVER_LDLIBS)
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_basesock_SOURCES = t_basesock.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
