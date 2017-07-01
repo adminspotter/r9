@@ -59,7 +59,7 @@ endif
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/classes/library.cc ../server/classes/library.h \
+	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
 t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_action_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
