@@ -45,6 +45,7 @@
 void Zone::init(DB *database)
 {
     int i;
+    std::map<uint64_t, GameObject *>::iterator j;
     std::vector<Octree *> z_row;
     std::vector<std::vector<Octree *> > y_row;
 
@@ -61,7 +62,9 @@ void Zone::init(DB *database)
     this->sectors.reserve(x_steps);
     for (i = 0; i < this->x_steps; ++i)
         this->sectors.push_back(y_row);
-    /* At this point, should we insert the game objects into the octrees? */
+
+    for (j = this->game_objects.begin(); j != this->game_objects.end(); ++j)
+        this->sector_contains(j->second->position)->insert(j->second);
 }
 
 /* Public methods */
