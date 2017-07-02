@@ -55,3 +55,26 @@ TEST_F(ZoneTest, CreateComplex)
 
     delete zone;
 }
+
+TEST_F(ZoneTest, SectorMethods)
+{
+    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+
+    zone = new Zone(1000, 1000, 1000, 1, 1, 3, database);
+
+    glm::dvec3 where1(500.0, 500.0, 500.0);
+    glm::dvec3 where2(500.0, 500.0, 1500.0);
+    Octree *o1 = zone->sector_contains(where1);
+    Octree *o2 = zone->sector_contains(where2);
+    ASSERT_FALSE(o1 == o2);
+
+    glm::ivec3 which1 = zone->which_sector(where1);
+    glm::ivec3 expected1(0, 0, 0);
+    ASSERT_TRUE(which1 == expected1);
+
+    glm::ivec3 which2 = zone->which_sector(where2);
+    glm::ivec3 expected2(0, 0, 1);
+    ASSERT_TRUE(which2 == expected2);
+
+    delete zone;
+}
