@@ -20,3 +20,26 @@ TEST(BaseUserTest, CreateDelete)
     delete base;
     delete con;
 }
+
+TEST(BaseUserTest, LessThan)
+{
+    Control *con1 = new Control(123LL, NULL);
+    Control *con2 = new Control(124LL, NULL);
+    base_user *base1 = new base_user(123LL, con1);
+    base_user *base2 = new base_user(124LL, con2);
+
+    ASSERT_TRUE(*base1 < *base2);
+
+    delete base2;
+    delete base1;
+    delete con2;
+    delete con1;
+}
+
+TEST(BaseUserTest, EqualTo)
+{
+}
+
+TEST(BaseUserTest, Assignment)
+{
+}
