@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2017, 19:05:04 tquirk
+ *   last updated 02 Jul 2017, 14:07:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -155,9 +155,11 @@ void Zone::connect_game_object(Control *con, uint64_t objid)
     /* Hook up to our character object */
     if (gi == this->game_objects.end())
     {
-        /* Create the object? */
+        /* Object doesn't exist, so we'll make it. */
         go = new GameObject(NULL, con, objid);
-        /* Set a position somewhere - the spawn point, perhaps? */
+        this->game_objects[objid] = go;
+        go->position = glm::dvec3(0.0, 0.0, 0.0);
+        this->sector_contains(go->position)->insert(go);
     }
     else
         go = gi->second;
@@ -167,8 +169,10 @@ void Zone::connect_game_object(Control *con, uint64_t objid)
     /* Send updates on all objects within visual range */
     for (gi = this->game_objects.begin(); gi != this->game_objects.end(); ++gi)
     {
+        /* We've already sent go, so no need to send it again. */
         /* Figure out how to send only to specific users */
-        if (go->distance_from(gi->second->position) < 1000.0)
+        if (gi->second != go
+            && go->distance_from(gi->second->position) < 1000.0)
             update_pool->push(gi->second);
     }
 }

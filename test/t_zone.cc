@@ -85,3 +85,38 @@ TEST_F(ZoneTest, SectorMethods)
 
     delete zone;
 }
+
+TEST_F(ZoneTest, ConnectObject)
+{
+    int obj_size, queue_size;
+
+    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_))
+        .WillOnce(Invoke(fake_server_objects));
+
+    zone = new Zone(1000, 1, database);
+    obj_size = zone->game_objects.size();
+    ASSERT_GT(obj_size, 0);
+
+    update_pool = new UpdatePool("zonetest", 1);
+
+    Control *control = new Control(1234LL, NULL);
+    zone->connect_game_object(control, 1234LL);
+    ASSERT_TRUE(zone->game_objects.size() == obj_size);
+
+    /* Update queue will have length of this object, plus all other
+     * objects "within visual range".  In our case here, it will be 2.
+     */
+    queue_size = update_pool->queue_size();
+    ASSERT_GT(queue_size, 1);
+
+    Control *control2 = new Control(9876LL, NULL);
+    zone->connect_game_object(control2, 9876LL);
+    ASSERT_TRUE(zone->game_objects.size() > obj_size);
+    ASSERT_TRUE(update_pool->queue_size() > queue_size);
+
+    delete control;
+    delete control2;
+    delete update_pool;
+    delete zone;
+}
+
