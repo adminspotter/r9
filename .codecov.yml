@@ -1,4 +1,5 @@
 ignore:
   - test/libtest*
+  - test/mock_*.h
   - test/t_*
   - test/gmock-1.7.0
