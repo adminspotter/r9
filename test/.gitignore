@@ -22,3 +22,4 @@ t_tcl
 t_texture_parser
 t_threadpool
 t_update_pool
+t_zone

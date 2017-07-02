@@ -21,7 +21,8 @@ if WANT_SERVER
 	t_sockaddr \
 	t_subserver \
 	t_threadpool \
-	t_update_pool
+	t_update_pool \
+	t_zone
 endif
 if WANT_PERL
   TC += t_perl
@@ -124,6 +125,16 @@ t_update_pool_SOURCES = t_update_pool.cc \
 	../server/config_data.cc ../server/config_data.h
 t_update_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_update_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
+
+t_zone_SOURCES = t_zone.cc \
+	../server/classes/zone.cc ../server/classes/zone.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_zone_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+t_zone_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
