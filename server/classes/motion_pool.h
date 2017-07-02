@@ -1,9 +1,9 @@
 /* motion_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2015, 13:07:18 tquirk
+ *   last updated 21 Jun 2017, 07:45:35 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,7 +37,7 @@ class MotionPool : public ThreadPool<GameObject *>
     MotionPool(const char *, unsigned int);
     ~MotionPool();
 
-    void start(void *(*)(void *));
+    void start(void);
 
     static void *motion_pool_worker(void *);
 };

@@ -1,9 +1,9 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 09:44:34 tquirk
+ *   last updated 02 Jul 2017, 14:07:39 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -39,16 +39,17 @@
 #include "thread_pool.h"
 #include "../config_data.h"
 #include "../log.h"
+#include "../server.h"
 
 /* Private methods */
-void Zone::init(void)
+void Zone::init(DB *database)
 {
     int i;
+    std::map<uint64_t, GameObject *>::iterator j;
     std::vector<Octree *> z_row;
     std::vector<std::vector<Octree *> > y_row;
 
-    this->load_actions(config.action_lib);
-    this->create_thread_pools();
+    database->get_server_objects(this->game_objects);
     std::clog << syslogNotice << "creating " << this->x_steps << 'x'
               << this->y_steps << 'x' << this->z_steps << " elements"
               << std::endl;
@@ -61,44 +62,23 @@ void Zone::init(void)
     this->sectors.reserve(x_steps);
     for (i = 0; i < this->x_steps; ++i)
         this->sectors.push_back(y_row);
-}
 
-void Zone::load_actions(const std::string& libname)
-{
-    try
-    {
-        this->action_lib = new Library(libname);
-        action_reg_t *reg
-            = (action_reg_t *)this->action_lib->symbol("actions_register");
-        (*reg)(this->actions);
-    }
-    catch (std::exception& e)
-    {
-        std::clog << syslogErr
-                  << "error loading actions library: " << e.what() << std::endl;
-        this->action_lib = NULL;
-    }
-}
-
-void Zone::create_thread_pools(void)
-{
-    this->action_pool = new ActionPool("action", config.action_threads);
-    this->motion_pool = new MotionPool("motion", config.motion_threads);
-    this->update_pool = new UpdatePool("update", config.update_threads);
+    for (j = this->game_objects.begin(); j != this->game_objects.end(); ++j)
+        this->sector_contains(j->second->position)->insert(j->second);
 }
 
 /* Public methods */
-Zone::Zone(uint64_t dim, uint16_t steps)
-    : sectors(), actions(), game_objects()
+Zone::Zone(uint64_t dim, uint16_t steps, DB *database)
+    : sectors(), game_objects()
 {
     this->x_dim = this->y_dim = this->z_dim = dim;
     this->x_steps = this->y_steps = this->z_steps = steps;
-    this->init();
+    this->init(database);
 }
 
 Zone::Zone(uint64_t xd, uint64_t yd, uint64_t zd,
-           uint16_t xs, uint16_t ys, uint16_t zs)
-    : sectors(), actions(), game_objects()
+           uint16_t xs, uint16_t ys, uint16_t zs, DB *database)
+    : sectors(), game_objects()
 {
     this->x_dim = xd;
     this->y_dim = yd;
@@ -106,33 +86,12 @@ Zone::Zone(uint64_t xd, uint64_t yd, uint64_t zd,
     this->x_steps = xs;
     this->y_steps = ys;
     this->z_steps = zs;
-    this->init();
+    this->init(database);
 }
 
 Zone::~Zone()
 {
     int i, j, k;
-
-    /* Stop the thread pools first; deleting them should run through the
-     * destructor, which will terminate all the threads and clean up
-     * the queues and stuff.
-     */
-    std::clog << "deleting thread pools" << std::endl;
-    if (this->action_pool != NULL)
-    {
-        delete this->action_pool;
-        this->action_pool = NULL;
-    }
-    if (this->motion_pool != NULL)
-    {
-        delete this->motion_pool;
-        this->motion_pool = NULL;
-    }
-    if (this->update_pool != NULL)
-    {
-        delete this->update_pool;
-        this->update_pool = NULL;
-    }
 
     /* Clear out the octrees */
     for (i = 0; i < this->x_steps; ++i)
@@ -155,44 +114,37 @@ Zone::~Zone()
         this->game_objects.erase(this->game_objects.begin(),
                                  this->game_objects.end());
     }
+}
 
-    /* Unregister all the action routines. */
-    if (this->action_lib != NULL)
+Octree *Zone::sector_contains(glm::dvec3& pos)
+{
+    glm::ivec3 sec = this->which_sector(pos);
+    Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
+    if (oct == NULL)
     {
-        std::clog << "cleaning up action routines" << std::endl;
-        try
-        {
-            action_unreg_t *unreg
-                = (action_unreg_t *)this->action_lib->symbol("actions_unregister");
-            (*unreg)(this->actions);
-        }
-        catch (std::exception& e) { /* Do nothing */ }
+        glm::ivec3 sec = this->which_sector(pos);
+        glm::dvec3 mn, mx;
 
-        /* Close the actions library */
-        delete this->action_lib;
+        mn.x = sec.x * this->x_dim;
+        mn.y = sec.y * this->y_dim;
+        mn.z = sec.z * this->z_dim;
+        mx.x = mn.x + this->x_dim;
+        mx.y = mn.y + this->y_dim;
+        mx.z = mn.z + this->z_dim;
+        oct = new Octree(NULL, mn, mx, 0);
+        this->sectors[sec[0]][sec[1]][sec[2]] = oct;
     }
+    return oct;
 }
 
-void Zone::start(void)
+glm::ivec3 Zone::which_sector(glm::dvec3& pos)
 {
-    /* Do we want to load up all the game objects here, before we start
-     * up the thread pools?
-     */
+    glm::ivec3 sector;
 
-    this->action_pool->startup_arg = (void *)this;
-    this->action_pool->start(ActionPool::action_pool_worker);
-
-    this->motion_pool->startup_arg = (void *)this;
-    this->motion_pool->start(MotionPool::motion_pool_worker);
-
-    this->update_pool->start();
-}
-
-void Zone::stop(void)
-{
-    this->action_pool->stop();
-    this->motion_pool->stop();
-    this->update_pool->stop();
+    sector.x = pos.x / this->x_dim;
+    sector.y = pos.y / this->y_dim;
+    sector.z = pos.z / this->z_dim;
+    return sector;
 }
 
 void Zone::connect_game_object(Control *con, uint64_t objid)
@@ -203,49 +155,24 @@ void Zone::connect_game_object(Control *con, uint64_t objid)
     /* Hook up to our character object */
     if (gi == this->game_objects.end())
     {
-        /* Create the object? */
+        /* Object doesn't exist, so we'll make it. */
         go = new GameObject(NULL, con, objid);
-        /* Set a position somewhere - the spawn point, perhaps? */
+        this->game_objects[objid] = go;
+        go->position = glm::dvec3(0.0, 0.0, 0.0);
+        this->sector_contains(go->position)->insert(go);
     }
     else
         go = gi->second;
     go->connect(con);
-    this->update_pool->push(go);
+    update_pool->push(go);
 
     /* Send updates on all objects within visual range */
     for (gi = this->game_objects.begin(); gi != this->game_objects.end(); ++gi)
     {
+        /* We've already sent go, so no need to send it again. */
         /* Figure out how to send only to specific users */
-        if (go->distance_from(gi->second->position) < 1000.0)
-            this->update_pool->push(gi->second);
+        if (gi->second != go
+            && go->distance_from(gi->second->position) < 1000.0)
+            update_pool->push(gi->second);
     }
-}
-
-int Zone::execute_action(Control *con, action_request& req, size_t len)
-{
-    Zone::actions_iterator i = this->actions.find(req.action_id);
-    Control::actions_iterator j = con->actions.find(req.action_id);
-    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
-
-    if (i != this->actions.end() && j != con->actions.end())
-    {
-        /* If it's not valid on this server, it should at least have
-         * a default.
-         */
-        if (!i->second.valid)
-        {
-            req.action_id = i->second.def;
-            i = this->actions.find(req.action_id);
-        }
-
-        req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
-        req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
-        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
-
-        return (*(i->second.action))(con->slave,
-                                     req.power_level,
-                                     this->game_objects[req.dest_object_id],
-                                     vec);
-    }
-    return -1;
 }

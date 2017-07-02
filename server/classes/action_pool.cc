@@ -1,9 +1,9 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 10:01:07 tquirk
+ *   last updated 30 Jun 2017, 08:51:59 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,77 +20,134 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * The minimal implementation of the Action pool.
+ * The action pool takes action requests, decides if they're valid and
+ * available on the server, and dispatches them to the appropriate
+ * action routine.
+ *
+ * This object takes care of loading and unloading the actions from
+ * the action library, and handles the dispatch entirely internally.
+ *
+ * Things to do
+ *
  */
 
+#include <glm/vec3.hpp>
+
 #include "action_pool.h"
-#include "zone.h"
 #include "listensock.h"
 
-ActionPool::ActionPool(const char *pool_name, unsigned int pool_size)
-    : ThreadPool<packet_list>(pool_name, pool_size)
+#include "../../proto/proto.h"
+
+void ActionPool::load_actions(void)
 {
+    if (this->action_lib != NULL)
+    {
+        std::clog << "loading action routines" << std::endl;
+        action_reg_t *reg
+            = (action_reg_t *)this->action_lib->symbol("actions_register");
+        (*reg)(this->actions);
+    }
+}
+
+ActionPool::ActionPool(unsigned int pool_size,
+                       std::map<uint64_t, GameObject *>& game_obj,
+                       Library *lib,
+                       DB *database)
+    : ThreadPool<packet_list>("action", pool_size), actions(),
+      game_objects(game_obj)
+{
+    database->get_server_skills(this->actions);
+    this->action_lib = lib;
+    this->load_actions();
 }
 
 ActionPool::~ActionPool()
 {
+    /* Unregister all the action routines. */
+    if (this->action_lib != NULL)
+    {
+        std::clog << "cleaning up action routines" << std::endl;
+        try
+        {
+            action_unreg_t *unreg
+                = (action_unreg_t *)this->action_lib->symbol("actions_unregister");
+            (*unreg)(this->actions);
+        }
+        catch (std::exception& e) { /* Destructors don't throw exceptions */ }
+
+        delete this->action_lib;
+    }
+    this->actions.clear();
 }
 
-void ActionPool::start(void *(*func)(void *))
-{
-    ThreadPool<packet_list>::start(func);
-}
-
-/* Unfortunately since we depend on some other stuff in the zone, we
- * have to take it, rather than ourselves, as an argument.  For
- * testing purposes, we should be able to mock the zone out enough to
- * verify that we're operating correctly.
+/* We will only use this thread pool in a very specific way, so making
+ * the caller handle stuff that it doesn't need to know about is
+ * inappropriate.  We'll set the required arg and start things up with
+ * the expected function.
  */
+void ActionPool::start(void)
+{
+    this->startup_arg = (void *)this;
+    this->ThreadPool<packet_list>::start(ActionPool::action_pool_worker);
+}
+
+/* pop() should return a ready-to-use item for the queue to process,
+ * so we'll handle the network-to-host translation here.  Once crypto
+ * is added, we'll take care of decrypting as well.
+ */
+void ActionPool::pop(packet_list *req)
+{
+    this->ThreadPool::pop(req);
+    ntoh_packet(&(req->buf), sizeof(packet));
+}
+
 void *ActionPool::action_pool_worker(void *arg)
 {
-    Zone *zone = (Zone *)arg;
+    ActionPool *act = (ActionPool *)arg;
     packet_list req;
-    uint16_t skillid;
-    int ret;
 
     for (;;)
     {
-        /* Grab the next packet off the queue */
-        zone->action_pool->pop(&req);
-
-        /* Process the packet */
-        ntoh_packet(&req.buf, sizeof(packet));
-
-        /* Make sure the action exists and is valid on this server,
-         * before trying to do anything
-         */
-        skillid = req.buf.act.action_id;
-        if (zone->actions.find(skillid) != zone->actions.end()
-            && zone->actions[skillid].valid == true)
-        {
-            /* Make the action call.
-             *
-             * The action routine will handle checking the environment
-             * and relevant skills of the target, and spawning of any
-             * new needed subobjects.
-             */
-            if (req.who->slave->get_object_id() == req.buf.act.object_id)
-                if ((ret = zone->execute_action(req.who,
-                                                req.buf.act,
-                                                sizeof(action_request))) > 0)
-                {
-                    packet_list pkt;
-
-                    pkt.buf.ack.type = TYPE_ACKPKT;
-                    pkt.buf.ack.version = 1;
-                    /*pkt.buf.ack.sequence = ;*/
-                    pkt.buf.ack.request = skillid;
-                    pkt.buf.ack.misc = (uint8_t)ret;
-                    pkt.who = req.who;
-
-                    req.parent->send_pool->push(pkt);
-                }
-        }
+        act->pop(&req);
+        act->execute_action(req.who, req.buf.act, req.parent);
     }
     return NULL;
+}
+
+void ActionPool::execute_action(Control *con,
+                                action_request& req,
+                                listen_socket *parent)
+{
+    ActionPool::actions_iterator i = this->actions.find(req.action_id);
+    Control::actions_iterator j = con->actions.find(req.action_id);
+    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
+    int retval;
+
+    /* TODO:  if the user doesn't have the skill, but it is valid, we
+     * should add it at level 0 so they can start accumulating
+     * improvement points.
+     */
+
+    if (i != this->actions.end() && j != con->actions.end()
+        && con->slave->get_object_id() == req.object_id)
+    {
+        /* If it's not valid on this server, it should at least have
+         * a default.
+         */
+        if (!i->second.valid)
+        {
+            req.action_id = i->second.def;
+            i = this->actions.find(req.action_id);
+        }
+
+        req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
+        req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
+        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
+
+        retval = (*(i->second.action))(con->slave,
+                                       req.power_level,
+                                       this->game_objects[req.dest_object_id],
+                                       vec);
+        parent->send_ack(con, TYPE_ACTREQ, (uint8_t)retval);
+    }
 }

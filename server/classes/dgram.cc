@@ -1,9 +1,9 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Jul 2016, 07:56:00 tquirk
+ *   last updated 22 Jun 2017, 08:37:22 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -104,8 +104,6 @@ void dgram_socket::do_login(uint64_t userid,
                             access_list& al,
                             int access_level)
 {
-    packet_list pkt;
-
     dgram_user *dgu = new dgram_user(userid, con);
     dgu->sa = build_sockaddr((struct sockaddr&)(al.what.login.who.dgram));
     this->users[userid] = dgu;
@@ -119,15 +117,7 @@ void dgram_socket::do_login(uint64_t userid,
          */
         dgu->pending_logout = true;
 
-    /* Send an ack packet, to let the user know their request status */
-    pkt.buf.ack.type = TYPE_ACKPKT;
-    pkt.buf.ack.version = 1;
-    pkt.buf.ack.sequence = dgu->sequence++;
-    pkt.buf.ack.request = TYPE_LOGREQ;
-    pkt.buf.ack.misc = (uint8_t)access_level;
-    pkt.who = con;
-    pkt.parent = this;
-    this->send_pool->push(pkt);
+    this->send_ack(con, TYPE_LOGREQ, (uint8_t)access_level);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
@@ -219,7 +209,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
             memcpy(&p.buf, &buf, len);
             p.who = found->second->control;
             p.parent = dgs;
-            zone->action_pool->push(p);
+            action_pool->push(p);
             break;
 
           default:

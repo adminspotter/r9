@@ -1,6 +1,6 @@
 /* library.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Feb 2016, 14:00:32 tquirk
+ *   last updated 30 Jun 2017, 08:05:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk
@@ -39,11 +39,11 @@ class Library
 
   public:
     Library(const std::string&);
-    ~Library();
+    virtual ~Library();
 
-    void open(void);
-    void *symbol(const char *);
-    void close(void);
+    virtual void open(void);
+    virtual void *symbol(const char *);
+    virtual void close(void);
 };
 
 #endif /* __INC_LIBRARY_H__ */

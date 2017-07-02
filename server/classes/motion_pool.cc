@@ -1,9 +1,9 @@
 /* motion_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Nov 2015, 17:54:15 tquirk
+ *   last updated 21 Jun 2017, 08:07:20 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,11 +20,24 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * The minimal implementation of the Motion pool.
+ * The implementation of the Motion pool.  Any objects that are in
+ * motion get pushed onto our work queue, and we handle their motion.
+ * If they're still in motion once we get done with them, we just push
+ * them back on our own queue.  We also push moved objects onto the
+ * update pool's work queue, so people can be notified of their
+ * movements.
+ *
+ * Things to do
+ *   - The physics library, once we create it, should be a part of this
+ *     object, and not the zone as we had originally intended.
+ *   - Consider whether passing a struct into the worker, composed of
+ *     pointers to the motion pool, update pool, and zone, might be
+ *     more appropriate.
+ *
  */
 
 #include "motion_pool.h"
-#include "zone.h"
+#include "../server.h"
 
 MotionPool::MotionPool(const char *pool_name, unsigned int pool_size)
     : ThreadPool<GameObject *>(pool_name, pool_size)
@@ -35,19 +48,24 @@ MotionPool::~MotionPool()
 {
 }
 
-void MotionPool::start(void *(*func)(void *))
+/* We will only use this thread pool in a very specific way, so making
+ * the caller handle stuff that it doesn't need to know about is
+ * inappropriate.  We'll set the required arg and start things up with
+ * the expected function.
+ */
+void MotionPool::start(void)
 {
-    ThreadPool<GameObject *>::start(func);
+    this->startup_arg = (void *)this;
+    this->ThreadPool<GameObject *>::start(MotionPool::motion_pool_worker);
 }
 
-/* Unfortunately since we depend on some other stuff in the zone, we
- * have to take it, rather than ourselves, as an argument.  For
- * testing purposes, we should be able to mock the zone out enough to
- * verify that we're operating correctly.
+/* We take ourselves as the arg, but we also use the zone and update
+ * pool from the global scope.  It's probably not the ideal way to go,
+ * but it'll get us going for now.
  */
 void *MotionPool::motion_pool_worker(void *arg)
 {
-    Zone *zone = (Zone *)arg;
+    MotionPool *mot = (MotionPool *)arg;
     GameObject *req;
     struct timeval current;
     double interval;
@@ -55,7 +73,7 @@ void *MotionPool::motion_pool_worker(void *arg)
 
     for (;;)
     {
-        zone->motion_pool->pop(&req);
+        mot->pop(&req);
 
         gettimeofday(&current, NULL);
         interval = (current.tv_sec + (current.tv_usec / 1000000.0))
@@ -67,8 +85,8 @@ void *MotionPool::motion_pool_worker(void *arg)
         /*req->orient += req->rotation * interval;*/
         sector = zone->sector_contains(req->position);
         sector->insert(req);
-        /*zone->physics->collide(sector, req);*/
-        zone->update_pool->push(req);
+        /*mot->physics->collide(sector, req);*/
+        update_pool->push(req);
 
         if ((req->movement[0] != 0.0
              || req->movement[1] != 0.0
@@ -76,7 +94,7 @@ void *MotionPool::motion_pool_worker(void *arg)
             || (req->rotation[0] != 0.0
                 || req->rotation[1] != 0.0
                 || req->rotation[2] != 0.0))
-            zone->motion_pool->push(req);
+            mot->push(req);
     }
     return NULL;
 }

@@ -1,9 +1,9 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 May 2017, 20:45:00 tquirk
+ *   last updated 22 Jun 2017, 08:45:39 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -300,8 +300,6 @@ void stream_socket::do_login(uint64_t userid,
                              access_list& al,
                              int access_level)
 {
-    packet_list pkt;
-
     stream_user *stu = new stream_user(userid, con);
     stu->subsrv = al.what.login.who.stream.sub;
     stu->fd = al.what.login.who.stream.sock;
@@ -315,15 +313,7 @@ void stream_socket::do_login(uint64_t userid,
          */
         stu->pending_logout = true;
 
-    /* Send an ack packet, to let the user know their request status. */
-    pkt.buf.ack.type = TYPE_ACKPKT;
-    pkt.buf.ack.version = 1;
-    pkt.buf.ack.sequence = stu->sequence++;
-    pkt.buf.ack.request = TYPE_LOGREQ;
-    pkt.buf.ack.misc = (uint8_t)access_level;
-    pkt.who = con;
-    pkt.parent = this;
-    this->send_pool->push(pkt);
+    this->send_ack(con, TYPE_LOGREQ, (uint8_t)access_level);
 }
 
 void *stream_socket::stream_listen_worker(void *arg)

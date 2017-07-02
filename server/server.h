@@ -1,9 +1,9 @@
 /* server.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2014, 07:47:43 tquirk
+ *   last updated 20 Jun 2017, 19:56:48 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,10 +30,16 @@
 #define __INC_SERVER_H__
 
 #include "classes/zone.h"
+#include "classes/action_pool.h"
+#include "classes/motion_pool.h"
+#include "classes/update_pool.h"
 #include "classes/modules/db.h"
 
 extern Zone *zone;
 extern DB *database;
+extern ActionPool *action_pool;
+extern MotionPool *motion_pool;
+extern UpdatePool *update_pool;
 
 void set_exit_flag(void);
 void complete_startup(void);

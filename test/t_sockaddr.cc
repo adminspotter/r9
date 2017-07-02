@@ -53,7 +53,7 @@ TEST(SockaddrInTest, CopyConstructor)
     sa->sin->sin_port = htons(1234);
     sa->sin->sin_addr.s_addr = ip_addr;
 
-    Sockaddr_in *sa2 = new Sockaddr_in(*sa);
+    Sockaddr_in *sa2 = new Sockaddr_in(*((Sockaddr *)sa));
 
     ASSERT_EQ(sa2->sin->sin_family, AF_INET);
     ASSERT_EQ(sa2->sin->sin_port, htons(1234));
@@ -107,6 +107,10 @@ TEST(SockaddrInTest, EqualComparison)
     ASSERT_TRUE(*sa1 == (const struct sockaddr *)&sin);
     ASSERT_FALSE(*sa2 == (const struct sockaddr *)&sin);
 
+    Sockaddr_in6 sa6;
+
+    ASSERT_FALSE(*sa1 == *((Sockaddr *)&sa6));
+
     delete sa2;
     delete sa1;
 }
@@ -133,6 +137,11 @@ TEST(SockaddrInTest, LessComparison)
     sa1->sin->sin_addr.s_addr += htonl(10L);
 
     ASSERT_FALSE(*sa1 < *sa2);
+    ASSERT_FALSE(*sa1 < *((const struct sockaddr *)&sin));
+
+    Sockaddr_in6 sa6;
+
+    ASSERT_FALSE(*sa1 < *((Sockaddr *)&sa6));
 
     delete sa2;
     delete sa1;
@@ -258,7 +267,7 @@ TEST(SockaddrIn6Test, CopyConstructor)
     sa->sin6->sin6_port = htons(1234);
     memcpy(&sa->sin6->sin6_addr, &ip_addr, sizeof(struct in6_addr));
 
-    Sockaddr_in6 *sa2 = new Sockaddr_in6(*sa);
+    Sockaddr_in6 *sa2 = new Sockaddr_in6(*((const Sockaddr *)sa));
 
     ASSERT_EQ(sa2->sin6->sin6_family, AF_INET6);
     ASSERT_EQ(sa2->sin6->sin6_port, htons(1234));
@@ -316,6 +325,10 @@ TEST(SockaddrIn6Test, EqualComparison)
 
     ASSERT_FALSE(*sa1 == *sa2);
 
+    Sockaddr_in sain;
+
+    ASSERT_FALSE(*sa1 == *((Sockaddr *)&sain));
+
     delete sa2;
     delete sa1;
 }
@@ -343,6 +356,11 @@ TEST(SockaddrIn6Test, LessComparison)
     ++(sa1->sin6->sin6_addr.s6_addr[14]);
 
     ASSERT_FALSE(*sa1 < *sa2);
+    ASSERT_FALSE(*sa1 < *((const struct sockaddr *)&sin));
+
+    Sockaddr_in sain;
+
+    ASSERT_FALSE(*sa1 < *((Sockaddr *)&sain));
 
     delete sa2;
     delete sa1;
@@ -468,7 +486,7 @@ TEST(SockaddrUnTest, CopyConstructor)
 
     strcpy(su->sun->sun_path, path);
 
-    Sockaddr_un *su2 = new Sockaddr_un(*su);
+    Sockaddr_un *su2 = new Sockaddr_un(*((const Sockaddr *)su));
 
     ASSERT_EQ(su2->sun->sun_family, AF_UNIX);
     ASSERT_STREQ(su2->sun->sun_path, path);
@@ -511,6 +529,10 @@ TEST(SockaddrUnTest, EqualComparison)
 
     ASSERT_FALSE(*su1 == *su2);
 
+    Sockaddr_in6 sa6;
+
+    ASSERT_FALSE(*su1 == *((Sockaddr *)&sa6));
+
     delete su2;
     delete su1;
 }
@@ -535,8 +557,12 @@ TEST(SockaddrUnTest, LessComparison)
 
     su2->sun->sun_path[2] = 'a';
 
-    ASSERT_FALSE(*su1 < (const struct sockaddr&)sun);
-    ASSERT_TRUE(*su2 < (const struct sockaddr&)sun);
+    ASSERT_FALSE(*su1 < *((const struct sockaddr *)&sun));
+    ASSERT_TRUE(*su2 < *((const struct sockaddr *)&sun));
+
+    Sockaddr_in6 sa6;
+
+    ASSERT_FALSE(*su1 < *((Sockaddr *)&sa6));
 
     delete su2;
     delete su1;
@@ -624,4 +650,20 @@ TEST(SockaddrUnTest, Factory)
 
     delete su;
     delete sa;
+}
+
+TEST(SockaddrTest, Factory)
+{
+    struct sockaddr sa;
+
+    sa.sa_family = 0;
+    while (sa.sa_family == AF_INET || sa.sa_family == AF_INET6
+           || sa.sa_family == AF_UNIX)
+        ++sa.sa_family;
+
+    ASSERT_THROW(
+        {
+            Sockaddr *s = build_sockaddr((struct sockaddr&)sa);
+        },
+        std::runtime_error);
 }

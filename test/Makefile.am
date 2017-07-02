@@ -21,7 +21,8 @@ if WANT_SERVER
 	t_sockaddr \
 	t_subserver \
 	t_threadpool \
-	t_update_pool
+	t_update_pool \
+	t_zone
 endif
 if WANT_PERL
   TC += t_perl
@@ -58,19 +59,13 @@ endif
 
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
-	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
-	../server/classes/update_pool.cc ../server/classes/update_pool.h \
-	../server/classes/zone.cc ../server/classes/zone.h \
-	../server/classes/control.cc ../server/classes/control.h \
-	../server/classes/game_obj.cc ../server/classes/game_obj.h \
-	../server/classes/geometry.cc ../server/classes/geometry.h \
-	../server/classes/library.cc ../server/classes/library.h \
-	../server/classes/octree.cc ../server/classes/octree.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
 	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
 t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_action_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
-	../proto/libr9_proto.la $(SERVER_LDLIBS)
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_basesock_SOURCES = t_basesock.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
@@ -104,19 +99,14 @@ t_log_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_log_LDADD = $(GTEST_LIBS)
 
 t_motion_pool_SOURCES = t_motion_pool.cc \
-	../server/classes/action_pool.cc ../server/classes/action_pool.h \
 	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
-	../server/classes/update_pool.cc ../server/classes/update_pool.h \
-	../server/classes/zone.cc ../server/classes/zone.h \
-	../server/classes/game_obj.cc ../server/classes/game_obj.h \
-	../server/classes/geometry.cc ../server/classes/geometry.h \
-	../server/classes/library.cc ../server/classes/library.h \
-	../server/classes/octree.cc ../server/classes/octree.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
 	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
-t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_motion_pool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
-	../proto/libr9_proto.la $(SERVER_LDLIBS)
+t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
@@ -129,23 +119,24 @@ t_threadpool_SOURCES = t_threadpool.cc ../server/classes/thread_pool.h
 t_threadpool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_update_pool_SOURCES = t_update_pool.cc \
-	../server/classes/action_pool.cc ../server/classes/action_pool.h \
-	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
 	../server/classes/update_pool.cc ../server/classes/update_pool.h \
-	../server/classes/zone.cc ../server/classes/zone.h \
-	../server/classes/listensock.cc ../server/classes/listensock.h \
-	../server/classes/basesock.cc ../server/classes/basesock.h \
-	../server/classes/control.cc ../server/classes/control.h \
-	../server/classes/game_obj.cc ../server/classes/game_obj.h \
-	../server/classes/geometry.cc ../server/classes/geometry.h \
-	../server/classes/library.cc ../server/classes/library.h \
-	../server/classes/octree.cc ../server/classes/octree.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
 	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h
+	../server/config_data.cc ../server/config_data.h
 t_update_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_update_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
-	../proto/libr9_proto.la $(SERVER_LDLIBS)
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
+
+t_zone_SOURCES = t_zone.cc \
+	../server/classes/zone.cc ../server/classes/zone.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_zone_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+t_zone_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_perl_SOURCES = t_perl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc

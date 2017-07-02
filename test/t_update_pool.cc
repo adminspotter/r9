@@ -9,57 +9,12 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-//#include "tap.h"
+#include "mock_db.h"
+#include "mock_listensock.h"
+#include "mock_zone.h"
+#include "mock_server_globals.h"
 
 using ::testing::_;
-
-std::vector<listen_socket *> sockets;
-Zone *zone;
-
-class mock_DB : public DB
-{
-  public:
-    mock_DB(const std::string& a, const std::string& b,
-            const std::string& c, const std::string& d)
-        : DB::DB(a, b, c, d)
-        {
-        };
-    ~mock_DB() {};
-
-    MOCK_METHOD2(check_authentication, uint64_t(const std::string& a,
-                                                const std::string& b));
-    MOCK_METHOD2(check_authorization, int(uint64_t a, uint64_t b));
-    MOCK_METHOD2(check_authorization, int(uint64_t a, const std::string& b));
-    MOCK_METHOD1(get_character_objectid, uint64_t(const std::string& a));
-    MOCK_METHOD3(open_new_login, int(uint64_t a, uint64_t b, Sockaddr *c));
-    MOCK_METHOD2(check_open_login, int(uint64_t a, uint64_t b));
-    MOCK_METHOD3(close_open_login, int(uint64_t a, uint64_t b, Sockaddr *c));
-    MOCK_METHOD3(get_player_server_skills,
-                 int(uint64_t a, uint64_t b,
-                     std::map<uint16_t, action_level>& c));
-
-    /* Server functions */
-    MOCK_METHOD1(get_server_skills, int(std::map<uint16_t, action_rec>& a));
-    MOCK_METHOD1(get_server_objects, int(std::map<uint64_t, GameObject *>& a));
-};
-
-class mock_listen : public listen_socket
-{
-  public:
-    mock_listen(struct addrinfo *a)
-        : listen_socket(a)
-        {
-        };
-    ~mock_listen() {};
-
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
-
-    MOCK_METHOD1(login_user, void(access_list& a));
-    MOCK_METHOD1(logout_user, void(access_list& a));
-
-    MOCK_METHOD4(do_login, void(uint64_t a, Control *b, access_list& c, int d));
-};
 
 class mock_SendPool : public ThreadPool<packet_list>
 {
@@ -73,8 +28,6 @@ class mock_SendPool : public ThreadPool<packet_list>
     MOCK_METHOD1(start, void(void *(*func)(void *)));
     MOCK_METHOD1(push, void(packet_list& p));
 };
-
-DB *database;
 
 TEST(UpdatePoolTest, Operate)
 {
@@ -97,7 +50,7 @@ TEST(UpdatePoolTest, Operate)
 
     ASSERT_NO_THROW(
         {
-            sock = new mock_listen(ai);
+            sock = new mock_listen_socket(ai);
         });
     delete sock->send_pool;
     sock->send_pool = send_pool;

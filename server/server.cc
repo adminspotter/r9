@@ -1,9 +1,9 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2016, 09:57:53 tquirk
+ *   last updated 21 Jun 2017, 07:41:55 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -86,8 +86,10 @@ static struct addrinfo *get_addr_info(int,
                                       const std::string&);
 static void free_addr_info(struct addrinfo *);
 static void setup_zone(void);
+static void setup_thread_pools(void);
 static void setup_console(void);
 static void cleanup_console(void);
+static void cleanup_thread_pools(void);
 static void cleanup_zone(void);
 static void cleanup_sockets(void);
 static void cleanup_log(void);
@@ -95,6 +97,9 @@ static void cleanup_daemon(void);
 
 int main_loop_exit_flag = 0;
 Zone *zone = NULL;
+ActionPool *action_pool = NULL;   /* Takes action requests      */
+MotionPool *motion_pool = NULL;   /* Processes motion/collision */
+UpdatePool *update_pool = NULL;   /* Sends motion updates       */
 DB *database = NULL;
 static Library *db_lib = NULL, *console_lib = NULL;
 std::vector<listen_socket *> sockets;
@@ -343,9 +348,6 @@ static void setup_zone(void)
     db_create_t *db_create;
 
     std::clog << "in zone setup" << std::endl;
-    zone = new Zone(config.size.dim[0], config.size.dim[1],
-                    config.size.dim[2], config.size.steps[0],
-                    config.size.steps[1], config.size.steps[2]);
 
     /* Load up the database lib before we start the access thread pool */
     db_lib = new Library("libr9_" + config.db_type + LT_MODULE_EXT);
@@ -353,11 +355,32 @@ static void setup_zone(void)
 
     database = db_create(config.db_host, config.db_user,
                          config.db_pass, config.db_name);
-    database->get_server_skills(zone->actions);
-    database->get_server_objects(zone->game_objects);
 
-    zone->start();
+    zone = new Zone(config.size.dim[0], config.size.dim[1],
+                    config.size.dim[2], config.size.steps[0],
+                    config.size.steps[1], config.size.steps[2], database);
+
+    setup_thread_pools();
     std::clog << "zone setup done" << std::endl;
+}
+
+static void setup_thread_pools(void)
+{
+    /* Once this library gets into the hands of the action pool, it
+     * takes ownership, and cleans it up where necessary.
+     */
+    Library *action_lib = new Library(config.action_lib);
+
+    action_pool = new ActionPool(config.action_threads,
+                                 zone->game_objects,
+                                 action_lib,
+                                 database);
+    motion_pool = new MotionPool("motion", config.motion_threads);
+    update_pool = new UpdatePool("update", config.update_threads);
+
+    action_pool->start();
+    motion_pool->start();
+    update_pool->start();
 }
 
 static void setup_console(void)
@@ -435,8 +458,30 @@ static void cleanup_console(void)
     console_lib = NULL;
 }
 
+static void cleanup_thread_pools(void)
+{
+    std::clog << "deleting thread pools" << std::endl;
+    if (action_pool != NULL)
+    {
+        delete action_pool;
+        action_pool = NULL;
+    }
+    if (motion_pool != NULL)
+    {
+        delete motion_pool;
+        motion_pool = NULL;
+    }
+    if (update_pool != NULL)
+    {
+        delete update_pool;
+        update_pool = NULL;
+    }
+}
+
 static void cleanup_zone(void)
 {
+    cleanup_thread_pools();
+
     if (zone != NULL)
     {
         std::clog << "deleting zone" << std::endl;
