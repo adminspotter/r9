@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2017, 07:32:59 tquirk
+ *   last updated 01 Jul 2017, 19:05:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -52,8 +52,6 @@
 
 class Zone
 {
-    friend class MotionPool;
-
   private:
     uint16_t x_steps, y_steps, z_steps;
     uint64_t x_dim, y_dim, z_dim;
@@ -68,40 +66,13 @@ class Zone
   protected:
     virtual void init(DB *);
 
-    inline Octree *sector_contains(glm::dvec3& pos)
-        {
-            glm::ivec3 sec = this->which_sector(pos);
-            Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
-            if (oct == NULL)
-            {
-                glm::ivec3 sec = this->which_sector(pos);
-                glm::dvec3 mn, mx;
-
-                mn.x = sec.x * this->x_dim;
-                mn.y = sec.y * this->y_dim;
-                mn.z = sec.z * this->z_dim;
-                mx.x = mn.x + this->x_dim;
-                mx.y = mn.y + this->y_dim;
-                mx.z = mn.z + this->z_dim;
-                oct = new Octree(NULL, mn, mx, 0);
-                this->sectors[sec[0]][sec[1]][sec[2]] = oct;
-            }
-            return oct;
-        };
-    inline glm::ivec3 which_sector(glm::dvec3& pos)
-        {
-            glm::ivec3 sector;
-
-            sector.x = pos.x / this->x_dim;
-            sector.y = pos.y / this->y_dim;
-            sector.z = pos.z / this->z_dim;
-            return sector;
-        };
-
   public:
     Zone(uint64_t, uint16_t, DB *);
     Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t, DB *);
     ~Zone();
+
+    Octree *sector_contains(glm::dvec3&);
+    glm::ivec3 which_sector(glm::dvec3&);
 
     virtual void connect_game_object(Control *, uint64_t);
 };

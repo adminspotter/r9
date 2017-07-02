@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2017, 07:23:45 tquirk
+ *   last updated 01 Jul 2017, 19:05:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -111,6 +111,37 @@ Zone::~Zone()
         this->game_objects.erase(this->game_objects.begin(),
                                  this->game_objects.end());
     }
+}
+
+Octree *Zone::sector_contains(glm::dvec3& pos)
+{
+    glm::ivec3 sec = this->which_sector(pos);
+    Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
+    if (oct == NULL)
+    {
+        glm::ivec3 sec = this->which_sector(pos);
+        glm::dvec3 mn, mx;
+
+        mn.x = sec.x * this->x_dim;
+        mn.y = sec.y * this->y_dim;
+        mn.z = sec.z * this->z_dim;
+        mx.x = mn.x + this->x_dim;
+        mx.y = mn.y + this->y_dim;
+        mx.z = mn.z + this->z_dim;
+        oct = new Octree(NULL, mn, mx, 0);
+        this->sectors[sec[0]][sec[1]][sec[2]] = oct;
+    }
+    return oct;
+}
+
+glm::ivec3 Zone::which_sector(glm::dvec3& pos)
+{
+    glm::ivec3 sector;
+
+    sector.x = pos.x / this->x_dim;
+    sector.y = pos.y / this->y_dim;
+    sector.z = pos.z / this->z_dim;
+    return sector;
 }
 
 void Zone::connect_game_object(Control *con, uint64_t objid)
