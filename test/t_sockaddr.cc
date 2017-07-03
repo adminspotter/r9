@@ -29,6 +29,8 @@ class fake_Sockaddr : public Sockaddr
 {
   public:
     fake_Sockaddr() : Sockaddr() {};
+    fake_Sockaddr(const Sockaddr& s) : Sockaddr(s) {};
+    fake_Sockaddr(const struct sockaddr& s) : Sockaddr(s) {};
     virtual ~fake_Sockaddr() {};
 
     virtual bool operator<(const Sockaddr& s) const {return false;};
@@ -45,6 +47,20 @@ TEST(SockaddrTest, BlankConstructor)
 
     ASSERT_EQ(fs->ss.ss_family, AF_INET);
 
+    delete fs;
+}
+
+TEST(SockaddrTest, CopyConstructor)
+{
+    fake_Sockaddr *fs = new fake_Sockaddr;
+
+    fs->ss.ss_family = 42;
+
+    fake_Sockaddr *fs2 = new fake_Sockaddr(*(Sockaddr *)fs);
+
+    ASSERT_EQ(fs2->ss.ss_family, 42);
+
+    delete fs2;
     delete fs;
 }
 
