@@ -64,6 +64,19 @@ TEST(SockaddrTest, CopyConstructor)
     delete fs;
 }
 
+TEST(SockaddrTest, StructConstructor)
+{
+    struct sockaddr_in sa;
+
+    sa.sin_family = 19;
+
+    fake_Sockaddr *fs = new fake_Sockaddr((const struct sockaddr&)sa);
+
+    ASSERT_EQ(fs->ss.ss_family, 19);
+
+    delete fs;
+}
+
 TEST(SockaddrInTest, BlankConstructor)
 {
     Sockaddr_in *sa = new Sockaddr_in;
