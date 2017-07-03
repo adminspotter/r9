@@ -112,6 +112,22 @@ TEST(SockaddrTest, Sockaddr)
     delete sa;
 }
 
+TEST(SockaddrTest, Factory)
+{
+    struct sockaddr sa;
+
+    sa.sa_family = 0;
+    while (sa.sa_family == AF_INET || sa.sa_family == AF_INET6
+           || sa.sa_family == AF_UNIX)
+        ++sa.sa_family;
+
+    ASSERT_THROW(
+        {
+            Sockaddr *s = build_sockaddr((struct sockaddr&)sa);
+        },
+        std::runtime_error);
+}
+
 TEST(SockaddrInTest, BlankConstructor)
 {
     Sockaddr_in *sa = new Sockaddr_in;
@@ -731,20 +747,4 @@ TEST(SockaddrUnTest, Factory)
 
     delete su;
     delete sa;
-}
-
-TEST(SockaddrTest, Factory)
-{
-    struct sockaddr sa;
-
-    sa.sa_family = 0;
-    while (sa.sa_family == AF_INET || sa.sa_family == AF_INET6
-           || sa.sa_family == AF_UNIX)
-        ++sa.sa_family;
-
-    ASSERT_THROW(
-        {
-            Sockaddr *s = build_sockaddr((struct sockaddr&)sa);
-        },
-        std::runtime_error);
 }
