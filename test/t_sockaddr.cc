@@ -77,6 +77,27 @@ TEST(SockaddrTest, StructConstructor)
     delete fs;
 }
 
+TEST(SockaddrTest, EqualComparison)
+{
+    fake_Sockaddr *fs = new fake_Sockaddr;
+    memset(&(fs->ss), 4, sizeof(struct sockaddr_storage));
+
+    fake_Sockaddr *fs2 = new fake_Sockaddr;
+    memset(&(fs2->ss), 5, sizeof(struct sockaddr_storage));
+
+    ASSERT_FALSE(*fs == *fs2);
+
+    memset(&(fs2->ss), 4, sizeof(struct sockaddr_storage));
+
+    ASSERT_TRUE(*fs == *fs2);
+    ASSERT_TRUE(*fs == ((struct sockaddr *)&fs2->ss));
+
+    memset(&(fs2->ss), 0, sizeof(struct sockaddr_storage));
+    memset(&(fs->ss), 0, sizeof(struct sockaddr_storage));
+    delete fs2;
+    delete fs;
+}
+
 TEST(SockaddrInTest, BlankConstructor)
 {
     Sockaddr_in *sa = new Sockaddr_in;
