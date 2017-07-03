@@ -25,11 +25,28 @@ extern "C" int getnameinfo(const struct sockaddr * __restrict sa,
     return 0;
 }
 
-/* We can't instantiate a Sockaddr object directly, since there are
- * pure-virtual functions, so we'll test the specific _in and _in6
- * objects, along with a little bit of polymorphism via the factory
- * constructor.
- */
+class fake_Sockaddr : public Sockaddr
+{
+  public:
+    fake_Sockaddr() : Sockaddr() {};
+    virtual ~fake_Sockaddr() {};
+
+    virtual bool operator<(const Sockaddr& s) const {return false;};
+    virtual bool operator<(const struct sockaddr& s) const {return false;};
+
+    virtual const char *ntop(void) {return "howdy";};
+    virtual const char *hostname(void) {return "host";};
+    virtual uint16_t port(void) {return 42;};
+};
+
+TEST(SockaddrTest, BlankConstructor)
+{
+    fake_Sockaddr *fs = new fake_Sockaddr;
+
+    ASSERT_EQ(fs->ss.ss_family, AF_INET);
+
+    delete fs;
+}
 
 TEST(SockaddrInTest, BlankConstructor)
 {
