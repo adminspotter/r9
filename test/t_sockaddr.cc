@@ -98,6 +98,20 @@ TEST(SockaddrTest, EqualComparison)
     delete fs;
 }
 
+TEST(SockaddrTest, Sockaddr)
+{
+    struct sockaddr_storage ss;
+    memset(&ss, 0, sizeof(struct sockaddr_storage));
+    ss.ss_family = 33;
+
+    fake_Sockaddr *sa = new fake_Sockaddr((const struct sockaddr&)ss);
+
+    struct sockaddr_storage *saddr = (struct sockaddr_storage *)sa->sockaddr();
+    ASSERT_EQ(saddr->ss_family, 33);
+
+    delete sa;
+}
+
 TEST(SockaddrInTest, BlankConstructor)
 {
     Sockaddr_in *sa = new Sockaddr_in;
