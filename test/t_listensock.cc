@@ -4,6 +4,41 @@
 
 #include "mock_server_globals.h"
 
+struct addrinfo *create_addrinfo(void)
+{
+    struct addrinfo hints, *addr = NULL;
+    int ret;
+
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_NUMERICSERV;
+    hints.ai_protocol = 0;
+    hints.ai_canonname = NULL;
+    hints.ai_addr = NULL;
+    hints.ai_next = NULL;
+
+    if ((ret = getaddrinfo(NULL, "9876", &hints, &addr)) != 0)
+    {
+        std::cerr << gai_strerror(ret) << std::endl;
+        throw std::runtime_error("getaddrinfo broke");
+    }
+
+    return addr;
+}
+
+/* The listen_socket has a couple of pure-virtual methods, so we need
+ * to derive something so we can actually test it.
+ */
+class test_listen_socket : public listen_socket
+{
+  public:
+    test_listen_socket(struct addrinfo *a) : listen_socket(a) {};
+    virtual ~test_listen_socket() {};
+
+    virtual void start(void) {};
+    virtual void do_login(uint64_t a, Control *b, access_list& c, int d) {};
+};
+
 TEST(BaseUserTest, CreateDelete)
 {
     Control *con = new Control(0LL, NULL);
@@ -68,4 +103,20 @@ TEST(BaseUserTest, Assignment)
     delete base1;
     delete con2;
     delete con1;
+}
+
+TEST(ListenSocketTest, CreateDelete)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen;
+
+    ASSERT_NO_THROW(
+        {
+            listen = new test_listen_socket(addr);
+        });
+    /* Thread pools should not be started */
+    ASSERT_TRUE(listen->send_pool->pool_size() == 0);
+    ASSERT_TRUE(listen->access_pool->pool_size() == 0);
+
+    delete listen;
 }
