@@ -98,6 +98,26 @@ TEST(SockaddrTest, EqualComparison)
     delete fs;
 }
 
+TEST(SockaddrTest, Assignment)
+{
+    fake_Sockaddr *fs = new fake_Sockaddr;
+    memset(&(fs->ss), 4, sizeof(struct sockaddr_storage));
+
+    fake_Sockaddr *fs2 = new fake_Sockaddr;
+    memset(&(fs2->ss), 5, sizeof(struct sockaddr_storage));
+
+    ASSERT_FALSE(*fs == *fs2);
+
+    *fs = *fs2;
+
+    ASSERT_TRUE(*fs == *fs2);
+
+    memset(&(fs2->ss), 0, sizeof(struct sockaddr_storage));
+    memset(&(fs->ss), 0, sizeof(struct sockaddr_storage));
+    delete fs2;
+    delete fs;
+}
+
 TEST(SockaddrTest, Sockaddr)
 {
     struct sockaddr_storage ss;
