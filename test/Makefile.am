@@ -187,3 +187,4 @@ t_image_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov
+	rm -f *.log *.trs
