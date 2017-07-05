@@ -99,8 +99,8 @@ t_listensock_SOURCES = t_listensock.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h \
 	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
-t_listensock_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_listensock_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+t_listensock_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+t_listensock_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 

@@ -2,11 +2,17 @@
 
 #include <gtest/gtest.h>
 
+#include "mock_db.h"
 #include "mock_server_globals.h"
+
+using ::testing::_;
+using ::testing::Return;
 
 struct addrinfo *create_addrinfo(void)
 {
     struct addrinfo hints, *addr = NULL;
+    static int port = 9876;
+    char port_str[6];
     int ret;
 
     hints.ai_family = AF_INET;
@@ -17,7 +23,8 @@ struct addrinfo *create_addrinfo(void)
     hints.ai_addr = NULL;
     hints.ai_next = NULL;
 
-    if ((ret = getaddrinfo(NULL, "9876", &hints, &addr)) != 0)
+    snprintf(port_str, sizeof(port_str), "%d", port--);
+    if ((ret = getaddrinfo(NULL, port_str, &hints, &addr)) != 0)
     {
         std::cerr << gai_strerror(ret) << std::endl;
         throw std::runtime_error("getaddrinfo broke");
@@ -119,6 +126,35 @@ TEST(ListenSocketTest, CreateDelete)
     ASSERT_TRUE(listen->access_pool->pool_size() == 0);
 
     delete listen;
+}
+
+TEST(ListenSocketTest, LoginNoUser)
+{
+    database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
+        .WillOnce(Return(0LL));
+
+    access_list access;
+
+    memset(&access.buf, 0, sizeof(packet));
+    strncpy(access.buf.log.username, "howdy", 6);
+    strncpy(access.buf.log.password, "pass", 5);
+    strncpy(access.buf.log.charname, "bob", 4);
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    ASSERT_TRUE(listen->users.size() == 0);
+
+    listen->login_user(access);
+
+    ASSERT_TRUE(listen->users.size() == 0);
+    ASSERT_FALSE(strncmp(access.buf.log.password,
+                         "pass",
+                         sizeof(access.buf.log.password)) == 0);
+
+    delete database;
 }
 
 TEST(ListenSocketTest, Logout)
