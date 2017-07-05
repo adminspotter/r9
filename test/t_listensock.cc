@@ -148,3 +148,23 @@ TEST(ListenSocketTest, Logout)
     delete listen;
     delete control;
 }
+
+TEST(ListenSocketTest, SendAck)
+{
+    Control *control = new Control(123LL, NULL);
+    base_user *bu = new base_user(123LL, control);
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen;
+
+    listen = new test_listen_socket(addr);
+    listen->users[123LL] = bu;
+
+    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
+
+    listen->send_ack(control, 1, 2);
+
+    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+
+    delete listen;
+    delete control;
+}
