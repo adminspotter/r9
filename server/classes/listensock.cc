@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2017, 08:44:42 tquirk
+ *   last updated 05 Jul 2017, 18:57:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -158,18 +158,10 @@ void *listen_socket::access_pool_worker(void *arg)
 
 void listen_socket::login_user(access_list& p)
 {
-    uint64_t userid = 0LL, char_objid = 0LL;
-    int auth_level;
-    std::string username(p.buf.log.username, sizeof(p.buf.log.username));
-    std::string password(p.buf.log.password, sizeof(p.buf.log.password));
+    uint64_t userid = this->get_userid(p.buf.log), char_objid = 0LL;
     std::string charname(p.buf.log.charname, sizeof(p.buf.log.charname));
+    int auth_level;
     Control *newcontrol = NULL;
-
-    userid = database->check_authentication(username, password);
-
-    /* Don't want to keep passwords around in core if we can help it. */
-    memset(p.buf.log.password, 0, sizeof(p.buf.log.password));
-    password.clear();
 
     if (userid == 0LL)
         return;
@@ -190,7 +182,8 @@ void listen_socket::login_user(access_list& p)
      * something back.
      */
     newcontrol = new Control(userid, NULL);
-    newcontrol->username = username;
+    newcontrol->username = std::string(p.buf.log.username,
+                                       sizeof(p.buf.log.username));
 
     std::clog << "login request from user "
               << newcontrol->username << " (" << userid
@@ -205,6 +198,21 @@ void listen_socket::login_user(access_list& p)
         char_objid = database->get_character_objectid(charname);
         zone->connect_game_object(newcontrol, char_objid);
     }
+}
+
+uint64_t listen_socket::get_userid(login_request& log)
+{
+    uint64_t userid;
+    std::string username(log.username, sizeof(log.username));
+    std::string password(log.password, sizeof(log.password));
+
+    userid = database->check_authentication(username, password);
+
+    /* Don't want to keep passwords around in core if we can help it. */
+    memset(log.password, 0, sizeof(log.password));
+    password.clear();
+
+    return userid;
 }
 
 void listen_socket::logout_user(access_list& p)
