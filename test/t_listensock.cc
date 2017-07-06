@@ -128,32 +128,28 @@ TEST(ListenSocketTest, CreateDelete)
     delete listen;
 }
 
-TEST(ListenSocketTest, LoginNoUser)
+TEST(ListenSocketTest, GetUserid)
 {
     database = new mock_DB("a", "b", "c", "d");
 
     EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
         .WillOnce(Return(0LL));
 
-    access_list access;
+    login_request log;
 
-    memset(&access.buf, 0, sizeof(packet));
-    strncpy(access.buf.log.username, "howdy", 6);
-    strncpy(access.buf.log.password, "pass", 5);
-    strncpy(access.buf.log.charname, "bob", 4);
+    memset(&log, 0, sizeof(login_request));
+    strncpy(log.username, "howdy", 6);
+    strncpy(log.password, "pass", 5);
 
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new test_listen_socket(addr);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    uint64_t userid = listen->get_userid(log);
 
-    listen->login_user(access);
+    ASSERT_EQ(userid, 0LL);
+    ASSERT_FALSE(strncmp(log.password, "pass", sizeof(log.password)) == 0);
 
-    ASSERT_TRUE(listen->users.size() == 0);
-    ASSERT_FALSE(strncmp(access.buf.log.password,
-                         "pass",
-                         sizeof(access.buf.log.password)) == 0);
-
+    delete listen;
     delete database;
 }
 
