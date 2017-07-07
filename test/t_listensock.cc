@@ -42,8 +42,8 @@ class test_listen_socket : public listen_socket
     test_listen_socket(struct addrinfo *a) : listen_socket(a) {};
     virtual ~test_listen_socket() {};
 
-    virtual void start(void) {};
-    virtual void do_login(uint64_t a, Control *b, access_list& c, int d) {};
+    virtual void start(void) override {};
+    virtual void do_login(uint64_t a, Control *b, access_list& c) override {};
 };
 
 TEST(BaseUserTest, CreateDelete)
