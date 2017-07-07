@@ -18,7 +18,9 @@ class mock_listen_socket : public listen_socket
     MOCK_METHOD1(login_user, void(access_list&));
     MOCK_METHOD1(logout_user, void(access_list&));
 
-    MOCK_METHOD4(do_login, void(uint64_t, Control *, access_list&, int));
+    MOCK_METHOD3(do_login, void(uint64_t, Control *, access_list&));
+    MOCK_METHOD1(get_userid, uint64_t(login_request&));
+    MOCK_METHOD2(connect_user, void(base_user *, access_list&));
 
     MOCK_METHOD3(send_ack, void(Control *, uint8_t, uint8_t));
 
