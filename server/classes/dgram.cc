@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2017, 08:37:22 tquirk
+ *   last updated 06 Jul 2017, 09:53:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -101,23 +101,14 @@ void dgram_socket::start(void)
 
 void dgram_socket::do_login(uint64_t userid,
                             Control *con,
-                            access_list& al,
-                            int access_level)
+                            access_list& al)
 {
     dgram_user *dgu = new dgram_user(userid, con);
     dgu->sa = build_sockaddr((struct sockaddr&)(al.what.login.who.dgram));
     this->users[userid] = dgu;
     this->socks[dgu->sa] = dgu;
 
-    if (access_level < ACCESS_VIEW)
-        /* We still need a control object to be able to send something
-         * back, but since this user has no access, we'll go ahead and
-         * make one that'll be reaped immediately.  This could be a
-         * race with the reaper thread.
-         */
-        dgu->pending_logout = true;
-
-    this->send_ack(con, TYPE_LOGREQ, (uint8_t)access_level);
+    this->connect_user((base_user *)dgu, al);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
