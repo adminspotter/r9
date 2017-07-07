@@ -8,6 +8,8 @@
 using ::testing::_;
 using ::testing::Return;
 
+int login_count;
+
 struct addrinfo *create_addrinfo(void)
 {
     struct addrinfo hints, *addr = NULL;
@@ -43,7 +45,11 @@ class test_listen_socket : public listen_socket
     virtual ~test_listen_socket() {};
 
     virtual void start(void) override {};
-    virtual void do_login(uint64_t a, Control *b, access_list& c) override {};
+    virtual void do_login(uint64_t a, Control *b, access_list& c) override
+        {
+            delete b;
+            ++login_count;
+        };
 };
 
 TEST(BaseUserTest, CreateDelete)
@@ -178,6 +184,40 @@ TEST(ListenSocketTest, LoginNoUser)
     ASSERT_FALSE(strncmp(access.buf.log.password,
                          "pass",
                          sizeof(access.buf.log.password)) == 0);
+
+    delete listen;
+    delete database;
+}
+
+TEST(ListenSocketTest, LoginAlready)
+{
+    DB *database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
+        .WillOnce(Return(123LL));
+
+    access_list access;
+
+    memset(&access.buf, 0, sizeof(packet));
+    strncpy(access.buf.log.username, "howdy", 6);
+    strncpy(access.buf.log.password, "pass", 5);
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    Control *control = new Control(123LL, NULL);
+    base_user *bu = new base_user(123LL, control);
+    bu->pending_logout = true;
+    listen->users[123LL] = bu;
+    login_count = 0;
+
+    ASSERT_TRUE(listen->users.size() == 1);
+
+    listen->login_user(access);
+
+    ASSERT_EQ(login_count, 0);
+    ASSERT_TRUE(listen->users.size() == 1);
+    ASSERT_EQ(bu->pending_logout, false);
 
     delete listen;
     delete database;
