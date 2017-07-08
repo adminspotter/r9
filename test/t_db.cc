@@ -96,3 +96,16 @@ class fake_DB : public DB
             return 0;
         };
 };
+
+TEST(DBTest, BadGethostbyname)
+{
+    fake_DB *database;
+
+    gethostname_failure = true;
+    ASSERT_THROW(
+        {
+            database = new fake_DB("a", "b", "c", "d");
+        },
+        std::runtime_error);
+    gethostname_failure = false;
+}
