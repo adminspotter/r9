@@ -109,3 +109,16 @@ TEST(DBTest, BadGethostbyname)
         std::runtime_error);
     gethostname_failure = false;
 }
+
+TEST(DBTest, BadGetaddrinfo)
+{
+    fake_DB *database;
+
+    getaddrinfo_failure = true;
+    ASSERT_THROW(
+        {
+            database = new fake_DB("a", "b", "c", "d");
+        },
+        std::runtime_error);
+    getaddrinfo_failure = false;
+}
