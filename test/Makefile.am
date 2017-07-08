@@ -16,6 +16,7 @@ if WANT_SERVER
 	t_console \
 	t_game_obj \
 	t_library \
+	t_listensock \
 	t_log \
 	t_motion_pool \
 	t_sockaddr \
@@ -92,6 +93,16 @@ t_game_obj_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 t_library_SOURCES = t_library.cc \
 	../server/classes/library.cc ../server/classes/library.h
 t_library_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS)
+
+t_listensock_SOURCES = t_listensock.cc \
+	../server/classes/listensock.cc ../server/classes/listensock.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_listensock_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+t_listensock_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_log_SOURCES = t_log.cc ../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
@@ -176,3 +187,4 @@ t_image_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov
+	rm -f *.log *.trs

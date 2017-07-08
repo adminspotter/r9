@@ -1,6 +1,7 @@
 #include "../server/classes/basesock.h"
 
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <stdexcept>
 #include <typeinfo>
@@ -10,6 +11,7 @@
 bool socket_error = false, socket_zero = false, bind_error = false;
 bool am_root = false, listen_error = false, pthread_create_error = false;
 bool pthread_cancel_error = false, pthread_join_error = false;
+bool unlink_error = false;
 int seteuid_count, setegid_count;
 
 /* This will never actually be run, so it doesn't need to do anything */
@@ -110,6 +112,13 @@ int pthread_join(pthread_t a, void **b)
     return 0;
 }
 
+int unlink(const char *a)
+{
+    if (unlink_error == true)
+        return -1;
+    return 0;
+}
+
 TEST(BasesockTest, CreateDelete)
 {
     struct addrinfo hints, *ai;
@@ -156,6 +165,45 @@ TEST(BasesockTest, CreateDelete)
         freeaddrinfo(ai);
     }
     socket_zero = false;
+}
+
+/* We are not verifying anything in this test under a Linux system,
+ * because for whatever reason, changing the rdbuf of std::clog is
+ * causing unexplainable segfaults on Linux.  Works fine on OSX.
+ */
+TEST(BasesockTest, DeleteUnix)
+{
+#ifdef __APPLE__
+    std::stringstream new_clog;
+    auto old_clog_rdbuf = std::clog.rdbuf(new_clog.rdbuf());
+#endif /* __APPLE__ */
+    struct addrinfo ai;
+    struct sockaddr_un sun;
+    basesock *base;
+
+    memset(&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_UNIX;
+    ai.ai_socktype = SOCK_STREAM;
+    ai.ai_protocol = 0;
+    ai.ai_addrlen = sizeof(struct sockaddr_un);
+    ai.ai_addr = (struct sockaddr *)&sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strncpy(sun.sun_path, "t_basesock.sock", 16);
+
+    ASSERT_NO_THROW(
+        {
+            base = new basesock(&ai);
+        });
+
+    unlink_error = true;
+
+    delete base;
+#ifdef __APPLE__
+    std::clog.rdbuf(old_clog_rdbuf);
+    ASSERT_TRUE(new_clog.str().find("could not unlink path")
+                != std::string::npos);
+#endif /* __APPLE__ */
 }
 
 TEST(BasesockTest, BadSocket)

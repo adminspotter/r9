@@ -35,6 +35,6 @@ script:
 - make
 - make check
 after_script:
-- pushd test && grep -l FAIL *.trs | sed -e 's/trs$/log/' | xargs cat && popd
+- for file in $(grep -l FAIL test/*.trs | sed -e 's/trs$/log/') ; do echo "$file" ; echo ; cat $file ; echo ; done
 after_success:
 - codecov

@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jun 2017, 08:44:42 tquirk
+ *   last updated 06 Jul 2017, 09:59:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -158,23 +158,12 @@ void *listen_socket::access_pool_worker(void *arg)
 
 void listen_socket::login_user(access_list& p)
 {
-    uint64_t userid = 0LL, char_objid = 0LL;
-    int auth_level;
-    std::string username(p.buf.log.username, sizeof(p.buf.log.username));
-    std::string password(p.buf.log.password, sizeof(p.buf.log.password));
+    uint64_t userid = this->get_userid(p.buf.log);
     std::string charname(p.buf.log.charname, sizeof(p.buf.log.charname));
     Control *newcontrol = NULL;
 
-    userid = database->check_authentication(username, password);
-
-    /* Don't want to keep passwords around in core if we can help it. */
-    memset(p.buf.log.password, 0, sizeof(p.buf.log.password));
-    password.clear();
-
     if (userid == 0LL)
         return;
-
-    auth_level = database->check_authorization(userid, charname);
 
     /* If they're already in our list, turn off any pending logout. */
     if (this->users.find(userid) != this->users.end())
@@ -190,21 +179,51 @@ void listen_socket::login_user(access_list& p)
      * something back.
      */
     newcontrol = new Control(userid, NULL);
-    newcontrol->username = username;
-
-    std::clog << "login request from user "
-              << newcontrol->username << " (" << userid
-              << "), auth " << auth_level << std::endl;
+    newcontrol->username = std::string(p.buf.log.username,
+                                       sizeof(p.buf.log.username));
 
     /* Perform the derived class's login part. */
-    this->do_login(userid, newcontrol, p, auth_level);
+    this->do_login(userid, newcontrol, p);
+}
 
-    /* Hook the new control up to the appropriate object, if appropriate. */
+uint64_t listen_socket::get_userid(login_request& log)
+{
+    uint64_t userid;
+    std::string username(log.username, sizeof(log.username));
+    std::string password(log.password, sizeof(log.password));
+
+    userid = database->check_authentication(username, password);
+
+    /* Don't want to keep passwords around in core if we can help it. */
+    memset(log.password, 0, sizeof(log.password));
+    password.clear();
+
+    return userid;
+}
+
+void listen_socket::connect_user(base_user *user, access_list& access)
+{
+    /* Hook the new control up to the appropriate object. */
+    std::string charname(access.buf.log.charname,
+                         sizeof(access.buf.log.charname));
+    uint64_t charid = database->get_character_objectid(user->userid, charname);
+    int auth_level = database->check_authorization(user->userid, charid);
+
+    std::clog << "login request from user "
+              << user->control->username << " (" << user->userid
+              << "), auth " << auth_level << std::endl;
+
+    if (auth_level < ACCESS_VIEW)
+        /* We still need a control object to be able to send something
+         * back, but since this user has no access, we'll go ahead and
+         * make one that'll be reaped immediately.
+         */
+        user->pending_logout = true;
+
     if (auth_level >= ACCESS_MOVE)
-    {
-        char_objid = database->get_character_objectid(charname);
-        zone->connect_game_object(newcontrol, char_objid);
-    }
+        zone->connect_game_object(user->control, charid);
+
+    this->send_ack(user->control, TYPE_LOGREQ, (uint8_t)auth_level);
 }
 
 void listen_socket::logout_user(access_list& p)

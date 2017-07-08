@@ -1,9 +1,9 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2016, 19:06:43 tquirk
+ *   last updated 06 Jul 2017, 09:52:13 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -100,47 +100,23 @@ int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
     return retval;
 }
 
-int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
-{
-    PGresult *res;
-    char str[256];
-    int retval = ACCESS_NONE;
-
-    snprintf(str, sizeof(str),
-             "SELECT c.access_type "
-             "FROM players AS a, characters AS b, server_access AS c, "
-             "servers AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.charactername='%.*s' "
-             "AND b.characterid=c.characterid "
-             "AND c.serverid=d.serverid "
-             "AND d.ip='%s'",
-             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
-    this->db_connect();
-
-    res = PQexec(this->db_handle, str);
-    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
-        retval = atol(PQgetvalue(res, 0, 0));
-    PQclear(res);
-    this->db_close();
-    return retval;
-}
-
-uint64_t PgSQL::get_character_objectid(const std::string& charname)
+uint64_t PgSQL::get_character_objectid(uint64_t userid,
+                                       const std::string& charname)
 {
     PGresult *res;
     char str[256];
     uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
-             "SELECT c.objectid "
-             "FROM characters AS a, servers AS b, server_objects AS c "
-             "WHERE a.charactername='%.*s' "
-             "AND a.characterid = c.characterid "
-             "AND b.serverid=c.serverid "
-             "AND b.ip='%s'",
-             DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
+             "SELECT d.objectid "
+             "FROM players AS a, characters AS a, servers AS b, server_objects AS c "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s' "
+             "AND b.characterid = d.characterid "
+             "AND c.serverid=d.serverid "
+             "AND c.ip='%s'",
+             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
     this->db_connect();
 
     res = PQexec(this->db_handle, str);

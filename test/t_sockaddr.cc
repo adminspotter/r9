@@ -25,11 +25,128 @@ extern "C" int getnameinfo(const struct sockaddr * __restrict sa,
     return 0;
 }
 
-/* We can't instantiate a Sockaddr object directly, since there are
- * pure-virtual functions, so we'll test the specific _in and _in6
- * objects, along with a little bit of polymorphism via the factory
- * constructor.
- */
+class fake_Sockaddr : public Sockaddr
+{
+  public:
+    fake_Sockaddr() : Sockaddr() {};
+    fake_Sockaddr(const Sockaddr& s) : Sockaddr(s) {};
+    fake_Sockaddr(const struct sockaddr& s) : Sockaddr(s) {};
+    virtual ~fake_Sockaddr() {};
+
+    virtual bool operator<(const Sockaddr& s) const {return false;};
+    virtual bool operator<(const struct sockaddr& s) const {return false;};
+
+    virtual const char *ntop(void) {return "howdy";};
+    virtual const char *hostname(void) {return "host";};
+    virtual uint16_t port(void) {return 42;};
+};
+
+TEST(SockaddrTest, BlankConstructor)
+{
+    fake_Sockaddr *fs = new fake_Sockaddr;
+
+    ASSERT_EQ(fs->ss.ss_family, AF_INET);
+
+    delete fs;
+}
+
+TEST(SockaddrTest, CopyConstructor)
+{
+    fake_Sockaddr *fs = new fake_Sockaddr;
+
+    fs->ss.ss_family = 42;
+
+    fake_Sockaddr *fs2 = new fake_Sockaddr(*(Sockaddr *)fs);
+
+    ASSERT_EQ(fs2->ss.ss_family, 42);
+
+    delete fs2;
+    delete fs;
+}
+
+TEST(SockaddrTest, StructConstructor)
+{
+    struct sockaddr_in sa;
+
+    sa.sin_family = 19;
+
+    fake_Sockaddr *fs = new fake_Sockaddr((const struct sockaddr&)sa);
+
+    ASSERT_EQ(fs->ss.ss_family, 19);
+
+    delete fs;
+}
+
+TEST(SockaddrTest, EqualComparison)
+{
+    fake_Sockaddr *fs = new fake_Sockaddr;
+    memset(&(fs->ss), 4, sizeof(struct sockaddr_storage));
+
+    fake_Sockaddr *fs2 = new fake_Sockaddr;
+    memset(&(fs2->ss), 5, sizeof(struct sockaddr_storage));
+
+    ASSERT_FALSE(*fs == *fs2);
+
+    memset(&(fs2->ss), 4, sizeof(struct sockaddr_storage));
+
+    ASSERT_TRUE(*fs == *fs2);
+    ASSERT_TRUE(*fs == ((struct sockaddr *)&fs2->ss));
+
+    memset(&(fs2->ss), 0, sizeof(struct sockaddr_storage));
+    memset(&(fs->ss), 0, sizeof(struct sockaddr_storage));
+    delete fs2;
+    delete fs;
+}
+
+TEST(SockaddrTest, Assignment)
+{
+    fake_Sockaddr *fs = new fake_Sockaddr;
+    memset(&(fs->ss), 4, sizeof(struct sockaddr_storage));
+
+    fake_Sockaddr *fs2 = new fake_Sockaddr;
+    memset(&(fs2->ss), 5, sizeof(struct sockaddr_storage));
+
+    ASSERT_FALSE(*fs == *fs2);
+
+    *fs = *fs2;
+
+    ASSERT_TRUE(*fs == *fs2);
+
+    memset(&(fs2->ss), 0, sizeof(struct sockaddr_storage));
+    memset(&(fs->ss), 0, sizeof(struct sockaddr_storage));
+    delete fs2;
+    delete fs;
+}
+
+TEST(SockaddrTest, Sockaddr)
+{
+    struct sockaddr_storage ss;
+    memset(&ss, 0, sizeof(struct sockaddr_storage));
+    ss.ss_family = 33;
+
+    fake_Sockaddr *sa = new fake_Sockaddr((const struct sockaddr&)ss);
+
+    struct sockaddr_storage *saddr = (struct sockaddr_storage *)sa->sockaddr();
+    ASSERT_EQ(saddr->ss_family, 33);
+
+    delete sa;
+}
+
+TEST(SockaddrTest, Factory)
+{
+    struct sockaddr sa;
+
+    sa.sa_family = 0;
+    while (sa.sa_family == AF_INET || sa.sa_family == AF_INET6
+           || sa.sa_family == AF_UNIX)
+        ++sa.sa_family;
+
+    ASSERT_THROW(
+        {
+            Sockaddr *s = build_sockaddr((struct sockaddr&)sa);
+        },
+        std::runtime_error);
+}
 
 TEST(SockaddrInTest, BlankConstructor)
 {
@@ -650,20 +767,4 @@ TEST(SockaddrUnTest, Factory)
 
     delete su;
     delete sa;
-}
-
-TEST(SockaddrTest, Factory)
-{
-    struct sockaddr sa;
-
-    sa.sa_family = 0;
-    while (sa.sa_family == AF_INET || sa.sa_family == AF_INET6
-           || sa.sa_family == AF_UNIX)
-        ++sa.sa_family;
-
-    ASSERT_THROW(
-        {
-            Sockaddr *s = build_sockaddr((struct sockaddr&)sa);
-        },
-        std::runtime_error);
 }
