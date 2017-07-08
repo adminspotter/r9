@@ -135,3 +135,14 @@ TEST(DBTest, BadNtop)
         std::runtime_error);
     ntop_failure = false;
 }
+
+TEST(DBTest, Success)
+{
+    fake_DB *database;
+
+    ASSERT_NO_THROW(
+        {
+            database = new fake_DB("a", "b", "c", "d");
+        });
+    delete database;
+}
