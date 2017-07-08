@@ -122,3 +122,16 @@ TEST(DBTest, BadGetaddrinfo)
         std::runtime_error);
     getaddrinfo_failure = false;
 }
+
+TEST(DBTest, BadNtop)
+{
+    fake_DB *database;
+
+    ntop_failure = true;
+    ASSERT_THROW(
+        {
+            database = new fake_DB("a", "b", "c", "d");
+        },
+        std::runtime_error);
+    ntop_failure = false;
+}
