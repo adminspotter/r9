@@ -8,6 +8,7 @@ t_comm
 t_comm_exception
 t_configdata
 t_console
+t_db
 t_font
 t_game_obj
 t_image
@@ -20,6 +21,7 @@ t_perl
 t_sockaddr
 t_subserver
 t_tcl
+t_tcl_exception
 t_texture_parser
 t_threadpool
 t_update_pool

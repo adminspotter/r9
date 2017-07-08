@@ -14,6 +14,7 @@ if WANT_SERVER
   TC += t_action_pool \
 	t_basesock \
 	t_console \
+	t_db \
 	t_game_obj \
 	t_library \
 	t_listensock \
@@ -29,7 +30,7 @@ if WANT_PERL
   TC += t_perl
 endif
 if WANT_TCL
-  TC += t_tcl
+  TC += t_tcl t_tcl_exception
 endif
 if WANT_CLIENT
   TC += t_cache \
@@ -83,6 +84,10 @@ t_console_SOURCES = t_console.cc \
 	../server/config_data.cc ../server/config_data.h
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_console_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(WRAP_LDLIBS)
+
+t_db_SOURCES = t_db.cc \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
+t_db_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_game_obj_SOURCES = t_game_obj.cc \
 	../server/classes/game_obj.cc ../server/classes/game_obj.h \
@@ -156,6 +161,11 @@ t_perl_LDADD = $(GTEST_LIBS) $(SERVER_LDLIBS)
 t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
 t_tcl_LDADD = $(GTEST_LIBS) $(SERVER_LDLIBS)
+
+t_tcl_exception_SOURCES = t_tcl_exception.cc \
+	../server/classes/modules/tcl.cc ../server/classes/modules/r9tcl.h
+t_tcl_exception_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS) \
+	$(TCL_LDLIBS)
 
 t_cache_SOURCES = t_cache.cc ../client/cache.h
 t_cache_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
