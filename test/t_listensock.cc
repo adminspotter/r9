@@ -251,6 +251,37 @@ TEST(ListenSocketTest, Login)
     delete database;
 }
 
+TEST(ListenSocketTest, ConnectUserNoAccess)
+{
+    DB *database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_NONE));
+
+    Control *control = new Control(123LL, NULL);
+    base_user *bu = new base_user(123LL, control);
+
+    access_list access;
+
+    memset(&access.buf, 0, sizeof(packet));
+    strncpy(access.buf.log.charname, "howdy", 6);
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+    listen->users[123LL] = bu;
+
+    ASSERT_TRUE(bu->pending_logout == false);
+
+    listen->connect_user(bu, access);
+
+    ASSERT_TRUE(bu->pending_logout == true);
+
+    delete listen;
+    delete database;
+}
+
 TEST(ListenSocketTest, Logout)
 {
     Control *control = new Control(123LL, NULL);
