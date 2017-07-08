@@ -48,6 +48,7 @@ const char *inet_ntop(int a, const void *b, char *c, socklen_t d)
 
 class fake_DB : public DB
 {
+  public:
     fake_DB(const std::string& a, const std::string& b,
             const std::string& c, const std::string& d) : DB(a, b, c, d) {};
     virtual ~fake_DB() {};
