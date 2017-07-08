@@ -30,7 +30,7 @@ if WANT_PERL
   TC += t_perl
 endif
 if WANT_TCL
-  TC += t_tcl
+  TC += t_tcl t_tcl_exception
 endif
 if WANT_CLIENT
   TC += t_cache \
@@ -161,6 +161,11 @@ t_perl_LDADD = $(GTEST_LIBS) $(SERVER_LDLIBS)
 t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
 t_tcl_LDADD = $(GTEST_LIBS) $(SERVER_LDLIBS)
+
+t_tcl_exception_SOURCES = t_tcl_exception.cc \
+	../server/classes/modules/tcl.cc ../server/classes/modules/r9tcl.h
+t_tcl_exception_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS) \
+	$(TCL_LDLIBS)
 
 t_cache_SOURCES = t_cache.cc ../client/cache.h
 t_cache_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \

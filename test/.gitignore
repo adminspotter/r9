@@ -21,6 +21,7 @@ t_perl
 t_sockaddr
 t_subserver
 t_tcl
+t_tcl_exception
 t_texture_parser
 t_threadpool
 t_update_pool
