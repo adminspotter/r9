@@ -14,6 +14,7 @@ if WANT_SERVER
   TC += t_action_pool \
 	t_basesock \
 	t_console \
+	t_db \
 	t_game_obj \
 	t_library \
 	t_listensock \
@@ -83,6 +84,10 @@ t_console_SOURCES = t_console.cc \
 	../server/config_data.cc ../server/config_data.h
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_console_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(WRAP_LDLIBS)
+
+t_db_SOURCES = t_db.cc \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
+t_db_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_game_obj_SOURCES = t_game_obj.cc \
 	../server/classes/game_obj.cc ../server/classes/game_obj.h \
