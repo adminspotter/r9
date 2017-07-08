@@ -10,7 +10,24 @@ using ::testing::_;
 using ::testing::Return;
 using ::testing::Invoke;
 
-int login_count;
+bool cancel_error = false, join_error = false;
+int cancel_count, join_count, login_count;
+
+int pthread_cancel(pthread_t a)
+{
+    ++cancel_count;
+    if (cancel_error == true)
+        return EINVAL;
+    return 0;
+}
+
+int pthread_join(pthread_t a, void **b)
+{
+    ++join_count;
+    if (join_error == true)
+        return EINVAL;
+    return 0;
+}
 
 struct addrinfo *create_addrinfo(void)
 {
@@ -66,6 +83,24 @@ class test_listen_socket : public listen_socket
             delete b;
             ++login_count;
         };
+};
+
+class broken_listen_socket : public listen_socket
+{
+  public:
+    broken_listen_socket(struct addrinfo *a) : listen_socket(a) {};
+    virtual ~broken_listen_socket() {};
+
+    virtual void start(void) override
+        {
+            this->reaper_running = true;
+        };
+    virtual void stop(void) override
+        {
+            throw std::runtime_error("argh");
+        };
+
+    virtual void do_login(uint64_t a, Control *b, access_list& c) override {};
 };
 
 TEST(BaseUserTest, CreateDelete)
