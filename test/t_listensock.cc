@@ -3,10 +3,12 @@
 #include <gtest/gtest.h>
 
 #include "mock_db.h"
+#include "mock_zone.h"
 #include "mock_server_globals.h"
 
 using ::testing::_;
 using ::testing::Return;
+using ::testing::Invoke;
 
 int login_count;
 
@@ -33,6 +35,20 @@ struct addrinfo *create_addrinfo(void)
     }
 
     return addr;
+}
+
+int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
+{
+    glm::dvec3 pos(100.0, 100.0, 100.0);
+
+    gom[1234LL] = new GameObject(NULL, NULL, 1234LL);
+    gom[1234LL]->position = pos;
+
+    gom[1235LL] = new GameObject(NULL, NULL, 1235LL);
+    pos.x = 125.0;
+    gom[1235LL]->position = pos;
+
+    return 2;
 }
 
 /* The listen_socket has a couple of pure-virtual methods, so we need
@@ -279,6 +295,46 @@ TEST(ListenSocketTest, ConnectUserNoAccess)
     ASSERT_TRUE(bu->pending_logout == true);
 
     delete listen;
+    delete database;
+}
+
+TEST(ListenSocketTest, ConnectUser)
+{
+    DB *database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_))
+        .WillOnce(Invoke(fake_server_objects));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_MOVE));
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+
+    zone = new mock_Zone(1000, 1, database);
+
+    EXPECT_CALL(*((mock_Zone *)zone), connect_game_object(_, _));
+
+    Control *control = new Control(123LL, NULL);
+    base_user *bu = new base_user(123LL, control);
+
+    access_list access;
+
+    memset(&access.buf, 0, sizeof(packet));
+    strncpy(access.buf.log.charname, "howdy", 6);
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+    listen->users[123LL] = bu;
+
+    ASSERT_TRUE(bu->pending_logout == false);
+    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
+
+    listen->connect_user(bu, access);
+
+    ASSERT_TRUE(bu->pending_logout == false);
+    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+
+    delete listen;
+    delete (mock_Zone *)zone;
     delete database;
 }
 
