@@ -185,6 +185,24 @@ TEST(ListenSocketTest, CreateDelete)
     delete listen;
 }
 
+TEST(ListenSocketTest, DeleteFailure)
+{
+    struct addrinfo *addr = create_addrinfo();
+    broken_listen_socket *listen = new broken_listen_socket(addr);
+
+    listen->start();
+
+    cancel_count = join_count = 0;
+    cancel_error = join_error = true;
+    ASSERT_NO_THROW(
+        {
+            delete listen;
+        });
+    ASSERT_GT(cancel_count, 0);
+    ASSERT_GT(join_count, 0);
+    cancel_error = join_error = false;
+}
+
 TEST(ListenSocketTest, GetUserid)
 {
     database = new mock_DB("a", "b", "c", "d");
