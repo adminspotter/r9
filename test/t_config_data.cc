@@ -7,8 +7,13 @@
 #include <gtest/gtest.h>
 
 /* There is a global config_data object that comes in with
- * config_data.cc, but we won't use it.  We'll make our own new ones
- * for each test, so we don't have to worry about previous state.
+ * config_data.cc, but we'll use it as little as we can.  We'll make
+ * our own new ones for each test, so we don't have to worry about
+ * previous state.
+ *
+ * The setup_configuration and cleanup_configuration functions do work
+ * on the global object, as does the parse_config_line method, so
+ * we'll worry about it for those two tests.
  */
 
 TEST(ConfigDataTest, CreateDelete)
@@ -71,4 +76,24 @@ TEST(ConfigDataTest, ParseCommandLine)
 
     unlink(fname.c_str());
     delete conf;
+}
+
+/* This test will operate on the global, so we won't make our own. */
+TEST(ConfigDataTest, ParseConfigLine)
+{
+    std::string fname = "./t_config_data.fake";
+    std::ofstream ofs(fname);
+    ofs << std::endl;
+    ofs << "    # This is a comment" << std::endl;
+    ofs << "   Leading    spaces" << std::endl;
+    ofs << "Trailing  spaces        " << std::endl;
+    ofs << "PidFile some_file   #actual line" << std::endl;
+    ofs.close();
+
+    ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
+
+    config.read_config_file(fname);
+    unlink(fname.c_str());
+    ASSERT_NE(config.pid_fname, config_data::PID_FNAME);
+    config.pid_fname = config_data::PID_FNAME;
 }
