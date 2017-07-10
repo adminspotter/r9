@@ -78,7 +78,12 @@ TEST(ConfigDataTest, ParseCommandLine)
     delete conf;
 }
 
-/* This test will operate on the global, so we won't make our own. */
+/* This test will operate on the global, so we won't make our own.
+ * All the individual parsing functions are static within the .cc
+ * file, so we can't call them directly.  We have access to the
+ * read_config_file method, so we can tailor the lines in our file to
+ * test each of the specific functions.
+ */
 TEST(ConfigDataTest, ParseConfigLine)
 {
     std::string fname = "./t_config_data.fake";
@@ -87,13 +92,15 @@ TEST(ConfigDataTest, ParseConfigLine)
     ofs << "    # This is a comment" << std::endl;
     ofs << "   Leading    spaces" << std::endl;
     ofs << "Trailing  spaces        " << std::endl;
-    ofs << "PidFile some_file   #actual line" << std::endl;
+    ofs << "PidFile some_file  # string" << std::endl;
+    ofs << "AccessThreads 987  # integer" << std::endl;
     ofs.close();
 
     ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
+    ASSERT_EQ(config.access_threads, config_data::NUM_THREADS);
 
     config.read_config_file(fname);
     unlink(fname.c_str());
     ASSERT_NE(config.pid_fname, config_data::PID_FNAME);
-    config.pid_fname = config_data::PID_FNAME;
+    ASSERT_EQ(config.access_threads, 987);
 }
