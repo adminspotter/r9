@@ -6,6 +6,7 @@ t_basesock
 t_cache
 t_comm
 t_comm_exception
+t_config_data
 t_configdata
 t_console
 t_db
