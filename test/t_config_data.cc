@@ -94,13 +94,16 @@ TEST(ConfigDataTest, ParseConfigLine)
     ofs << "Trailing  spaces        " << std::endl;
     ofs << "PidFile some_file  # string" << std::endl;
     ofs << "AccessThreads 987  # integer" << std::endl;
+    ofs << "UseBalance 9.0     # float" << std::endl;
     ofs.close();
 
     ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
     ASSERT_EQ(config.access_threads, config_data::NUM_THREADS);
+    ASSERT_EQ(config.load_threshold, config_data::LOAD_THRESH);
 
     config.read_config_file(fname);
     unlink(fname.c_str());
     ASSERT_NE(config.pid_fname, config_data::PID_FNAME);
     ASSERT_EQ(config.access_threads, 987);
+    ASSERT_EQ(config.load_threshold, 9.0);
 }
