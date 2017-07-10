@@ -103,7 +103,7 @@ TEST(ConfigDataTest, ParseConfigLine)
 
     config.read_config_file(fname);
     unlink(fname.c_str());
-    ASSERT_NE(config.pid_fname, config_data::PID_FNAME);
+    ASSERT_EQ(config.pid_fname, "some_file");
     ASSERT_EQ(config.access_threads, 987);
     ASSERT_EQ(config.load_threshold, 9.0);
 }
