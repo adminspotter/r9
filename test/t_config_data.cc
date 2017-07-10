@@ -1,5 +1,9 @@
 #include "../server/config_data.h"
 
+#include <unistd.h>
+
+#include <fstream>
+
 #include <gtest/gtest.h>
 
 /* There is a global config_data object that comes in with
@@ -43,5 +47,28 @@ TEST(ConfigDataTest, CreateDelete)
     ASSERT_EQ(conf->size.steps[1], config_data::ZONE_STEPS);
     ASSERT_EQ(conf->size.steps[2], config_data::ZONE_STEPS);
 
+    delete conf;
+}
+
+TEST(ConfigDataTest, ParseCommandLine)
+{
+    std::string fname = "./t_config_data.fake";
+    char prog[] = "r9d", d_arg[] = "-d", f_arg[] = "-f", n_arg[] = "-n";
+    char *args[5] = { prog, d_arg, f_arg, (char *)fname.c_str(), n_arg };
+    config_data *conf = new config_data;
+
+    std::ofstream ofs(fname);
+    ofs << std::endl;
+    ofs.close();
+
+    conf->daemonize = true;
+    ASSERT_NO_THROW(
+        {
+            conf->parse_command_line(5, args);
+        });
+    ASSERT_TRUE(conf->argv.size() == 5);
+    ASSERT_EQ(conf->daemonize, false);
+
+    unlink(fname.c_str());
     delete conf;
 }
