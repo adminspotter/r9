@@ -10,9 +10,12 @@
 
 #include <gtest/gtest.h>
 
+extern void setup_configuration(int, char **);
+extern void cleanup_configuration(void);
+
 struct passwd pw;
 struct group gr;
-int getpwnam_count, getgrnam_count, seteuid_count, setegid_count;
+int getpwnam_count, getgrnam_count, seteuid_count, setegid_count, chdir_count;
 
 struct passwd *getpwnam(const char *a)
 {
@@ -45,6 +48,12 @@ int seteuid(uid_t a)
 int setegid(gid_t a)
 {
     ++setegid_count;
+    return 0;
+}
+
+int chdir(const char *a)
+{
+    ++chdir_count;
     return 0;
 }
 
@@ -95,6 +104,59 @@ TEST(ConfigDataTest, CreateDelete)
     ASSERT_EQ(conf->size.steps[2], config_data::ZONE_STEPS);
 
     delete conf;
+}
+
+TEST(ConfigDataTest, SetupCleanup)
+{
+    std::string fname = "./t_config_data.fake";
+    char prog[] = "r9d", f_arg[] = "-f";
+    char *args[3] = { prog, f_arg, (char *)fname.c_str() };
+
+    std::ofstream ofs(fname);
+    ofs << "Port dgram:0.0.0.0:9870" << std::endl;
+    ofs << "Console unix:./t_config_data.test.sock" << std::endl;
+    ofs << "ZoneSize 3000 4000 5000 3 4 5" << std::endl;
+    ofs.close();
+
+    ASSERT_EQ(config.size.dim[0], config_data::ZONE_SIZE);
+    ASSERT_EQ(config.size.dim[1], config_data::ZONE_SIZE);
+    ASSERT_EQ(config.size.dim[2], config_data::ZONE_SIZE);
+    ASSERT_EQ(config.size.steps[0], config_data::ZONE_STEPS);
+    ASSERT_EQ(config.size.steps[1], config_data::ZONE_STEPS);
+    ASSERT_EQ(config.size.steps[2], config_data::ZONE_STEPS);
+    ASSERT_TRUE(config.listen_ports.size() == 0);
+    ASSERT_TRUE(config.consoles.size() == 0);
+
+    seteuid_count = setegid_count = chdir_count = 0;
+
+    setup_configuration(3, args);
+    unlink(fname.c_str());
+
+    ASSERT_EQ(config.size.dim[0], 3000);
+    ASSERT_EQ(config.size.dim[1], 4000);
+    ASSERT_EQ(config.size.dim[2], 5000);
+    ASSERT_EQ(config.size.steps[0], 3);
+    ASSERT_EQ(config.size.steps[1], 4);
+    ASSERT_EQ(config.size.steps[2], 5);
+    ASSERT_TRUE(config.listen_ports.size() == 1);
+    ASSERT_TRUE(config.consoles.size() == 1);
+    ASSERT_EQ(seteuid_count, 0);
+    ASSERT_EQ(setegid_count, 0);
+    ASSERT_EQ(chdir_count, 0);
+
+    cleanup_configuration();
+
+    ASSERT_EQ(config.size.dim[0], config_data::ZONE_SIZE);
+    ASSERT_EQ(config.size.dim[1], config_data::ZONE_SIZE);
+    ASSERT_EQ(config.size.dim[2], config_data::ZONE_SIZE);
+    ASSERT_EQ(config.size.steps[0], config_data::ZONE_STEPS);
+    ASSERT_EQ(config.size.steps[1], config_data::ZONE_STEPS);
+    ASSERT_EQ(config.size.steps[2], config_data::ZONE_STEPS);
+    ASSERT_TRUE(config.listen_ports.size() == 0);
+    ASSERT_TRUE(config.consoles.size() == 0);
+    ASSERT_EQ(seteuid_count, 1);
+    ASSERT_EQ(setegid_count, 1);
+    ASSERT_EQ(chdir_count, 1);
 }
 
 TEST(ConfigDataTest, ParseCommandLine)
