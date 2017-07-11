@@ -5,8 +5,8 @@
 #include <string.h>
 
 bool error_fail = false;
-char *bad_news = "oh noes";
-char *good_lib = "goodlib.so";
+char bad_news[] = "oh noes";
+char good_lib[] = "goodlib.so";
 
 extern "C" {
     char *dlerror(void)

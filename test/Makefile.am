@@ -13,6 +13,7 @@ TC =
 if WANT_SERVER
   TC += t_action_pool \
 	t_basesock \
+	t_config_data \
 	t_console \
 	t_db \
 	t_game_obj \
@@ -75,6 +76,11 @@ t_basesock_SOURCES = t_basesock.cc \
 	../server/config_data.cc ../server/config_data.h
 t_basesock_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_basesock_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+
+t_config_data_SOURCES = t_config_data.cc \
+	../server/config_data.cc ../server/config_data.h
+t_config_data_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_config_data_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_console_SOURCES = t_console.cc \
 	../server/classes/modules/console.h \

@@ -1,9 +1,9 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jan 2016, 17:53:47 tquirk
+ *   last updated 10 Jul 2017, 23:39:40 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -54,9 +54,8 @@
  *
  * All boolean options (UseNonBlock, UseKeepAlive, etc.) now accept
  * boolean arguments, i.e. "yes", "on", "true" are valid values
- * (case-insensitive), as are numbers >0.  A null or 0-length value is
- * also interpreted as true.  If it doesn't recognize the option
- * string according to the above rules, it is false.
+ * (case-insensitive).  If it doesn't recognize the option string
+ * according to the above rules, it is false.
  *
  * Port types are as follows:
  *   (dgram|stream):<optional addr>:<port>
@@ -373,11 +372,9 @@ static void config_boolean_element(const std::string& key,
 {
     bool *element = (bool *)ptr;
 
-    if (value == ""
-        || value == "yes"
+    if (value == "yes"
         || value == "true"
-        || value == "on"
-        || std::stoi(value) > 0)
+        || value == "on")
         *element = true;
     else
         *element = false;

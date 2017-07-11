@@ -6,7 +6,7 @@
 #include "../server/classes/library.h"
 
 bool dlopen_error = false, dlclose_error = false, dlerror_error = false;
-char *bad_news = "oh noes";
+char bad_news[] = "oh noes";
 
 extern "C" {
     void *dlopen(const char *a, int b)
