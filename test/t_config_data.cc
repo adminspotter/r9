@@ -161,12 +161,22 @@ TEST(ConfigDataTest, ParseConfigLine)
     ofs << "LogFacility user" << std::endl;
     ofs << "LogFacility uucp" << std::endl;
     ofs << "LogFacility bogus" << std::endl;
+    ofs << "Port broken" << std::endl;
+    ofs << "Port bogus:whatever" << std::endl;
+    ofs << "Port unix:thing" << std::endl;
+    ofs << "Port dgram:1.2.3.4" << std::endl;
+    ofs << "Port dgram:1.2.3.4:9876" << std::endl;
+    ofs << "Port stream:9876" << std::endl;
+    ofs << "Port stream:f00f::abcd:9876" << std::endl;
+    ofs << "Port stream:[f00f::abcd:9876" << std::endl;
+    ofs << "Port stream:[f00f::abcd]:9876" << std::endl;
     ofs.close();
 
     ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
     ASSERT_EQ(config.access_threads, config_data::NUM_THREADS);
     ASSERT_EQ(config.load_threshold, config_data::LOAD_THRESH);
     ASSERT_EQ(config.log_facility, config_data::LOG_FACILITY);
+    ASSERT_TRUE(config.listen_ports.size() == 0);
 
     getpwnam_count = seteuid_count = 0;
     getgrnam_count = setegid_count = 0;
@@ -182,4 +192,5 @@ TEST(ConfigDataTest, ParseConfigLine)
     ASSERT_EQ(getgrnam_count, 2);
     ASSERT_EQ(setegid_count, 1);
     ASSERT_EQ(config.log_facility, LOG_UUCP);
+    ASSERT_TRUE(config.listen_ports.size() == 3);
 }
