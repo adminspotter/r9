@@ -1,10 +1,32 @@
 #include "../server/config_data.h"
 
+#include <sys/types.h>
 #include <unistd.h>
+#include <pwd.h>
 
 #include <fstream>
 
 #include <gtest/gtest.h>
+
+struct passwd pw;
+int getpwnam_count, seteuid_count;
+
+struct passwd *getpwnam(const char *a)
+{
+    ++getpwnam_count;
+    if (!strncmp(a, "correct", 7))
+    {
+        pw.pw_uid = 987;
+        return &pw;
+    }
+    return NULL;
+}
+
+int seteuid(uid_t a)
+{
+    ++seteuid_count;
+    return 0;
+}
 
 /* There is a global config_data object that comes in with
  * config_data.cc, but we'll use it as little as we can.  We'll make
@@ -89,21 +111,28 @@ TEST(ConfigDataTest, ParseConfigLine)
     std::string fname = "./t_config_data.fake";
     std::ofstream ofs(fname);
     ofs << std::endl;
-    ofs << "    # This is a comment" << std::endl;
+    ofs << "# This is a comment" << std::endl;
     ofs << "   Leading    spaces" << std::endl;
     ofs << "Trailing  spaces        " << std::endl;
     ofs << "PidFile some_file  # string" << std::endl;
     ofs << "AccessThreads 987  # integer" << std::endl;
     ofs << "UseBalance 9.0     # float" << std::endl;
+    ofs << "ServerUID wrong    # bad user" << std::endl;
+    ofs << "ServerUID correct  # good user" << std::endl;
     ofs.close();
 
     ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
     ASSERT_EQ(config.access_threads, config_data::NUM_THREADS);
     ASSERT_EQ(config.load_threshold, config_data::LOAD_THRESH);
 
+    getpwnam_count = seteuid_count = 0;
+
     config.read_config_file(fname);
     unlink(fname.c_str());
+
     ASSERT_EQ(config.pid_fname, "some_file");
     ASSERT_EQ(config.access_threads, 987);
     ASSERT_EQ(config.load_threshold, 9.0);
+    ASSERT_EQ(getpwnam_count, 2);
+    ASSERT_EQ(seteuid_count, 1);
 }
