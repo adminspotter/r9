@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
+#include <syslog.h>
 
 #include <fstream>
 
@@ -140,11 +141,32 @@ TEST(ConfigDataTest, ParseConfigLine)
     ofs << "ServerUID correct  # good user" << std::endl;
     ofs << "ServerGID wrong    # bad group" << std::endl;
     ofs << "ServerGID correct  # good group" << std::endl;
+    ofs << "LogFacility auth" << std::endl;
+    ofs << "LogFacility authpriv" << std::endl;
+    ofs << "LogFacility cron" << std::endl;
+    ofs << "LogFacility daemon" << std::endl;
+    ofs << "LogFacility kern" << std::endl;
+    ofs << "LogFacility local0" << std::endl;
+    ofs << "LogFacility local1" << std::endl;
+    ofs << "LogFacility local2" << std::endl;
+    ofs << "LogFacility local3" << std::endl;
+    ofs << "LogFacility local4" << std::endl;
+    ofs << "LogFacility local5" << std::endl;
+    ofs << "LogFacility local6" << std::endl;
+    ofs << "LogFacility local7" << std::endl;
+    ofs << "LogFacility lpr" << std::endl;
+    ofs << "LogFacility mail" << std::endl;
+    ofs << "LogFacility news" << std::endl;
+    ofs << "LogFacility syslog" << std::endl;
+    ofs << "LogFacility user" << std::endl;
+    ofs << "LogFacility uucp" << std::endl;
+    ofs << "LogFacility bogus" << std::endl;
     ofs.close();
 
     ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
     ASSERT_EQ(config.access_threads, config_data::NUM_THREADS);
     ASSERT_EQ(config.load_threshold, config_data::LOAD_THRESH);
+    ASSERT_EQ(config.log_facility, config_data::LOG_FACILITY);
 
     getpwnam_count = seteuid_count = 0;
     getgrnam_count = setegid_count = 0;
@@ -159,4 +181,5 @@ TEST(ConfigDataTest, ParseConfigLine)
     ASSERT_EQ(seteuid_count, 1);
     ASSERT_EQ(getgrnam_count, 2);
     ASSERT_EQ(setegid_count, 1);
+    ASSERT_EQ(config.log_facility, LOG_UUCP);
 }
