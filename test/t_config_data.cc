@@ -137,6 +137,10 @@ TEST(ConfigDataTest, ParseConfigLine)
     ofs << "PidFile some_file  # string" << std::endl;
     ofs << "AccessThreads 987  # integer" << std::endl;
     ofs << "UseBalance 9.0     # float" << std::endl;
+    ofs << "UseKeepAlive no    # negative bool" << std::endl;
+    ofs << "UseKeepAlive yes   # yes bool" << std::endl;
+    ofs << "UseKeepAlive true  # true bool" << std::endl;
+    ofs << "UseKeepAlive on    # on bool" << std::endl;
     ofs << "ServerUID wrong    # bad user" << std::endl;
     ofs << "ServerUID correct  # good user" << std::endl;
     ofs << "ServerGID wrong    # bad group" << std::endl;
@@ -176,6 +180,7 @@ TEST(ConfigDataTest, ParseConfigLine)
     ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
     ASSERT_EQ(config.access_threads, config_data::NUM_THREADS);
     ASSERT_EQ(config.load_threshold, config_data::LOAD_THRESH);
+    ASSERT_EQ(config.use_keepalive, false);
     ASSERT_EQ(config.log_facility, config_data::LOG_FACILITY);
     ASSERT_TRUE(config.listen_ports.size() == 0);
     ASSERT_EQ(config.size.dim[0], config_data::ZONE_SIZE);
@@ -194,6 +199,7 @@ TEST(ConfigDataTest, ParseConfigLine)
     ASSERT_EQ(config.pid_fname, "some_file");
     ASSERT_EQ(config.access_threads, 987);
     ASSERT_EQ(config.load_threshold, 9.0);
+    ASSERT_EQ(config.use_keepalive, true);
     ASSERT_EQ(getpwnam_count, 2);
     ASSERT_EQ(seteuid_count, 1);
     ASSERT_EQ(getgrnam_count, 2);
