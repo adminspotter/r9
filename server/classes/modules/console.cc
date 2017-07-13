@@ -1,9 +1,9 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2015, 08:42:25 tquirk
+ *   last updated 13 Jul 2017, 08:56:20 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,7 +24,6 @@
  * with the console session thread class.
  *
  * Things to do
- *   - See if we can use the basesock, rather than mostly reimplementing it.
  *
  */
 
@@ -44,6 +43,8 @@
 #if HAVE_LIBWRAP
 #include <tcpd.h>
 #include "../../config_data.h"
+
+static char string_unknown[] = STRING_UNKNOWN;
 #endif /* HAVE_LIBWRAP */
 
 pthread_mutex_t ConsoleSession::dispatch_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -206,7 +207,7 @@ int Console::wrap_request(Sockaddr *sa)
     return hosts_ctl((char *)config.log_prefix.c_str(),
                      (char *)sa->hostname(),
                      (char *)sa->ntop(),
-                     STRING_UNKNOWN);
+                     string_unknown);
 #else
     return 1;
 #endif
