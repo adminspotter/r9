@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:52:13 tquirk
+ *   last updated 13 Jul 2017, 09:52:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -21,11 +21,9 @@
  *
  *
  * This file contains the routines which store and retrieve data from
- * our user database files using PostgreSQL.  This is not likely to
- * be the final database system that we will use, but it's supported.
+ * our user database files using PostgreSQL.
  *
  * Things to do
- *   - Implement the stubbed-out functions.
  *
  */
 
@@ -33,6 +31,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+
+/* The PRIu64 type macros are not defined unless specifically
+ * requested by the following macro.
+ */
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
 #include <inttypes.h>
 
 #include <sstream>
