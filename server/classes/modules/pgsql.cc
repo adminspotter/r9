@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2017, 09:52:46 tquirk
+ *   last updated 13 Jul 2017, 15:48:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -52,7 +52,8 @@ PgSQL::PgSQL(const std::string& host, const std::string& user,
 {
 }
 
-uint64_t PgSQL::check_authentication(const std::string& user, const std::string& pass)
+uint64_t PgSQL::check_authentication(const std::string& user,
+                                     const std::string& pass)
 {
     PGresult *res;
     char str[256];
