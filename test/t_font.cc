@@ -28,6 +28,11 @@ std::vector<std::string> paths =
 };
 
 std::u32string single_line = {'H', 'o', 'w', 'd', 'y', '!'};
+std::vector<std::u32string> multi_line =
+{
+    {'H', 'o', 'w', 'd', 'y'},
+    {'T', 'h', 'e', 'r', 'e', '!'}
+};
 
 TEST(GlyphTest, IsLToR)
 {
@@ -157,6 +162,24 @@ TEST(FontTest, NaiveRender)
     ui::image img;
 
     f->render_string(single_line, img);
+
+    ASSERT_GT(img.width, 0);
+    ASSERT_GT(img.height, 0);
+    ASSERT_EQ(img.per_pixel, 1);
+    ASSERT_TRUE(img.data != NULL);
+
+    img.reset();
+    delete f;
+}
+
+TEST(FontTest, NaiveMultiRender)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = new ui::font(font_name, 30, paths);
+
+    ui::image img;
+
+    f->render_multiline_string(multi_line, img);
 
     ASSERT_GT(img.width, 0);
     ASSERT_GT(img.height, 0);
