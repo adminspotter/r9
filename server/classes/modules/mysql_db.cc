@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:48:04 tquirk
+ *   last updated 13 Jul 2017, 09:21:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -33,6 +33,13 @@
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
+
+/* The PRIu64 type macros are not defined unless specifically
+ * requested by the following macro.
+ */
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
 #include <inttypes.h>
 
 #include <sstream>

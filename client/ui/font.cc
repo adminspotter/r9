@@ -1,9 +1,9 @@
 /* font.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 May 2017, 13:12:37 tquirk
+ *   last updated 14 Jul 2017, 09:34:41 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -55,6 +55,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <set>
 #include <stdexcept>
 #include <algorithm>
 
@@ -70,6 +71,40 @@
  */
 static FT_Library ft_lib;
 static int ft_lib_count = 0;
+
+/* Instead of having a giant if-condition, we'll do some sensible
+ * searching with a set.  There are a handful of single code points
+ * which are r-to-l, and a number of ranges.  We'll make ranges out of
+ * the single points, with the same beginning and end, and our
+ * comparisons should still hold.
+ */
+struct range
+{
+    uint32_t start, end;
+
+    range(uint32_t a, uint32_t b) { this->start = a; this->end = b; };
+};
+
+static bool operator<(const range& a, const range& b)
+{
+    if (a.end < b.start)
+        return true;
+    return false;
+}
+
+static std::set<range> r_to_l_ranges =
+{
+    {0x05be, 0x05be}, {0x05c0, 0x05c0}, {0x05c3, 0x05c3}, {0x05c6, 0x05c6},
+    {0x05d0, 0x05f4}, {0x0608, 0x0608}, {0x060b, 0x060b}, {0x060d, 0x060d},
+    {0x061b, 0x064a}, {0x066d, 0x066f}, {0x0671, 0x06d5}, {0x06e5, 0x06e6},
+    {0x06ee, 0x06ef}, {0x06fa, 0x0710}, {0x0712, 0x072f}, {0x074d, 0x07a5},
+    {0x07b1, 0x07ea}, {0x07f4, 0x07f5}, {0x07fa, 0x0815}, {0x081a, 0x081a},
+    {0x0824, 0x0824}, {0x0828, 0x0828}, {0x0830, 0x0858}, {0x085e, 0x08ac},
+    {0x200f, 0x200f}, {0xfb1d, 0xfb1d}, {0xfb1f, 0xfb28}, {0xfb2a, 0xfd3d},
+    {0xfd50, 0xfdfc}, {0xfe70, 0xfefc}, {0x10800, 0x1091b}, {0x10920, 0x10a00},
+    {0x10a10, 0x10a33}, {0x10a40, 0x10b35}, {0x10b40, 0x10c48},
+    {0x1ee00, 0x1eebb}
+};
 
 static FT_Library *init_freetype(void)
 {
@@ -87,44 +122,16 @@ static void cleanup_freetype(void)
 
 /* The TTF format, or at least Freetype, doesn't distinguish between
  * L-to-R and R-to-L characters.  Seems that they could provide a
- * negative advance value for R-to-L, but whatever.  This table should
- * provide the ranges which are R-to-L based on Unicode code point.
+ * negative advance value for R-to-L, but whatever.  Our R-to-L set
+ * should provide the ranges which are R-to-L based on Unicode code
+ * point.
  */
 bool ui::glyph::is_l_to_r(void)
 {
-    if (this->code_point == 0x05be || this->code_point == 0x05c0
-        || this->code_point == 0x05c3 || this->code_point == 0x05c6
-        || (this->code_point >= 0x05d0 && this->code_point <= 0x05f4)
-        || this->code_point == 0x0608 || this->code_point == 0x060b
-        || this->code_point == 0x060d
-        || (this->code_point >= 0x061b && this->code_point <= 0x064a)
-        || (this->code_point >= 0x066d && this->code_point <= 0x066f)
-        || (this->code_point >= 0x0671 && this->code_point <= 0x06d5)
-        || (this->code_point >= 0x06e5 && this->code_point <= 0x06e6)
-        || (this->code_point >= 0x06ee && this->code_point <= 0x06ef)
-        || (this->code_point >= 0x06fa && this->code_point <= 0x0710)
-        || (this->code_point >= 0x0712 && this->code_point <= 0x072f)
-        || (this->code_point >= 0x074d && this->code_point <= 0x07a5)
-        || (this->code_point >= 0x07b1 && this->code_point <= 0x07ea)
-        || (this->code_point >= 0x07f4 && this->code_point <= 0x07f5)
-        || (this->code_point >= 0x07fa && this->code_point <= 0x0815)
-        || this->code_point == 0x081a || this->code_point == 0x0824
-        || this->code_point == 0x0828
-        || (this->code_point >= 0x0830 && this->code_point <= 0x0858)
-        || (this->code_point >= 0x085e && this->code_point <= 0x08ac)
-        || this->code_point == 0x200f || this->code_point == 0xfb1d
-        || (this->code_point >= 0xfb1f && this->code_point <= 0xfb28)
-        || (this->code_point >= 0xfb2a && this->code_point <= 0xfd3d)
-        || (this->code_point >= 0xfd50 && this->code_point <= 0xfdfc)
-        || (this->code_point >= 0xfe70 && this->code_point <= 0xfefc)
-        || (this->code_point >= 0x10800 && this->code_point <= 0x1091b)
-        || (this->code_point >= 0x10920 && this->code_point <= 0x10a00)
-        || (this->code_point >= 0x10a10 && this->code_point <= 0x10a33)
-        || (this->code_point >= 0x10a40 && this->code_point <= 0x10b35)
-        || (this->code_point >= 0x10b40 && this->code_point <= 0x10c48)
-        || (this->code_point >= 0x1ee00 && this->code_point <= 0x1eebb))
-        return false;
-    return true;
+    if (r_to_l_ranges.find(range(this->code_point, this->code_point))
+        == r_to_l_ranges.end())
+        return true;
+    return false;
 }
 
 std::string ui::font::search_path(std::string& font_name,
@@ -143,11 +150,13 @@ std::string ui::font::search_path(std::string& font_name,
          */
         if ((pos = path.find('~')) != std::string::npos)
         {
-            std::string home = getenv("HOME");
+            char *home;
+            std::string home_str;
 
-            if (home.size() == 0)
+            if ((home = getenv("HOME")) == NULL)
                 throw std::runtime_error(_("Could not find home directory"));
-            path.replace(pos, 1, home);
+            home_str = home;
+            path.replace(pos, 1, home_str);
         }
         path += '/' + font_name;
         if (stat(path.c_str(), &st) != -1)

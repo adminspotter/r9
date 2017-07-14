@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -6,11 +8,11 @@
 
 #include <gtest/gtest.h>
 
-/* This will be available on Macs, but probably nowhere else */
 #define FONT_NAME "techover.ttf"
 
 std::vector<std::string> paths =
 {
+    "~/whatever/man",
 #if defined(__APPLE__)
     "~/Library/Fonts",
     "/Library/Fonts",
@@ -25,6 +27,30 @@ std::vector<std::string> paths =
     ".",
 };
 
+std::u32string single_line = {'H', 'o', 'w', 'd', 'y', '!'};
+std::vector<std::u32string> multi_line =
+{
+    {'H', 'o', 'w', 'd', 'y'},
+    {'T', 'h', 'e', 'r', 'e', '!'}
+};
+
+TEST(GlyphTest, IsLToR)
+{
+    ui::glyph g;
+
+    /* Not in our map */
+    g.code_point = 0x0099;
+    ASSERT_TRUE(g.is_l_to_r());
+
+    /* A singleton in the map */
+    g.code_point = 0x05be;
+    ASSERT_FALSE(g.is_l_to_r());
+
+    /* A range in the map */
+    g.code_point = 0x05df;
+    ASSERT_FALSE(g.is_l_to_r());
+}
+
 TEST(FontTest, BasicCreateDelete)
 {
     std::string font_name = FONT_NAME;
@@ -35,6 +61,56 @@ TEST(FontTest, BasicCreateDelete)
             f = new ui::font(font_name, 10, paths);
         });
     ASSERT_TRUE(f != NULL);
+
+    delete f;
+}
+
+TEST(FontTest, SearchPath)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = NULL;
+
+    char *home = getenv("HOME"), *saved_home = NULL;
+
+    if (home != NULL)
+    {
+        saved_home = strdup(home);
+        unsetenv("HOME");
+    }
+
+    ASSERT_THROW(
+        {
+            f = new ui::font(font_name, 10, paths);
+        },
+        std::runtime_error);
+
+    if (saved_home != NULL)
+    {
+        setenv("HOME", saved_home, 1);
+        free(saved_home);
+    }
+
+    font_name = "noway_nohow_wontexist.font.hahaha";
+
+    ASSERT_THROW(
+        {
+            f = new ui::font(font_name, 10, paths);
+        },
+        std::runtime_error);
+}
+
+TEST(FontTest, MaxCellSize)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = new ui::font(font_name, 30, paths);
+
+    std::vector<int> sizes = {0, 0, 0};
+
+    f->max_cell_size(sizes);
+
+    ASSERT_GT(sizes[0], 0);
+    ASSERT_GT(sizes[1], 0);
+    ASSERT_GT(sizes[2], 0);
 
     delete f;
 }
@@ -59,5 +135,57 @@ TEST(FontTest, GlyphAccess)
     ASSERT_GT(g.pitch, 0);
     ASSERT_TRUE(g.bitmap != NULL);
 
+    delete f;
+}
+
+TEST(FontTest, NaiveSize)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = new ui::font(font_name, 30, paths);
+
+    std::vector<int> sizes = {0, 0, 0};
+
+    f->get_string_size(single_line, sizes);
+
+    ASSERT_GT(sizes[0], 0);
+    ASSERT_GT(sizes[1], 0);
+    ASSERT_GT(sizes[2], 0);
+
+    delete f;
+}
+
+TEST(FontTest, NaiveRender)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = new ui::font(font_name, 30, paths);
+
+    ui::image img;
+
+    f->render_string(single_line, img);
+
+    ASSERT_GT(img.width, 0);
+    ASSERT_GT(img.height, 0);
+    ASSERT_EQ(img.per_pixel, 1);
+    ASSERT_TRUE(img.data != NULL);
+
+    img.reset();
+    delete f;
+}
+
+TEST(FontTest, NaiveMultiRender)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = new ui::font(font_name, 30, paths);
+
+    ui::image img;
+
+    f->render_multiline_string(multi_line, img);
+
+    ASSERT_GT(img.width, 0);
+    ASSERT_GT(img.height, 0);
+    ASSERT_EQ(img.per_pixel, 1);
+    ASSERT_TRUE(img.data != NULL);
+
+    img.reset();
     delete f;
 }
