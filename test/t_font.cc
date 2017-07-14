@@ -27,6 +27,8 @@ std::vector<std::string> paths =
     ".",
 };
 
+std::u32string single_line = {'H', 'o', 'w', 'd', 'y', '!'};
+
 TEST(GlyphTest, IsLToR)
 {
     ui::glyph g;
@@ -127,6 +129,22 @@ TEST(FontTest, GlyphAccess)
     ASSERT_GT(g.top, 0);
     ASSERT_GT(g.pitch, 0);
     ASSERT_TRUE(g.bitmap != NULL);
+
+    delete f;
+}
+
+TEST(FontTest, NaiveSize)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = new ui::font(font_name, 30, paths);
+
+    std::vector<int> sizes = {0, 0, 0};
+
+    f->get_string_size(single_line, sizes);
+
+    ASSERT_GT(sizes[0], 0);
+    ASSERT_GT(sizes[1], 0);
+    ASSERT_GT(sizes[2], 0);
 
     delete f;
 }
