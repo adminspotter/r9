@@ -106,6 +106,8 @@ TEST(FontTest, MaxCellSize)
     ASSERT_GT(sizes[0], 0);
     ASSERT_GT(sizes[1], 0);
     ASSERT_GT(sizes[2], 0);
+
+    delete f;
 }
 
 TEST(FontTest, GlyphAccess)
