@@ -27,8 +27,6 @@ std::vector<std::string> paths =
     ".",
 };
 
-char fake_home[] = "/path/that/should/not/exist";
-
 TEST(GlyphTest, IsLToR)
 {
     ui::glyph g;
