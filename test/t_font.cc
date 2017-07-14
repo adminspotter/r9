@@ -89,6 +89,20 @@ TEST(FontTest, SearchPath)
         std::runtime_error);
 }
 
+TEST(FontTest, MaxCellSize)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = new ui::font(font_name, 30, paths);
+
+    std::vector<int> sizes = {0, 0, 0};
+
+    f->max_cell_size(sizes);
+
+    ASSERT_GT(sizes[0], 0);
+    ASSERT_GT(sizes[1], 0);
+    ASSERT_GT(sizes[2], 0);
+}
+
 TEST(FontTest, GlyphAccess)
 {
     std::string font_name = FONT_NAME;
