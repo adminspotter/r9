@@ -25,6 +25,23 @@ std::vector<std::string> paths =
     ".",
 };
 
+TEST(GlyphTest, IsLToR)
+{
+    ui::glyph g;
+
+    /* Not in our map */
+    g.code_point = 0x0099;
+    ASSERT_TRUE(g.is_l_to_r());
+
+    /* A singleton in the map */
+    g.code_point = 0x05be;
+    ASSERT_FALSE(g.is_l_to_r());
+
+    /* A range in the map */
+    g.code_point = 0x05df;
+    ASSERT_FALSE(g.is_l_to_r());
+}
+
 TEST(FontTest, BasicCreateDelete)
 {
     std::string font_name = FONT_NAME;
