@@ -30,7 +30,11 @@ char home[] = "/home/nobody";
 
 char *getenv(const char *a)
 {
-    if (getenv_failure == true)
+    /* GTest gets upset if we try to fake variables that it seems like
+     * it needs to have.  We'll pretend that none of them are set
+     * (which should be the case anyway).
+     */
+    if (getenv_failure == true || !strncmp("GTEST_", a, 6))
         return NULL;
     return home;
 }
