@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -25,19 +27,7 @@ std::vector<std::string> paths =
     ".",
 };
 
-bool getenv_failure = false;
-char home[] = "/home/nobody";
-
-char *getenv(const char *a)
-{
-    /* GTest gets upset if we try to fake variables that it seems like
-     * it needs to have.  We'll pretend that none of them are set
-     * (which should be the case anyway).
-     */
-    if (getenv_failure == true || !strncmp("GTEST_", a, 6))
-        return NULL;
-    return home;
-}
+char fake_home[] = "/path/that/should/not/exist";
 
 TEST(GlyphTest, IsLToR)
 {
@@ -75,7 +65,13 @@ TEST(FontTest, SearchPath)
     std::string font_name = FONT_NAME;
     ui::font *f = NULL;
 
-    getenv_failure = true;
+    char *home = getenv("HOME"), *saved_home = NULL;
+
+    if (home != NULL)
+    {
+        saved_home = strdup(home);
+        unsetenv("HOME");
+    }
 
     ASSERT_THROW(
         {
@@ -83,7 +79,12 @@ TEST(FontTest, SearchPath)
         },
         std::runtime_error);
 
-    getenv_failure = false;
+    if (saved_home != NULL)
+    {
+        setenv("HOME", saved_home, 1);
+        free(saved_home);
+    }
+
     font_name = "noway_nohow_wontexist.font.hahaha";
 
     ASSERT_THROW(
