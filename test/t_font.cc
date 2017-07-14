@@ -6,11 +6,11 @@
 
 #include <gtest/gtest.h>
 
-/* This will be available on Macs, but probably nowhere else */
 #define FONT_NAME "techover.ttf"
 
 std::vector<std::string> paths =
 {
+    "~/whatever/man",
 #if defined(__APPLE__)
     "~/Library/Fonts",
     "/Library/Fonts",
@@ -24,6 +24,16 @@ std::vector<std::string> paths =
 #endif
     ".",
 };
+
+bool getenv_failure = false;
+char home[] = "/home/nobody";
+
+char *getenv(const char *a)
+{
+    if (getenv_failure == true)
+        return NULL;
+    return home;
+}
 
 TEST(GlyphTest, IsLToR)
 {
@@ -54,6 +64,29 @@ TEST(FontTest, BasicCreateDelete)
     ASSERT_TRUE(f != NULL);
 
     delete f;
+}
+
+TEST(FontTest, SearchPath)
+{
+    std::string font_name = FONT_NAME;
+    ui::font *f = NULL;
+
+    getenv_failure = true;
+
+    ASSERT_THROW(
+        {
+            f = new ui::font(font_name, 10, paths);
+        },
+        std::runtime_error);
+
+    getenv_failure = false;
+    font_name = "noway_nohow_wontexist.font.hahaha";
+
+    ASSERT_THROW(
+        {
+            f = new ui::font(font_name, 10, paths);
+        },
+        std::runtime_error);
 }
 
 TEST(FontTest, GlyphAccess)
