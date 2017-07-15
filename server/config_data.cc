@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2017, 23:39:40 tquirk
+ *   last updated 15 Jul 2017, 00:04:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -110,6 +110,7 @@
 #endif /* HAVE_SYSLOG_H */
 #include <errno.h>
 
+#include <map>
 #include <fstream>
 #include <sstream>
 
@@ -189,6 +190,17 @@ handlers[] =
     { "UseReuse",      off(use_reuse),      &config_boolean_element  },
     { "ZoneSize",      off(size),           &config_location_element },
 #undef off
+};
+
+static std::map<std::string, int> logfac_table =
+{
+    {"auth", LOG_AUTH}, {"authpriv", LOG_AUTHPRIV}, {"cron", LOG_CRON},
+    {"daemon", LOG_DAEMON}, {"kern", LOG_KERN}, {"local0", LOG_LOCAL0},
+    {"local1", LOG_LOCAL1}, {"local2", LOG_LOCAL2}, {"local3", LOG_LOCAL3},
+    {"local4", LOG_LOCAL4}, {"local5", LOG_LOCAL5}, {"local6", LOG_LOCAL6},
+    {"local7", LOG_LOCAL7}, {"lpr", LOG_LPR}, {"mail", LOG_MAIL},
+    {"news", LOG_NEWS}, {"syslog", LOG_SYSLOG}, {"user", LOG_USER},
+    {"uucp", LOG_UUCP}
 };
 
 config_data::config_data()
@@ -412,25 +424,8 @@ static void config_logfac_element(const std::string& key,
 {
     int *element = (int *)ptr;
 
-    if (value == "auth")           *element = LOG_AUTH;
-    else if (value == "authpriv")  *element = LOG_AUTHPRIV;
-    else if (value == "cron")      *element = LOG_CRON;
-    else if (value == "daemon")    *element = LOG_DAEMON;
-    else if (value == "kern")      *element = LOG_KERN;
-    else if (value == "local0")    *element = LOG_LOCAL0;
-    else if (value == "local1")    *element = LOG_LOCAL1;
-    else if (value == "local2")    *element = LOG_LOCAL2;
-    else if (value == "local3")    *element = LOG_LOCAL3;
-    else if (value == "local4")    *element = LOG_LOCAL4;
-    else if (value == "local5")    *element = LOG_LOCAL5;
-    else if (value == "local6")    *element = LOG_LOCAL6;
-    else if (value == "local7")    *element = LOG_LOCAL7;
-    else if (value == "lpr")       *element = LOG_LPR;
-    else if (value == "mail")      *element = LOG_MAIL;
-    else if (value == "news")      *element = LOG_NEWS;
-    else if (value == "syslog")    *element = LOG_SYSLOG;
-    else if (value == "user")      *element = LOG_USER;
-    else if (value == "uucp")      *element = LOG_UUCP;
+    if (logfac_table.find(value) != logfac_table.end())
+        *element = logfac_table[value];
     else
         std::clog << "Unknown facility (" << value << ") for "
                   << key << std::endl;
