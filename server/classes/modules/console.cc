@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2017, 08:56:20 tquirk
+ *   last updated 15 Jul 2017, 17:42:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -172,7 +172,7 @@ void *Console::console_listener(void *arg)
     ConsoleSession *sess = NULL;
 
     while ((newsock = accept(con->sock,
-                             reinterpret_cast<struct sockaddr *>(&ss),
+                             (struct sockaddr *)(&ss),
                              &ss_len)) != -1)
     {
         try
