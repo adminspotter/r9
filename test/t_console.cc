@@ -9,6 +9,9 @@
 
 #define TMP_PATH  "./consoletest"
 
+extern "C" Console *console_create(struct addrinfo *);
+extern "C" void console_destroy(Console *);
+
 #if HAVE_LIBWRAP
 #include <tcpd.h>
 #include "../server/config_data.h"
@@ -57,33 +60,28 @@ TEST(ConsoleTest, CreateInet)
     freeaddrinfo(ai);
 }
 
-TEST(ConsoleTest, CreateUnix)
+TEST(ConsoleTest, CreateFactory)
 {
-    struct addrinfo ai;
-    struct sockaddr_un sun;
+    struct addrinfo hints, *ai;
+    int ret;
     Console *con;
 
-    memset(&sun, 0, sizeof(struct sockaddr_un));
-    sun.sun_family = AF_UNIX;
-    strcpy(sun.sun_path, TMP_PATH);
-
-    ai.ai_family = AF_UNIX;
-    ai.ai_socktype = SOCK_STREAM;
-    ai.ai_protocol = 0;
-    ai.ai_addrlen = sizeof(struct sockaddr_un);
-    ai.ai_addr = (struct sockaddr *)&sun;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
+    ret = getaddrinfo("localhost", "1234", &hints, &ai);
 
     ASSERT_NO_THROW(
         {
-            con = new Console(&ai);
+            con = console_create(ai);
         });
-    ASSERT_STREQ(con->sa->ntop(), TMP_PATH);
-    ASSERT_EQ(con->sa->port(), UINT16_MAX);
-    ASSERT_STREQ(con->sa->hostname(), "localhost");
+    ASSERT_STREQ(con->sa->ntop(), "127.0.0.1");
+    ASSERT_EQ(con->sa->port(), 1234);
     ASSERT_GE(con->sock, 0);
 
-    delete(con);
-    unlink(TMP_PATH);
+    console_destroy(con);
+    freeaddrinfo(ai);
 }
 
 TEST(ConsoleTest, WrapRequest)
