@@ -146,37 +146,3 @@ TEST(ConsoleTest, InetListener)
     delete(con);
     freeaddrinfo(ai);
 }
-
-TEST(ConsoleTest, UnixListener)
-{
-    struct addrinfo ai;
-    struct sockaddr_un sun;
-    Console *con;
-
-    memset(&sun, 0, sizeof(struct sockaddr_un));
-    sun.sun_family = AF_UNIX;
-    strcpy(sun.sun_path, TMP_PATH);
-
-    ai.ai_family = AF_UNIX;
-    ai.ai_socktype = SOCK_STREAM;
-    ai.ai_protocol = 0;
-    ai.ai_addrlen = sizeof(struct sockaddr_un);
-    ai.ai_addr = (struct sockaddr *)&sun;
-
-    ASSERT_NO_THROW(
-        {
-            con = new Console(&ai);
-        });
-    ASSERT_STREQ(con->sa->ntop(), TMP_PATH);
-    ASSERT_EQ(con->sa->port(), UINT16_MAX);
-    ASSERT_STREQ(con->sa->hostname(), "localhost");
-    ASSERT_GE(con->sock, 0);
-
-    con->listen_arg = (void *)con;
-    con->start(Console::console_listener);
-    /* Should send some data to it */
-    con->stop();
-
-    delete(con);
-    unlink(TMP_PATH);
-}
