@@ -190,7 +190,7 @@ TEST(ConsoleTest, InetListener)
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1237", &hints, &ai);
     ASSERT_EQ(ret, 0);
@@ -205,7 +205,9 @@ TEST(ConsoleTest, InetListener)
 
     con->listen_arg = (void *)con;
     con->start(Console::console_listener);
-    /* Should send some data to it */
+
+    send_data_to(1237);
+
     con->stop();
 
     delete(con);
