@@ -35,6 +35,71 @@ int hosts_ctl(char *prefix, char *hostname, char *address, char *user)
 }
 #endif /* HAVE_LIBWRAP */
 
+void send_data_to(short port)
+{
+    struct addrinfo hints, *ai;
+    int sock, len;
+    char buf[1024];
+
+    snprintf(buf, sizeof(buf), "%d", port);
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    getaddrinfo("localhost", buf, &hints, &ai);
+
+    if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        std::ostringstream s;
+        s << "socket error: " << strerror(errno) << " (" << errno << ')';
+        throw std::runtime_error(s.str());
+    }
+    std::cerr << "sock opened" << std::endl;
+
+    if (connect(sock, ai->ai_addr, ai->ai_addrlen) < 0)
+    {
+        std::ostringstream s;
+        s << "connect error: " << strerror(errno) << " (" << errno << ')';
+        throw std::runtime_error(s.str());
+    }
+    std::cerr << "connected" << std::endl;
+
+    /* First thing, we should get a prompt */
+    len = recv(sock, buf, sizeof(buf), 0);
+    ASSERT_GT(len, 0);
+    std::cerr << "got the prompt" << std::endl;
+
+    /* Send a fake command */
+    len = snprintf(buf, sizeof(buf), "whoa\n");
+    len = send(sock, buf, len, 0);
+    ASSERT_GT(len, 0);
+    std::cerr << "sent the fake command" << std::endl;
+
+    len = recv(sock, buf, sizeof(buf), 0);
+    ASSERT_GT(len, 0);
+    ASSERT_TRUE(strstr(buf, "not implemented") != NULL);
+    std::cerr << "got the message" << std::endl;
+
+    /* Logout */
+    len = snprintf(buf, sizeof(buf), "exit\n");
+    len = send(sock, buf, len, 0);
+    ASSERT_GT(len, 0);
+    std::cerr << "sent the logout" << std::endl;
+
+    /* We should get a message, then a closed connection */
+    len = recv(sock, buf, sizeof(buf), 0);
+    ASSERT_GT(len, 0);
+    std::cerr << "got the message" << std::endl;
+
+    while ((len = recv(sock, buf, sizeof(buf), 0)) != 0)
+        std::cerr << "read " << len << " bytes" << std::endl;
+
+    close(sock);
+    std::cerr << "closed the sock" << std::endl;
+    freeaddrinfo(ai);
+    std::cerr << "freed the addrinfo" << std::endl;
+}
+
 TEST(ConsoleTest, CreateInet)
 {
     struct addrinfo hints, *ai;
