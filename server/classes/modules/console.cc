@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jul 2017, 17:42:18 tquirk
+ *   last updated 16 Jul 2017, 09:50:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -125,14 +125,14 @@ void ConsoleSession::cleanup(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;
 
-    delete sess->in->rdbuf();
-    delete sess->in;
-    delete sess->out->rdbuf();
-    delete sess->out;
     if (sess->sock)
     {
         close(sess->sock);
         sess->sock = 0;
+        delete sess->in->rdbuf();
+        delete sess->in;
+        delete sess->out->rdbuf();
+        delete sess->out;
     }
 }
 
