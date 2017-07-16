@@ -8,3 +8,5 @@ ratings:
   - doc/
 exclude_paths:
 - test/
+- intl/
+- m4/
