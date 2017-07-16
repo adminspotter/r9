@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2017, 08:56:20 tquirk
+ *   last updated 16 Jul 2017, 09:50:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -125,14 +125,14 @@ void ConsoleSession::cleanup(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;
 
-    delete sess->in->rdbuf();
-    delete sess->in;
-    delete sess->out->rdbuf();
-    delete sess->out;
     if (sess->sock)
     {
         close(sess->sock);
         sess->sock = 0;
+        delete sess->in->rdbuf();
+        delete sess->in;
+        delete sess->out->rdbuf();
+        delete sess->out;
     }
 }
 
@@ -172,7 +172,7 @@ void *Console::console_listener(void *arg)
     ConsoleSession *sess = NULL;
 
     while ((newsock = accept(con->sock,
-                             reinterpret_cast<struct sockaddr *>(&ss),
+                             (struct sockaddr *)(&ss),
                              &ss_len)) != -1)
     {
         try

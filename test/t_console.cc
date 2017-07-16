@@ -9,6 +9,9 @@
 
 #define TMP_PATH  "./consoletest"
 
+extern "C" Console *console_create(struct addrinfo *);
+extern "C" void console_destroy(Console *);
+
 #if HAVE_LIBWRAP
 #include <tcpd.h>
 #include "../server/config_data.h"
@@ -31,6 +34,71 @@ int hosts_ctl(char *prefix, char *hostname, char *address, char *user)
     return ret;
 }
 #endif /* HAVE_LIBWRAP */
+
+void send_data_to(short port)
+{
+    struct addrinfo hints, *ai;
+    int sock, len;
+    char buf[1024];
+
+    snprintf(buf, sizeof(buf), "%d", port);
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    getaddrinfo("localhost", buf, &hints, &ai);
+
+    if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        std::ostringstream s;
+        s << "socket error: " << strerror(errno) << " (" << errno << ')';
+        throw std::runtime_error(s.str());
+    }
+    std::cerr << "sock opened" << std::endl;
+
+    if (connect(sock, ai->ai_addr, ai->ai_addrlen) < 0)
+    {
+        std::ostringstream s;
+        s << "connect error: " << strerror(errno) << " (" << errno << ')';
+        throw std::runtime_error(s.str());
+    }
+    std::cerr << "connected" << std::endl;
+
+    /* First thing, we should get a prompt */
+    len = recv(sock, buf, sizeof(buf), 0);
+    ASSERT_GT(len, 0);
+    std::cerr << "got the prompt" << std::endl;
+
+    /* Send a fake command */
+    len = snprintf(buf, sizeof(buf), "whoa\n");
+    len = send(sock, buf, len, 0);
+    ASSERT_GT(len, 0);
+    std::cerr << "sent the fake command" << std::endl;
+
+    len = recv(sock, buf, sizeof(buf), 0);
+    ASSERT_GT(len, 0);
+    ASSERT_TRUE(strstr(buf, "not implemented") != NULL);
+    std::cerr << "got the message" << std::endl;
+
+    /* Logout */
+    len = snprintf(buf, sizeof(buf), "exit\n");
+    len = send(sock, buf, len, 0);
+    ASSERT_GT(len, 0);
+    std::cerr << "sent the logout" << std::endl;
+
+    /* We should get a message, then a closed connection */
+    len = recv(sock, buf, sizeof(buf), 0);
+    ASSERT_GT(len, 0);
+    std::cerr << "got the message" << std::endl;
+
+    while ((len = recv(sock, buf, sizeof(buf), 0)) != 0)
+        std::cerr << "read " << len << " bytes" << std::endl;
+
+    close(sock);
+    std::cerr << "closed the sock" << std::endl;
+    freeaddrinfo(ai);
+    std::cerr << "freed the addrinfo" << std::endl;
+}
 
 TEST(ConsoleTest, CreateInet)
 {
@@ -57,33 +125,28 @@ TEST(ConsoleTest, CreateInet)
     freeaddrinfo(ai);
 }
 
-TEST(ConsoleTest, CreateUnix)
+TEST(ConsoleTest, CreateFactory)
 {
-    struct addrinfo ai;
-    struct sockaddr_un sun;
+    struct addrinfo hints, *ai;
+    int ret;
     Console *con;
 
-    memset(&sun, 0, sizeof(struct sockaddr_un));
-    sun.sun_family = AF_UNIX;
-    strcpy(sun.sun_path, TMP_PATH);
-
-    ai.ai_family = AF_UNIX;
-    ai.ai_socktype = SOCK_STREAM;
-    ai.ai_protocol = 0;
-    ai.ai_addrlen = sizeof(struct sockaddr_un);
-    ai.ai_addr = (struct sockaddr *)&sun;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
+    ret = getaddrinfo("localhost", "1234", &hints, &ai);
 
     ASSERT_NO_THROW(
         {
-            con = new Console(&ai);
+            con = console_create(ai);
         });
-    ASSERT_STREQ(con->sa->ntop(), TMP_PATH);
-    ASSERT_EQ(con->sa->port(), UINT16_MAX);
-    ASSERT_STREQ(con->sa->hostname(), "localhost");
+    ASSERT_STREQ(con->sa->ntop(), "127.0.0.1");
+    ASSERT_EQ(con->sa->port(), 1234);
     ASSERT_GE(con->sock, 0);
 
-    delete(con);
-    unlink(TMP_PATH);
+    console_destroy(con);
+    freeaddrinfo(ai);
 }
 
 TEST(ConsoleTest, WrapRequest)
@@ -127,7 +190,7 @@ TEST(ConsoleTest, InetListener)
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1237", &hints, &ai);
     ASSERT_EQ(ret, 0);
@@ -142,43 +205,11 @@ TEST(ConsoleTest, InetListener)
 
     con->listen_arg = (void *)con;
     con->start(Console::console_listener);
-    /* Should send some data to it */
+
+    send_data_to(1237);
+
     con->stop();
 
     delete(con);
     freeaddrinfo(ai);
-}
-
-TEST(ConsoleTest, UnixListener)
-{
-    struct addrinfo ai;
-    struct sockaddr_un sun;
-    Console *con;
-
-    memset(&sun, 0, sizeof(struct sockaddr_un));
-    sun.sun_family = AF_UNIX;
-    strcpy(sun.sun_path, TMP_PATH);
-
-    ai.ai_family = AF_UNIX;
-    ai.ai_socktype = SOCK_STREAM;
-    ai.ai_protocol = 0;
-    ai.ai_addrlen = sizeof(struct sockaddr_un);
-    ai.ai_addr = (struct sockaddr *)&sun;
-
-    ASSERT_NO_THROW(
-        {
-            con = new Console(&ai);
-        });
-    ASSERT_STREQ(con->sa->ntop(), TMP_PATH);
-    ASSERT_EQ(con->sa->port(), UINT16_MAX);
-    ASSERT_STREQ(con->sa->hostname(), "localhost");
-    ASSERT_GE(con->sock, 0);
-
-    con->listen_arg = (void *)con;
-    con->start(Console::console_listener);
-    /* Should send some data to it */
-    con->stop();
-
-    delete(con);
-    unlink(TMP_PATH);
 }
