@@ -85,7 +85,6 @@ class dgram_socket : public listen_socket
     void do_logout(base_user *) override;
 
     static void *dgram_listen_worker(void *);
-    static void *dgram_reaper_worker(void *);
     static void *dgram_send_worker(void *);
 };
 

@@ -212,50 +212,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     return NULL;
 }
 
-void *dgram_socket::dgram_reaper_worker(void *arg)
-{
-    dgram_socket *dgs = (dgram_socket *)arg;
-    listen_socket::users_iterator i;
-    dgram_user *dgu;
-    time_t now;
-
-    std::clog << "started reaper thread for datagram port "
-              << dgs->sock.sa->port() << std::endl;
-    for (;;)
-    {
-        sleep(listen_socket::REAP_TIMEOUT);
-        now = time(NULL);
-        for (i = dgs->users.begin(); i != dgs->users.end(); ++i)
-        {
-            pthread_testcancel();
-            if ((dgu = dynamic_cast<dgram_user *>((*i).second)) == NULL)
-                continue;
-            if (dgu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
-            {
-                /* We'll consider the user link-dead */
-                std::clog << "removing user "
-                          << dgu->control->username << " ("
-                          << dgu->userid << ") from datagram port "
-                          << dgs->sock.sa->port() << std::endl;
-                if (dgu->control->slave != NULL)
-                {
-                    /* Clean up a user who has logged out */
-                    dgu->control->slave->natures.insert("invisible");
-                    dgu->control->slave->natures.insert("non-interactive");
-                }
-                delete dgu->control;
-                dgs->socks.erase(dgu->sa);
-                dgs->users.erase((*(i--)).second->userid);
-            }
-            else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
-                     && dgu->pending_logout == false)
-                dgs->send_ping(dgu->control);
-        }
-        pthread_testcancel();
-    }
-    return NULL;
-}
-
 void *dgram_socket::dgram_send_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
