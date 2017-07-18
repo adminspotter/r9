@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 08:35:50 tquirk
+ *   last updated 18 Jul 2017, 09:11:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -83,7 +83,6 @@ listen_socket::listen_socket(struct addrinfo *ai)
 
 listen_socket::~listen_socket()
 {
-    int retval;
     listen_socket::users_iterator i;
 
     try { this->stop(); }
@@ -139,6 +138,8 @@ void listen_socket::start(void)
 
 void listen_socket::stop(void)
 {
+    int retval;
+
     this->send_pool->stop();
     this->access_pool->stop();
     this->sock.stop();
