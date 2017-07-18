@@ -1,6 +1,6 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:59:57 tquirk
+ *   last updated 18 Jul 2017, 07:33:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -76,6 +76,8 @@ class dgram_socket : public listen_socket
   public:
     dgram_socket(struct addrinfo *);
     ~dgram_socket();
+
+    std::string port_type(void) override;
 
     void start(void) override;
 

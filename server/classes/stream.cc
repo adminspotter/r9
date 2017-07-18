@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jul 2017, 22:48:24 tquirk
+ *   last updated 18 Jul 2017, 07:54:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -251,6 +251,11 @@ stream_socket::~stream_socket()
     this->subservers.erase(this->subservers.begin(), this->subservers.end());
 
     /* Thread pools are handled by the listen_socket destructor */
+}
+
+std::string stream_socket::port_type(void)
+{
+    return "stream";
 }
 
 void stream_socket::start(void)

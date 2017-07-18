@@ -11,6 +11,8 @@ class mock_listen_socket : public listen_socket
     mock_listen_socket(struct addrinfo *a) : listen_socket(a) {};
     virtual ~mock_listen_socket() {};
 
+    MOCK_METHOD0(port_type, std::string(void));
+
     MOCK_METHOD0(init, void(void));
     MOCK_METHOD0(start, void(void));
     MOCK_METHOD0(stop, void(void));

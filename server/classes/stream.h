@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:59:45 tquirk
+ *   last updated 18 Jul 2017, 07:32:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -75,6 +75,8 @@ class stream_socket : public listen_socket
   public:
     stream_socket(struct addrinfo *);
     ~stream_socket();
+
+    std::string port_type(void) override;
 
     void start(void) override;
 

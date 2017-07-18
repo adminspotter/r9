@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jul 2017, 22:33:02 tquirk
+ *   last updated 18 Jul 2017, 07:56:49 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -68,6 +68,11 @@ dgram_socket::~dgram_socket()
     /* Should we send logout messages to everybody? */
 
     /* Thread pools are handled by the listen_socket destructor */
+}
+
+std::string dgram_socket::port_type(void)
+{
+    return "datagram";
 }
 
 void dgram_socket::start(void)

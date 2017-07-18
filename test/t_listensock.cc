@@ -91,6 +91,11 @@ class broken_listen_socket : public listen_socket
     broken_listen_socket(struct addrinfo *a) : listen_socket(a) {};
     virtual ~broken_listen_socket() {};
 
+    virtual std::string port_type(void) override
+        {
+            return "broken";
+        };
+
     virtual void start(void) override
         {
             this->reaper_running = true;
