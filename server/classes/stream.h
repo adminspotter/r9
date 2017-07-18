@@ -84,7 +84,6 @@ class stream_socket : public listen_socket
     void do_logout(base_user *) override;
 
     static void *stream_listen_worker(void *);
-    static void *stream_reaper_worker(void *);
     static void *stream_send_worker(void *);
 };
 

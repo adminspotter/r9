@@ -424,55 +424,6 @@ void *stream_socket::stream_listen_worker(void *arg)
     return NULL;
 }
 
-void *stream_socket::stream_reaper_worker(void *arg)
-{
-    stream_socket *sts = (stream_socket *)arg;
-    listen_socket::users_iterator i;
-    stream_user *stu;
-    time_t now;
-
-    std::clog << "started reaper thread for stream port "
-              << sts->sock.sa->port() << std::endl;
-    for (;;)
-    {
-        sleep(listen_socket::REAP_TIMEOUT);
-        now = time(NULL);
-        for (i = sts->users.begin(); i != sts->users.end(); ++i)
-        {
-            pthread_testcancel();
-            if ((stu = dynamic_cast<stream_user *>((*i).second)) == NULL)
-                continue;
-            if (stu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
-            {
-                /* We'll consider the user link-dead */
-                std::clog << "removing user "
-                          << stu->control->username
-                          << " (" << stu->userid << ") from stream port "
-                          << sts->sock.sa->port() << std::endl;
-                if (stu->control->slave != NULL)
-                {
-                    /* Clean up a user who has logged out */
-                    stu->control->slave->natures.insert("invisible");
-                    stu->control->slave->natures.insert("non-interactive");
-                }
-                delete stu->control;
-                /* Tell subserver stu->subserv to close and erase user
-                 * stu->fd
-                 * To do this, we'll simply pass the descriptor again.
-                 */
-                sts->pass_fd(stu->subsrv, stu->fd);
-                sts->users.erase((*(i--)).second->userid);
-            }
-            else if (stu->timestamp < now - listen_socket::PING_TIMEOUT
-                     && stu->pending_logout == false)
-                /* After 30 seconds, see if the user is still there */
-                sts->send_ping(stu->control);
-        }
-        pthread_testcancel();
-    }
-    return NULL;
-}
-
 void *stream_socket::stream_send_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
