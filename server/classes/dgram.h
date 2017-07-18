@@ -1,6 +1,6 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 07:33:12 tquirk
+ *   last updated 18 Jul 2017, 09:31:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -74,7 +74,10 @@ class dgram_socket : public listen_socket
                      less_sockaddr>::iterator socks_iterator;
 
   public:
-    dgram_socket(struct addrinfo *);
+    dgram_socket(struct addrinfo *,
+                 int = listen_socket::REAP_TIMEOUT,
+                 int = listen_socket::PING_TIMEOUT,
+                 int = listen_socket::LINK_DEAD_TIMEOUT);
     ~dgram_socket();
 
     std::string port_type(void) override;

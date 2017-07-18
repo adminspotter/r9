@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 09:15:15 tquirk
+ *   last updated 18 Jul 2017, 09:31:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -58,8 +58,8 @@ const dgram_user& dgram_user::operator=(const dgram_user& du)
     return *this;
 }
 
-dgram_socket::dgram_socket(struct addrinfo *ai)
-    : listen_socket(ai)
+dgram_socket::dgram_socket(struct addrinfo *ai, int rt, int pt, int ldt)
+    : listen_socket(ai, rt, pt, ldt)
 {
 }
 

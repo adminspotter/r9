@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 08:34:50 tquirk
+ *   last updated 18 Jul 2017, 09:32:20 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -79,8 +79,8 @@ const stream_socket::subserver& stream_socket::subserver::operator=(const stream
     return *this;
 }
 
-stream_socket::stream_socket(struct addrinfo *ai)
-    : listen_socket(ai), subservers()
+stream_socket::stream_socket(struct addrinfo *ai, int rt, int pt, int ldt)
+    : listen_socket(ai, rt, pt, ldt), subservers()
 {
     FD_ZERO(&(this->master_readfs));
     FD_SET(this->sock.sock, &(this->master_readfs));
