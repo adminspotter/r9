@@ -89,22 +89,6 @@ listen_socket::~listen_socket()
     try { this->stop(); }
     catch (std::exception& e) { /* Do nothing */ }
 
-    if (this->reaper_running)
-    {
-        if ((retval = pthread_cancel(this->reaper)) != 0)
-        {
-            std::clog << syslogErr << "couldn't cancel reaper thread for port "
-                      << this->sock.sa->port() << ": "
-                      << strerror(retval) << " (" << retval << ")" << std::endl;
-        }
-        sleep(0);
-        if ((retval = pthread_join(this->reaper, NULL)) != 0)
-            std::clog << syslogErr
-                      << "error terminating reaper thread for port "
-                      << this->sock.sa->port() << ": "
-                      << strerror(retval) << " (" << retval << ")" << std::endl;
-    }
-
     /* Clear out the users map */
     for (i = this->users.begin(); i != this->users.end(); ++i)
         delete (*i).second;
@@ -158,6 +142,24 @@ void listen_socket::stop(void)
     this->send_pool->stop();
     this->access_pool->stop();
     this->sock.stop();
+
+    if (this->reaper_running)
+    {
+        if ((retval = pthread_cancel(this->reaper)) != 0)
+        {
+            std::clog << syslogErr << "couldn't cancel reaper thread for "
+                      << this->port_type() << " port "
+                      << this->sock.sa->port() << ": "
+                      << strerror(retval) << " (" << retval << ")" << std::endl;
+        }
+        sleep(0);
+        if ((retval = pthread_join(this->reaper, NULL)) != 0)
+            std::clog << syslogErr
+                      << "error terminating reaper thread for "
+                      << this->port_type() << " port "
+                      << this->sock.sa->port() << ": "
+                      << strerror(retval) << " (" << retval << ")" << std::endl;
+    }
 }
 
 void *listen_socket::access_pool_worker(void *arg)
