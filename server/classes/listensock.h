@@ -99,6 +99,7 @@ class listen_socket {
     virtual void logout_user(access_list&);
 
     virtual void do_login(uint64_t, Control *, access_list&) = 0;
+    virtual void do_logout(base_user *) = 0;
 
     virtual void send_ping(Control *);
     virtual void send_ack(Control *, uint8_t, uint8_t);

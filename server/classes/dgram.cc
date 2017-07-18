@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 07:56:49 tquirk
+ *   last updated 18 Jul 2017, 08:23:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -114,6 +114,18 @@ void dgram_socket::do_login(uint64_t userid,
     this->socks[dgu->sa] = dgu;
 
     this->connect_user((base_user *)dgu, al);
+}
+
+/* The do_logout method performs the only dgram_socket-specific work
+ * for removing a datagram user from the object.  Everything else is
+ * handled in listen_socket::reaper_worker.
+ */
+void dgram_socket::do_logout(base_user *bu)
+{
+    dgram_user *dgu = dynamic_cast<dgram_user *>(bu);
+
+    if (dgu != NULL)
+        dgs->socks.erase(dgu->sa);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)

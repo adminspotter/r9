@@ -81,6 +81,7 @@ class stream_socket : public listen_socket
     void start(void) override;
 
     void do_login(uint64_t, Control *, access_list&) override;
+    void do_logout(base_user *) override;
 
     static void *stream_listen_worker(void *);
     static void *stream_reaper_worker(void *);

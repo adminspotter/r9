@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 07:54:55 tquirk
+ *   last updated 18 Jul 2017, 08:34:50 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -310,6 +310,21 @@ void stream_socket::do_login(uint64_t userid,
     users[userid] = stu;
 
     this->connect_user((base_user *)stu, al);
+}
+
+/* The do_logout method performs the only stream_socket-specific work
+ * for removing a stream user from the object.  Everything else is
+ * handled in listen_socket::reaper_worker.
+ */
+void stream_socket::do_logout(base_user *bu)
+{
+    stream_user *stu = dynamic_cast<stream_user *>(bu);
+
+    if (stu != NULL)
+        /* Tell the appropriate subserver to close and erase user
+         * stu->fd by passing the descriptor in again.
+         */
+        this->pass_fd(stu->subsrv, stu->fd);
 }
 
 void *stream_socket::stream_listen_worker(void *arg)
