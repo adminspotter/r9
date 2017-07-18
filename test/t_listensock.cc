@@ -77,12 +77,18 @@ class test_listen_socket : public listen_socket
     test_listen_socket(struct addrinfo *a) : listen_socket(a) {};
     virtual ~test_listen_socket() {};
 
+    virtual std::string port_type(void) override
+        {
+            return "test";
+        };
+
     virtual void start(void) override {};
     virtual void do_login(uint64_t a, Control *b, access_list& c) override
         {
             delete b;
             ++login_count;
         };
+    virtual void do_logout(base_user *a) override {};
 };
 
 class broken_listen_socket : public listen_socket
