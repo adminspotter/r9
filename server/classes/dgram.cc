@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 08:23:29 tquirk
+ *   last updated 18 Jul 2017, 09:15:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -107,7 +107,7 @@ void dgram_socket::do_logout(base_user *bu)
     dgram_user *dgu = dynamic_cast<dgram_user *>(bu);
 
     if (dgu != NULL)
-        dgs->socks.erase(dgu->sa);
+        this->socks.erase(dgu->sa);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
