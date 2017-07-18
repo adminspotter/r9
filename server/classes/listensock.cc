@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 09:11:52 tquirk
+ *   last updated 18 Jul 2017, 09:13:33 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -189,7 +189,7 @@ void *listen_socket::reaper_worker(void *arg)
 {
     listen_socket *ls = (listen_socket *)arg;
     listen_socket::users_iterator i;
-    bu *bu;
+    base_user *bu;
     time_t now;
 
     std::clog << "started reaper thread for " << ls->port_type() << " port "
