@@ -24,6 +24,9 @@ class mock_listen_socket : public listen_socket
     MOCK_METHOD1(get_userid, uint64_t(login_request&));
     MOCK_METHOD2(connect_user, void(base_user *, access_list&));
 
+    MOCK_METHOD1(do_logout, void(base_user *));
+
+    MOCK_METHOD1(send_ping, void(Control *));
     MOCK_METHOD3(send_ack, void(Control *, uint8_t, uint8_t));
 
     /* Shouldn't need to mock the access_pool_worker static method,

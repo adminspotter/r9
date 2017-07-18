@@ -106,6 +106,7 @@ class broken_listen_socket : public listen_socket
         };
 
     virtual void do_login(uint64_t a, Control *b, access_list& c) override {};
+    virtual void do_logout(base_user *a) override {};
 };
 
 TEST(BaseUserTest, CreateDelete)
