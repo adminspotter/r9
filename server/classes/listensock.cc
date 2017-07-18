@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jul 2017, 22:31:58 tquirk
+ *   last updated 18 Jul 2017, 08:35:50 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -153,6 +153,48 @@ void *listen_socket::access_pool_worker(void *arg)
         /* Otherwise, we don't recognize it, and will ignore it */
     }
     std::clog << "access pool worker ending";
+    return NULL;
+}
+
+void *listen_socket::reaper_worker(void *arg)
+{
+    listen_socket *ls = (listen_socket *)arg;
+    listen_socket::users_iterator i;
+    bu *bu;
+    time_t now;
+
+    std::clog << "started reaper thread for " << ls->port_type() << " port "
+              << ls->sock.sa->port() << std::endl;
+    for (;;)
+    {
+        sleep(listen_socket::REAP_TIMEOUT);
+        now = time(NULL);
+        for (i = ls->users.begin(); i != ls->users.end(); ++i)
+        {
+            pthread_testcancel();
+            if (bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
+            {
+                /* We'll consider the user link-dead */
+                std::clog << "removing user "
+                          << bu->control->username << " ("
+                          << bu->userid << ") from " << ls->port_type()
+                          << " port " << ls->sock.sa->port() << std::endl;
+                if (bu->control->slave != NULL)
+                {
+                    /* Clean up a user who has logged out */
+                    bu->control->slave->natures.insert("invisible");
+                    bu->control->slave->natures.insert("non-interactive");
+                }
+                delete bu->control;
+                ls->do_logout(bu);
+                ls->users.erase((*(i--)).second->userid);
+            }
+            else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
+                     && bu->pending_logout == false)
+                ls->send_ping(bu->control);
+        }
+        pthread_testcancel();
+    }
     return NULL;
 }
 

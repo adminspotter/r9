@@ -91,6 +91,7 @@ class listen_socket {
     virtual void stop(void);
 
     static void *access_pool_worker(void *);
+    static void *reaper_worker(void *);
 
     virtual void login_user(access_list&);
     virtual uint64_t get_userid(login_request&);
