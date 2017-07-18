@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:53:34 tquirk
+ *   last updated 17 Jul 2017, 22:33:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -250,16 +250,7 @@ void *dgram_socket::dgram_reaper_worker(void *arg)
             }
             else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
                      && dgu->pending_logout == false)
-            {
-                packet_list pkt;
-
-                pkt.buf.basic.type = TYPE_PNGPKT;
-                pkt.buf.basic.version = 1;
-                pkt.buf.basic.sequence = dgu->sequence++;
-                pkt.who = dgu->control;
-                pkt.parent = dgs;
-                dgs->send_pool->push(pkt);
-            }
+                dgs->send_ping(dgu->control);
         }
         pthread_testcancel();
     }

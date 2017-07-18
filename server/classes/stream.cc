@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2017, 21:44:59 tquirk
+ *   last updated 17 Jul 2017, 22:48:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -461,17 +461,8 @@ void *stream_socket::stream_reaper_worker(void *arg)
             }
             else if (stu->timestamp < now - listen_socket::PING_TIMEOUT
                      && stu->pending_logout == false)
-            {
                 /* After 30 seconds, see if the user is still there */
-                packet_list pkt;
-
-                pkt.buf.basic.type = TYPE_PNGPKT;
-                pkt.buf.basic.version = 1;
-                pkt.buf.basic.sequence = stu->sequence++;
-                pkt.who = stu->control;
-                pkt.parent = sts;
-                sts->send_pool->push(pkt);
-            }
+                sts->send_ping(stu->control);
         }
         pthread_testcancel();
     }
