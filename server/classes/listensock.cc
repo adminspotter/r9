@@ -127,6 +127,32 @@ void listen_socket::init(void)
     this->reaper_running = false;
 }
 
+void listen_socket::start(void)
+{
+    int retval;
+
+    std::clog << "starting connection loop for "
+              << this->port_type() << " port "
+              << this->sock.sa->port() << std::endl;
+
+    /* Start up the reaping thread */
+    if ((retval = pthread_create(&this->reaper, NULL,
+                                 reaper_worker, (void *)this)) != 0)
+    {
+        std::ostringstream s;
+        s << "couldn't create reaper thread for "
+          << this->port_type() << " port "
+          << this->sock.sa->port() << ": "
+          << strerror(retval) << " (" << retval << ")";
+        throw std::runtime_error(s.str());
+    }
+    this->reaper_running = true;
+
+    sleep(0);
+    this->access_pool->startup_arg = (void *)this;
+    this->access_pool->start(listen_socket::access_pool_worker);
+}
+
 void listen_socket::stop(void)
 {
     this->send_pool->stop();

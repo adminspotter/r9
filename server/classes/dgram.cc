@@ -77,31 +77,13 @@ std::string dgram_socket::port_type(void)
 
 void dgram_socket::start(void)
 {
-    int retval;
-
-    std::clog << "starting connection loop for datagram port "
-              << this->sock.sa->port() << std::endl;
+    this->listen_socket::start();
 
     /* Start up the listen thread and thread pools */
-    sleep(0);
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(dgram_socket::dgram_send_worker);
-    this->access_pool->startup_arg = (void *)this;
-    this->access_pool->start(listen_socket::access_pool_worker);
     this->sock.listen_arg = (void *)this;
     this->sock.start(dgram_socket::dgram_listen_worker);
-
-    /* Start up the reaping thread */
-    if ((retval = pthread_create(&this->reaper, NULL,
-                                 dgram_reaper_worker, (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't create reaper thread for datagram port "
-          << this->sock.sa->port() << ": "
-          << strerror(retval) << " (" << retval << ")";
-        throw std::runtime_error(s.str());
-    }
-    this->reaper_running = true;
 }
 
 void dgram_socket::do_login(uint64_t userid,

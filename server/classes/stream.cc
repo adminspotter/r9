@@ -262,9 +262,6 @@ void stream_socket::start(void)
 {
     int i, retval;
 
-    std::clog << "starting connection loop for stream port "
-              << this->sock.sa->port() << std::endl;
-
     /* Before we go into the select loop, we should spawn off the
      * number of subservers in min_subservers.
      */
@@ -278,26 +275,13 @@ void stream_socket::start(void)
             throw std::runtime_error(s.str());
         }
 
+    this->listen_socket::start();
+
     /* Start up the sending thread pool */
-    sleep(0);
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(stream_socket::stream_send_worker);
-    this->access_pool->startup_arg = (void *)this;
-    this->access_pool->start(listen_socket::access_pool_worker);
     this->sock.listen_arg = (void *)this;
     this->sock.start(stream_socket::stream_listen_worker);
-
-    /* Start up the reaping thread */
-    if ((retval = pthread_create(&this->reaper, NULL,
-                                 stream_reaper_worker, (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't create reaper thread for stream port "
-          << this->sock.sa->port() << ": "
-          << strerror(retval) << " (" << retval << ")";
-        throw std::runtime_error(s.str());
-    }
-    this->reaper_running = true;
 }
 
 void stream_socket::do_login(uint64_t userid,

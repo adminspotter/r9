@@ -87,7 +87,7 @@ class listen_socket {
 
     virtual std::string port_type(void) = 0;
 
-    virtual void start(void) = 0;
+    virtual void start(void);
     virtual void stop(void);
 
     static void *access_pool_worker(void *);
