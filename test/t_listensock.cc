@@ -10,8 +10,17 @@ using ::testing::_;
 using ::testing::Return;
 using ::testing::Invoke;
 
-bool cancel_error = false, join_error = false;
-int cancel_count, join_count, login_count;
+bool create_error = false, cancel_error = false, join_error = false;
+int create_count, cancel_count, join_count, login_count;
+
+int pthread_create(pthread_t *a, const pthread_attr_t *b,
+                   void *(*c)(void *), void *d)
+{
+    ++create_count;
+    if (create_error == true)
+        return EINVAL;
+    return 0;
+}
 
 int pthread_cancel(pthread_t a)
 {
@@ -193,6 +202,39 @@ TEST(ListenSocketTest, CreateDelete)
     /* Thread pools should not be started */
     ASSERT_TRUE(listen->send_pool->pool_size() == 0);
     ASSERT_TRUE(listen->access_pool->pool_size() == 0);
+
+    delete listen;
+}
+
+TEST(ListenSocketTest, StartStop)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen;
+
+    create_count = cancel_count = join_count = 0;
+    listen = new test_listen_socket(addr);
+
+    create_error = true;
+    ASSERT_THROW(
+        {
+            listen->start();
+        },
+        std::runtime_error);
+    ASSERT_EQ(create_count, 1);
+
+    create_error = false;
+    create_count = 0;
+    ASSERT_NO_THROW(
+        {
+            listen->start();
+        });
+    ASSERT_GT(create_count, 1);
+
+    join_error = false;
+    ASSERT_NO_THROW(
+        {
+            listen->stop();
+        });
 
     delete listen;
 }
