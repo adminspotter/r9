@@ -230,6 +230,31 @@ TEST(ListenSocketTest, StartStop)
         });
     ASSERT_GT(create_count, 1);
 
+    cancel_error = true;
+    ASSERT_THROW(
+        {
+            listen->stop();
+        },
+        std::runtime_error);
+    try { listen->stop(); }
+    catch (std::runtime_error& e)
+    {
+        ASSERT_TRUE(strstr(e.what(), "couldn't cancel reaper") != NULL);
+    }
+
+    cancel_error = false;
+    join_error = true;
+    ASSERT_THROW(
+        {
+            listen->stop();
+        },
+        std::runtime_error);
+    try { listen->stop(); }
+    catch (std::runtime_error& e)
+    {
+        ASSERT_TRUE(strstr(e.what(), "couldn't join reaper") != NULL);
+    }
+
     join_error = false;
     ASSERT_NO_THROW(
         {
