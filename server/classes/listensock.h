@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 09:26:35 tquirk
+ *   last updated 19 Jul 2017, 12:17:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -86,8 +86,6 @@ class listen_socket {
                   int = PING_TIMEOUT,
                   int = LINK_DEAD_TIMEOUT);
     virtual ~listen_socket();
-
-    void init(void);
 
     virtual std::string port_type(void) = 0;
 

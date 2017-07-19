@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 23:09:24 tquirk
+ *   last updated 19 Jul 2017, 12:54:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -81,7 +81,12 @@ listen_socket::listen_socket(struct addrinfo *ai, int rt, int pt, int ldt)
     this->reap_time = rt;
     this->ping_time = pt;
     this->link_dead_time = ldt;
-    this->init();
+    this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);
+    this->access_pool = new ThreadPool<access_list>("access",
+                                                    config.access_threads);
+    this->access_pool->clean_on_pop = true;
+
+    this->reaper_running = false;
 }
 
 listen_socket::~listen_socket()
@@ -101,16 +106,6 @@ listen_socket::~listen_socket()
 
     if (this->access_pool != NULL)
         delete this->access_pool;
-}
-
-void listen_socket::init(void)
-{
-    this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);
-    this->access_pool = new ThreadPool<access_list>("access",
-                                                    config.access_threads);
-    this->access_pool->clean_on_pop = true;
-
-    this->reaper_running = false;
 }
 
 void listen_socket::start(void)
