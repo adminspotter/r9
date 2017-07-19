@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 09:29:51 tquirk
+ *   last updated 18 Jul 2017, 23:09:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -151,18 +151,22 @@ void listen_socket::stop(void)
     {
         if ((retval = pthread_cancel(this->reaper)) != 0)
         {
-            std::clog << syslogErr << "couldn't cancel reaper thread for "
-                      << this->port_type() << " port "
-                      << this->sock.sa->port() << ": "
-                      << strerror(retval) << " (" << retval << ")" << std::endl;
+            std::ostringstream s;
+            s << "couldn't cancel reaper thread for " << this->port_type()
+              << " port " << this->sock.sa->port() << ": "
+              << strerror(retval) << " (" << retval << ")";
+            throw std::runtime_error(s.str());
         }
         sleep(0);
         if ((retval = pthread_join(this->reaper, NULL)) != 0)
-            std::clog << syslogErr
-                      << "error terminating reaper thread for "
-                      << this->port_type() << " port "
-                      << this->sock.sa->port() << ": "
-                      << strerror(retval) << " (" << retval << ")" << std::endl;
+        {
+            std::ostringstream s;
+            s << "couldn't join reaper thread for " << this->port_type()
+              << " port " << this->sock.sa->port() << ": "
+              << strerror(retval) << " (" << retval << ")";
+            throw std::runtime_error(s.str());
+        }
+        this->reaper_running = false;
     }
 }
 
