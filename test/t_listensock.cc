@@ -91,7 +91,6 @@ class test_listen_socket : public listen_socket
             return "test";
         };
 
-    virtual void start(void) override {};
     virtual void do_login(uint64_t a, Control *b, access_list& c) override
         {
             delete b;
@@ -109,15 +108,6 @@ class broken_listen_socket : public listen_socket
     virtual std::string port_type(void) override
         {
             return "broken";
-        };
-
-    virtual void start(void) override
-        {
-            this->reaper_running = true;
-        };
-    virtual void stop(void) override
-        {
-            throw std::runtime_error("argh");
         };
 
     virtual void do_login(uint64_t a, Control *b, access_list& c) override {};
