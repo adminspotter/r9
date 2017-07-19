@@ -138,10 +138,6 @@ void listen_socket::stop(void)
 {
     int retval;
 
-    this->send_pool->stop();
-    this->access_pool->stop();
-    this->sock.stop();
-
     if (this->reaper_running)
     {
         if ((retval = pthread_cancel(this->reaper)) != 0)
@@ -163,6 +159,10 @@ void listen_socket::stop(void)
         }
         this->reaper_running = false;
     }
+
+    this->send_pool->stop();
+    this->access_pool->stop();
+    this->sock.stop();
 }
 
 void *listen_socket::access_pool_worker(void *arg)
