@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2017, 12:17:30 tquirk
+ *   last updated 20 Jul 2017, 08:12:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -67,7 +67,6 @@ class listen_socket {
     static const int LINK_DEAD_TIMEOUT = 75;
 
   protected:
-    int reap_time, ping_time, link_dead_time;
     bool reaper_running;
     pthread_t reaper;
 
@@ -81,10 +80,7 @@ class listen_socket {
     basesock sock;
 
   public:
-    listen_socket(struct addrinfo *,
-                  int = REAP_TIMEOUT,
-                  int = PING_TIMEOUT,
-                  int = LINK_DEAD_TIMEOUT);
+    listen_socket(struct addrinfo *);
     virtual ~listen_socket();
 
     virtual std::string port_type(void) = 0;

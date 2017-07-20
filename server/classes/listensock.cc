@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2017, 08:05:07 tquirk
+ *   last updated 20 Jul 2017, 08:12:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -75,12 +75,9 @@ const base_user& base_user::operator=(const base_user& u)
     return *this;
 }
 
-listen_socket::listen_socket(struct addrinfo *ai, int rt, int pt, int ldt)
+listen_socket::listen_socket(struct addrinfo *ai)
     : users(), sock(ai)
 {
-    this->reap_time = rt;
-    this->ping_time = pt;
-    this->link_dead_time = ldt;
     this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);
     this->access_pool = new ThreadPool<access_list>("access",
                                                     config.access_threads);
@@ -195,12 +192,12 @@ void *listen_socket::reaper_worker(void *arg)
               << " port " << ls->sock.sa->port() << std::endl;
     for (;;)
     {
-        sleep(ls->reap_time);
+        sleep(listen_socket::REAP_TIMEOUT);
         now = time(NULL);
         for (i = ls->users.begin(); i != ls->users.end(); ++i)
         {
             pthread_testcancel();
-            if (bu->timestamp < now - ls->link_dead_time)
+            if (bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
             {
                 /* We'll consider the user link-dead */
                 std::clog << "removing user "
@@ -217,7 +214,7 @@ void *listen_socket::reaper_worker(void *arg)
                 ls->do_logout(bu);
                 ls->users.erase((*(i--)).second->userid);
             }
-            else if (bu->timestamp < now - ls->ping_time
+            else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
                      && bu->pending_logout == false)
                 ls->send_ping(bu->control);
         }
