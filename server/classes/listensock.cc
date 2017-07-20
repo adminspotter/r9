@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2017, 12:54:48 tquirk
+ *   last updated 19 Jul 2017, 22:26:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -96,16 +96,13 @@ listen_socket::~listen_socket()
     try { this->stop(); }
     catch (std::exception& e) { /* Do nothing */ }
 
+    delete this->send_pool;
+    delete this->access_pool;
+
     /* Clear out the users map */
     for (i = this->users.begin(); i != this->users.end(); ++i)
         delete (*i).second;
     this->users.erase(this->users.begin(), this->users.end());
-
-    if (this->send_pool != NULL)
-        delete this->send_pool;
-
-    if (this->access_pool != NULL)
-        delete this->access_pool;
 }
 
 void listen_socket::start(void)
