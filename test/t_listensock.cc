@@ -99,21 +99,6 @@ class test_listen_socket : public listen_socket
     virtual void do_logout(base_user *a) override {};
 };
 
-class broken_listen_socket : public listen_socket
-{
-  public:
-    broken_listen_socket(struct addrinfo *a) : listen_socket(a) {};
-    virtual ~broken_listen_socket() {};
-
-    virtual std::string port_type(void) override
-        {
-            return "broken";
-        };
-
-    virtual void do_login(uint64_t a, Control *b, access_list& c) override {};
-    virtual void do_logout(base_user *a) override {};
-};
-
 TEST(BaseUserTest, CreateDelete)
 {
     Control *con = new Control(0LL, NULL);
@@ -252,24 +237,6 @@ TEST(ListenSocketTest, StartStop)
         });
 
     delete listen;
-}
-
-TEST(ListenSocketTest, DeleteFailure)
-{
-    struct addrinfo *addr = create_addrinfo();
-    broken_listen_socket *listen = new broken_listen_socket(addr);
-
-    listen->start();
-
-    cancel_count = join_count = 0;
-    cancel_error = join_error = true;
-    ASSERT_NO_THROW(
-        {
-            delete listen;
-        });
-    ASSERT_GT(cancel_count, 0);
-    ASSERT_GT(join_count, 0);
-    cancel_error = join_error = false;
 }
 
 TEST(ListenSocketTest, GetUserid)
