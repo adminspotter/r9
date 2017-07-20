@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2017, 22:26:25 tquirk
+ *   last updated 20 Jul 2017, 08:05:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -167,7 +167,8 @@ void *listen_socket::access_pool_worker(void *arg)
     listen_socket *ls = (listen_socket *)arg;
     access_list req;
 
-    std::clog << "started access pool worker";
+    std::clog << "started access pool worker for " << ls->port_type()
+              << " port " << ls->sock.sa->port() << std::endl;
     for (;;)
     {
         ls->access_pool->pop(&req);
@@ -180,7 +181,6 @@ void *listen_socket::access_pool_worker(void *arg)
             ls->logout_user(req);
         /* Otherwise, we don't recognize it, and will ignore it */
     }
-    std::clog << "access pool worker ending";
     return NULL;
 }
 
@@ -191,8 +191,8 @@ void *listen_socket::reaper_worker(void *arg)
     base_user *bu;
     time_t now;
 
-    std::clog << "started reaper thread for " << ls->port_type() << " port "
-              << ls->sock.sa->port() << std::endl;
+    std::clog << "started reaper thread for " << ls->port_type()
+              << " port " << ls->sock.sa->port() << std::endl;
     for (;;)
     {
         sleep(ls->reap_time);
