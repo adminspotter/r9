@@ -61,3 +61,52 @@ class test_listen_socket : public listen_socket
             ++logout_count;
         };
 };
+
+TEST(ListenSocketTest, ReaperWorker)
+{
+    config.send_threads = 1;
+    config.access_threads = 1;
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    /* This user will be sent a ping */
+    Control *control = new Control(123LL, NULL);
+    base_user *bu = new base_user(123LL, control);
+    bu->pending_logout = false;
+    bu->timestamp = time(NULL) - listen_socket::PING_TIMEOUT - 1;
+    listen->users[123LL] = bu;
+
+    /* This user will be logged out entirely */
+    Control *control2 = new Control(1234LL, NULL);
+    base_user *bu2 = new base_user(1234LL, control2);
+    bu2->pending_logout = true;
+    bu2->timestamp = time(NULL) - listen_socket::LINK_DEAD_TIMEOUT - 1;
+    listen->users[1234LL] = bu2;
+    GameObject *gob = new GameObject(NULL, NULL, 1234LL);
+    control2->slave = gob;
+
+    logout_count = 0;
+
+    listen->start();
+
+    /* Since we have mocked out sleep(), we'll run the system sleep(1)
+     * command to give the reaper a chance to do its work.
+     */
+    system("sleep 1");
+
+    listen->stop();
+
+    ASSERT_GE(sleep_count, 1);
+    ASSERT_EQ(logout_count, 1);
+    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+    ASSERT_TRUE(listen->users.size() == 1);
+    ASSERT_TRUE(gob->natures.find("invisible") != gob->natures.end());
+    ASSERT_TRUE(gob->natures.find("non-interactive") != gob->natures.end());
+
+    delete gob;
+    delete bu;
+    delete control;
+    delete listen;
+    freeaddrinfo(addr);
+}
