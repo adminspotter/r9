@@ -96,9 +96,6 @@ listen_socket::~listen_socket()
     delete this->send_pool;
     delete this->access_pool;
 
-    /* Clear out the users map */
-    for (i = this->users.begin(); i != this->users.end(); ++i)
-        delete (*i).second;
     this->users.erase(this->users.begin(), this->users.end());
 }
 
