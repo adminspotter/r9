@@ -90,10 +90,11 @@ TEST(ListenSocketTest, ReaperWorker)
 
     listen->start();
 
-    /* Since we have mocked out sleep(), we'll run the system sleep(1)
-     * command to give the reaper a chance to do its work.
+    /* The user will be deleted absolutely last, so that's what we
+     * need to wait for.
      */
-    system("sleep 1");
+    while (listen->users.size() > 1)
+        ;
 
     listen->stop();
 
