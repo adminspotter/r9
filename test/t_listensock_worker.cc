@@ -51,6 +51,15 @@ class test_listen_socket : public listen_socket
             return "test";
         };
 
+    virtual void login_user(access_list& a) override
+        {
+            ++login_count;
+        };
+    virtual void logout_user(access_list& a) override
+        {
+            ++logout_count;
+        };
+
     virtual void do_login(uint64_t a, Control *b, access_list& c) override
         {
             delete b;
@@ -108,6 +117,42 @@ TEST(ListenSocketTest, ReaperWorker)
     delete gob;
     delete bu;
     delete control;
+    delete listen;
+    freeaddrinfo(addr);
+}
+
+TEST(ListenSocketTest, AccessWorker)
+{
+    config.send_threads = 1;
+    config.access_threads = 1;
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    access_list req;
+
+    memset(&req, 0, sizeof(access_list));
+    req.buf.basic.type = TYPE_LOGREQ;
+    listen->access_pool->push(req);
+
+    req.buf.basic.type = TYPE_LGTREQ;
+    listen->access_pool->push(req);
+
+    ASSERT_TRUE(listen->access_pool->queue_size() == 2);
+
+    login_count = logout_count = 0;
+
+    listen->start();
+
+    while (logout_count == 0 && login_count == 0)
+        ;
+
+    listen->stop();
+
+    ASSERT_GT(login_count, 0);
+    ASSERT_GT(logout_count, 0);
+    ASSERT_TRUE(listen->access_pool->queue_size() == 0);
+
     delete listen;
     freeaddrinfo(addr);
 }
