@@ -10,8 +10,17 @@ using ::testing::_;
 using ::testing::Return;
 using ::testing::Invoke;
 
-bool cancel_error = false, join_error = false;
-int cancel_count, join_count, login_count;
+bool create_error = false, cancel_error = false, join_error = false;
+int create_count, cancel_count, join_count, login_count;
+
+int pthread_create(pthread_t *a, const pthread_attr_t *b,
+                   void *(*c)(void *), void *d)
+{
+    ++create_count;
+    if (create_error == true)
+        return EINVAL;
+    return 0;
+}
 
 int pthread_cancel(pthread_t a)
 {
@@ -77,30 +86,17 @@ class test_listen_socket : public listen_socket
     test_listen_socket(struct addrinfo *a) : listen_socket(a) {};
     virtual ~test_listen_socket() {};
 
-    virtual void start(void) override {};
+    virtual std::string port_type(void) override
+        {
+            return "test";
+        };
+
     virtual void do_login(uint64_t a, Control *b, access_list& c) override
         {
             delete b;
             ++login_count;
         };
-};
-
-class broken_listen_socket : public listen_socket
-{
-  public:
-    broken_listen_socket(struct addrinfo *a) : listen_socket(a) {};
-    virtual ~broken_listen_socket() {};
-
-    virtual void start(void) override
-        {
-            this->reaper_running = true;
-        };
-    virtual void stop(void) override
-        {
-            throw std::runtime_error("argh");
-        };
-
-    virtual void do_login(uint64_t a, Control *b, access_list& c) override {};
+    virtual void do_logout(base_user *a) override {};
 };
 
 TEST(BaseUserTest, CreateDelete)
@@ -185,22 +181,62 @@ TEST(ListenSocketTest, CreateDelete)
     delete listen;
 }
 
-TEST(ListenSocketTest, DeleteFailure)
+TEST(ListenSocketTest, StartStop)
 {
     struct addrinfo *addr = create_addrinfo();
-    broken_listen_socket *listen = new broken_listen_socket(addr);
+    listen_socket *listen;
 
-    listen->start();
+    create_count = cancel_count = join_count = 0;
+    listen = new test_listen_socket(addr);
 
-    cancel_count = join_count = 0;
-    cancel_error = join_error = true;
+    create_error = true;
+    ASSERT_THROW(
+        {
+            listen->start();
+        },
+        std::runtime_error);
+    ASSERT_EQ(create_count, 1);
+
+    create_error = false;
+    create_count = 0;
     ASSERT_NO_THROW(
         {
-            delete listen;
+            listen->start();
         });
-    ASSERT_GT(cancel_count, 0);
-    ASSERT_GT(join_count, 0);
-    cancel_error = join_error = false;
+    ASSERT_GT(create_count, 1);
+
+    cancel_error = true;
+    ASSERT_THROW(
+        {
+            listen->stop();
+        },
+        std::runtime_error);
+    try { listen->stop(); }
+    catch (std::runtime_error& e)
+    {
+        ASSERT_TRUE(strstr(e.what(), "couldn't cancel reaper") != NULL);
+    }
+
+    cancel_error = false;
+    join_error = true;
+    ASSERT_THROW(
+        {
+            listen->stop();
+        },
+        std::runtime_error);
+    try { listen->stop(); }
+    catch (std::runtime_error& e)
+    {
+        ASSERT_TRUE(strstr(e.what(), "couldn't join reaper") != NULL);
+    }
+
+    join_error = false;
+    ASSERT_NO_THROW(
+        {
+            listen->stop();
+        });
+
+    delete listen;
 }
 
 TEST(ListenSocketTest, GetUserid)
@@ -413,6 +449,26 @@ TEST(ListenSocketTest, Logout)
     listen->logout_user(access);
 
     ASSERT_TRUE(bu->pending_logout == true);
+    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+
+    delete listen;
+    delete control;
+}
+
+TEST(ListenSocketTest, SendPing)
+{
+    Control *control = new Control(123LL, NULL);
+    base_user *bu = new base_user(123LL, control);
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen;
+
+    listen = new test_listen_socket(addr);
+    listen->users[123LL] = bu;
+
+    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
+
+    listen->send_ping(control);
+
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;

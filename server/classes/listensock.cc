@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:59:07 tquirk
+ *   last updated 21 Jul 2017, 08:43:01 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -78,47 +78,6 @@ const base_user& base_user::operator=(const base_user& u)
 listen_socket::listen_socket(struct addrinfo *ai)
     : users(), sock(ai)
 {
-    this->init();
-}
-
-listen_socket::~listen_socket()
-{
-    int retval;
-    listen_socket::users_iterator i;
-
-    try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
-
-    if (this->reaper_running)
-    {
-        if ((retval = pthread_cancel(this->reaper)) != 0)
-        {
-            std::clog << syslogErr << "couldn't cancel reaper thread for port "
-                      << this->sock.sa->port() << ": "
-                      << strerror(retval) << " (" << retval << ")" << std::endl;
-        }
-        sleep(0);
-        if ((retval = pthread_join(this->reaper, NULL)) != 0)
-            std::clog << syslogErr
-                      << "error terminating reaper thread for port "
-                      << this->sock.sa->port() << ": "
-                      << strerror(retval) << " (" << retval << ")" << std::endl;
-    }
-
-    /* Clear out the users map */
-    for (i = this->users.begin(); i != this->users.end(); ++i)
-        delete (*i).second;
-    this->users.erase(this->users.begin(), this->users.end());
-
-    if (this->send_pool != NULL)
-        delete this->send_pool;
-
-    if (this->access_pool != NULL)
-        delete this->access_pool;
-}
-
-void listen_socket::init(void)
-{
     this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);
     this->access_pool = new ThreadPool<access_list>("access",
                                                     config.access_threads);
@@ -127,8 +86,71 @@ void listen_socket::init(void)
     this->reaper_running = false;
 }
 
+listen_socket::~listen_socket()
+{
+    listen_socket::users_iterator i;
+
+    try { this->stop(); }
+    catch (std::exception& e) { /* Do nothing */ }
+
+    delete this->send_pool;
+    delete this->access_pool;
+
+    this->users.erase(this->users.begin(), this->users.end());
+}
+
+void listen_socket::start(void)
+{
+    int retval;
+
+    std::clog << "starting connection loop for "
+              << this->port_type() << " port "
+              << this->sock.sa->port() << std::endl;
+
+    /* Start up the reaping thread */
+    if ((retval = pthread_create(&this->reaper, NULL,
+                                 reaper_worker, (void *)this)) != 0)
+    {
+        std::ostringstream s;
+        s << "couldn't create reaper thread for "
+          << this->port_type() << " port "
+          << this->sock.sa->port() << ": "
+          << strerror(retval) << " (" << retval << ")";
+        throw std::runtime_error(s.str());
+    }
+    this->reaper_running = true;
+
+    sleep(0);
+    this->access_pool->startup_arg = (void *)this;
+    this->access_pool->start(listen_socket::access_pool_worker);
+}
+
 void listen_socket::stop(void)
 {
+    int retval;
+
+    if (this->reaper_running)
+    {
+        if ((retval = pthread_cancel(this->reaper)) != 0)
+        {
+            std::ostringstream s;
+            s << "couldn't cancel reaper thread for " << this->port_type()
+              << " port " << this->sock.sa->port() << ": "
+              << strerror(retval) << " (" << retval << ")";
+            throw std::runtime_error(s.str());
+        }
+        sleep(0);
+        if ((retval = pthread_join(this->reaper, NULL)) != 0)
+        {
+            std::ostringstream s;
+            s << "couldn't join reaper thread for " << this->port_type()
+              << " port " << this->sock.sa->port() << ": "
+              << strerror(retval) << " (" << retval << ")";
+            throw std::runtime_error(s.str());
+        }
+        this->reaper_running = false;
+    }
+
     this->send_pool->stop();
     this->access_pool->stop();
     this->sock.stop();
@@ -139,7 +161,8 @@ void *listen_socket::access_pool_worker(void *arg)
     listen_socket *ls = (listen_socket *)arg;
     access_list req;
 
-    std::clog << "started access pool worker";
+    std::clog << "started access pool worker for " << ls->port_type()
+              << " port " << ls->sock.sa->port() << std::endl;
     for (;;)
     {
         ls->access_pool->pop(&req);
@@ -152,7 +175,56 @@ void *listen_socket::access_pool_worker(void *arg)
             ls->logout_user(req);
         /* Otherwise, we don't recognize it, and will ignore it */
     }
-    std::clog << "access pool worker ending";
+    return NULL;
+}
+
+void *listen_socket::reaper_worker(void *arg)
+{
+    listen_socket *ls = (listen_socket *)arg;
+    listen_socket::users_iterator i;
+    base_user *bu;
+    time_t now;
+
+    std::clog << "started reaper thread for " << ls->port_type()
+              << " port " << ls->sock.sa->port() << std::endl;
+    for (;;)
+    {
+        sleep(listen_socket::REAP_TIMEOUT);
+        now = time(NULL);
+        for (i = ls->users.begin(); i != ls->users.end(); ++i)
+        {
+            pthread_testcancel();
+            bu = (*i).second;
+            if (bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
+            {
+                /* We'll consider the user link-dead */
+                std::clog << "removing user "
+                          << bu->control->username << " ("
+                          << bu->userid << ") from " << ls->port_type()
+                          << " port " << ls->sock.sa->port() << std::endl;
+                if (bu->control->slave != NULL)
+                {
+                    /* Clean up a user who has logged out */
+                    bu->control->slave->natures.insert("invisible");
+                    bu->control->slave->natures.insert("non-interactive");
+                }
+                delete bu->control;
+                ls->do_logout(bu);
+
+                /* i will be invalidated by the following erase, so
+                 * let's move to a valid spot that will let our loop
+                 * continue without missing anything.
+                 */
+                --i;
+
+                ls->users.erase(bu->userid);
+            }
+            else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
+                     && bu->pending_logout == false)
+                ls->send_ping(bu->control);
+        }
+        pthread_testcancel();
+    }
     return NULL;
 }
 
@@ -243,6 +315,22 @@ void listen_socket::logout_user(access_list& p)
                   << " (" << bu->control->userid << ")" << std::endl;
 
         this->send_ack(bu->control, TYPE_LGTREQ, 0);
+    }
+}
+
+void listen_socket::send_ping(Control *con)
+{
+    packet_list pkt;
+    listen_socket::users_iterator found;
+
+    if ((found = this->users.find(con->userid)) != this->users.end())
+    {
+        pkt.buf.basic.type = TYPE_PNGPKT;
+        pkt.buf.basic.version = 1;
+        pkt.buf.basic.sequence = found->second->sequence++;
+        pkt.who = con;
+        pkt.parent = this;
+        this->send_pool->push(pkt);
     }
 }
 

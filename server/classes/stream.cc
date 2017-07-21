@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2017, 21:44:59 tquirk
+ *   last updated 18 Jul 2017, 08:34:50 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -253,12 +253,14 @@ stream_socket::~stream_socket()
     /* Thread pools are handled by the listen_socket destructor */
 }
 
+std::string stream_socket::port_type(void)
+{
+    return "stream";
+}
+
 void stream_socket::start(void)
 {
     int i, retval;
-
-    std::clog << "starting connection loop for stream port "
-              << this->sock.sa->port() << std::endl;
 
     /* Before we go into the select loop, we should spawn off the
      * number of subservers in min_subservers.
@@ -273,26 +275,13 @@ void stream_socket::start(void)
             throw std::runtime_error(s.str());
         }
 
+    this->listen_socket::start();
+
     /* Start up the sending thread pool */
-    sleep(0);
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(stream_socket::stream_send_worker);
-    this->access_pool->startup_arg = (void *)this;
-    this->access_pool->start(listen_socket::access_pool_worker);
     this->sock.listen_arg = (void *)this;
     this->sock.start(stream_socket::stream_listen_worker);
-
-    /* Start up the reaping thread */
-    if ((retval = pthread_create(&this->reaper, NULL,
-                                 stream_reaper_worker, (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't create reaper thread for stream port "
-          << this->sock.sa->port() << ": "
-          << strerror(retval) << " (" << retval << ")";
-        throw std::runtime_error(s.str());
-    }
-    this->reaper_running = true;
 }
 
 void stream_socket::do_login(uint64_t userid,
@@ -305,6 +294,21 @@ void stream_socket::do_login(uint64_t userid,
     users[userid] = stu;
 
     this->connect_user((base_user *)stu, al);
+}
+
+/* The do_logout method performs the only stream_socket-specific work
+ * for removing a stream user from the object.  Everything else is
+ * handled in listen_socket::reaper_worker.
+ */
+void stream_socket::do_logout(base_user *bu)
+{
+    stream_user *stu = dynamic_cast<stream_user *>(bu);
+
+    if (stu != NULL)
+        /* Tell the appropriate subserver to close and erase user
+         * stu->fd by passing the descriptor in again.
+         */
+        this->pass_fd(stu->subsrv, stu->fd);
 }
 
 void *stream_socket::stream_listen_worker(void *arg)
@@ -417,64 +421,6 @@ void *stream_socket::stream_listen_worker(void *arg)
     }
     std::clog << "exiting connection loop for stream port "
               << sts->sock.sa->port() << std::endl;
-    return NULL;
-}
-
-void *stream_socket::stream_reaper_worker(void *arg)
-{
-    stream_socket *sts = (stream_socket *)arg;
-    listen_socket::users_iterator i;
-    stream_user *stu;
-    time_t now;
-
-    std::clog << "started reaper thread for stream port "
-              << sts->sock.sa->port() << std::endl;
-    for (;;)
-    {
-        sleep(listen_socket::REAP_TIMEOUT);
-        now = time(NULL);
-        for (i = sts->users.begin(); i != sts->users.end(); ++i)
-        {
-            pthread_testcancel();
-            if ((stu = dynamic_cast<stream_user *>((*i).second)) == NULL)
-                continue;
-            if (stu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
-            {
-                /* We'll consider the user link-dead */
-                std::clog << "removing user "
-                          << stu->control->username
-                          << " (" << stu->userid << ") from stream port "
-                          << sts->sock.sa->port() << std::endl;
-                if (stu->control->slave != NULL)
-                {
-                    /* Clean up a user who has logged out */
-                    stu->control->slave->natures.insert("invisible");
-                    stu->control->slave->natures.insert("non-interactive");
-                }
-                delete stu->control;
-                /* Tell subserver stu->subserv to close and erase user
-                 * stu->fd
-                 * To do this, we'll simply pass the descriptor again.
-                 */
-                sts->pass_fd(stu->subsrv, stu->fd);
-                sts->users.erase((*(i--)).second->userid);
-            }
-            else if (stu->timestamp < now - listen_socket::PING_TIMEOUT
-                     && stu->pending_logout == false)
-            {
-                /* After 30 seconds, see if the user is still there */
-                packet_list pkt;
-
-                pkt.buf.basic.type = TYPE_PNGPKT;
-                pkt.buf.basic.version = 1;
-                pkt.buf.basic.sequence = stu->sequence++;
-                pkt.who = stu->control;
-                pkt.parent = sts;
-                sts->send_pool->push(pkt);
-            }
-        }
-        pthread_testcancel();
-    }
     return NULL;
 }
 

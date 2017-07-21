@@ -1,6 +1,6 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:59:57 tquirk
+ *   last updated 18 Jul 2017, 07:33:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -77,12 +77,14 @@ class dgram_socket : public listen_socket
     dgram_socket(struct addrinfo *);
     ~dgram_socket();
 
+    std::string port_type(void) override;
+
     void start(void) override;
 
     void do_login(uint64_t, Control *, access_list&) override;
+    void do_logout(base_user *) override;
 
     static void *dgram_listen_worker(void *);
-    static void *dgram_reaper_worker(void *);
     static void *dgram_send_worker(void *);
 };
 

@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:53:34 tquirk
+ *   last updated 18 Jul 2017, 09:15:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -70,33 +70,20 @@ dgram_socket::~dgram_socket()
     /* Thread pools are handled by the listen_socket destructor */
 }
 
+std::string dgram_socket::port_type(void)
+{
+    return "datagram";
+}
+
 void dgram_socket::start(void)
 {
-    int retval;
-
-    std::clog << "starting connection loop for datagram port "
-              << this->sock.sa->port() << std::endl;
+    this->listen_socket::start();
 
     /* Start up the listen thread and thread pools */
-    sleep(0);
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(dgram_socket::dgram_send_worker);
-    this->access_pool->startup_arg = (void *)this;
-    this->access_pool->start(listen_socket::access_pool_worker);
     this->sock.listen_arg = (void *)this;
     this->sock.start(dgram_socket::dgram_listen_worker);
-
-    /* Start up the reaping thread */
-    if ((retval = pthread_create(&this->reaper, NULL,
-                                 dgram_reaper_worker, (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        s << "couldn't create reaper thread for datagram port "
-          << this->sock.sa->port() << ": "
-          << strerror(retval) << " (" << retval << ")";
-        throw std::runtime_error(s.str());
-    }
-    this->reaper_running = true;
 }
 
 void dgram_socket::do_login(uint64_t userid,
@@ -109,6 +96,18 @@ void dgram_socket::do_login(uint64_t userid,
     this->socks[dgu->sa] = dgu;
 
     this->connect_user((base_user *)dgu, al);
+}
+
+/* The do_logout method performs the only dgram_socket-specific work
+ * for removing a datagram user from the object.  Everything else is
+ * handled in listen_socket::reaper_worker.
+ */
+void dgram_socket::do_logout(base_user *bu)
+{
+    dgram_user *dgu = dynamic_cast<dgram_user *>(bu);
+
+    if (dgu != NULL)
+        this->socks.erase(dgu->sa);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
@@ -210,59 +209,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     }
     std::clog << "exiting connection loop for datagram port "
               << dgs->sock.sa->port() << std::endl;
-    return NULL;
-}
-
-void *dgram_socket::dgram_reaper_worker(void *arg)
-{
-    dgram_socket *dgs = (dgram_socket *)arg;
-    listen_socket::users_iterator i;
-    dgram_user *dgu;
-    time_t now;
-
-    std::clog << "started reaper thread for datagram port "
-              << dgs->sock.sa->port() << std::endl;
-    for (;;)
-    {
-        sleep(listen_socket::REAP_TIMEOUT);
-        now = time(NULL);
-        for (i = dgs->users.begin(); i != dgs->users.end(); ++i)
-        {
-            pthread_testcancel();
-            if ((dgu = dynamic_cast<dgram_user *>((*i).second)) == NULL)
-                continue;
-            if (dgu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
-            {
-                /* We'll consider the user link-dead */
-                std::clog << "removing user "
-                          << dgu->control->username << " ("
-                          << dgu->userid << ") from datagram port "
-                          << dgs->sock.sa->port() << std::endl;
-                if (dgu->control->slave != NULL)
-                {
-                    /* Clean up a user who has logged out */
-                    dgu->control->slave->natures.insert("invisible");
-                    dgu->control->slave->natures.insert("non-interactive");
-                }
-                delete dgu->control;
-                dgs->socks.erase(dgu->sa);
-                dgs->users.erase((*(i--)).second->userid);
-            }
-            else if (dgu->timestamp < now - listen_socket::PING_TIMEOUT
-                     && dgu->pending_logout == false)
-            {
-                packet_list pkt;
-
-                pkt.buf.basic.type = TYPE_PNGPKT;
-                pkt.buf.basic.version = 1;
-                pkt.buf.basic.sequence = dgu->sequence++;
-                pkt.who = dgu->control;
-                pkt.parent = dgs;
-                dgs->send_pool->push(pkt);
-            }
-        }
-        pthread_testcancel();
-    }
     return NULL;
 }
 

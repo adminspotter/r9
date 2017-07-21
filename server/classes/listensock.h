@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 10:10:56 tquirk
+ *   last updated 20 Jul 2017, 08:12:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -83,12 +83,13 @@ class listen_socket {
     listen_socket(struct addrinfo *);
     virtual ~listen_socket();
 
-    void init(void);
+    virtual std::string port_type(void) = 0;
 
-    virtual void start(void) = 0;
+    virtual void start(void);
     virtual void stop(void);
 
     static void *access_pool_worker(void *);
+    static void *reaper_worker(void *);
 
     virtual void login_user(access_list&);
     virtual uint64_t get_userid(login_request&);
@@ -97,7 +98,9 @@ class listen_socket {
     virtual void logout_user(access_list&);
 
     virtual void do_login(uint64_t, Control *, access_list&) = 0;
+    virtual void do_logout(base_user *) = 0;
 
+    virtual void send_ping(Control *);
     virtual void send_ack(Control *, uint8_t, uint8_t);
 };
 
