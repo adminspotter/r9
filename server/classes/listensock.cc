@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2017, 08:12:25 tquirk
+ *   last updated 21 Jul 2017, 08:43:01 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -197,6 +197,7 @@ void *listen_socket::reaper_worker(void *arg)
         for (i = ls->users.begin(); i != ls->users.end(); ++i)
         {
             pthread_testcancel();
+            bu = (*i).second;
             if (bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
             {
                 /* We'll consider the user link-dead */
@@ -212,7 +213,14 @@ void *listen_socket::reaper_worker(void *arg)
                 }
                 delete bu->control;
                 ls->do_logout(bu);
-                ls->users.erase((*(i--)).second->userid);
+
+                /* i will be invalidated by the following erase, so
+                 * let's move to a valid spot that will let our loop
+                 * continue without missing anything.
+                 */
+                --i;
+
+                ls->users.erase(bu->userid);
             }
             else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
                      && bu->pending_logout == false)
