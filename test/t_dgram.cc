@@ -79,3 +79,14 @@ TEST(DgramSocketTest, CreateDelete)
     delete dgs;
     freeaddrinfo(addr);
 }
+
+TEST(DgramSocketTest, PortType)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+
+    ASSERT_TRUE(dgs->port_type() == "datagram");
+
+    delete dgs;
+    freeaddrinfo(addr);
+}
