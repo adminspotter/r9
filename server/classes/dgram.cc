@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 09:15:15 tquirk
+ *   last updated 23 Jul 2017, 23:06:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -48,6 +48,10 @@ extern volatile int main_loop_exit_flag;
 
 dgram_user::dgram_user(uint64_t u, Control *c)
     : base_user(u, c)
+{
+}
+
+dgram_user::~dgram_user()
 {
 }
 
