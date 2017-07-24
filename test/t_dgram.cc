@@ -1,4 +1,5 @@
 #include "../server/classes/dgram.h"
+#include "../server/config_data.h"
 
 #include <gtest/gtest.h>
 
@@ -87,6 +88,27 @@ TEST(DgramSocketTest, PortType)
 
     ASSERT_TRUE(dgs->port_type() == "datagram");
 
+    delete dgs;
+    freeaddrinfo(addr);
+}
+
+TEST(DgramSocketTest, Start)
+{
+    config.send_threads = 1;
+    config.access_threads = 1;
+
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+
+    ASSERT_NO_THROW(
+        {
+            dgs->start();
+        });
+
+    ASSERT_TRUE(dgs->send_pool->startup_arg == (void *)dgs);
+    ASSERT_TRUE(dgs->sock.listen_arg == (void *)dgs);
+
+    /* The listen_socket handles the stopping in its destructor. */
     delete dgs;
     freeaddrinfo(addr);
 }
