@@ -10,6 +10,7 @@ t_config_data
 t_configdata
 t_console
 t_db
+t_dgram
 t_font
 t_game_obj
 t_image
