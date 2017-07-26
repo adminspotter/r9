@@ -3,7 +3,11 @@
 
 #include <gtest/gtest.h>
 
+#include "mock_db.h"
 #include "mock_server_globals.h"
+
+using ::testing::_;
+using ::testing::Return;
 
 struct addrinfo *create_addrinfo(void)
 {
@@ -111,4 +115,41 @@ TEST(DgramSocketTest, Start)
     /* The listen_socket handles the stopping in its destructor. */
     delete dgs;
     freeaddrinfo(addr);
+}
+
+TEST(DgramSocketTest, DoLogin)
+{
+    database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_NONE));
+
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+
+    ASSERT_TRUE(dgs->users.size() == 0);
+    ASSERT_TRUE(dgs->socks.size() == 0);
+
+    Control *control = new Control(123LL, NULL);
+
+    access_list al;
+
+    memset(&al, 0, sizeof(access_list));
+    al.parent = (listen_socket *)dgs;
+    al.what.login.who.dgram.ss_family = AF_INET;
+    al.buf.basic.type = TYPE_LOGREQ;
+    strncpy(al.buf.log.username, "bobbo", sizeof(al.buf.log.username));
+    strncpy(al.buf.log.password, "argh!", sizeof(al.buf.log.password));
+    strncpy(al.buf.log.charname, "howdy", sizeof(al.buf.log.charname));
+
+    dgs->do_login(123LL, control, al);
+
+    ASSERT_TRUE(dgs->users.size() == 1);
+    ASSERT_TRUE(dgs->socks.size() == 1);
+
+    delete dgs;
+    freeaddrinfo(addr);
+    delete database;
 }
