@@ -131,3 +131,27 @@ TEST(DgramSocketTest, DoLogin)
     freeaddrinfo(addr);
     delete database;
 }
+
+TEST(DgramSocketTest, DoLogout)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+    dgram_user *dgu = new dgram_user(123LL, NULL);
+    struct sockaddr_in sin;
+
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+
+    dgs->socks[dgu->sa] = dgu;
+
+    ASSERT_TRUE(dgs->socks.size() == 1);
+
+    dgs->do_logout((base_user *)dgu);
+
+    ASSERT_TRUE(dgs->socks.size() == 0);
+
+    delete dgu;
+    delete dgs;
+    freeaddrinfo(addr);
+}
