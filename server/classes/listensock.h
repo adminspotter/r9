@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jul 2017, 18:19:59 tquirk
+ *   last updated 30 Jul 2017, 18:31:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -55,6 +55,8 @@ class base_user {
     virtual bool operator==(const base_user&) const;
 
     virtual const base_user& operator=(const base_user&);
+
+    void send_ack(listen_socket *, uint8_t, uint8_t);
 };
 
 class listen_socket {
@@ -98,7 +100,6 @@ class listen_socket {
     virtual void do_logout(base_user *) = 0;
 
     virtual void send_ping(Control *);
-    virtual void send_ack(Control *, uint8_t, uint8_t);
 };
 
 #endif /* __INC_LISTENSOCK_H__ */

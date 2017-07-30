@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jun 2017, 08:51:59 tquirk
+ *   last updated 30 Jul 2017, 18:39:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -148,6 +148,6 @@ void ActionPool::execute_action(Control *con,
                                        req.power_level,
                                        this->game_objects[req.dest_object_id],
                                        vec);
-        parent->send_ack(con, TYPE_ACTREQ, (uint8_t)retval);
+        i->second->send_ack(parent, TYPE_ACTREQ, (uint8_t)retval);
     }
 }

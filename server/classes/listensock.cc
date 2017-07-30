@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jul 2017, 18:20:03 tquirk
+ *   last updated 30 Jul 2017, 18:37:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -68,6 +68,20 @@ const base_user& base_user::operator=(const base_user& u)
     this->timestamp = u.timestamp;
     this->pending_logout = u.pending_logout;
     return *this;
+}
+
+void base_user::send_ack(listen_socket *s, uint8_t req, uint8_t misc)
+{
+    packet_list pkt;
+
+    pkt.buf.ack.type = TYPE_ACKPKT;
+    pkt.buf.ack.version = 1;
+    pkt.buf.ack.sequence = this->sequence++;
+    pkt.buf.ack.request = req;
+    pkt.buf.ack.misc = misc;
+    pkt.who = this->control;
+    pkt.parent = s;
+    s->send_pool->push(pkt);
 }
 
 listen_socket::listen_socket(struct addrinfo *ai)
@@ -290,7 +304,7 @@ void listen_socket::connect_user(base_user *user, access_list& access)
     if (auth_level >= ACCESS_MOVE)
         zone->connect_game_object(user->control, charid);
 
-    this->send_ack(user->control, TYPE_LOGREQ, (uint8_t)auth_level);
+    user->send_ack(this, TYPE_LOGREQ, (uint8_t)auth_level);
 }
 
 void listen_socket::logout_user(access_list& p)
@@ -309,7 +323,7 @@ void listen_socket::logout_user(access_list& p)
                   << bu->control->username
                   << " (" << bu->control->userid << ")" << std::endl;
 
-        this->send_ack(bu->control, TYPE_LGTREQ, 0);
+        bu->send_ack(this, TYPE_LGTREQ, 0);
     }
 }
 
@@ -323,24 +337,6 @@ void listen_socket::send_ping(Control *con)
         pkt.buf.basic.type = TYPE_PNGPKT;
         pkt.buf.basic.version = 1;
         pkt.buf.basic.sequence = found->second->sequence++;
-        pkt.who = con;
-        pkt.parent = this;
-        this->send_pool->push(pkt);
-    }
-}
-
-void listen_socket::send_ack(Control *con, uint8_t req, uint8_t misc)
-{
-    packet_list pkt;
-    listen_socket::users_iterator found;
-
-    if ((found = this->users.find(con->userid)) != this->users.end())
-    {
-        pkt.buf.ack.type = TYPE_ACKPKT;
-        pkt.buf.ack.version = 1;
-        pkt.buf.ack.sequence = found->second->sequence++;
-        pkt.buf.ack.request = req;
-        pkt.buf.ack.misc = misc;
         pkt.who = con;
         pkt.parent = this;
         this->send_pool->push(pkt);
