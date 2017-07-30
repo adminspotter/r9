@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jul 2017, 18:37:02 tquirk
+ *   last updated 30 Jul 2017, 18:46:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -68,6 +68,18 @@ const base_user& base_user::operator=(const base_user& u)
     this->timestamp = u.timestamp;
     this->pending_logout = u.pending_logout;
     return *this;
+}
+
+void base_user::send_ping(listen_socket *s)
+{
+    packet_list pkt;
+
+    pkt.buf.basic.type = TYPE_PNGPKT;
+    pkt.buf.basic.version = 1;
+    pkt.buf.basic.sequence = this->sequence++;
+    pkt.who = this->control;
+    pkt.parent = s;
+    s->send_pool->push(pkt);
 }
 
 void base_user::send_ack(listen_socket *s, uint8_t req, uint8_t misc)
@@ -230,7 +242,7 @@ void *listen_socket::reaper_worker(void *arg)
             }
             else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
                      && bu->pending_logout == false)
-                ls->send_ping(bu->control);
+                bu->send_ping(ls);
         }
         pthread_testcancel();
     }
@@ -324,21 +336,5 @@ void listen_socket::logout_user(access_list& p)
                   << " (" << bu->control->userid << ")" << std::endl;
 
         bu->send_ack(this, TYPE_LGTREQ, 0);
-    }
-}
-
-void listen_socket::send_ping(Control *con)
-{
-    packet_list pkt;
-    listen_socket::users_iterator found;
-
-    if ((found = this->users.find(con->userid)) != this->users.end())
-    {
-        pkt.buf.basic.type = TYPE_PNGPKT;
-        pkt.buf.basic.version = 1;
-        pkt.buf.basic.sequence = found->second->sequence++;
-        pkt.who = con;
-        pkt.parent = this;
-        this->send_pool->push(pkt);
     }
 }
