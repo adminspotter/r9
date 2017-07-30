@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jul 2017, 08:43:01 tquirk
+ *   last updated 30 Jul 2017, 18:20:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -39,21 +39,16 @@
 
 base_user::base_user(uint64_t u, Control *c)
 {
-    this->init(u, c);
-}
-
-base_user::~base_user()
-{
-}
-
-void base_user::init(uint64_t u, Control *c)
-{
     this->userid = u;
     this->control = c;
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
     this->sequence = 0L;
+}
+
+base_user::~base_user()
+{
 }
 
 bool base_user::operator<(const base_user& u) const

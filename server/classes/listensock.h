@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2017, 08:12:42 tquirk
+ *   last updated 30 Jul 2017, 18:19:59 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -49,9 +49,6 @@ class base_user {
 
     base_user(uint64_t, Control *);
     virtual ~base_user();
-
-  protected:
-    void init(uint64_t, Control *);
 
   public:
     virtual bool operator<(const base_user&) const;
