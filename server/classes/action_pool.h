@@ -1,6 +1,6 @@
 /* action_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jun 2017, 08:51:41 tquirk
+ *   last updated 30 Jul 2017, 19:02:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -61,7 +61,7 @@ class ActionPool : public ThreadPool<packet_list>
 
     static void *action_pool_worker(void *);
 
-    void execute_action(Control *, action_request&, listen_socket *);
+    void execute_action(base_user *, action_request&, listen_socket *);
 };
 
 #endif /* __INC_ACTION_POOL_H__ */

@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jul 2017, 18:46:09 tquirk
+ *   last updated 30 Jul 2017, 19:05:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -77,7 +77,7 @@ void base_user::send_ping(listen_socket *s)
     pkt.buf.basic.type = TYPE_PNGPKT;
     pkt.buf.basic.version = 1;
     pkt.buf.basic.sequence = this->sequence++;
-    pkt.who = this->control;
+    pkt.who = this;
     pkt.parent = s;
     s->send_pool->push(pkt);
 }
@@ -91,7 +91,7 @@ void base_user::send_ack(listen_socket *s, uint8_t req, uint8_t misc)
     pkt.buf.ack.sequence = this->sequence++;
     pkt.buf.ack.request = req;
     pkt.buf.ack.misc = misc;
-    pkt.who = this->control;
+    pkt.who = this;
     pkt.parent = s;
     s->send_pool->push(pkt);
 }

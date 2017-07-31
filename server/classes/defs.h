@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 10:23:11 tquirk
+ *   last updated 30 Jul 2017, 19:02:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -46,6 +46,7 @@
 /* Eliminate the multiple-include problems */
 class Control;
 class GameObject;
+class base_user;
 class listen_socket;
 
 typedef struct sequence_tag
@@ -58,7 +59,7 @@ typedef struct packet_list_tag
 {
     packet buf;
     listen_socket *parent;
-    Control *who;
+    base_user *who;
 }
 packet_list;
 
