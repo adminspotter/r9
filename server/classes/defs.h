@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 20:23:37 tquirk
+ *   last updated 31 Jul 2017, 22:37:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -65,7 +65,6 @@ packet_list;
 typedef struct access_list_tag
 {
     packet buf;
-    listen_socket *parent;
     union
     {
         struct

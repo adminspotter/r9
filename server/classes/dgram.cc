@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 20:19:13 tquirk
+ *   last updated 31 Jul 2017, 22:38:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -171,7 +171,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         {
             std::clog << "got a login packet" << std::endl;
             memcpy(&a.buf, &buf, len);
-            a.parent = dgs;
             memcpy(&a.what.login.who.dgram, &from,
                    sizeof(struct sockaddr_storage));
             dgs->access_pool->push(a);
@@ -191,7 +190,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
             std::clog << "got a logout packet" << std::endl;
             found->second->timestamp = time(NULL);
             memcpy(&a.buf, &buf, len);
-            a.parent = dgs;
             a.what.logout.who = found->second->userid;
             dgs->access_pool->push(a);
             break;
