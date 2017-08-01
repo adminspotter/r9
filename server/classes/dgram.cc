@@ -46,6 +46,9 @@
 
 extern volatile int main_loop_exit_flag;
 
+typedef void (*packet_handler)(dgram_socket *, packet&,
+                               dgram_user *, Sockaddr *);
+
 dgram_user::dgram_user(uint64_t u, Control *c, listen_socket *l)
     : base_user(u, c, l)
 {
@@ -206,6 +209,44 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     std::clog << "exiting connection loop for datagram port "
               << dgs->sock.sa->port() << std::endl;
     return NULL;
+}
+
+void dgram_socket::handle_login(dgram_socket *s, packet& p,
+                                dgram_user *u, Sockaddr *sa)
+{
+    access_list al;
+
+    memcpy(&al.buf, &p, sizeof(login_request));
+    al.what.login.who.dgram = sa;
+    s->access_pool->push(al);
+}
+
+void dgram_socket::handle_ack(dgram_socket *s, packet& p,
+                              dgram_user *u, Sockaddr *sa)
+{
+    u->timestamp = time(NULL);
+}
+
+void dgram_socket::handle_logout(dgram_socket *s, packet& p,
+                                 dgram_user *u, Sockaddr *sa)
+{
+    access_list al;
+
+    u->timestamp = time(NULL);
+    memcpy(&al.buf, &p, sizeof(logout_request));
+    al.what.logout.who = u->userid;
+    s->access_pool->push(al);
+}
+
+void dgram_socket::handle_action(dgram_socket *s, packet& p,
+                                 dgram_user *u, Sockaddr *sa)
+{
+    packet_list pl;
+
+    u->timestamp = time(NULL);
+    memcpy(&pl.buf, &p, sizeof(action_request));
+    pl.who = u;
+    action_pool->push(pl);
 }
 
 void *dgram_socket::dgram_send_worker(void *arg)
