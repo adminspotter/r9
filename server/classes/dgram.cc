@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2017, 08:50:38 tquirk
+ *   last updated 01 Aug 2017, 09:00:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -153,9 +153,10 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         if (len <= 0 || fromlen == 0 || !ntoh_packet(&buf, len))
             continue;
 
-        /* Figure out who sent this packet */
         try { sa = build_sockaddr((struct sockaddr&)from); }
-        catch (...) { continue; }
+        catch (std::runtime_error& e) {
+            std::clog << syslogWarn << e.what() << std::endl;
+            continue;
 
         /* At this point, we know that the sender is a real host, and
          * the packet is a legitimate packet.
