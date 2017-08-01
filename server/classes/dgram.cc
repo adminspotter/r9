@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2017, 09:00:19 tquirk
+ *   last updated 01 Aug 2017, 09:15:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -133,15 +133,11 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     Sockaddr *sa;
     struct sockaddr_storage from;
     socklen_t fromlen;
-    dgram_socket::socks_iterator found;
-    access_list a;
-    packet_list p;
 
     /* Make sure we can be cancelled as we expect. */
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
-    /* Do the receiving part */
     for (;;)
     {
         if (main_loop_exit_flag == 1)
@@ -168,51 +164,9 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         catch (std::runtime_error& e) {
             std::clog << syslogWarn << e.what() << std::endl;
             continue;
-
-        /* At this point, we know that the sender is a real host, and
-         * the packet is a legitimate packet.
-         */
-        found = dgs->socks.find(sa);
-        if (found == dgs->socks.end() && buf.basic.type == TYPE_LOGREQ)
-        {
-            std::clog << "got a login packet" << std::endl;
-            memcpy(&a.buf, &buf, len);
-            memcpy(&a.what.login.who.dgram, &from,
-                   sizeof(struct sockaddr_storage));
-            dgs->access_pool->push(a);
         }
 
-        /* Do something with whatever we got */
-        switch (buf.basic.type)
-        {
-          case TYPE_ACKPKT:
-            /* Acknowledgement packet */
-            std::clog << "got an ack packet" << std::endl;
-            found->second->timestamp = time(NULL);
-            break;
-
-          case TYPE_LGTREQ:
-            /* Logout request */
-            std::clog << "got a logout packet" << std::endl;
-            found->second->timestamp = time(NULL);
-            memcpy(&a.buf, &buf, len);
-            a.what.logout.who = found->second->userid;
-            dgs->access_pool->push(a);
-            break;
-
-          case TYPE_ACTREQ:
-            /* Action request */
-            std::clog << "got an action request packet" << std::endl;
-            found->second->timestamp = time(NULL);
-            memcpy(&p.buf, &buf, len);
-            p.who = found->second->control;
-            action_pool->push(p);
-            break;
-
-          default:
-            break;
-        }
-        delete sa;
+        dgs->handle_packet(buf, sa);
     }
     std::clog << "exiting connection loop for datagram port "
               << dgs->sock.sa->port() << std::endl;

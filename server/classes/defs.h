@@ -48,6 +48,7 @@ class Control;
 class GameObject;
 class base_user;
 class listen_socket;
+class Sockaddr;
 
 typedef struct sequence_tag
 {
@@ -71,7 +72,7 @@ typedef struct access_list_tag
         {
             union
             {
-                struct sockaddr_storage dgram;
+                Sockaddr *dgram;
                 struct
                 {
                     int sub, sock;
