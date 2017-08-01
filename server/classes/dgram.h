@@ -82,6 +82,8 @@ class dgram_socket : public listen_socket
 
     void start(void) override;
 
+    void handle_packet(packet&, Sockaddr *);
+
     static void handle_login(dgram_socket *, packet&,
                              dgram_user *, Sockaddr *);
     static void handle_ack(dgram_socket *, packet&,

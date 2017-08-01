@@ -49,6 +49,14 @@ extern volatile int main_loop_exit_flag;
 typedef void (*packet_handler)(dgram_socket *, packet&,
                                dgram_user *, Sockaddr *);
 
+static std::map<int, packet_handler> packet_handlers =
+{
+    { TYPE_LOGREQ, dgram_socket::handle_login },
+    { TYPE_ACKPKT, dgram_socket::handle_ack },
+    { TYPE_LGTREQ, dgram_socket::handle_logout },
+    { TYPE_ACTREQ, dgram_socket::handle_action }
+};
+
 dgram_user::dgram_user(uint64_t u, Control *c, listen_socket *l)
     : base_user(u, c, l)
 {
@@ -209,6 +217,20 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     std::clog << "exiting connection loop for datagram port "
               << dgs->sock.sa->port() << std::endl;
     return NULL;
+}
+
+void dgram_socket::handle_packet(packet& p, Sockaddr *sa)
+{
+    dgram_user *dgu = NULL;
+    auto handler = packet_handlers.find(p.basic.type);
+    auto found = this->socks.find(sa);
+
+    if (found != this->socks.end())
+        dgu = found->second;
+
+    if (handler != packet_handlers.end())
+        (handler->second)(this, p, dgu, sa);
+    delete sa;
 }
 
 void dgram_socket::handle_login(dgram_socket *s, packet& p,
