@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 22:38:42 tquirk
+ *   last updated 01 Aug 2017, 08:50:38 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -149,19 +149,13 @@ void *dgram_socket::dgram_listen_worker(void *arg)
                        (struct sockaddr *)&from, &fromlen);
         pthread_testcancel();
 
-        /* Did we actually even get anything? */
-        if (len <= 0 || fromlen == 0)
+        /* If anything is wrong, just ignore what we got */
+        if (len <= 0 || fromlen == 0 || !ntoh_packet(&buf, len))
             continue;
 
         /* Figure out who sent this packet */
         try { sa = build_sockaddr((struct sockaddr&)from); }
         catch (...) { continue; }
-
-        /* If we got a packet which wasn't the right size for its
-         * type, just drop it on the floor.
-         */
-        if (!ntoh_packet(&buf, len))
-            continue;
 
         /* At this point, we know that the sender is a real host, and
          * the packet is a legitimate packet.
