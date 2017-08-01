@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jul 2017, 19:05:13 tquirk
+ *   last updated 31 Jul 2017, 20:19:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -37,8 +37,9 @@
 #include "../config_data.h"
 #include "../log.h"
 
-base_user::base_user(uint64_t u, Control *c)
+base_user::base_user(uint64_t u, Control *c, listen_socket *l)
 {
+    this->parent = l;
     this->userid = u;
     this->control = c;
     this->timestamp = time(NULL);
@@ -70,7 +71,7 @@ const base_user& base_user::operator=(const base_user& u)
     return *this;
 }
 
-void base_user::send_ping(listen_socket *s)
+void base_user::send_ping(void)
 {
     packet_list pkt;
 
@@ -78,11 +79,10 @@ void base_user::send_ping(listen_socket *s)
     pkt.buf.basic.version = 1;
     pkt.buf.basic.sequence = this->sequence++;
     pkt.who = this;
-    pkt.parent = s;
-    s->send_pool->push(pkt);
+    this->parent->send_pool->push(pkt);
 }
 
-void base_user::send_ack(listen_socket *s, uint8_t req, uint8_t misc)
+void base_user::send_ack(uint8_t req, uint8_t misc)
 {
     packet_list pkt;
 
@@ -92,8 +92,7 @@ void base_user::send_ack(listen_socket *s, uint8_t req, uint8_t misc)
     pkt.buf.ack.request = req;
     pkt.buf.ack.misc = misc;
     pkt.who = this;
-    pkt.parent = s;
-    s->send_pool->push(pkt);
+    this->parent->send_pool->push(pkt);
 }
 
 listen_socket::listen_socket(struct addrinfo *ai)
@@ -242,7 +241,7 @@ void *listen_socket::reaper_worker(void *arg)
             }
             else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
                      && bu->pending_logout == false)
-                bu->send_ping(ls);
+                bu->send_ping();
         }
         pthread_testcancel();
     }
@@ -316,7 +315,7 @@ void listen_socket::connect_user(base_user *user, access_list& access)
     if (auth_level >= ACCESS_MOVE)
         zone->connect_game_object(user->control, charid);
 
-    user->send_ack(this, TYPE_LOGREQ, (uint8_t)auth_level);
+    user->send_ack(TYPE_LOGREQ, (uint8_t)auth_level);
 }
 
 void listen_socket::logout_user(access_list& p)
@@ -335,6 +334,6 @@ void listen_socket::logout_user(access_list& p)
                   << bu->control->username
                   << " (" << bu->control->userid << ")" << std::endl;
 
-        bu->send_ack(this, TYPE_LGTREQ, 0);
+        bu->send_ack(TYPE_LGTREQ, 0);
     }
 }

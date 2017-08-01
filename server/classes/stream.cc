@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2017, 08:34:50 tquirk
+ *   last updated 31 Jul 2017, 09:19:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -56,8 +56,8 @@
 
 extern volatile int main_loop_exit_flag;
 
-stream_user::stream_user(uint64_t u, Control *c)
-    : base_user(u, c)
+stream_user::stream_user(uint64_t u, Control *c, listen_socket *l)
+    : base_user(u, c, l)
 {
     this->subsrv = 0;
     this->fd = 0;
@@ -288,7 +288,7 @@ void stream_socket::do_login(uint64_t userid,
                              Control *con,
                              access_list& al)
 {
-    stream_user *stu = new stream_user(userid, con);
+    stream_user *stu = new stream_user(userid, con, this);
     stu->subsrv = al.what.login.who.stream.sub;
     stu->fd = al.what.login.who.stream.sock;
     users[userid] = stu;

@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jul 2017, 19:02:03 tquirk
+ *   last updated 31 Jul 2017, 20:25:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -109,14 +109,12 @@ void *ActionPool::action_pool_worker(void *arg)
     for (;;)
     {
         act->pop(&req);
-        act->execute_action(req.who, req.buf.act, req.parent);
+        act->execute_action(req.who, req.buf.act);
     }
     return NULL;
 }
 
-void ActionPool::execute_action(base_user *user,
-                                action_request& req,
-                                listen_socket *parent)
+void ActionPool::execute_action(base_user *user, action_request& req)
 {
     ActionPool::actions_iterator i = this->actions.find(req.action_id);
     Control::actions_iterator j = user->control->actions.find(req.action_id);
@@ -148,6 +146,6 @@ void ActionPool::execute_action(base_user *user,
                                        req.power_level,
                                        this->game_objects[req.dest_object_id],
                                        vec);
-        user->send_ack(parent, TYPE_ACTREQ, (uint8_t)retval);
+        user->send_ack(TYPE_ACTREQ, (uint8_t)retval);
     }
 }
