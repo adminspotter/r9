@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jun 2017, 08:51:59 tquirk
+ *   last updated 31 Jul 2017, 20:25:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -109,17 +109,15 @@ void *ActionPool::action_pool_worker(void *arg)
     for (;;)
     {
         act->pop(&req);
-        act->execute_action(req.who, req.buf.act, req.parent);
+        act->execute_action(req.who, req.buf.act);
     }
     return NULL;
 }
 
-void ActionPool::execute_action(Control *con,
-                                action_request& req,
-                                listen_socket *parent)
+void ActionPool::execute_action(base_user *user, action_request& req)
 {
     ActionPool::actions_iterator i = this->actions.find(req.action_id);
-    Control::actions_iterator j = con->actions.find(req.action_id);
+    Control::actions_iterator j = user->control->actions.find(req.action_id);
     glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
     int retval;
 
@@ -128,8 +126,8 @@ void ActionPool::execute_action(Control *con,
      * improvement points.
      */
 
-    if (i != this->actions.end() && j != con->actions.end()
-        && con->slave->get_object_id() == req.object_id)
+    if (i != this->actions.end() && j != user->control->actions.end()
+        && user->control->slave->get_object_id() == req.object_id)
     {
         /* If it's not valid on this server, it should at least have
          * a default.
@@ -144,10 +142,10 @@ void ActionPool::execute_action(Control *con,
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
         req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
 
-        retval = (*(i->second.action))(con->slave,
+        retval = (*(i->second.action))(user->control->slave,
                                        req.power_level,
                                        this->game_objects[req.dest_object_id],
                                        vec);
-        parent->send_ack(con, TYPE_ACTREQ, (uint8_t)retval);
+        user->send_ack(TYPE_ACTREQ, (uint8_t)retval);
     }
 }

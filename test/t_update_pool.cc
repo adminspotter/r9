@@ -56,9 +56,9 @@ TEST(UpdatePoolTest, Operate)
     sock->send_pool = send_pool;
     sockets.push_back(sock);
 
-    sock->users[1LL] = new base_user(1LL, con);
-    sock->users[2LL] = new base_user(2LL, con);
-    sock->users[3LL] = new base_user(3LL, con);
+    sock->users[1LL] = new base_user(1LL, con, NULL);
+    sock->users[2LL] = new base_user(2LL, con, NULL);
+    sock->users[3LL] = new base_user(3LL, con, NULL);
     ASSERT_EQ(sock->users.size(), 3);
 
     database = new mock_DB("a", "b", "c", "d");

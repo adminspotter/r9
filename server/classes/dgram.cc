@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jul 2017, 23:06:30 tquirk
+ *   last updated 01 Aug 2017, 22:25:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -46,8 +46,19 @@
 
 extern volatile int main_loop_exit_flag;
 
-dgram_user::dgram_user(uint64_t u, Control *c)
-    : base_user(u, c)
+typedef void (*packet_handler)(dgram_socket *, packet&,
+                               dgram_user *, Sockaddr *);
+
+static std::map<int, packet_handler> packet_handlers =
+{
+    { TYPE_LOGREQ, dgram_socket::handle_login },
+    { TYPE_ACKPKT, dgram_socket::handle_ack },
+    { TYPE_LGTREQ, dgram_socket::handle_logout },
+    { TYPE_ACTREQ, dgram_socket::handle_action }
+};
+
+dgram_user::dgram_user(uint64_t u, Control *c, listen_socket *l)
+    : base_user(u, c, l)
 {
 }
 
@@ -94,8 +105,8 @@ void dgram_socket::do_login(uint64_t userid,
                             Control *con,
                             access_list& al)
 {
-    dgram_user *dgu = new dgram_user(userid, con);
-    dgu->sa = build_sockaddr((struct sockaddr&)(al.what.login.who.dgram));
+    dgram_user *dgu = new dgram_user(userid, con, this);
+    dgu->sa = al.what.login.who.dgram;
     this->users[userid] = dgu;
     this->socks[dgu->sa] = dgu;
 
@@ -122,15 +133,11 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     Sockaddr *sa;
     struct sockaddr_storage from;
     socklen_t fromlen;
-    dgram_socket::socks_iterator found;
-    access_list a;
-    packet_list p;
 
     /* Make sure we can be cancelled as we expect. */
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
-    /* Do the receiving part */
     for (;;)
     {
         if (main_loop_exit_flag == 1)
@@ -149,71 +156,73 @@ void *dgram_socket::dgram_listen_worker(void *arg)
                        (struct sockaddr *)&from, &fromlen);
         pthread_testcancel();
 
-        /* Did we actually even get anything? */
-        if (len <= 0 || fromlen == 0)
+        /* If anything is wrong, just ignore what we got */
+        if (len <= 0 || fromlen == 0 || !ntoh_packet(&buf, len))
             continue;
 
-        /* Figure out who sent this packet */
         try { sa = build_sockaddr((struct sockaddr&)from); }
-        catch (...) { continue; }
-
-        /* If we got a packet which wasn't the right size for its
-         * type, just drop it on the floor.
-         */
-        if (!ntoh_packet(&buf, len))
+        catch (std::runtime_error& e) {
+            std::clog << syslogWarn << e.what() << std::endl;
             continue;
-
-        /* At this point, we know that the sender is a real host, and
-         * the packet is a legitimate packet.
-         */
-        found = dgs->socks.find(sa);
-        if (found == dgs->socks.end() && buf.basic.type == TYPE_LOGREQ)
-        {
-            std::clog << "got a login packet" << std::endl;
-            memcpy(&a.buf, &buf, len);
-            a.parent = dgs;
-            memcpy(&a.what.login.who.dgram, &from,
-                   sizeof(struct sockaddr_storage));
-            dgs->access_pool->push(a);
         }
 
-        /* Do something with whatever we got */
-        switch (buf.basic.type)
-        {
-          case TYPE_ACKPKT:
-            /* Acknowledgement packet */
-            std::clog << "got an ack packet" << std::endl;
-            found->second->timestamp = time(NULL);
-            break;
-
-          case TYPE_LGTREQ:
-            /* Logout request */
-            std::clog << "got a logout packet" << std::endl;
-            found->second->timestamp = time(NULL);
-            memcpy(&a.buf, &buf, len);
-            a.parent = dgs;
-            a.what.logout.who = found->second->userid;
-            dgs->access_pool->push(a);
-            break;
-
-          case TYPE_ACTREQ:
-            /* Action request */
-            std::clog << "got an action request packet" << std::endl;
-            found->second->timestamp = time(NULL);
-            memcpy(&p.buf, &buf, len);
-            p.who = found->second->control;
-            p.parent = dgs;
-            action_pool->push(p);
-            break;
-
-          default:
-            break;
-        }
-        delete sa;
+        dgs->handle_packet(buf, sa);
     }
     std::clog << "exiting connection loop for datagram port "
               << dgs->sock.sa->port() << std::endl;
     return NULL;
+}
+
+void dgram_socket::handle_packet(packet& p, Sockaddr *sa)
+{
+    dgram_user *dgu = NULL;
+    auto handler = packet_handlers.find(p.basic.type);
+    auto found = this->socks.find(sa);
+
+    if (found != this->socks.end())
+        dgu = found->second;
+
+    if (handler != packet_handlers.end())
+        (handler->second)(this, p, dgu, sa);
+    delete sa;
+}
+
+void dgram_socket::handle_login(dgram_socket *s, packet& p,
+                                dgram_user *u, Sockaddr *sa)
+{
+    access_list al;
+
+    memcpy(&al.buf, &p, sizeof(login_request));
+    al.what.login.who.dgram = sa;
+    s->access_pool->push(al);
+}
+
+void dgram_socket::handle_ack(dgram_socket *s, packet& p,
+                              dgram_user *u, Sockaddr *sa)
+{
+    u->timestamp = time(NULL);
+}
+
+void dgram_socket::handle_logout(dgram_socket *s, packet& p,
+                                 dgram_user *u, Sockaddr *sa)
+{
+    access_list al;
+
+    u->timestamp = time(NULL);
+    memcpy(&al.buf, &p, sizeof(logout_request));
+    al.what.logout.who = u->userid;
+    s->access_pool->push(al);
+}
+
+void dgram_socket::handle_action(dgram_socket *s, packet& p,
+                                 dgram_user *u, Sockaddr *sa)
+{
+    packet_list pl;
+
+    u->timestamp = time(NULL);
+    memcpy(&pl.buf, &p, sizeof(action_request));
+    pl.who = u;
+    action_pool->push(pl);
 }
 
 void *dgram_socket::dgram_send_worker(void *arg)

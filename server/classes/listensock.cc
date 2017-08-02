@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jul 2017, 08:43:01 tquirk
+ *   last updated 31 Jul 2017, 20:19:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -37,23 +37,19 @@
 #include "../config_data.h"
 #include "../log.h"
 
-base_user::base_user(uint64_t u, Control *c)
+base_user::base_user(uint64_t u, Control *c, listen_socket *l)
 {
-    this->init(u, c);
-}
-
-base_user::~base_user()
-{
-}
-
-void base_user::init(uint64_t u, Control *c)
-{
+    this->parent = l;
     this->userid = u;
     this->control = c;
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
     this->sequence = 0L;
+}
+
+base_user::~base_user()
+{
 }
 
 bool base_user::operator<(const base_user& u) const
@@ -73,6 +69,30 @@ const base_user& base_user::operator=(const base_user& u)
     this->timestamp = u.timestamp;
     this->pending_logout = u.pending_logout;
     return *this;
+}
+
+void base_user::send_ping(void)
+{
+    packet_list pkt;
+
+    pkt.buf.basic.type = TYPE_PNGPKT;
+    pkt.buf.basic.version = 1;
+    pkt.buf.basic.sequence = this->sequence++;
+    pkt.who = this;
+    this->parent->send_pool->push(pkt);
+}
+
+void base_user::send_ack(uint8_t req, uint8_t misc)
+{
+    packet_list pkt;
+
+    pkt.buf.ack.type = TYPE_ACKPKT;
+    pkt.buf.ack.version = 1;
+    pkt.buf.ack.sequence = this->sequence++;
+    pkt.buf.ack.request = req;
+    pkt.buf.ack.misc = misc;
+    pkt.who = this;
+    this->parent->send_pool->push(pkt);
 }
 
 listen_socket::listen_socket(struct addrinfo *ai)
@@ -221,7 +241,7 @@ void *listen_socket::reaper_worker(void *arg)
             }
             else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
                      && bu->pending_logout == false)
-                ls->send_ping(bu->control);
+                bu->send_ping();
         }
         pthread_testcancel();
     }
@@ -295,7 +315,7 @@ void listen_socket::connect_user(base_user *user, access_list& access)
     if (auth_level >= ACCESS_MOVE)
         zone->connect_game_object(user->control, charid);
 
-    this->send_ack(user->control, TYPE_LOGREQ, (uint8_t)auth_level);
+    user->send_ack(TYPE_LOGREQ, (uint8_t)auth_level);
 }
 
 void listen_socket::logout_user(access_list& p)
@@ -314,40 +334,6 @@ void listen_socket::logout_user(access_list& p)
                   << bu->control->username
                   << " (" << bu->control->userid << ")" << std::endl;
 
-        this->send_ack(bu->control, TYPE_LGTREQ, 0);
-    }
-}
-
-void listen_socket::send_ping(Control *con)
-{
-    packet_list pkt;
-    listen_socket::users_iterator found;
-
-    if ((found = this->users.find(con->userid)) != this->users.end())
-    {
-        pkt.buf.basic.type = TYPE_PNGPKT;
-        pkt.buf.basic.version = 1;
-        pkt.buf.basic.sequence = found->second->sequence++;
-        pkt.who = con;
-        pkt.parent = this;
-        this->send_pool->push(pkt);
-    }
-}
-
-void listen_socket::send_ack(Control *con, uint8_t req, uint8_t misc)
-{
-    packet_list pkt;
-    listen_socket::users_iterator found;
-
-    if ((found = this->users.find(con->userid)) != this->users.end())
-    {
-        pkt.buf.ack.type = TYPE_ACKPKT;
-        pkt.buf.ack.version = 1;
-        pkt.buf.ack.sequence = found->second->sequence++;
-        pkt.buf.ack.request = req;
-        pkt.buf.ack.misc = misc;
-        pkt.who = con;
-        pkt.parent = this;
-        this->send_pool->push(pkt);
+        bu->send_ack(TYPE_LGTREQ, 0);
     }
 }

@@ -1,6 +1,6 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jul 2017, 23:05:26 tquirk
+ *   last updated 01 Aug 2017, 08:44:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -59,7 +59,7 @@ class dgram_user : public base_user
   public:
     Sockaddr *sa;
 
-    dgram_user(uint64_t, Control *);
+    dgram_user(uint64_t, Control *, listen_socket *);
     virtual ~dgram_user();
 
     const dgram_user& operator=(const dgram_user&);
@@ -81,6 +81,17 @@ class dgram_socket : public listen_socket
     std::string port_type(void) override;
 
     void start(void) override;
+
+    void handle_packet(packet&, Sockaddr *);
+
+    static void handle_login(dgram_socket *, packet&,
+                             dgram_user *, Sockaddr *);
+    static void handle_ack(dgram_socket *, packet&,
+                           dgram_user *, Sockaddr *);
+    static void handle_logout(dgram_socket *, packet&,
+                              dgram_user *, Sockaddr *);
+    static void handle_action(dgram_socket *, packet&,
+                              dgram_user *, Sockaddr *);
 
     void do_login(uint64_t, Control *, access_list&) override;
     void do_logout(base_user *) override;

@@ -139,6 +139,7 @@ TEST_F(ActionPoolTest, StartStop)
 TEST_F(ActionPoolTest, NoSkill)
 {
     Control *control = new Control(123LL, (*game_objs)[9876LL]);
+    base_user *bu = new base_user(123LL, control, listensock);
     (*game_objs)[9876LL]->connect(control);
 
     EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
@@ -159,10 +160,11 @@ TEST_F(ActionPoolTest, NoSkill)
 
     action_count = 0;
 
-    action_pool->execute_action(control, pkt, NULL);
+    action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 0);
 
     (*game_objs)[9876LL]->disconnect(control);
+    delete bu;
     delete control;
     delete action_pool;
 }
@@ -170,6 +172,7 @@ TEST_F(ActionPoolTest, NoSkill)
 TEST_F(ActionPoolTest, InvalidSkill)
 {
     Control *control = new Control(123LL, (*game_objs)[9876LL]);
+    base_user *bu = new base_user(123LL, control, listensock);
     control->actions[567] = {567, 5, 0, 0};
     (*game_objs)[9876LL]->connect(control);
 
@@ -177,8 +180,6 @@ TEST_F(ActionPoolTest, InvalidSkill)
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
-    EXPECT_CALL(*listensock, send_ack(control, TYPE_ACTREQ, 4))
-        .Times(1);
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -193,10 +194,11 @@ TEST_F(ActionPoolTest, InvalidSkill)
 
     action_count = 0;
 
-    action_pool->execute_action(control, pkt, listensock);
+    action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 1);
 
     (*game_objs)[9876LL]->disconnect(control);
+    delete bu;
     delete control;
     delete action_pool;
 }
@@ -204,6 +206,7 @@ TEST_F(ActionPoolTest, InvalidSkill)
 TEST_F(ActionPoolTest, WrongObjectId)
 {
     Control *control = new Control(123LL, (*game_objs)[9876LL]);
+    base_user *bu = new base_user(123LL, control, listensock);
     control->actions[789] = {789, 5, 0, 0};
     (*game_objs)[9876LL]->connect(control);
 
@@ -225,10 +228,11 @@ TEST_F(ActionPoolTest, WrongObjectId)
 
     action_count = 0;
 
-    action_pool->execute_action(control, pkt, NULL);
+    action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 0);
 
     (*game_objs)[9876LL]->disconnect(control);
+    delete bu;
     delete control;
     delete action_pool;
 }
@@ -236,6 +240,7 @@ TEST_F(ActionPoolTest, WrongObjectId)
 TEST_F(ActionPoolTest, GoodObjectId)
 {
     Control *control = new Control(123LL, (*game_objs)[9876LL]);
+    base_user *bu = new base_user(123LL, control, listensock);
     control->actions[789] = {789, 5, 0, 0};
     (*game_objs)[9876LL]->connect(control);
 
@@ -243,8 +248,6 @@ TEST_F(ActionPoolTest, GoodObjectId)
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
-    EXPECT_CALL(*listensock, send_ack(control, TYPE_ACTREQ, 4))
-        .Times(1);
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -259,10 +262,11 @@ TEST_F(ActionPoolTest, GoodObjectId)
 
     action_count = 0;
 
-    action_pool->execute_action(control, pkt, listensock);
+    action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 1);
 
     (*game_objs)[9876LL]->disconnect(control);
+    delete bu;
     delete control;
     delete action_pool;
 }

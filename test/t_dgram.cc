@@ -40,7 +40,7 @@ TEST(DgramUserTest, CreateDelete)
 
     ASSERT_NO_THROW(
         {
-            dgu = new dgram_user(control->userid, control);
+            dgu = new dgram_user(control->userid, control, NULL);
         });
 
     delete dgu;
@@ -53,8 +53,8 @@ TEST(DgramUserTest, Assignment)
     Control *control2 = new Control(123LL, NULL);
     dgram_user *dgu1, *dgu2;
 
-    dgu1 = new dgram_user(control1->userid, control1);
-    dgu2 = new dgram_user(control2->userid, control2);
+    dgu1 = new dgram_user(control1->userid, control1, NULL);
+    dgu2 = new dgram_user(control2->userid, control2, NULL);
 
     ASSERT_NE(dgu1->userid, dgu2->userid);
     ASSERT_NE(dgu1->control, dgu2->control);
@@ -115,8 +115,7 @@ TEST(DgramSocketTest, DoLogin)
     access_list al;
 
     memset(&al, 0, sizeof(access_list));
-    al.parent = (listen_socket *)dgs;
-    al.what.login.who.dgram.ss_family = AF_INET;
+    al.what.login.who.dgram = NULL;
     al.buf.basic.type = TYPE_LOGREQ;
     strncpy(al.buf.log.username, "bobbo", sizeof(al.buf.log.username));
     strncpy(al.buf.log.password, "argh!", sizeof(al.buf.log.password));
@@ -136,7 +135,7 @@ TEST(DgramSocketTest, DoLogout)
 {
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL);
+    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));

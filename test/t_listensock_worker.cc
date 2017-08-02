@@ -81,14 +81,14 @@ TEST(ListenSocketTest, ReaperWorker)
 
     /* This user will be sent a ping */
     Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control);
+    base_user *bu = new base_user(123LL, control, listen);
     bu->pending_logout = false;
     bu->timestamp = time(NULL) - listen_socket::PING_TIMEOUT - 1;
     listen->users[123LL] = bu;
 
     /* This user will be logged out entirely */
     Control *control2 = new Control(1234LL, NULL);
-    base_user *bu2 = new base_user(1234LL, control2);
+    base_user *bu2 = new base_user(1234LL, control2, listen);
     bu2->pending_logout = true;
     bu2->timestamp = time(NULL) - listen_socket::LINK_DEAD_TIMEOUT - 1;
     listen->users[1234LL] = bu2;
