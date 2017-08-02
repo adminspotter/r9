@@ -20,7 +20,7 @@ int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 Library *lib;
 std::map<uint64_t, GameObject *> *game_objs;
 mock_listen_socket *listensock;
-int register_count, unregister_count, action_count;
+int ntoh_count, register_count, unregister_count, action_count;
 
 struct addrinfo *create_addrinfo(void)
 {
@@ -42,6 +42,12 @@ struct addrinfo *create_addrinfo(void)
     }
 
     return addr;
+}
+
+int ntoh_packet(packet *p, size_t s)
+{
+    ++ntoh_count;
+    return 1;
 }
 
 void register_actions(std::map<uint16_t, action_rec>& a)
@@ -264,6 +270,48 @@ TEST_F(ActionPoolTest, GoodObjectId)
 
     action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 1);
+
+    (*game_objs)[9876LL]->disconnect(control);
+    delete bu;
+    delete control;
+    delete action_pool;
+}
+
+TEST_F(ActionPoolTest, Worker)
+{
+    Control *control = new Control(123LL, (*game_objs)[9876LL]);
+    base_user *bu = new base_user(123LL, control, listensock);
+    control->actions[789] = {789, 5, 0, 0};
+    (*game_objs)[9876LL]->connect(control);
+
+    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
+    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
+        .WillOnce(Return((void *)register_actions))
+        .WillOnce(Return((void *)unregister_actions));
+
+    action_pool = new ActionPool(1, *game_objs, lib, database);
+
+    packet_list pl;
+    memset(&pl.buf, 0, sizeof(action_request));
+    pl.buf.act.type = TYPE_ACTREQ;
+    pl.buf.act.version = 1;
+    pl.buf.act.sequence = 1LL;
+    pl.buf.act.object_id = 9876LL;
+    pl.buf.act.action_id = 789;
+    pl.buf.act.power_level = 5;
+    pl.who = bu;
+    action_pool->push(pl);
+
+    action_count = ntoh_count = 0;
+
+    action_pool->start();
+
+    while (action_count == 0)
+        ;
+
+    action_pool->stop();
+    ASSERT_EQ(action_count, 1);
+    ASSERT_GT(ntoh_count, 0);
 
     (*game_objs)[9876LL]->disconnect(control);
     delete bu;
