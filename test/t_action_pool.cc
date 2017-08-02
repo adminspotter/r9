@@ -180,8 +180,6 @@ TEST_F(ActionPoolTest, InvalidSkill)
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
-    EXPECT_CALL(*listensock, send_ack(control, TYPE_ACTREQ, 4))
-        .Times(1);
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -250,8 +248,6 @@ TEST_F(ActionPoolTest, GoodObjectId)
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
-    EXPECT_CALL(*listensock, send_ack(control, TYPE_ACTREQ, 4))
-        .Times(1);
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
