@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2017, 09:15:31 tquirk
+ *   last updated 01 Aug 2017, 22:25:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -106,7 +106,7 @@ void dgram_socket::do_login(uint64_t userid,
                             access_list& al)
 {
     dgram_user *dgu = new dgram_user(userid, con, this);
-    dgu->sa = build_sockaddr((struct sockaddr&)(al.what.login.who.dgram));
+    dgu->sa = al.what.login.who.dgram;
     this->users[userid] = dgu;
     this->socks[dgu->sa] = dgu;
 
