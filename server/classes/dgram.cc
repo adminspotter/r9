@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2017, 22:25:11 tquirk
+ *   last updated 02 Aug 2017, 08:29:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -193,7 +193,7 @@ void dgram_socket::handle_login(dgram_socket *s, packet& p,
     access_list al;
 
     memcpy(&al.buf, &p, sizeof(login_request));
-    al.what.login.who.dgram = sa;
+    al.what.login.who.dgram = build_sockaddr(*sa->sockaddr());
     s->access_pool->push(al);
 }
 
