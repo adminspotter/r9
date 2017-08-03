@@ -273,3 +273,43 @@ TEST(DgramSocketTest, HandleLogout)
     delete dgs;
     freeaddrinfo(addr);
 }
+
+TEST(DgramSocketTest, HandleAction)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    struct sockaddr_in sin;
+
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+
+    dgs->socks[dgu->sa] = dgu;
+
+    dgu->timestamp = 0;
+
+    /* Creating an actual ActionPool will be prohibitive, since it
+     * requires so many other objects to make it go.  All we need here
+     * is the push() method, and the queue_size() method to make sure
+     * our function is doing what we expect it to.
+     */
+    action_pool = (ActionPool *)new ThreadPool<packet_list>("test", 1);
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_ACTREQ;
+
+    ASSERT_TRUE(action_pool->queue_size() == 0);
+
+    dgram_socket::handle_action(dgs, p, dgu, dgu->sa);
+
+    ASSERT_NE(dgu->timestamp, 0);
+    ASSERT_TRUE(action_pool->queue_size() != 0);
+
+    delete (ThreadPool<packet_list> *)action_pool;
+    delete dgu->sa;
+    delete dgu;
+    delete dgs;
+    freeaddrinfo(addr);
+}
