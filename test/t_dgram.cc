@@ -205,3 +205,34 @@ TEST(DgramSocketTest, HandlePacket)
     delete dgs;
     freeaddrinfo(addr);
 }
+
+TEST(DgramSocketTest, HandleLogin)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+    struct sockaddr_in sin;
+
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sin);
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_LOGREQ;
+
+    ASSERT_TRUE(dgs->access_pool->queue_size() == 0);
+
+    dgram_socket::handle_login(dgs, p, NULL, sa);
+
+    ASSERT_TRUE(dgs->access_pool->queue_size() != 0);
+    access_list al;
+    memset(&al, 0, sizeof(access_list));
+    dgs->access_pool->pop(&al);
+    ASSERT_EQ(al.buf.basic.type, TYPE_LOGREQ);
+    ASSERT_TRUE((void *)al.what.login.who.dgram != (void *)sa);
+
+    delete al.what.login.who.dgram;
+    delete sa;
+    delete dgs;
+    freeaddrinfo(addr);
+}
