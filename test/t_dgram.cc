@@ -236,3 +236,40 @@ TEST(DgramSocketTest, HandleLogin)
     delete dgs;
     freeaddrinfo(addr);
 }
+
+TEST(DgramSocketTest, HandleLogout)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    struct sockaddr_in sin;
+
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+
+    dgs->socks[dgu->sa] = dgu;
+
+    dgu->timestamp = 0;
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_LGTREQ;
+
+    ASSERT_TRUE(dgs->access_pool->queue_size() == 0);
+
+    dgram_socket::handle_logout(dgs, p, dgu, dgu->sa);
+
+    ASSERT_NE(dgu->timestamp, 0);
+    ASSERT_TRUE(dgs->access_pool->queue_size() != 0);
+    access_list al;
+    memset(&al, 0, sizeof(access_list));
+    dgs->access_pool->pop(&al);
+    ASSERT_EQ(al.buf.basic.type, TYPE_LGTREQ);
+    ASSERT_EQ(al.what.logout.who, 123LL);
+
+    delete dgu->sa;
+    delete dgu;
+    delete dgs;
+    freeaddrinfo(addr);
+}
