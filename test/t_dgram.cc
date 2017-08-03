@@ -154,3 +154,27 @@ TEST(DgramSocketTest, DoLogout)
     delete dgs;
     freeaddrinfo(addr);
 }
+
+TEST(DgramSocketTest, HandlePacketUnknown)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+    struct sockaddr_in sin;
+
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sin);
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_POSUPD;
+
+    dgs->handle_packet(p, sa);
+
+    /* Not sure what to assert here.  We're exercising the code, but
+     * if there's nothing to do, there's nothing to prove.
+     */
+
+    delete dgs;
+    freeaddrinfo(addr);
+}
