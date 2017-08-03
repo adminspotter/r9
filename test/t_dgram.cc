@@ -178,3 +178,30 @@ TEST(DgramSocketTest, HandlePacketUnknown)
     delete dgs;
     freeaddrinfo(addr);
 }
+
+TEST(DgramSocketTest, HandlePacket)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    struct sockaddr_in sin;
+
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+
+    dgs->socks[dgu->sa] = dgu;
+
+    dgu->timestamp = 0;
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_ACKPKT;
+
+    dgs->handle_packet(p, dgu->sa);
+
+    ASSERT_NE(dgu->timestamp, 0);
+
+    delete dgs;
+    freeaddrinfo(addr);
+}
