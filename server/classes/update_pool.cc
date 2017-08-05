@@ -1,6 +1,6 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 11:28:27 tquirk
+ *   last updated 31 Jul 2017, 20:23:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -84,8 +84,7 @@ void *UpdatePool::update_pool_worker(void *arg)
                  user != (*sock)->users.end();
                  ++user)
             {
-                pkt.who = user->second->control;
-                pkt.parent = *sock;
+                pkt.who = user->second;
                 (*sock)->send_pool->push(pkt);
             }
     }

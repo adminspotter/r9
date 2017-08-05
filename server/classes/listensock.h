@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2017, 08:12:42 tquirk
+ *   last updated 31 Jul 2017, 09:18:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -38,7 +38,7 @@
 #include "thread_pool.h"
 #include "defs.h"
 
-/* For use in the socket types which use the basesock */
+class listen_socket;
 
 class base_user {
   public:
@@ -47,17 +47,20 @@ class base_user {
     time_t timestamp;
     bool pending_logout;
 
-    base_user(uint64_t, Control *);
-    virtual ~base_user();
-
   protected:
-    void init(uint64_t, Control *);
+    listen_socket *parent;
 
   public:
+    base_user(uint64_t, Control *, listen_socket *);
+    virtual ~base_user();
+
     virtual bool operator<(const base_user&) const;
     virtual bool operator==(const base_user&) const;
 
     virtual const base_user& operator=(const base_user&);
+
+    void send_ping(void);
+    void send_ack(uint8_t, uint8_t);
 };
 
 class listen_socket {
@@ -99,9 +102,6 @@ class listen_socket {
 
     virtual void do_login(uint64_t, Control *, access_list&) = 0;
     virtual void do_logout(base_user *) = 0;
-
-    virtual void send_ping(Control *);
-    virtual void send_ack(Control *, uint8_t, uint8_t);
 };
 
 #endif /* __INC_LISTENSOCK_H__ */
