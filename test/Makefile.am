@@ -17,6 +17,7 @@ if WANT_SERVER
 	t_console \
 	t_db \
 	t_dgram \
+	t_dgram_worker \
 	t_game_obj \
 	t_library \
 	t_listensock \
@@ -104,6 +105,16 @@ t_dgram_SOURCES = t_dgram.cc \
 	../server/config_data.cc ../server/config_data.h
 t_dgram_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_dgram_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
+
+t_dgram_worker_SOURCES = t_dgram_worker.cc \
+	../server/classes/dgram.cc ../server/classes/dgram.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_dgram_worker_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_dgram_worker_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
