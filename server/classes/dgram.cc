@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2017, 06:33:04 tquirk
+ *   last updated 05 Aug 2017, 07:36:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -261,7 +261,7 @@ void *dgram_socket::dgram_send_worker(void *arg)
             /* TODO: Encryption */
             if (sendto(dgs->sock.sock,
                        (void *)&req.buf, realsize, 0,
-                       (struct sockaddr *)&(dgu->sa->ss),
+                       dgu->sa->sockaddr(),
                        sizeof(struct sockaddr_storage)) == -1)
                 std::clog << syslogErr
                           << "error sending packet out datagram port "
