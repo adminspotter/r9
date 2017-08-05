@@ -58,6 +58,21 @@ ssize_t recvfrom(int sockfd,
     return retval;
 }
 
+ssize_t sendto(int sockfd,
+               const void *buf, size_t len,
+               int flags,
+               const struct sockaddr *dest_addr, socklen_t addrlen)
+{
+    static int stage = 0;
+
+    if (stage++ == 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+    return 0;
+}
+
 int pthread_setcancelstate(int a, int *b)
 {
     return 0;
@@ -79,14 +94,14 @@ int ntoh_packet(packet *p, size_t s)
     return 1;
 }
 
-/* Send queue test
- *
- * 4 packet_list elements in the send queue:
- *   - one that won't hton
- *   - one that references a non-dgram user
- *   - one that fails to send
- *   - one that sends correctly
- */
+int hton_packet(packet *p, size_t s)
+{
+    static int stage = 0;
+
+    if (stage++ == 0)
+        return 0;
+    return 1;
+}
 
 struct addrinfo *create_addrinfo(void)
 {
@@ -130,3 +145,12 @@ TEST(DgramSocketTest, ListenWorker)
     delete dgs;
     freeaddrinfo(addr);
 }
+
+/* Send queue test
+ *
+ * 4 packet_list elements in the send queue:
+ *   - one that won't hton
+ *   - one that references a non-dgram user
+ *   - one that fails to send
+ *   - one that sends correctly
+ */
