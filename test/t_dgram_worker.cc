@@ -1,4 +1,5 @@
 #include "../server/classes/dgram.h"
+#include "../server/config_data.h"
 
 #include <gtest/gtest.h>
 
@@ -156,6 +157,9 @@ TEST(DgramSocketTest, ListenWorker)
  */
 TEST(DgramSocketTest, SendWorker)
 {
+    config.send_threads = 1;
+    config.access_threads = 1;
+
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
     dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
