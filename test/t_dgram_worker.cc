@@ -11,6 +11,52 @@
  *   4. recvfrom sets a sockaddr which won't build
  *   5. recvfrom works, packet gets dispatched, sets exit flag
  */
+ssize_t recvfrom(int sockfd,
+                 void *buf, size_t len,
+                 int flags,
+                 struct sockaddr *src_addr, socklen_t *addrlen)
+{
+    static int stage = 0;
+    ssize_t retval;
+    packet *pkt = (packet *)buf;
+    struct sockaddr_in *sin = (struct sockaddr_in *)src_addr;
+
+    std::cerr << stage << std::endl;
+    switch (stage++)
+    {
+      case 0:
+        retval = 0;
+        break;
+
+      case 1:
+        retval = 1;
+        *addrlen = 0;
+        break;
+
+      case 2:
+        pkt->basic.type = TYPE_ACKPKT;
+        retval = 1;
+        break;
+
+      case 3:
+        pkt->basic.type = TYPE_ACKPKT;
+        retval = sizeof(ack_packet);
+        /* If we set the sockaddr all 0, it should fail to build. */
+        memset(sin, 0, sizeof(struct sockaddr_in));
+        break;
+
+      default:
+      case 4:
+        main_loop_exit_flag = 1;
+        pkt->basic.type = TYPE_ACKPKT;
+        retval = sizeof(ack_packet);
+        memset(sin, 0, sizeof(struct sockaddr_in));
+        sin->sin_family = AF_INET;
+        *addrlen = sizeof(struct sockaddr_in);
+        break;
+    }
+    return retval;
+}
 
 /* Send queue test
  *
