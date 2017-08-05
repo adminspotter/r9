@@ -58,6 +58,27 @@ ssize_t recvfrom(int sockfd,
     return retval;
 }
 
+int pthread_setcancelstate(int a, int *b)
+{
+    return 0;
+}
+
+int pthread_setcanceltype(int a, int *b)
+{
+    return 0;
+}
+
+void pthread_testcancel(void)
+{
+}
+
+int ntoh_packet(packet *p, size_t s)
+{
+    if (p->basic.type == TYPE_ACKPKT && s == 1)
+        return 0;
+    return 1;
+}
+
 /* Send queue test
  *
  * 4 packet_list elements in the send queue:
@@ -90,4 +111,22 @@ struct addrinfo *create_addrinfo(void)
     }
 
     return addr;
+}
+
+TEST(DgramSocketTest, ListenWorker)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+    void *retval;
+
+    main_loop_exit_flag = 0;
+
+    ASSERT_NO_THROW(
+        {
+            retval = dgram_socket::dgram_listen_worker((void *)dgs);
+        });
+    ASSERT_TRUE(retval == NULL);
+
+    delete dgs;
+    freeaddrinfo(addr);
 }
