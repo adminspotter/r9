@@ -25,6 +25,7 @@ if WANT_SERVER
 	t_log \
 	t_motion_pool \
 	t_sockaddr \
+	t_stream \
 	t_subserver \
 	t_threadpool \
 	t_update_pool \
@@ -166,6 +167,16 @@ t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+
+t_stream_SOURCES = t_stream.cc \
+	../server/classes/stream.cc ../server/classes/stream.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_stream_CXXFLAGS = -DSUBSERVER_PROG=\"/bin/false\" $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_stream_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_subserver_SOURCES = t_subserver.cc ../server/r9subserver
 t_subserver_CXXFLAGS = -DIN_SUBSERVER $(GTEST_INCLUDES)

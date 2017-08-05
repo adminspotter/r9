@@ -23,6 +23,7 @@ t_logbuf
 t_motion_pool
 t_perl
 t_sockaddr
+t_stream
 t_subserver
 t_tcl
 t_tcl_exception
