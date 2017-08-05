@@ -4,6 +4,8 @@
 
 #include "mock_server_globals.h"
 
+int sendto_stage = 0;
+
 /* recvfrom is going to drive the listen loop test in steps:
  *   1. recvfrom returns 0 length
  *   2. recvfrom sets 0 fromlen
@@ -63,9 +65,7 @@ ssize_t sendto(int sockfd,
                int flags,
                const struct sockaddr *dest_addr, socklen_t addrlen)
 {
-    static int stage = 0;
-
-    if (stage++ == 0)
+    if (sendto_stage++ == 0)
     {
         errno = EINVAL;
         return -1;
@@ -154,3 +154,39 @@ TEST(DgramSocketTest, ListenWorker)
  *   - one that fails to send
  *   - one that sends correctly
  */
+TEST(DgramSocketTest, SendWorker)
+{
+    struct addrinfo *addr = create_addrinfo();
+    dgram_socket *dgs = new dgram_socket(addr);
+    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    struct sockaddr_in sin;
+
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+    dgs->users[123LL] = dgu;
+
+    base_user *bu = new base_user(124LL, NULL, NULL);
+    dgs->users[124LL] = bu;
+
+    packet_list pl;
+
+    memset(&pl, 0, sizeof(packet_list));
+    pl.buf.basic.type = TYPE_ACKPKT;
+
+    pl.who = bu;
+    dgs->send_pool->push(pl);
+    dgs->send_pool->push(pl);
+
+    pl.who = dgu;
+    dgs->send_pool->push(pl);
+    dgs->send_pool->push(pl);
+
+    dgs->start();
+
+    while (sendto_stage < 1)
+        ;
+
+    delete dgs;
+    freeaddrinfo(addr);
+}
