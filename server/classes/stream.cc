@@ -79,14 +79,6 @@ const stream_socket::subserver& stream_socket::subserver::operator=(const stream
     return *this;
 }
 
-stream_socket::stream_socket(struct addrinfo *ai)
-    : listen_socket(ai), subservers()
-{
-    FD_ZERO(&(this->master_readfs));
-    FD_SET(this->sock.sock, &(this->master_readfs));
-    this->max_fd = this->sock.sock + 1;
-}
-
 int stream_socket::create_subserver(void)
 {
     int i, fd[2], pid, retval = -1;
@@ -227,6 +219,14 @@ int stream_socket::pass_fd(int fd, int new_fd)
     if (sendmsg(fd, &msg, 0) != 1)
         return -1;
     return 0;
+}
+
+stream_socket::stream_socket(struct addrinfo *ai)
+    : listen_socket(ai), subservers()
+{
+    FD_ZERO(&(this->master_readfs));
+    FD_SET(this->sock.sock, &(this->master_readfs));
+    this->max_fd = this->sock.sock + 1;
 }
 
 stream_socket::~stream_socket()
