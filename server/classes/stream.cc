@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Aug 2017, 17:43:42 tquirk
+ *   last updated 06 Aug 2017, 17:48:20 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -314,12 +314,6 @@ void stream_socket::do_logout(base_user *bu)
 void *stream_socket::stream_listen_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
-    int fd, retval, len;
-    unsigned char buf[1024];
-    struct sockaddr_in sin;
-    socklen_t slen;
-    struct linger ls;
-    stream_socket::subserver_iterator i, j;
 
     for (;;)
     {
