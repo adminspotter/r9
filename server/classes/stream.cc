@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 09:19:32 tquirk
+ *   last updated 06 Aug 2017, 17:26:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -326,36 +326,11 @@ void *stream_socket::stream_listen_worker(void *arg)
         if (main_loop_exit_flag == 1)
             break;
 
-        /* The readfs state is undefined after select; define it. */
-        memcpy(&(sts->readfs), &(sts->master_readfs), sizeof(fd_set));
-
         pthread_testcancel();
-        if ((retval = select(sts->max_fd, &(sts->readfs),
-                             NULL, NULL, NULL)) == 0)
+        if (sts->select_fd_set() < 1)
             continue;
-        else if (retval == -1)
-        {
-            pthread_testcancel();
-            if (errno == EINTR)
-            {
-                /* we got a signal; it could have been a HUP */
-                std::clog << syslogNotice
-                          << "select interrupted by signal in stream port "
-                          << sts->sock.sa->port() << std::endl;
-                continue;
-            }
-            else
-            {
-                std::clog << syslogErr
-                          << "select error in stream port "
-                          << sts->sock.sa->port() << ": "
-                          << strerror(errno) << " (" << errno << ")"
-                          << std::endl;
-                /* Should we blow up or something here? */
-            }
-        }
-
         pthread_testcancel();
+
         /* We got some data from somebody. */
         /* Figure out if it's a listening socket. */
         if (FD_ISSET(sts->sock.sock, &(sts->readfs))
@@ -425,6 +400,40 @@ void *stream_socket::stream_listen_worker(void *arg)
     std::clog << "exiting connection loop for stream port "
               << sts->sock.sa->port() << std::endl;
     return NULL;
+}
+
+int stream_socket::select_fd_set(void)
+{
+    int retval;
+
+    memcpy(&this->readfs, &this->master_readfs, sizeof(fd_set));
+
+    if ((retval = select(this->max_fd, &this->readfs,
+                         NULL, NULL, NULL)) < 1)
+        /* We have no timeout, so a zero or negative return indicates
+         * actual errors.  We'll short-circuit the rest of the connect
+         * loop by clearing the descriptor set.
+         */
+        FD_ZERO(&this->readfs);
+
+    if (retval == -1)
+    {
+        if (errno == EINTR)
+        {
+            std::clog << syslogNotice
+                      << "select interrupted by signal in stream port "
+                      << this->sock.sa->port() << std::endl;
+        }
+        else
+        {
+            std::clog << syslogErr
+                      << "select error in stream port "
+                      << this->sock.sa->port() << ": "
+                      << strerror(errno) << " (" << errno << ")"
+                      << std::endl;
+        }
+    }
+    return retval;
 }
 
 void *stream_socket::stream_send_worker(void *arg)
