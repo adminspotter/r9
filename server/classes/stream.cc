@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Aug 2017, 17:39:21 tquirk
+ *   last updated 06 Aug 2017, 17:43:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -332,30 +332,7 @@ void *stream_socket::stream_listen_worker(void *arg)
         pthread_testcancel();
 
         sts->accept_new_connection();
-
-        for (i = sts->subservers.begin(); i != sts->subservers.end(); ++i)
-            if (FD_ISSET((*i).sock, &(sts->readfs)))
-            {
-                /* It's a subserver socket. */
-                if ((len = read((*i).sock,
-                                buf,
-                                sizeof(buf))) > 0)
-                {
-                    /* We have recieved something. */
-                    std::clog << "got something" << std::endl;
-
-                    /* The first sizeof(int) bytes will be the socket
-                     * descriptor, and the rest of it will be the actual
-                     * client data that we got.
-                     */
-                }
-                else
-                {
-                    /* This subserver has died. */
-                    this->reap_subserver(*i);
-                    sts->subservers.erase(i--);
-                }
-            }
+        sts->handle_subservers();
     }
     std::clog << "exiting connection loop for stream port "
               << sts->sock.sa->port() << std::endl;
@@ -429,6 +406,36 @@ void stream_socket::accept_new_connection(void)
              */
             close(fd);
     }
+}
+
+void stream_socket::handle_subservers(void)
+{
+    int len;
+    unsigned char buf[1024];
+    stream_socket::subserver_iterator i;
+
+    for (i = this->subservers.begin(); i != this->subservers.end(); ++i)
+        if (FD_ISSET((*i).sock, &this->readfs))
+        {
+            if ((len = read((*i).sock,
+                            buf,
+                            sizeof(buf))) > 0)
+            {
+                /* We have recieved something. */
+                std::clog << "got something" << std::endl;
+
+                /* The first sizeof(int) bytes will be the socket
+                 * descriptor, and the rest of it will be the actual
+                 * client data that we got.
+                 */
+            }
+            else
+            {
+                /* A 0 indicates that the other end closed the socket. */
+                this->reap_subserver(*i);
+                this->subservers.erase(i--);
+            }
+        }
 }
 
 void stream_socket::reap_subserver(stream_socket::subserver& sub)
