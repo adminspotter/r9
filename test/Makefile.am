@@ -173,7 +173,8 @@ t_stream_SOURCES = t_stream.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h \
 	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
-t_stream_CXXFLAGS = -DSUBSERVER_PROG=\"/bin/false\" $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_stream_CXXFLAGS = -DSUBSERVER_PROG=\"../server/r9subserver\" \
+	$(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_stream_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)

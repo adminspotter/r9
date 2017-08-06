@@ -1,4 +1,5 @@
 #include "../server/classes/stream.h"
+#include "../server/config_data.h"
 
 #include <gtest/gtest.h>
 
@@ -85,6 +86,28 @@ TEST(StreamSocketTest, PortType)
     stream_socket *sts = new stream_socket(addr);
 
     ASSERT_TRUE(sts->port_type() == "stream");
+
+    delete sts;
+    freeaddrinfo(addr);
+}
+
+TEST(StreamSocketTest, StartStop)
+{
+    config.send_threads = 1;
+    config.access_threads = 1;
+
+    struct addrinfo *addr = create_addrinfo();
+    stream_socket *sts = new stream_socket(addr);
+
+    ASSERT_NO_THROW(
+        {
+            sts->start();
+        });
+
+    ASSERT_NO_THROW(
+        {
+            sts->stop();
+        });
 
     delete sts;
     freeaddrinfo(addr);
