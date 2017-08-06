@@ -323,6 +323,9 @@ void *stream_socket::stream_listen_worker(void *arg)
 
     for (;;)
     {
+        if (main_loop_exit_flag == 1)
+            break;
+
         /* The readfs state is undefined after select; define it. */
         memcpy(&(sts->readfs), &(sts->master_readfs), sizeof(fd_set));
 
