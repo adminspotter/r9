@@ -78,3 +78,14 @@ TEST(StreamSocketTest, CreateDelete)
 
     delete sts;
 }
+
+TEST(StreamSocketTest, PortType)
+{
+    struct addrinfo *addr = create_addrinfo();
+    stream_socket *sts = new stream_socket(addr);
+
+    ASSERT_TRUE(sts->port_type() == "stream");
+
+    delete sts;
+    freeaddrinfo(addr);
+}
