@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Aug 2017, 17:26:04 tquirk
+ *   last updated 06 Aug 2017, 17:33:40 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -331,35 +331,7 @@ void *stream_socket::stream_listen_worker(void *arg)
             continue;
         pthread_testcancel();
 
-        /* We got some data from somebody. */
-        /* Figure out if it's a listening socket. */
-        if (FD_ISSET(sts->sock.sock, &(sts->readfs))
-            && (fd = accept(sts->sock.sock,
-                            (struct sockaddr *)&sin, &slen)) > 0)
-        {
-            /* Pass the new fd to a subserver immediately.
-             * First, set some good socket options, based on
-             * our config options.
-             */
-            ls.l_onoff = (config.use_linger > 0);
-            ls.l_linger = config.use_linger;
-            setsockopt(fd, SOL_SOCKET, SO_LINGER,
-                       &ls, sizeof(struct linger));
-            setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
-                       &config.use_keepalive, sizeof(int));
-            ioctl(fd, FIONBIO, &config.use_nonblock);
-            if ((retval = sts->choose_subserver()) != -1)
-            {
-                /* We have connections available */
-                sts->pass_fd(sts->subservers[retval].sock, fd);
-                ++(sts->subservers[retval].connections);
-            }
-            else
-                /* We should send some kind of "maximum number of
-                 * connections exceeded" message here.
-                 */
-                close(fd);
-        }
+        sts->accept_new_connection();
 
         for (i = sts->subservers.begin(); i != sts->subservers.end(); ++i)
             if (FD_ISSET((*i).sock, &(sts->readfs)))
@@ -434,6 +406,41 @@ int stream_socket::select_fd_set(void)
         }
     }
     return retval;
+}
+
+void stream_socket::accept_new_connection(void)
+{
+    struct sockaddr_in sin;
+    socklen_t slen;
+    struct linger ls;
+    int fd, which;
+
+    if (FD_ISSET(this->sock.sock, &this->readfs)
+        && (fd = accept(this->sock.sock,
+                        (struct sockaddr *)&sin, &slen)) > 0)
+    {
+        /* Pass the new fd to a subserver immediately.
+         * First, set some good socket options, based on
+         * our config options.
+         */
+        ls.l_onoff = (config.use_linger > 0);
+        ls.l_linger = config.use_linger;
+        setsockopt(fd, SOL_SOCKET, SO_LINGER,
+                   &ls, sizeof(struct linger));
+        setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
+                   &config.use_keepalive, sizeof(int));
+        ioctl(fd, FIONBIO, &config.use_nonblock);
+        if ((which = this->choose_subserver()) >= 0)
+        {
+            this->pass_fd(this->subservers[which].sock, fd);
+            ++(this->subservers[which].connections);
+        }
+        else
+            /* We should send some kind of "maximum number of
+             * connections exceeded" message here.
+             */
+            close(fd);
+    }
 }
 
 void *stream_socket::stream_send_worker(void *arg)
