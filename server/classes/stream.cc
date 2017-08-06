@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Aug 2017, 17:33:40 tquirk
+ *   last updated 06 Aug 2017, 17:39:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -352,20 +352,8 @@ void *stream_socket::stream_listen_worker(void *arg)
                 else
                 {
                     /* This subserver has died. */
-                    std::clog << "stream port " << sts->sock.sa->port()
-                              << " subserver " << (*i).pid
-                              << " died" << std::endl;
-                    waitpid((*i).pid, NULL, 0);
-                    close((*i).sock);
-                    FD_CLR((*i).sock, &(sts->master_readfs));
+                    this->reap_subserver(*i);
                     sts->subservers.erase(i--);
-
-                    /* Make sure max_fd is valid. */
-                    sts->max_fd = sts->sock.sock + 1;
-                    for (j = sts->subservers.begin();
-                         j != sts->subservers.end();
-                         ++j)
-                        sts->max_fd = std::max((*j).sock + 1, sts->max_fd);
                 }
             }
     }
@@ -441,6 +429,22 @@ void stream_socket::accept_new_connection(void)
              */
             close(fd);
     }
+}
+
+void stream_socket::reap_subserver(stream_socket::subserver& sub)
+{
+    stream_socket::subserver_iterator i;
+
+    std::clog << "stream port " << this->sock.sa->port()
+              << " subserver " << sub.pid
+              << " died" << std::endl;
+    waitpid(sub.pid, NULL, 0);
+    close(sub.sock);
+    FD_CLR(sub.sock, &this->master_readfs);
+
+    this->max_fd = this->sock.sock + 1;
+    for (i = this->subservers.begin(); i != this->subservers.end(); ++i)
+        this->max_fd = std::max(sub.sock + 1, this->max_fd);
 }
 
 void *stream_socket::stream_send_worker(void *arg)

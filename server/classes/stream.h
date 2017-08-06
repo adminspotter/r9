@@ -86,6 +86,7 @@ class stream_socket : public listen_socket
     static void *stream_listen_worker(void *);
     int select_fd_set(void);
     void accept_new_connection(void);
+    void reap_subserver(stream_socket::subserver&);
 
     static void *stream_send_worker(void *);
 };
