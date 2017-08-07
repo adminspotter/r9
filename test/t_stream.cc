@@ -5,6 +5,8 @@
 
 #include "mock_server_globals.h"
 
+bool select_failure = false, select_eintr = false;
+
 struct addrinfo *create_addrinfo(void)
 {
     struct addrinfo hints, *addr = NULL;
@@ -28,6 +30,19 @@ struct addrinfo *create_addrinfo(void)
     }
 
     return addr;
+}
+
+int select(int a, fd_set *b, fd_set *c, fd_set *d, struct timeval *e)
+{
+    if (select_failure == true)
+    {
+        if (select_eintr == true)
+            errno = EINTR;
+        else
+            errno = EINVAL;
+        return -1;
+    }
+    return 0;
 }
 
 TEST(StreamUserTest, CreateDelete)
@@ -108,6 +123,34 @@ TEST(StreamSocketTest, StartStop)
         {
             sts->stop();
         });
+
+    delete sts;
+    freeaddrinfo(addr);
+}
+
+TEST(StreamSocketTest, SelectFdSet)
+{
+    int retval;
+    struct addrinfo *addr = create_addrinfo();
+    stream_socket *sts = new stream_socket(addr);
+
+    select_failure = true;
+    select_eintr = true;
+    retval = sts->select_fd_set();
+
+    ASSERT_EQ(retval, -1);
+    ASSERT_EQ(errno, EINTR);
+
+    select_eintr = false;
+    retval = sts->select_fd_set();
+
+    ASSERT_EQ(retval, -1);
+    ASSERT_EQ(errno, EINVAL);
+
+    select_failure = false;
+    retval = sts->select_fd_set();
+
+    ASSERT_EQ(retval, 0);
 
     delete sts;
     freeaddrinfo(addr);
