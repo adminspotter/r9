@@ -231,30 +231,11 @@ stream_socket::stream_socket(struct addrinfo *ai)
 
 stream_socket::~stream_socket()
 {
-    stream_socket::subserver_iterator i;
-
-    for (auto j = this->fds.begin(); j != this->fds.end(); ++j)
-        close(*j);
+    for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
+        close(*i);
     this->fds.clear();
 
-    if (this->sock.sock != 0)
-        FD_CLR(this->sock.sock, &this->master_readfs);
-
-    /* Kill each of the subservers, and empty the vector */
-    for (i = this->subservers.begin(); i != this->subservers.end(); ++i)
-    {
-        if (kill((*i).pid, SIGTERM) == -1)
-            std::clog << syslogErr
-                      << "couldn't kill subserver " << (*i).pid
-                      << " for stream port " << this->sock.sa->port() << ": "
-                      << strerror(errno) << " (" << errno << ")" << std::endl;
-        waitpid((*i).pid, NULL, 0);
-        FD_CLR((*i).sock, &this->master_readfs);
-        close((*i).sock);
-    }
-    this->subservers.erase(this->subservers.begin(), this->subservers.end());
-
-    /* Thread pools are handled by the listen_socket destructor */
+    /* Thread pools and users are handled by the listen_socket destructor */
 }
 
 std::string stream_socket::port_type(void)
@@ -264,21 +245,6 @@ std::string stream_socket::port_type(void)
 
 void stream_socket::start(void)
 {
-    int i, retval;
-
-    /* Before we go into the select loop, we should spawn off the
-     * number of subservers in min_subservers.
-     */
-    for (i = 0; i < config.min_subservers; ++i)
-        if ((this->create_subserver()) == -1)
-        {
-            std::ostringstream s;
-            s << "couldn't create subserver for stream port "
-              << this->sock.sa->port() << ": "
-              << strerror(errno) << " (" << errno << ")";
-            throw std::runtime_error(s.str());
-        }
-
     this->listen_socket::start();
 
     /* Start up the sending thread pool */
