@@ -224,8 +224,8 @@ int stream_socket::pass_fd(int fd, int new_fd)
 stream_socket::stream_socket(struct addrinfo *ai)
     : listen_socket(ai), subservers(), fds()
 {
-    FD_ZERO(&(this->master_readfs));
-    FD_SET(this->sock.sock, &(this->master_readfs));
+    FD_ZERO(&this->master_readfs);
+    FD_SET(this->sock.sock, &this->master_readfs);
     this->max_fd = this->sock.sock + 1;
 }
 
