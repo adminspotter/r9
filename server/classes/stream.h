@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Aug 2017, 09:03:10 tquirk
+ *   last updated 08 Aug 2017, 21:06:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -34,6 +34,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <map>
 
 #include "control.h"
 #include "listensock.h"
@@ -58,6 +59,9 @@ class stream_socket : public listen_socket
 
         const subserver& operator=(const subserver&);
     };
+
+  public:
+    std::map<int, stream_user *> fds;
 
   private:
     int max_fd;

@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Aug 2017, 17:48:20 tquirk
+ *   last updated 09 Aug 2017, 08:18:27 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -222,7 +222,7 @@ int stream_socket::pass_fd(int fd, int new_fd)
 }
 
 stream_socket::stream_socket(struct addrinfo *ai)
-    : listen_socket(ai), subservers()
+    : listen_socket(ai), subservers(), fds()
 {
     FD_ZERO(&(this->master_readfs));
     FD_SET(this->sock.sock, &(this->master_readfs));
@@ -232,6 +232,10 @@ stream_socket::stream_socket(struct addrinfo *ai)
 stream_socket::~stream_socket()
 {
     stream_socket::subserver_iterator i;
+
+    for (auto j = this->fds.begin(); j != this->fds.end(); ++j)
+        close(*j);
+    this->fds.clear();
 
     if (this->sock.sock != 0)
         FD_CLR(this->sock.sock, &this->master_readfs);
