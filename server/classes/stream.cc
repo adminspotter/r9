@@ -230,7 +230,7 @@ stream_socket::stream_socket(struct addrinfo *ai)
 stream_socket::~stream_socket()
 {
     for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
-        close(*i);
+        close((*i).first);
     this->fds.clear();
 
     /* Thread pools and users are handled by the listen_socket destructor */
@@ -368,7 +368,7 @@ void stream_socket::handle_users(void)
     for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
         if (FD_ISSET((*i).first, &this->readfs))
         {
-            if ((len = read((*i).sock,
+            if ((len = read((*i).first,
                             buf,
                             sizeof(buf))) > 0)
             {
@@ -431,7 +431,7 @@ void *stream_socket::stream_send_worker(void *arg)
             if (write(stu->fd, (void *)&req, realsize) == -1)
                 std::clog << syslogErr
                           << "error sending packet out stream port "
-                          << sts->sock.sa->port() << ", user port " <<
+                          << sts->sock.sa->port() << ", user port "
                           << stu->fd << ": "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
