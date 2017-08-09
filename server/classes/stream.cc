@@ -293,9 +293,8 @@ void stream_socket::do_login(uint64_t userid,
                              access_list& al)
 {
     stream_user *stu = new stream_user(userid, con, this);
-    stu->subsrv = al.what.login.who.stream.sub;
     stu->fd = al.what.login.who.stream.sock;
-    users[userid] = stu;
+    this->users[userid] = stu;
 
     this->connect_user((base_user *)stu, al);
 }
@@ -309,10 +308,12 @@ void stream_socket::do_logout(base_user *bu)
     stream_user *stu = dynamic_cast<stream_user *>(bu);
 
     if (stu != NULL)
-        /* Tell the appropriate subserver to close and erase user
-         * stu->fd by passing the descriptor in again.
-         */
-        this->pass_fd(stu->subsrv, stu->fd);
+    {
+        close(stu->fd);
+        if (stu->fd + 1 == this->max_fd)
+            --this->max_fd;
+        this->fds.erase(stu->fd);
+    }
 }
 
 void *stream_socket::stream_listen_worker(void *arg)
@@ -382,10 +383,6 @@ void stream_socket::accept_new_connection(void)
         && (fd = accept(this->sock.sock,
                         (struct sockaddr *)&sin, &slen)) > 0)
     {
-        /* Pass the new fd to a subserver immediately.
-         * First, set some good socket options, based on
-         * our config options.
-         */
         ls.l_onoff = (config.use_linger > 0);
         ls.l_linger = config.use_linger;
         setsockopt(fd, SOL_SOCKET, SO_LINGER,
@@ -393,16 +390,9 @@ void stream_socket::accept_new_connection(void)
         setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
                    &config.use_keepalive, sizeof(int));
         ioctl(fd, FIONBIO, &config.use_nonblock);
-        if ((which = this->choose_subserver()) >= 0)
-        {
-            this->pass_fd(this->subservers[which].sock, fd);
-            ++(this->subservers[which].connections);
-        }
-        else
-            /* We should send some kind of "maximum number of
-             * connections exceeded" message here.
-             */
-            close(fd);
+        this->fds[fd] = NULL;
+        FD_SET(fd, &this->master_readfs);
+        this->max_fd = std::max(this->max_fd, fd + 1);
     }
 }
 
