@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2017, 08:18:27 tquirk
+ *   last updated 09 Aug 2017, 09:01:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -471,11 +471,15 @@ void *stream_socket::stream_send_worker(void *arg)
             stu = dynamic_cast<stream_user *>(sts->users[req.who->userid]);
             if (stu == NULL)
                 continue;
+
             /* TODO: Encryption */
-            write(sts->subservers[stu->subsrv].sock,
-                  (void *)&stu->fd, sizeof(int));
-            write(sts->subservers[stu->subsrv].sock,
-                  (void *)&req, realsize);
+            if (write(stu->fd, (void *)&req, realsize) == -1)
+                std::clog << syslogErr
+                          << "error sending packet out stream port "
+                          << sts->sock.sa->port() << ", user port " <<
+                          << stu->fd << ": "
+                          << strerror(errno) << " (" << errno << ")"
+                          << std::endl;
         }
     }
     std::clog << "exiting send pool worker for stream port "
