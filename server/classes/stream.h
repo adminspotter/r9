@@ -42,7 +42,7 @@
 class stream_user : public base_user
 {
   public:
-    int subsrv, fd;
+    int fd;
 
     stream_user(uint64_t, Control *, listen_socket *);
 

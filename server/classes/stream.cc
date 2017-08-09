@@ -59,13 +59,11 @@ extern volatile int main_loop_exit_flag;
 stream_user::stream_user(uint64_t u, Control *c, listen_socket *l)
     : base_user(u, c, l)
 {
-    this->subsrv = 0;
     this->fd = 0;
 }
 
 const stream_user& stream_user::operator=(const stream_user& su)
 {
-    this->subsrv = su.subsrv;
     this->fd = su.fd;
     this->base_user::operator=(su);
     return *this;
@@ -259,7 +257,7 @@ void stream_socket::do_login(uint64_t userid,
                              access_list& al)
 {
     stream_user *stu = new stream_user(userid, con, this);
-    stu->fd = al.what.login.who.stream.sock;
+    stu->fd = al.what.login.who.stream;
     this->users[userid] = stu;
 
     this->connect_user((base_user *)stu, al);
