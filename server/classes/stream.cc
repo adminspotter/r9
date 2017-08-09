@@ -331,7 +331,7 @@ void *stream_socket::stream_listen_worker(void *arg)
         pthread_testcancel();
 
         sts->accept_new_connection();
-        sts->handle_subservers();
+        sts->handle_users();
     }
     std::clog << "exiting connection loop for stream port "
               << sts->sock.sa->port() << std::endl;
@@ -396,14 +396,13 @@ void stream_socket::accept_new_connection(void)
     }
 }
 
-void stream_socket::handle_subservers(void)
+void stream_socket::handle_users(void)
 {
     int len;
     unsigned char buf[1024];
-    stream_socket::subserver_iterator i;
 
-    for (i = this->subservers.begin(); i != this->subservers.end(); ++i)
-        if (FD_ISSET((*i).sock, &this->readfs))
+    for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
+        if (FD_ISSET((*i).first, &this->readfs))
         {
             if ((len = read((*i).sock,
                             buf,
@@ -420,8 +419,10 @@ void stream_socket::handle_subservers(void)
             else
             {
                 /* A 0 indicates that the other end closed the socket. */
-                this->reap_subserver(*i);
-                this->subservers.erase(i--);
+                auto j = this->users.find((*i).second->userid);
+                (*i).second = NULL;
+                this->fds.erase(i--);
+                this->users.erase(j);
             }
         }
 }
