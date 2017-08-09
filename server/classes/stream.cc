@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2017, 09:01:28 tquirk
+ *   last updated 09 Aug 2017, 09:59:41 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -69,158 +69,8 @@ const stream_user& stream_user::operator=(const stream_user& su)
     return *this;
 }
 
-const stream_socket::subserver& stream_socket::subserver::operator=(const stream_socket::subserver& ss)
-{
-    this->sock = ss.sock;
-    this->pid = ss.pid;
-    this->connections = ss.connections;
-    return *this;
-}
-
-int stream_socket::create_subserver(void)
-{
-    int i, fd[2], pid, retval = -1;
-
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fd) == -1)
-    {
-        std::clog << syslogErr
-                  << "couldn't create subserver sockets for stream port "
-                  << this->sock.sa->port() << ": "
-                  << strerror(errno) << " (" << errno << ")" << std::endl;
-        return retval;
-    }
-
-    /* We want the port number available to the child, for error reporting */
-    i = this->sock.sa->port();
-
-    if ((pid = fork()) < 0)
-    {
-        std::clog << syslogErr
-                  << "couldn't fork new subserver for stream port "
-                  << this->sock.sa->port() << ": "
-                  << strerror(errno) << " (" << errno << ")" << std::endl;
-        close(fd[0]);
-        close(fd[1]);
-    }
-    else if (pid == 0)
-    {
-        /* We are the child; close all sockets except for the one
-         * which connects us to the main server.  We call closelog
-         * explicitly because it doesn't seem to work otherwise.
-         */
-        struct rlimit rlim;
-
-        if (getrlimit(RLIMIT_NOFILE, &rlim) != 0)
-        {
-            std::clog << syslogErr
-                      << "can't get rlimit in child " << getpid()
-                      << " for stream port " << i << ": "
-                      << strerror(errno) << " (" << errno << ")" << std::endl;
-            std::clog << syslogErr << "terminating child " << getpid()
-                      << " for stream port " << i << std::endl;
-            _exit(1);
-        }
-
-        /* Close all the open files except for our server
-         * communication socket.
-         */
-        closelog();
-        dup2(fd[1], STDIN_FILENO);
-        for (i = 0; i < (int)rlim.rlim_cur; ++i)
-            if (i != STDIN_FILENO)
-                close(i);
-
-        /* This call will never return */
-        execl(SUBSERVER_PROG, "r9subserver", NULL);
-
-        /* And in case it does... */
-        close(STDIN_FILENO);
-        _exit(0);
-    }
-    else
-    {
-        /* We are the parent */
-        stream_socket::subserver new_sub;
-
-        close(fd[1]);
-        new_sub.sock = fd[0];
-        new_sub.pid = pid;
-        new_sub.connections = 0;
-        this->max_fd = std::max(new_sub.sock + 1, this->max_fd);
-        this->subservers.push_back(new_sub);
-        retval = this->subservers.size() - 1;
-        std::clog << "created subserver " << retval
-                  << " for stream port " << this->sock.sa->port()
-                  << ", sock " << new_sub.sock
-                  << ", pid " << new_sub.pid << std::endl;
-    }
-    return retval;
-}
-
-/* The next function is the load-balancing functions which is used
- * to pick the subserver to which we'll hand off a child socket.
- *
- * The load balancing routine tries to keep a balance between all
- * subservers, and spawns a new subserver when the load on all the
- * current ones exceeds the threshold value.
- *
- * Logic dictates that smaller values of load_threshold would work
- * better with larger values of min_subservers.  Of course, in
- * practice it might be very different.
- *
- * It looks like we're going to have to deny connections at some
- * point, if the load gets way too great.  Our return value for that
- * will be -1.
- */
-int stream_socket::choose_subserver(void)
-{
-    int i, lowest_load = config.max_subservers, best_index = -1;
-
-    for (i = 0; i < (int)this->subservers.size(); ++i)
-        if (this->subservers[i].connections < (int)(config.max_subservers
-                                                    * config.load_threshold)
-            && this->subservers[i].connections < lowest_load)
-        {
-            lowest_load = this->subservers[i].connections;
-            best_index = i;
-        }
-    if (best_index == -1
-        && (int)this->subservers.size() < config.max_subservers)
-        best_index = this->create_subserver();
-    return best_index;
-}
-
-/* The W. Richard Stevens function wasn't working in the unit test for
- * the subserver, so we had to do a little tweakery.  Working version
- * came mostly from http://stackoverflow.com/questions/28003921/sending-file-descriptor-by-linux-socket
- */
-int stream_socket::pass_fd(int fd, int new_fd)
-{
-    struct cmsghdr *cmptr;
-    struct iovec iov = { .iov_base = (void *)"", .iov_len = 1 };
-    struct msghdr msg = { 0 };
-    char buf[CMSG_SPACE(sizeof(new_fd))];
-
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
-    msg.msg_control = buf;
-    msg.msg_controllen = sizeof(buf);
-
-    cmptr = CMSG_FIRSTHDR(&msg);
-    cmptr->cmsg_level = SOL_SOCKET;
-    cmptr->cmsg_type = SCM_RIGHTS;
-    cmptr->cmsg_len = CMSG_LEN(sizeof(new_fd));
-
-    memmove(CMSG_DATA(cmptr), &new_fd, sizeof(new_fd));
-    msg.msg_controllen = cmptr->cmsg_len;
-
-    if (sendmsg(fd, &msg, 0) != 1)
-        return -1;
-    return 0;
-}
-
 stream_socket::stream_socket(struct addrinfo *ai)
-    : listen_socket(ai), subservers(), fds()
+    : listen_socket(ai), fds()
 {
     FD_ZERO(&this->master_readfs);
     FD_SET(this->sock.sock, &this->master_readfs);
@@ -389,22 +239,6 @@ void stream_socket::handle_users(void)
                 this->users.erase(j);
             }
         }
-}
-
-void stream_socket::reap_subserver(stream_socket::subserver& sub)
-{
-    stream_socket::subserver_iterator i;
-
-    std::clog << "stream port " << this->sock.sa->port()
-              << " subserver " << sub.pid
-              << " died" << std::endl;
-    waitpid(sub.pid, NULL, 0);
-    close(sub.sock);
-    FD_CLR(sub.sock, &this->master_readfs);
-
-    this->max_fd = this->sock.sock + 1;
-    for (i = this->subservers.begin(); i != this->subservers.end(); ++i)
-        this->max_fd = std::max(sub.sock + 1, this->max_fd);
 }
 
 void *stream_socket::stream_send_worker(void *arg)

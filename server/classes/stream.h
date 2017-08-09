@@ -33,7 +33,6 @@
 #include <sys/select.h>
 
 #include <cstdint>
-#include <vector>
 #include <map>
 
 #include "control.h"
@@ -51,30 +50,13 @@ class stream_user : public base_user
 
 class stream_socket : public listen_socket
 {
-  private:
-    class subserver
-    {
-      public:
-        int sock, pid, connections;
-
-        const subserver& operator=(const subserver&);
-    };
-
   public:
     std::map<int, stream_user *> fds;
 
   private:
     int max_fd;
-    std::vector<stream_socket::subserver> subservers;
-
-    typedef std::vector<stream_socket::subserver>::iterator subserver_iterator;
 
     fd_set readfs, master_readfs;
-
-  private:
-    int create_subserver(void);
-    int choose_subserver(void);
-    int pass_fd(int, int);
 
   public:
     stream_socket(struct addrinfo *);
@@ -91,7 +73,6 @@ class stream_socket : public listen_socket
     int select_fd_set(void);
     void accept_new_connection(void);
     void handle_users(void);
-    void reap_subserver(stream_socket::subserver&);
 
     static void *stream_send_worker(void *);
 };
