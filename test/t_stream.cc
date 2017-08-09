@@ -66,16 +66,13 @@ TEST(StreamUserTest, Assignment)
     stream_user *stu1 = new stream_user(123LL, NULL, NULL);
     stream_user *stu2 = new stream_user(987LL, NULL, NULL);
 
-    stu1->subsrv = 123;
     stu1->fd = 42;
 
-    stu2->subsrv = 456;
     stu2->fd = 99;
 
     *stu2 = *stu1;
 
     ASSERT_EQ(stu1->userid, stu2->userid);
-    ASSERT_EQ(stu1->subsrv, stu2->subsrv);
     ASSERT_EQ(stu1->fd, stu2->fd);
 
     delete stu2;
