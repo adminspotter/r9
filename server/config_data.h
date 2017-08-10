@@ -1,9 +1,9 @@
 /* config_data.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Jan 2016, 17:23:23 tquirk
+ *   last updated 09 Aug 2017, 23:36:01 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -63,12 +63,9 @@ class config_data
     /* Some default constants */
     static const int LINGER_LEN;
     static const int LOG_FACILITY;
-    static const int MIN_SUBSERV;
-    static const int MAX_SUBSERV;
     static const int NUM_THREADS;
     static const int ZONE_SIZE;
     static const int ZONE_STEPS;
-    static const float LOAD_THRESH;
     static const char SERVER_ROOT[];
     static const char LOG_PREFIX[];
     static const char PID_FNAME[];
@@ -82,8 +79,6 @@ class config_data
     bool daemonize, use_keepalive, use_nonblock, use_reuse;
     int use_linger, log_facility;
     std::string server_root, log_prefix, pid_fname;
-    float load_threshold;
-    int min_subservers, max_subservers;
     int access_threads, action_threads, motion_threads, send_threads;
     int update_threads;
     location size, spawn;
