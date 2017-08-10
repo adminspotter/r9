@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2017, 23:35:51 tquirk
+ *   last updated 09 Aug 2017, 23:52:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -134,7 +134,6 @@ typedef void (*config_elem_t)(const std::string&, const std::string&, void *);
 
 static void config_string_element(const std::string&, const std::string&, void *);
 static void config_integer_element(const std::string&, const std::string&, void *);
-static void config_float_element(const std::string&, const std::string&, void *);
 static void config_boolean_element(const std::string&, const std::string&, void *);
 static void config_user_element(const std::string&, const std::string&, void *);
 static void config_group_element(const std::string&, const std::string&, void *);
@@ -354,15 +353,6 @@ static void config_integer_element(const std::string& key,
     int *element = (int *)ptr;
 
     *element = std::stoi(value);
-}
-
-static void config_float_element(const std::string& key,
-                                 const std::string& value,
-                                 void *ptr)
-{
-    float *element = (float *)ptr;
-
-    *element = std::stof(value);
 }
 
 static void config_boolean_element(const std::string& key,

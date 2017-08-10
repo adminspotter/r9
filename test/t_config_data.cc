@@ -89,9 +89,6 @@ TEST(ConfigDataTest, CreateDelete)
     ASSERT_EQ(conf->use_reuse, true);
     ASSERT_EQ(conf->use_linger, config_data::LINGER_LEN);
     ASSERT_EQ(conf->log_facility, config_data::LOG_FACILITY);
-    ASSERT_EQ(conf->load_threshold, config_data::LOAD_THRESH);
-    ASSERT_EQ(conf->min_subservers, config_data::MIN_SUBSERV);
-    ASSERT_EQ(conf->max_subservers, config_data::MAX_SUBSERV);
     ASSERT_EQ(conf->access_threads, config_data::NUM_THREADS);
     ASSERT_EQ(conf->motion_threads, config_data::NUM_THREADS);
     ASSERT_EQ(conf->send_threads, config_data::NUM_THREADS);
@@ -198,7 +195,6 @@ TEST(ConfigDataTest, ParseConfigLine)
     ofs << "Trailing  spaces        " << std::endl;
     ofs << "PidFile some_file  # string" << std::endl;
     ofs << "AccessThreads 987  # integer" << std::endl;
-    ofs << "UseBalance 9.0     # float" << std::endl;
     ofs << "UseKeepAlive no    # negative bool" << std::endl;
     ofs << "UseKeepAlive yes   # yes bool" << std::endl;
     ofs << "UseKeepAlive true  # true bool" << std::endl;
@@ -241,7 +237,6 @@ TEST(ConfigDataTest, ParseConfigLine)
 
     ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
     ASSERT_EQ(config.access_threads, config_data::NUM_THREADS);
-    ASSERT_EQ(config.load_threshold, config_data::LOAD_THRESH);
     ASSERT_EQ(config.use_keepalive, false);
     ASSERT_EQ(config.log_facility, config_data::LOG_FACILITY);
     ASSERT_TRUE(config.listen_ports.size() == 0);
@@ -260,7 +255,6 @@ TEST(ConfigDataTest, ParseConfigLine)
 
     ASSERT_EQ(config.pid_fname, "some_file");
     ASSERT_EQ(config.access_threads, 987);
-    ASSERT_EQ(config.load_threshold, 9.0);
     ASSERT_EQ(config.use_keepalive, true);
     ASSERT_EQ(getpwnam_count, 2);
     ASSERT_EQ(seteuid_count, 1);
