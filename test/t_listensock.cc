@@ -86,11 +86,6 @@ class test_listen_socket : public listen_socket
     test_listen_socket(struct addrinfo *a) : listen_socket(a) {};
     virtual ~test_listen_socket() {};
 
-    virtual std::string port_type(void) override
-        {
-            return "test";
-        };
-
     virtual void do_login(uint64_t a, Control *b, access_list& c) override
         {
             delete b;
@@ -179,6 +174,17 @@ TEST(ListenSocketTest, CreateDelete)
     ASSERT_TRUE(listen->access_pool->pool_size() == 0);
 
     delete listen;
+}
+
+TEST(DgramSocketTest, PortType)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *dgs = new test_listen_socket(addr);
+
+    ASSERT_TRUE(dgs->port_type() == "listen");
+
+    delete dgs;
+    freeaddrinfo(addr);
 }
 
 TEST(ListenSocketTest, StartStop)

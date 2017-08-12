@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 20:19:58 tquirk
+ *   last updated 12 Aug 2017, 09:01:49 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -117,6 +117,11 @@ listen_socket::~listen_socket()
     delete this->access_pool;
 
     this->users.erase(this->users.begin(), this->users.end());
+}
+
+std::string listen_socket::port_type(void)
+{
+    return "listen";
 }
 
 void listen_socket::start(void)

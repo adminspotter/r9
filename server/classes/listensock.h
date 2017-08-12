@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 09:18:29 tquirk
+ *   last updated 12 Aug 2017, 09:01:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -86,7 +86,7 @@ class listen_socket {
     listen_socket(struct addrinfo *);
     virtual ~listen_socket();
 
-    virtual std::string port_type(void) = 0;
+    virtual std::string port_type(void);
 
     virtual void start(void);
     virtual void stop(void);
