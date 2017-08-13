@@ -88,6 +88,7 @@ t_config_data_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_control_SOURCES = t_control.cc \
 	../server/classes/control.cc ../server/classes/control.h \
+	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
 t_control_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_control_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
