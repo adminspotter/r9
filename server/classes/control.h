@@ -55,6 +55,7 @@ class Control
     ~Control();
 
     virtual bool operator<(const Control&) const;
+    virtual bool operator==(const Control&) const;
 
     bool take_over(GameObject *);
 };

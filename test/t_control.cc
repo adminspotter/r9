@@ -57,3 +57,18 @@ TEST(ControlTest, LessThan)
     delete con2;
     delete con1;
 }
+
+TEST(ControlTest, Equality)
+{
+    Control *con1 = new Control(1LL, NULL);
+    Control *con2 = new Control(2LL, NULL);
+
+    ASSERT_FALSE(*con1 == *con2);
+
+    con1->userid = con2->userid;
+
+    ASSERT_TRUE(*con1 == *con2);
+
+    delete con2;
+    delete con1;
+}
