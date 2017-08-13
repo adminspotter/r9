@@ -52,7 +52,7 @@ class Control
 
   public:
     Control(uint64_t, GameObject *);
-    ~Control();
+    virtual ~Control();
 
     virtual bool operator<(const Control&) const;
     virtual bool operator==(const Control&) const;
