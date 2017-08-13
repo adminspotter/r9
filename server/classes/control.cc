@@ -1,9 +1,9 @@
 /* control.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2015, 15:12:03 tquirk
+ *   last updated 13 Aug 2017, 09:10:37 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -40,9 +40,12 @@ Control::Control(uint64_t userid, GameObject *slave)
 
 Control::~Control()
 {
-    /* Disconnect the slave */
+    /* Disconnect the slaves */
     if (this->slave != NULL)
         this->slave->disconnect(this);
+    if (this->default_slave != NULL && this->default_slave != this->slave)
+        this->default_slave->disconnect(this);
+    this->default_slave = this->slave = NULL;
 }
 
 bool Control::take_over(GameObject *new_slave)
