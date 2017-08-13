@@ -45,3 +45,15 @@ TEST(ControlTest, CreateDeleteConnected)
     delete go2;
     delete go1;
 }
+
+TEST(ControlTest, LessThan)
+{
+    Control *con1 = new Control(1LL, NULL);
+    Control *con2 = new Control(2LL, NULL);
+
+    ASSERT_TRUE(*con1 < *con2);
+    ASSERT_FALSE(*con2 < *con1);
+
+    delete con2;
+    delete con1;
+}

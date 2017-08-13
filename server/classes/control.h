@@ -1,9 +1,9 @@
 /* control.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Dec 2015, 16:13:31 tquirk
+ *   last updated 12 Aug 2017, 10:56:10 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -53,6 +53,8 @@ class Control
   public:
     Control(uint64_t, GameObject *);
     ~Control();
+
+    virtual bool operator<(const Control&) const;
 
     bool take_over(GameObject *);
 };

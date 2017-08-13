@@ -48,6 +48,11 @@ Control::~Control()
     this->default_slave = this->slave = NULL;
 }
 
+bool Control::operator<(const Control& c) const
+{
+    return (this->userid < c.userid);
+}
+
 bool Control::take_over(GameObject *new_slave)
 {
     if (new_slave->connect(this))
