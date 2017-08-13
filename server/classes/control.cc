@@ -58,6 +58,16 @@ bool Control::operator==(const Control& c) const
     return (this->userid == c.userid);
 }
 
+const Control& Control::operator=(const Control& c)
+{
+    this->userid = c.userid;
+    this->default_slave = c.default_slave;
+    this->slave = c.slave;
+    this->username = c.username;
+    this->actions.insert(c.actions.begin(), c.actions.end());
+    return *this;
+}
+
 bool Control::take_over(GameObject *new_slave)
 {
     if (new_slave->connect(this))

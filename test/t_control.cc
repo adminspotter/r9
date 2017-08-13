@@ -72,3 +72,31 @@ TEST(ControlTest, Equality)
     delete con2;
     delete con1;
 }
+
+TEST(ControlTest, Assignment)
+{
+    GameObject *go1 = new GameObject(NULL, NULL, 123LL);
+    GameObject *go2 = new GameObject(NULL, NULL, 124LL);
+    Control *con1 = new Control(123LL, go1);
+    con1->slave = go2;
+    con1->username = "howdy";
+
+    Control *con2 = new Control(987LL, NULL);
+
+    ASSERT_NE(con1->userid, con2->userid);
+    ASSERT_FALSE(con1->default_slave == con2->default_slave);
+    ASSERT_FALSE(con1->slave == con2->slave);
+    ASSERT_FALSE(con1->username == con2->username);
+
+    *con2 = *con1;
+
+    ASSERT_EQ(con1->userid, con2->userid);
+    ASSERT_TRUE(con1->default_slave == con2->default_slave);
+    ASSERT_TRUE(con1->slave == con2->slave);
+    ASSERT_TRUE(con1->username == con2->username);
+
+    delete con2;
+    delete con1;
+    delete go2;
+    delete go1;
+}
