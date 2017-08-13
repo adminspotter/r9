@@ -100,3 +100,20 @@ TEST(ControlTest, Assignment)
     delete go2;
     delete go1;
 }
+
+TEST(ControlTest, TakeOver)
+{
+    GameObject *go1 = new GameObject(NULL, NULL, 123LL);
+    Control *con = new Control(123LL, NULL);
+
+    bool result = con->take_over(go1);
+
+    ASSERT_TRUE(result);
+
+    result = con->take_over(go1);
+
+    ASSERT_FALSE(result);
+
+    delete con;
+    delete go1;
+}
