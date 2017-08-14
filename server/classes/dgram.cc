@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2017, 07:36:30 tquirk
+ *   last updated 12 Aug 2017, 11:48:14 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -57,8 +57,8 @@ static std::map<int, packet_handler> packet_handlers =
     { TYPE_ACTREQ, dgram_socket::handle_action }
 };
 
-dgram_user::dgram_user(uint64_t u, Control *c, listen_socket *l)
-    : base_user(u, c, l)
+dgram_user::dgram_user(uint64_t u, GameObject *g, listen_socket *l)
+    : base_user(u, g, l)
 {
 }
 

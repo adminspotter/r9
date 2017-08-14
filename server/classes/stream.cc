@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2017, 09:59:41 tquirk
+ *   last updated 12 Aug 2017, 11:48:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -56,8 +56,8 @@
 
 extern volatile int main_loop_exit_flag;
 
-stream_user::stream_user(uint64_t u, Control *c, listen_socket *l)
-    : base_user(u, c, l)
+stream_user::stream_user(uint64_t u, GameObject *g, listen_socket *l)
+    : base_user(u, g, l)
 {
     this->fd = 0;
 }

@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Aug 2017, 21:06:03 tquirk
+ *   last updated 12 Aug 2017, 11:48:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -43,7 +43,7 @@ class stream_user : public base_user
   public:
     int fd;
 
-    stream_user(uint64_t, Control *, listen_socket *);
+    stream_user(uint64_t, GameObject *, listen_socket *);
 
     const stream_user& operator=(const stream_user&);
 };

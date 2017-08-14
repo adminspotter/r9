@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 09:18:29 tquirk
+ *   last updated 13 Aug 2017, 08:51:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -40,10 +40,9 @@
 
 class listen_socket;
 
-class base_user {
+class base_user : public Control {
   public:
-    uint64_t userid, sequence;
-    Control *control;
+    uint64_t sequence;
     time_t timestamp;
     bool pending_logout;
 
@@ -51,11 +50,8 @@ class base_user {
     listen_socket *parent;
 
   public:
-    base_user(uint64_t, Control *, listen_socket *);
+    base_user(uint64_t, GameObject *, listen_socket *);
     virtual ~base_user();
-
-    virtual bool operator<(const base_user&) const;
-    virtual bool operator==(const base_user&) const;
 
     virtual const base_user& operator=(const base_user&);
 

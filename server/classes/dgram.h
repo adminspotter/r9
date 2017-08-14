@@ -1,6 +1,6 @@
 /* dgram.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Aug 2017, 08:44:36 tquirk
+ *   last updated 12 Aug 2017, 11:47:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -59,7 +59,7 @@ class dgram_user : public base_user
   public:
     Sockaddr *sa;
 
-    dgram_user(uint64_t, Control *, listen_socket *);
+    dgram_user(uint64_t, GameObject *, listen_socket *);
     virtual ~dgram_user();
 
     const dgram_user& operator=(const dgram_user&);

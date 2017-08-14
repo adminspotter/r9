@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 20:19:58 tquirk
+ *   last updated 13 Aug 2017, 08:49:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -37,11 +37,10 @@
 #include "../config_data.h"
 #include "../log.h"
 
-base_user::base_user(uint64_t u, Control *c, listen_socket *l)
+base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
+    : Control(u, g)
 {
     this->parent = l;
-    this->userid = u;
-    this->control = c;
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
@@ -50,24 +49,20 @@ base_user::base_user(uint64_t u, Control *c, listen_socket *l)
 
 base_user::~base_user()
 {
-}
-
-bool base_user::operator<(const base_user& u) const
-{
-    return (this->userid < u.userid);
-}
-
-bool base_user::operator==(const base_user& u) const
-{
-    return (this->userid == u.userid);
+    if (this->slave != NULL)
+    {
+        /* Clean up a user who has logged out */
+        this->slave->natures.insert("invisible");
+        this->slave->natures.insert("non-interactive");
+    }
 }
 
 const base_user& base_user::operator=(const base_user& u)
 {
-    this->userid = u.userid;
-    this->control = u.control;
+    this->Control::operator=((const Control&)u);
     this->timestamp = u.timestamp;
     this->pending_logout = u.pending_logout;
+    this->sequence = u.sequence;
     return *this;
 }
 
@@ -330,9 +325,8 @@ void listen_socket::logout_user(access_list& p)
     {
         base_user *bu = found->second;
         bu->pending_logout = true;
-        std::clog << "logout request from "
-                  << bu->control->username
-                  << " (" << bu->control->userid << ")" << std::endl;
+        std::clog << "logout request from " << bu->username
+                  << " (" << bu->userid << ")" << std::endl;
 
         bu->send_ack(TYPE_LGTREQ, 0);
     }
