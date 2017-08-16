@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Aug 2017, 08:49:46 tquirk
+ *   last updated 16 Aug 2017, 08:59:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -213,26 +213,11 @@ void *listen_socket::reaper_worker(void *arg)
             if (bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
             {
                 /* We'll consider the user link-dead */
-                std::clog << "removing user "
-                          << bu->control->username << " ("
+                std::clog << "removing user " << bu->username << " ("
                           << bu->userid << ") from " << ls->port_type()
                           << " port " << ls->sock.sa->port() << std::endl;
-                if (bu->control->slave != NULL)
-                {
-                    /* Clean up a user who has logged out */
-                    bu->control->slave->natures.insert("invisible");
-                    bu->control->slave->natures.insert("non-interactive");
-                }
-                delete bu->control;
-                ls->do_logout(bu);
-
-                /* i will be invalidated by the following erase, so
-                 * let's move to a valid spot that will let our loop
-                 * continue without missing anything.
-                 */
                 --i;
-
-                ls->users.erase(bu->userid);
+                ls->disconnect_user(bu);
             }
             else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
                      && bu->pending_logout == false)
@@ -330,4 +315,20 @@ void listen_socket::logout_user(access_list& p)
 
         bu->send_ack(TYPE_LGTREQ, 0);
     }
+}
+
+void listen_socket::connect_user(base_user *bu, access_list& al)
+{
+    this->users[bu->userid] = bu;
+    bu->send_ack(TYPE_LOGREQ, bu->auth_level);
+}
+
+void listen_socket::disconnect_user(base_user *bu)
+{
+    if (bu->slave != NULL)
+    {
+        bu->slave->natures.insert("invisible");
+        bu->slave->natures.insert("non-interactive");
+    }
+    this->users.erase(bu->userid);
 }
