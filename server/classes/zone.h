@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jul 2017, 19:05:47 tquirk
+ *   last updated 14 Aug 2017, 09:29:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -74,6 +74,7 @@ class Zone
     Octree *sector_contains(glm::dvec3&);
     glm::ivec3 which_sector(glm::dvec3&);
 
+    GameObject *find_game_object(uint64_t);
     virtual void connect_game_object(Control *, uint64_t);
 };
 
