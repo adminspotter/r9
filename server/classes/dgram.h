@@ -35,7 +35,6 @@
 #include <map>
 #include <functional>
 
-#include "control.h"
 #include "listensock.h"
 #include "sockaddr.h"
 
@@ -52,17 +51,6 @@ class less_sockaddr
         {
             return (*a < *b);
         }
-};
-
-class dgram_user : public base_user
-{
-  public:
-    Sockaddr *sa;
-
-    dgram_user(uint64_t, GameObject *, listen_socket *);
-    virtual ~dgram_user();
-
-    const dgram_user& operator=(const dgram_user&);
 };
 
 class dgram_socket : public listen_socket

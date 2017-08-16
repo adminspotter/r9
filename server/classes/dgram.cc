@@ -57,22 +57,6 @@ static std::map<int, packet_handler> packet_handlers =
     { TYPE_ACTREQ, dgram_socket::handle_action }
 };
 
-dgram_user::dgram_user(uint64_t u, GameObject *g, listen_socket *l)
-    : base_user(u, g, l)
-{
-}
-
-dgram_user::~dgram_user()
-{
-}
-
-const dgram_user& dgram_user::operator=(const dgram_user& du)
-{
-    this->sa = du.sa;
-    this->base_user::operator=(du);
-    return *this;
-}
-
 dgram_socket::dgram_socket(struct addrinfo *ai)
     : listen_socket(ai)
 {

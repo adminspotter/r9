@@ -56,19 +56,6 @@
 
 extern volatile int main_loop_exit_flag;
 
-stream_user::stream_user(uint64_t u, GameObject *g, listen_socket *l)
-    : base_user(u, g, l)
-{
-    this->fd = 0;
-}
-
-const stream_user& stream_user::operator=(const stream_user& su)
-{
-    this->fd = su.fd;
-    this->base_user::operator=(su);
-    return *this;
-}
-
 stream_socket::stream_socket(struct addrinfo *ai)
     : listen_socket(ai), fds()
 {

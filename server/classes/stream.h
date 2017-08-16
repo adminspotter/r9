@@ -35,18 +35,7 @@
 #include <cstdint>
 #include <map>
 
-#include "control.h"
 #include "listensock.h"
-
-class stream_user : public base_user
-{
-  public:
-    int fd;
-
-    stream_user(uint64_t, GameObject *, listen_socket *);
-
-    const stream_user& operator=(const stream_user&);
-};
 
 class stream_socket : public listen_socket
 {
