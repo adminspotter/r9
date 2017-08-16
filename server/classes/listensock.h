@@ -45,6 +45,7 @@ class base_user : public Control {
     uint64_t sequence;
     time_t timestamp;
     bool pending_logout;
+    uint8_t auth_level;
 
   protected:
     listen_socket *parent;
@@ -92,7 +93,7 @@ class listen_socket {
 
     virtual void login_user(access_list&);
     virtual uint64_t get_userid(login_request&);
-    virtual void connect_user(base_user *, access_list&);
+    base_user *check_access(uint64_t, login_request&);
 
     virtual void logout_user(access_list&);
 

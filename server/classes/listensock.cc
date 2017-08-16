@@ -231,8 +231,6 @@ void *listen_socket::reaper_worker(void *arg)
 void listen_socket::login_user(access_list& p)
 {
     uint64_t userid = this->get_userid(p.buf.log);
-    std::string charname(p.buf.log.charname, sizeof(p.buf.log.charname));
-    Control *newcontrol = NULL;
 
     if (userid == 0LL)
         return;
@@ -245,17 +243,12 @@ void listen_socket::login_user(access_list& p)
         return;
     }
 
-    /* If we've got a real user, go ahead and make a control object
-     * for them.  If the access level is too low, we'll reap it
-     * immediately, but we do need the control to be able to send
-     * something back.
-     */
-    newcontrol = new Control(userid, NULL);
-    newcontrol->username = std::string(p.buf.log.username,
-                                       sizeof(p.buf.log.username));
+    base_user *bu = this->check_access(userid, p.buf.log);
 
-    /* Perform the derived class's login part. */
-    this->do_login(userid, newcontrol, p);
+    if (bu == NULL)
+        return;
+
+    this->connect_user(bu, p);
 }
 
 uint64_t listen_socket::get_userid(login_request& log)
@@ -273,29 +266,30 @@ uint64_t listen_socket::get_userid(login_request& log)
     return userid;
 }
 
-void listen_socket::connect_user(base_user *user, access_list& access)
+base_user *listen_socket::check_access(uint64_t userid, login_request& log)
 {
-    /* Hook the new control up to the appropriate object. */
-    std::string charname(access.buf.log.charname,
-                         sizeof(access.buf.log.charname));
-    uint64_t charid = database->get_character_objectid(user->userid, charname);
-    int auth_level = database->check_authorization(user->userid, charid);
-
-    std::clog << "login request from user "
-              << user->control->username << " (" << user->userid
-              << "), auth " << auth_level << std::endl;
+    std::string charname(log.charname, std::min(sizeof(log.charname),
+                                                strlen(log.charname)));
+    uint64_t charid = database->get_character_objectid(userid, charname);
+    int auth_level = database->check_authorization(userid, charid);
+    GameObject *go = NULL;
 
     if (auth_level < ACCESS_VIEW)
-        /* We still need a control object to be able to send something
-         * back, but since this user has no access, we'll go ahead and
-         * make one that'll be reaped immediately.
-         */
-        user->pending_logout = true;
+        return NULL;
 
     if (auth_level >= ACCESS_MOVE)
-        zone->connect_game_object(user->control, charid);
+        go = zone->find_game_object(charid);
 
-    user->send_ack(TYPE_LOGREQ, (uint8_t)auth_level);
+    base_user *bu = new base_user(userid, go, this);
+    bu->username = std::string(log.username, std::min(sizeof(log.username),
+                                                      strlen(log.username)));
+    bu->auth_level = auth_level;
+
+    std::clog << "login for user " << bu->username << " (" << bu->userid
+              << "), char " << charname << " (" << charid
+              << "), auth " << auth_level << std::endl;
+
+    return bu;
 }
 
 void listen_socket::logout_user(access_list& p)
