@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2017, 08:59:24 tquirk
+ *   last updated 16 Aug 2017, 17:35:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -321,10 +321,5 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 
 void listen_socket::disconnect_user(base_user *bu)
 {
-    if (bu->slave != NULL)
-    {
-        bu->slave->natures.insert("invisible");
-        bu->slave->natures.insert("non-interactive");
-    }
     this->users.erase(bu->userid);
 }
