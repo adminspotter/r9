@@ -144,9 +144,7 @@ TEST_F(ActionPoolTest, StartStop)
 
 TEST_F(ActionPoolTest, NoSkill)
 {
-    Control *control = new Control(123LL, (*game_objs)[9876LL]);
-    base_user *bu = new base_user(123LL, control, listensock);
-    (*game_objs)[9876LL]->connect(control);
+    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
 
     EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
@@ -169,18 +167,15 @@ TEST_F(ActionPoolTest, NoSkill)
     action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 0);
 
-    (*game_objs)[9876LL]->disconnect(control);
+    (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
-    delete control;
     delete action_pool;
 }
 
 TEST_F(ActionPoolTest, InvalidSkill)
 {
-    Control *control = new Control(123LL, (*game_objs)[9876LL]);
-    base_user *bu = new base_user(123LL, control, listensock);
-    control->actions[567] = {567, 5, 0, 0};
-    (*game_objs)[9876LL]->connect(control);
+    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    bu->actions[567] = {567, 5, 0, 0};
 
     EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
@@ -203,18 +198,15 @@ TEST_F(ActionPoolTest, InvalidSkill)
     action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 1);
 
-    (*game_objs)[9876LL]->disconnect(control);
+    (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
-    delete control;
     delete action_pool;
 }
 
 TEST_F(ActionPoolTest, WrongObjectId)
 {
-    Control *control = new Control(123LL, (*game_objs)[9876LL]);
-    base_user *bu = new base_user(123LL, control, listensock);
-    control->actions[789] = {789, 5, 0, 0};
-    (*game_objs)[9876LL]->connect(control);
+    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    bu->actions[789] = {789, 5, 0, 0};
 
     EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
@@ -237,18 +229,15 @@ TEST_F(ActionPoolTest, WrongObjectId)
     action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 0);
 
-    (*game_objs)[9876LL]->disconnect(control);
+    (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
-    delete control;
     delete action_pool;
 }
 
 TEST_F(ActionPoolTest, GoodObjectId)
 {
-    Control *control = new Control(123LL, (*game_objs)[9876LL]);
-    base_user *bu = new base_user(123LL, control, listensock);
-    control->actions[789] = {789, 5, 0, 0};
-    (*game_objs)[9876LL]->connect(control);
+    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    bu->actions[789] = {789, 5, 0, 0};
 
     EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
@@ -271,18 +260,15 @@ TEST_F(ActionPoolTest, GoodObjectId)
     action_pool->execute_action(bu, pkt);
     ASSERT_EQ(action_count, 1);
 
-    (*game_objs)[9876LL]->disconnect(control);
+    (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
-    delete control;
     delete action_pool;
 }
 
 TEST_F(ActionPoolTest, Worker)
 {
-    Control *control = new Control(123LL, (*game_objs)[9876LL]);
-    base_user *bu = new base_user(123LL, control, listensock);
-    control->actions[789] = {789, 5, 0, 0};
-    (*game_objs)[9876LL]->connect(control);
+    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    bu->actions[789] = {789, 5, 0, 0};
 
     EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
@@ -313,8 +299,7 @@ TEST_F(ActionPoolTest, Worker)
     ASSERT_EQ(action_count, 1);
     ASSERT_GT(ntoh_count, 0);
 
-    (*game_objs)[9876LL]->disconnect(control);
+    (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
-    delete control;
     delete action_pool;
 }
