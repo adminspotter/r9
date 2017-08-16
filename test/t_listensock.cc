@@ -336,7 +336,7 @@ TEST(ListenSocketTest, LoginNoUser)
 
 TEST(ListenSocketTest, LoginAlready)
 {
-    DB *database = new mock_DB("a", "b", "c", "d");
+    database = new mock_DB("a", "b", "c", "d");
 
     EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
         .WillOnce(Return(123LL));
@@ -348,19 +348,16 @@ TEST(ListenSocketTest, LoginAlready)
     strncpy(access.buf.log.password, "pass", 5);
 
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    test_listen_socket *listen = new test_listen_socket(addr);
 
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
     bu->pending_logout = true;
     listen->users[123LL] = bu;
-    login_count = 0;
 
     ASSERT_TRUE(listen->users.size() == 1);
 
     listen->login_user(access);
 
-    ASSERT_EQ(login_count, 0);
     ASSERT_TRUE(listen->users.size() == 1);
     ASSERT_EQ(bu->pending_logout, false);
 
