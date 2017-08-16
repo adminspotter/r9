@@ -11,7 +11,7 @@ using ::testing::Return;
 using ::testing::Invoke;
 
 bool create_error = false, cancel_error = false, join_error = false;
-int create_count, cancel_count, join_count, login_count;
+int create_count, cancel_count, join_count;
 
 int pthread_create(pthread_t *a, const pthread_attr_t *b,
                    void *(*c)(void *), void *d)
@@ -90,13 +90,6 @@ class test_listen_socket : public listen_socket
         {
             return "test";
         };
-
-    virtual void do_login(uint64_t a, Control *b, access_list& c) override
-        {
-            delete b;
-            ++login_count;
-        };
-    virtual void do_logout(base_user *a) override {};
 };
 
 TEST(BaseUserTest, CreateDelete)
