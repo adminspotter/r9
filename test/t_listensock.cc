@@ -367,30 +367,42 @@ TEST(ListenSocketTest, LoginAlready)
 
 TEST(ListenSocketTest, Login)
 {
-    DB *database = new mock_DB("a", "b", "c", "d");
+    database = new mock_DB("a", "b", "c", "d");
 
     EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
         .WillOnce(Return(123LL));
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_MOVE));
+    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+
+    zone = new Zone(1000, 1, database);
+    zone->game_objects[1234LL] = go;
 
     access_list access;
 
     memset(&access.buf, 0, sizeof(packet));
     strncpy(access.buf.log.username, "howdy", 6);
     strncpy(access.buf.log.password, "pass", 5);
+    strncpy(access.buf.log.charname, "blah", 5);
 
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new test_listen_socket(addr);
 
-    login_count = 0;
 
     ASSERT_TRUE(listen->users.size() == 0);
 
     listen->login_user(access);
 
-    ASSERT_EQ(login_count, 1);
+    ASSERT_TRUE(listen->users.size() == 1);
+    ASSERT_EQ(listen->users[123LL]->auth_level, ACCESS_MOVE);
 
+    delete zone;
     delete listen;
-    delete database;
+    delete (mock_DB *)database;
 }
 
 TEST(ListenSocketTest, ConnectUserNoAccess)
