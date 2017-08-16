@@ -409,29 +409,21 @@ TEST(ListenSocketTest, Logout)
 {
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen;
-    access_list access;
 
     listen = new test_listen_socket(addr);
 
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
 
     listen->users[123LL] = bu;
 
     ASSERT_TRUE(listen->send_pool->queue_size() == 0);
 
-    /* The logout method never looks at the packet (access.buf), so we
-     * won't bother setting anything in it.
-     */
-    access.what.logout.who = 123LL;
-
-    listen->logout_user(access);
+    listen->logout_user(123LL);
 
     ASSERT_TRUE(bu->pending_logout == true);
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
-    delete control;
 }
 
 TEST(ListenSocketTest, ConnectUser)
