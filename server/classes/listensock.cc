@@ -254,11 +254,11 @@ void listen_socket::login_user(access_list& p)
 
 uint64_t listen_socket::get_userid(login_request& log)
 {
-    uint64_t userid;
-    std::string username(log.username, sizeof(log.username));
-    std::string password(log.password, sizeof(log.password));
-
-    userid = database->check_authentication(username, password);
+    std::string username(log.username, std::min(sizeof(log.username),
+                                                strlen(log.username)));
+    std::string password(log.password, std::min(sizeof(log.password),
+                                                strlen(log.password)));
+    uint64_t userid = database->check_authentication(username, password);
 
     /* Don't want to keep passwords around in core if we can help it. */
     memset(log.password, 0, sizeof(log.password));
