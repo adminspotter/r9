@@ -236,7 +236,7 @@ void stream_socket::handle_users(void)
 void *stream_socket::stream_send_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
-    stream_user *stu;
+    base_user *bu;
     int fd;
     packet_list req;
     size_t realsize;
@@ -250,11 +250,7 @@ void *stream_socket::stream_send_worker(void *arg)
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize))
         {
-            stu = dynamic_cast<stream_user *>(sts->users[req.who->userid]);
-            if (stu == NULL)
-                continue;
-
-            fd = sts->user_fds[stu->userid];
+            fd = sts->user_fds[bu->userid];
             /* TODO: Encryption */
             if (write(fd, (void *)&req, realsize) == -1)
                 std::clog << syslogErr

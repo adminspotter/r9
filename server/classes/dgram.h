@@ -68,11 +68,11 @@ class dgram_user : public base_user
 class dgram_socket : public listen_socket
 {
   public:
-    std::map<Sockaddr *, dgram_user *, less_sockaddr> socks;
+    std::map<Sockaddr *, base_user *, less_sockaddr> socks;
     std::map<uint64_t, Sockaddr *> user_socks;
 
     typedef std::map<Sockaddr *,
-                     dgram_user *,
+                     base_user *,
                      less_sockaddr>::iterator socks_iterator;
 
   public:
@@ -86,13 +86,13 @@ class dgram_socket : public listen_socket
     void handle_packet(packet&, Sockaddr *);
 
     static void handle_login(dgram_socket *, packet&,
-                             dgram_user *, Sockaddr *);
+                             base_user *, Sockaddr *);
     static void handle_ack(dgram_socket *, packet&,
-                           dgram_user *, Sockaddr *);
+                           base_user *, Sockaddr *);
     static void handle_logout(dgram_socket *, packet&,
-                              dgram_user *, Sockaddr *);
+                              base_user *, Sockaddr *);
     static void handle_action(dgram_socket *, packet&,
-                              dgram_user *, Sockaddr *);
+                              base_user *, Sockaddr *);
 
     virtual void connect_user(base_user *, access_list&) override;
     virtual void disconnect_user(base_user *) override;

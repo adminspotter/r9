@@ -51,7 +51,7 @@ class stream_user : public base_user
 class stream_socket : public listen_socket
 {
   public:
-    std::map<int, stream_user *> fds;
+    std::map<int, base_user *> fds;
     std::map<uint64_t, int> user_fds;
 
   private:
