@@ -434,6 +434,46 @@ TEST(ListenSocketTest, Logout)
     delete control;
 }
 
+TEST(ListenSocketTest, ConnectUser)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    access_list access;
+
+    memset(&access.buf, 0, sizeof(packet));
+
+    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
+    ASSERT_TRUE(listen->users.size() == 0);
+
+    listen->connect_user(bu, access);
+
+    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+    ASSERT_TRUE(listen->users.size() == 1);
+
+    delete listen;
+}
+
+TEST(ListenSocketTest, DisconnectUser)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[123LL] = bu;
+
+    ASSERT_TRUE(listen->users.size() == 1);
+
+    listen->disconnect_user(bu);
+
+    ASSERT_TRUE(listen->users.size() == 0);
+
+    delete listen;
+}
+
 TEST(BaseUserTest, SendPing)
 {
     struct addrinfo *addr = create_addrinfo();
