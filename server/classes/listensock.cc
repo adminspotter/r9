@@ -210,7 +210,8 @@ void *listen_socket::reaper_worker(void *arg)
         {
             pthread_testcancel();
             bu = (*i).second;
-            if (bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
+            if (bu->pending_logout == true
+                || bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
             {
                 /* We'll consider the user link-dead */
                 std::clog << "removing user " << bu->username << " ("
