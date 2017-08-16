@@ -187,7 +187,8 @@ void *listen_socket::access_pool_worker(void *arg)
         if (req.buf.basic.type == TYPE_LOGREQ)
             ls->login_user(req);
         else if (req.buf.basic.type == TYPE_LGTREQ)
-            ls->logout_user(req);
+            ls->logout_user(req.what.logout.who);
+
         /* Otherwise, we don't recognize it, and will ignore it */
     }
     return NULL;
@@ -293,7 +294,7 @@ base_user *listen_socket::check_access(uint64_t userid, login_request& log)
     return bu;
 }
 
-void listen_socket::logout_user(access_list& p)
+void listen_socket::logout_user(uint64_t userid)
 {
     packet_list pkt;
     listen_socket::users_iterator found;
@@ -301,14 +302,14 @@ void listen_socket::logout_user(access_list& p)
     /* The reaper threads take care of the actual removing of the user
      * and whatnot.  We just set the flag.
      */
-    if ((found = this->users.find(p.what.logout.who)) != this->users.end())
+    if ((found = this->users.find(userid)) != this->users.end())
     {
         base_user *bu = found->second;
-        bu->pending_logout = true;
         std::clog << "logout request from " << bu->username
                   << " (" << bu->userid << ")" << std::endl;
 
         bu->send_ack(TYPE_LGTREQ, 0);
+        bu->pending_logout = true;
     }
 }
 
