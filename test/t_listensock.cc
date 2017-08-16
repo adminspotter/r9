@@ -242,6 +242,68 @@ TEST(ListenSocketTest, GetUserid)
     delete database;
 }
 
+TEST(ListenSocketTest, CheckAccessNoAccess)
+{
+    database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_NONE));
+
+    login_request log;
+
+    memset(&log, 0, sizeof(login_request));
+    strncpy(log.username, "howdy", 6);
+    strncpy(log.password, "pass", 5);
+    strncpy(log.charname, "blah", 5);
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    base_user *bu = listen->check_access(123LL, log);
+
+    ASSERT_TRUE(bu == NULL);
+
+    delete listen;
+    delete database;
+}
+
+TEST(ListenSocketTest, CheckAccess)
+{
+    database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_MOVE));
+    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+
+    zone = new Zone(1000, 1, database);
+    zone->game_objects[1234LL] = go;
+
+    login_request log;
+
+    memset(&log, 0, sizeof(login_request));
+    strncpy(log.username, "howdy", 6);
+    strncpy(log.password, "pass", 5);
+    strncpy(log.charname, "blah", 5);
+
+    struct addrinfo *addr = create_addrinfo();
+    test_listen_socket *listen = new test_listen_socket(addr);
+
+    base_user *bu = listen->check_access(123LL, log);
+
+    ASSERT_TRUE(bu != NULL);
+
+    delete bu;
+    delete listen;
+    delete zone;
+    delete (mock_DB *)database;
+}
+
 TEST(ListenSocketTest, LoginNoUser)
 {
     database = new mock_DB("a", "b", "c", "d");
