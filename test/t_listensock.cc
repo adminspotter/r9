@@ -101,57 +101,44 @@ class test_listen_socket : public listen_socket
 
 TEST(BaseUserTest, CreateDelete)
 {
-    Control *con = new Control(0LL, NULL);
     base_user *base = NULL;
 
     ASSERT_NO_THROW(
         {
-            base = new base_user(0LL, con, NULL);
+            base = new base_user(0LL, NULL, NULL);
         });
     ASSERT_EQ(base->userid, 0LL);
-    ASSERT_EQ(base->control, con);
     ASSERT_EQ(base->pending_logout, false);
 
     delete base;
-    delete con;
 }
 
 TEST(BaseUserTest, LessThan)
 {
-    Control *con1 = new Control(123LL, NULL);
-    Control *con2 = new Control(124LL, NULL);
-    base_user *base1 = new base_user(123LL, con1, NULL);
-    base_user *base2 = new base_user(124LL, con2, NULL);
+    base_user *base1 = new base_user(123LL, NULL, NULL);
+    base_user *base2 = new base_user(124LL, NULL, NULL);
 
     ASSERT_TRUE(*base1 < *base2);
 
     delete base2;
     delete base1;
-    delete con2;
-    delete con1;
 }
 
 TEST(BaseUserTest, EqualTo)
 {
-    Control *con1 = new Control(123LL, NULL);
-    Control *con2 = new Control(124LL, NULL);
-    base_user *base1 = new base_user(123LL, con1, NULL);
-    base_user *base2 = new base_user(124LL, con2, NULL);
+    base_user *base1 = new base_user(123LL, NULL, NULL);
+    base_user *base2 = new base_user(124LL, NULL, NULL);
 
     ASSERT_FALSE(*base1 == *base2);
 
     delete base2;
     delete base1;
-    delete con2;
-    delete con1;
 }
 
 TEST(BaseUserTest, Assignment)
 {
-    Control *con1 = new Control(123LL, NULL);
-    Control *con2 = new Control(124LL, NULL);
-    base_user *base1 = new base_user(123LL, con1, NULL);
-    base_user *base2 = new base_user(124LL, con2, NULL);
+    base_user *base1 = new base_user(123LL, NULL, NULL);
+    base_user *base2 = new base_user(124LL, NULL, NULL);
 
     ASSERT_FALSE(*base1 == *base2);
 
@@ -161,8 +148,6 @@ TEST(BaseUserTest, Assignment)
 
     delete base2;
     delete base1;
-    delete con2;
-    delete con1;
 }
 
 TEST(ListenSocketTest, CreateDelete)
@@ -465,8 +450,7 @@ TEST(BaseUserTest, SendPing)
 
     listen = new test_listen_socket(addr);
 
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
 
     listen->users[123LL] = bu;
 
@@ -477,7 +461,6 @@ TEST(BaseUserTest, SendPing)
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
-    delete control;
 }
 
 TEST(BaseUserTest, SendAck)
@@ -487,8 +470,7 @@ TEST(BaseUserTest, SendAck)
 
     listen = new test_listen_socket(addr);
 
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
 
     listen->users[123LL] = bu;
 
@@ -499,5 +481,4 @@ TEST(BaseUserTest, SendAck)
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
-    delete control;
 }
