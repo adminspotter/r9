@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Aug 2017, 11:48:14 tquirk
+ *   last updated 14 Aug 2017, 10:32:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -105,10 +105,11 @@ void dgram_socket::do_login(uint64_t userid,
                             Control *con,
                             access_list& al)
 {
-    dgram_user *dgu = new dgram_user(userid, con, this);
+    dgram_user *dgu = new dgram_user(userid, NULL, this);
     dgu->sa = al.what.login.who.dgram;
     this->users[userid] = dgu;
     this->socks[dgu->sa] = dgu;
+    this->user_socks[userid] = al.what.login.who.dgram;
 
     this->connect_user((base_user *)dgu, al);
 }
@@ -120,6 +121,7 @@ void dgram_socket::do_login(uint64_t userid,
 void dgram_socket::do_logout(base_user *bu)
 {
     dgram_user *dgu = dynamic_cast<dgram_user *>(bu);
+    this->user_socks.erase(dgu->userid);
 
     if (dgu != NULL)
         this->socks.erase(dgu->sa);
@@ -261,7 +263,7 @@ void *dgram_socket::dgram_send_worker(void *arg)
             /* TODO: Encryption */
             if (sendto(dgs->sock.sock,
                        (void *)&req.buf, realsize, 0,
-                       dgu->sa->sockaddr(),
+                       dgs->user_socks[dgu->userid]->sockaddr(),
                        sizeof(struct sockaddr_storage)) == -1)
                 std::clog << syslogErr
                           << "error sending packet out datagram port "

@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Aug 2017, 11:48:48 tquirk
+ *   last updated 14 Aug 2017, 10:31:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -106,9 +106,10 @@ void stream_socket::do_login(uint64_t userid,
                              Control *con,
                              access_list& al)
 {
-    stream_user *stu = new stream_user(userid, con, this);
+    stream_user *stu = new stream_user(userid, NULL, this);
     stu->fd = al.what.login.who.stream;
     this->users[userid] = stu;
+    this->user_fds[userid] = al.what.login.who.stream;
 
     this->connect_user((base_user *)stu, al);
 }
@@ -127,6 +128,7 @@ void stream_socket::do_logout(base_user *bu)
         if (stu->fd + 1 == this->max_fd)
             --this->max_fd;
         this->fds.erase(stu->fd);
+        this->user_fds.erase(stu->userid);
     }
 }
 
@@ -245,6 +247,7 @@ void *stream_socket::stream_send_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
     stream_user *stu;
+    int fd;
     packet_list req;
     size_t realsize;
 
@@ -261,12 +264,13 @@ void *stream_socket::stream_send_worker(void *arg)
             if (stu == NULL)
                 continue;
 
+            fd = sts->user_fds[stu->userid];
             /* TODO: Encryption */
-            if (write(stu->fd, (void *)&req, realsize) == -1)
+            if (write(fd, (void *)&req, realsize) == -1)
                 std::clog << syslogErr
                           << "error sending packet out stream port "
                           << sts->sock.sa->port() << ", user port "
-                          << stu->fd << ": "
+                          << fd << ": "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
         }

@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Aug 2017, 11:48:31 tquirk
+ *   last updated 14 Aug 2017, 10:31:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -52,6 +52,7 @@ class stream_socket : public listen_socket
 {
   public:
     std::map<int, stream_user *> fds;
+    std::map<uint64_t, int> user_fds;
 
   private:
     int max_fd;
