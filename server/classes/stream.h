@@ -67,8 +67,8 @@ class stream_socket : public listen_socket
 
     void start(void) override;
 
-    void do_login(uint64_t, Control *, access_list&) override;
-    void do_logout(base_user *) override;
+    virtual void connect_user(base_user *, access_list&) override;
+    virtual void disconnect_user(base_user *) override;
 
     static void *stream_listen_worker(void *);
     int select_fd_set(void);

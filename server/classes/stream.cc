@@ -102,34 +102,24 @@ void stream_socket::start(void)
     this->sock.start(stream_socket::stream_listen_worker);
 }
 
-void stream_socket::do_login(uint64_t userid,
-                             Control *con,
-                             access_list& al)
+void stream_socket::connect_user(base_user *bu, access_list& al)
 {
-    stream_user *stu = new stream_user(userid, NULL, this);
-    stu->fd = al.what.login.who.stream;
-    this->users[userid] = stu;
-    this->user_fds[userid] = al.what.login.who.stream;
+    this->fds[al.what.login.who.stream] = bu;
+    this->user_fds[bu->userid] = al.what.login.who.stream;
 
-    this->connect_user((base_user *)stu, al);
+    this->listen_socket::connect_user(bu, al);
 }
 
-/* The do_logout method performs the only stream_socket-specific work
- * for removing a stream user from the object.  Everything else is
- * handled in listen_socket::reaper_worker.
- */
-void stream_socket::do_logout(base_user *bu)
+void stream_socket::disconnect_user(base_user *bu)
 {
-    stream_user *stu = dynamic_cast<stream_user *>(bu);
+    int fd = this->user_fds[bu->userid];
+    close(fd);
+    if (fd + 1 == this->max_fd)
+        --this->max_fd;
+    this->fds.erase(fd);
+    this->user_fds.erase(bu->userid);
 
-    if (stu != NULL)
-    {
-        close(stu->fd);
-        if (stu->fd + 1 == this->max_fd)
-            --this->max_fd;
-        this->fds.erase(stu->fd);
-        this->user_fds.erase(stu->userid);
-    }
+    this->listen_socket::disconnect_user(bu);
 }
 
 void *stream_socket::stream_listen_worker(void *arg)

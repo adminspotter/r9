@@ -97,9 +97,6 @@ class listen_socket {
 
     virtual void logout_user(access_list&);
 
-    virtual void do_login(uint64_t, Control *, access_list&) = 0;
-    virtual void do_logout(base_user *) = 0;
-
     virtual void connect_user(base_user *, access_list&);
     virtual void disconnect_user(base_user *);
 };

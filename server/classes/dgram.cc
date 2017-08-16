@@ -101,30 +101,21 @@ void dgram_socket::start(void)
     this->sock.start(dgram_socket::dgram_listen_worker);
 }
 
-void dgram_socket::do_login(uint64_t userid,
-                            Control *con,
-                            access_list& al)
+void dgram_socket::connect_user(base_user *bu, access_list& al)
 {
-    dgram_user *dgu = new dgram_user(userid, NULL, this);
-    dgu->sa = al.what.login.who.dgram;
-    this->users[userid] = dgu;
-    this->socks[dgu->sa] = dgu;
-    this->user_socks[userid] = al.what.login.who.dgram;
+    this->socks[al.what.login.who.dgram] = bu;
+    this->user_socks[bu->userid] = al.what.login.who.dgram;
 
-    this->connect_user((base_user *)dgu, al);
+    this->listen_socket::connect_user(bu, al);
 }
 
-/* The do_logout method performs the only dgram_socket-specific work
- * for removing a datagram user from the object.  Everything else is
- * handled in listen_socket::reaper_worker.
- */
-void dgram_socket::do_logout(base_user *bu)
+void dgram_socket::disconnect_user(base_user *bu)
 {
-    dgram_user *dgu = dynamic_cast<dgram_user *>(bu);
-    this->user_socks.erase(dgu->userid);
+    Sockaddr *sa = this->user_socks[bu->userid];
+    this->socks.erase(sa);
+    this->user_socks.erase(bu->userid);
 
-    if (dgu != NULL)
-        this->socks.erase(dgu->sa);
+    this->listen_socket::disconnect_user(bu);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
