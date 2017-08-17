@@ -379,6 +379,37 @@ TEST(ListenSocketTest, LoginAlready)
     delete database;
 }
 
+TEST(ListenSocketTest, LoginNoAccess)
+{
+    database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
+        .WillOnce(Return(123LL));
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_NONE));
+
+    access_list access;
+
+    memset(&access.buf, 0, sizeof(packet));
+    strncpy(access.buf.log.username, "howdy", 6);
+    strncpy(access.buf.log.password, "pass", 5);
+    strncpy(access.buf.log.charname, "blah", 5);
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    ASSERT_TRUE(listen->users.size() == 0);
+
+    listen->login_user(access);
+
+    ASSERT_TRUE(listen->users.size() == 0);
+
+    delete listen;
+    delete (mock_DB *)database;
+}
+
 TEST(ListenSocketTest, Login)
 {
     database = new mock_DB("a", "b", "c", "d");
