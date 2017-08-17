@@ -147,24 +147,26 @@ TEST(DgramSocketTest, HandlePacket)
 {
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    base_user *bu = new base_user(123LL, NULL, dgs);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET;
-    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sin);
 
-    dgs->socks[dgu->sa] = dgu;
+    dgs->users[bu->userid] = bu;
+    dgs->socks[sa] = bu;
+    dgs->user_socks[bu->userid] = sa;
 
-    dgu->timestamp = 0;
+    bu->timestamp = 0;
 
     packet p;
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACKPKT;
 
-    dgs->handle_packet(p, dgu->sa);
+    dgs->handle_packet(p, sa);
 
-    ASSERT_NE(dgu->timestamp, 0);
+    ASSERT_NE(bu->timestamp, 0);
 
     delete dgs;
     freeaddrinfo(addr);
@@ -205,16 +207,18 @@ TEST(DgramSocketTest, HandleLogout)
 {
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    base_user *bu = new base_user(123LL, NULL, dgs);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET;
-    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sin);
 
-    dgs->socks[dgu->sa] = dgu;
+    dgs->users[bu->userid] = bu;
+    dgs->socks[sa] = bu;
+    dgs->user_socks[bu->userid] = sa;
 
-    dgu->timestamp = 0;
+    bu->timestamp = 0;
 
     packet p;
     memset(&p, 0, sizeof(packet));
@@ -222,9 +226,9 @@ TEST(DgramSocketTest, HandleLogout)
 
     ASSERT_TRUE(dgs->access_pool->queue_size() == 0);
 
-    dgram_socket::handle_logout(dgs, p, dgu, dgu->sa);
+    dgram_socket::handle_logout(dgs, p, bu, sa);
 
-    ASSERT_NE(dgu->timestamp, 0);
+    ASSERT_NE(bu->timestamp, 0);
     ASSERT_TRUE(dgs->access_pool->queue_size() != 0);
     access_list al;
     memset(&al, 0, sizeof(access_list));
@@ -232,8 +236,8 @@ TEST(DgramSocketTest, HandleLogout)
     ASSERT_EQ(al.buf.basic.type, TYPE_LGTREQ);
     ASSERT_EQ(al.what.logout.who, 123LL);
 
-    delete dgu->sa;
-    delete dgu;
+    delete sa;
+    delete bu;
     delete dgs;
     freeaddrinfo(addr);
 }
@@ -242,16 +246,18 @@ TEST(DgramSocketTest, HandleAction)
 {
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    base_user *bu = new base_user(123LL, NULL, dgs);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET;
-    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sin);
 
-    dgs->socks[dgu->sa] = dgu;
+    dgs->users[bu->userid] = bu;
+    dgs->socks[sa] = bu;
+    dgs->user_socks[bu->userid] = sa;
 
-    dgu->timestamp = 0;
+    bu->timestamp = 0;
 
     /* Creating an actual ActionPool will be prohibitive, since it
      * requires so many other objects to make it go.  All we need here
@@ -266,14 +272,13 @@ TEST(DgramSocketTest, HandleAction)
 
     ASSERT_TRUE(action_pool->queue_size() == 0);
 
-    dgram_socket::handle_action(dgs, p, dgu, dgu->sa);
+    dgram_socket::handle_action(dgs, p, bu, sa);
 
-    ASSERT_NE(dgu->timestamp, 0);
+    ASSERT_NE(bu->timestamp, 0);
     ASSERT_TRUE(action_pool->queue_size() != 0);
 
     delete (ThreadPool<packet_list> *)action_pool;
-    delete dgu->sa;
-    delete dgu;
+    delete bu;
     delete dgs;
     freeaddrinfo(addr);
 }
