@@ -125,8 +125,7 @@ TEST(ListenSocketTest, AccessWorker)
 
     listen->start();
 
-    while (listen->users.find(123LL) != listen->users.end()
-           || listen->users[123LL]->pending_logout == false)
+    while (listen->access_pool->queue_size() != 0)
         ;
 
     listen->stop();
