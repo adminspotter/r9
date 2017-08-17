@@ -171,6 +171,7 @@ TEST(ListenSocketTest, CreateDelete)
     ASSERT_TRUE(listen->access_pool->pool_size() == 0);
 
     delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(ListenSocketTest, StartStop)
@@ -229,6 +230,7 @@ TEST(ListenSocketTest, StartStop)
         });
 
     delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(ListenSocketTest, GetUserid)
@@ -253,6 +255,7 @@ TEST(ListenSocketTest, GetUserid)
     ASSERT_FALSE(strncmp(log.password, "pass", sizeof(log.password)) == 0);
 
     delete listen;
+    freeaddrinfo(addr);
     delete database;
 }
 
@@ -280,6 +283,7 @@ TEST(ListenSocketTest, CheckAccessNoAccess)
     ASSERT_TRUE(bu == NULL);
 
     delete listen;
+    freeaddrinfo(addr);
     delete database;
 }
 
@@ -314,6 +318,7 @@ TEST(ListenSocketTest, CheckAccess)
 
     delete bu;
     delete listen;
+    freeaddrinfo(addr);
     delete zone;
     delete (mock_DB *)database;
 }
@@ -345,6 +350,7 @@ TEST(ListenSocketTest, LoginNoUser)
                          sizeof(access.buf.log.password)) == 0);
 
     delete listen;
+    freeaddrinfo(addr);
     delete database;
 }
 
@@ -376,6 +382,7 @@ TEST(ListenSocketTest, LoginAlready)
     ASSERT_EQ(bu->pending_logout, false);
 
     delete listen;
+    freeaddrinfo(addr);
     delete database;
 }
 
@@ -407,6 +414,7 @@ TEST(ListenSocketTest, LoginNoAccess)
     ASSERT_TRUE(listen->users.size() == 0);
 
     delete listen;
+    freeaddrinfo(addr);
     delete (mock_DB *)database;
 }
 
@@ -437,7 +445,6 @@ TEST(ListenSocketTest, Login)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new test_listen_socket(addr);
 
-
     ASSERT_TRUE(listen->users.size() == 0);
 
     listen->login_user(access);
@@ -447,6 +454,7 @@ TEST(ListenSocketTest, Login)
 
     delete zone;
     delete listen;
+    freeaddrinfo(addr);
     delete (mock_DB *)database;
 }
 
@@ -469,6 +477,7 @@ TEST(ListenSocketTest, Logout)
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(ListenSocketTest, ConnectUser)
@@ -491,6 +500,7 @@ TEST(ListenSocketTest, ConnectUser)
     ASSERT_TRUE(listen->users.size() == 1);
 
     delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(ListenSocketTest, DisconnectUser)
@@ -509,6 +519,7 @@ TEST(ListenSocketTest, DisconnectUser)
     ASSERT_TRUE(listen->users.size() == 0);
 
     delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(BaseUserTest, SendPing)
@@ -529,6 +540,7 @@ TEST(BaseUserTest, SendPing)
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(BaseUserTest, SendAck)
@@ -549,4 +561,5 @@ TEST(BaseUserTest, SendAck)
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
+    freeaddrinfo(addr);
 }
