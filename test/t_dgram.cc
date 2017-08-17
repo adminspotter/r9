@@ -95,22 +95,16 @@ TEST(DgramSocketTest, PortType)
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, DoLogin)
+TEST(DgramSocketTest, ConnectUser)
 {
-    database = new mock_DB("a", "b", "c", "d");
-
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
-        .WillOnce(Return(ACCESS_NONE));
-
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
 
     ASSERT_TRUE(dgs->users.size() == 0);
     ASSERT_TRUE(dgs->socks.size() == 0);
+    ASSERT_TRUE(dgs->user_socks.size() == 0);
 
-    Control *control = new Control(123LL, NULL);
+    base_user *bu = new base_user(123LL, NULL, dgs);
 
     access_list al;
 
@@ -121,10 +115,11 @@ TEST(DgramSocketTest, DoLogin)
     strncpy(al.buf.log.password, "argh!", sizeof(al.buf.log.password));
     strncpy(al.buf.log.charname, "howdy", sizeof(al.buf.log.charname));
 
-    dgs->do_login(123LL, control, al);
+    dgs->connect_user(bu, al);
 
     ASSERT_TRUE(dgs->users.size() == 1);
     ASSERT_TRUE(dgs->socks.size() == 1);
+    ASSERT_TRUE(dgs->user_socks.size() == 1);
 
     delete dgs;
     freeaddrinfo(addr);
