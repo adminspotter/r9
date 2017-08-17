@@ -45,40 +45,6 @@ int select(int a, fd_set *b, fd_set *c, fd_set *d, struct timeval *e)
     return 0;
 }
 
-TEST(StreamUserTest, CreateDelete)
-{
-    stream_user *stu;
-
-    ASSERT_NO_THROW(
-        {
-            stu = new stream_user(123LL, NULL, NULL);
-        });
-    ASSERT_EQ(stu->userid, 123LL);
-    ASSERT_EQ(stu->pending_logout, false);
-    ASSERT_NE(stu->timestamp, 0);
-    ASSERT_TRUE(stu->control == NULL);
-
-    delete stu;
-}
-
-TEST(StreamUserTest, Assignment)
-{
-    stream_user *stu1 = new stream_user(123LL, NULL, NULL);
-    stream_user *stu2 = new stream_user(987LL, NULL, NULL);
-
-    stu1->fd = 42;
-
-    stu2->fd = 99;
-
-    *stu2 = *stu1;
-
-    ASSERT_EQ(stu1->userid, stu2->userid);
-    ASSERT_EQ(stu1->fd, stu2->fd);
-
-    delete stu2;
-    delete stu1;
-}
-
 TEST(StreamSocketTest, CreateDelete)
 {
     struct addrinfo *addr = create_addrinfo();
