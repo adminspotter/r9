@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Aug 2017, 07:36:30 tquirk
+ *   last updated 16 Aug 2017, 22:19:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -47,7 +47,7 @@
 extern volatile int main_loop_exit_flag;
 
 typedef void (*packet_handler)(dgram_socket *, packet&,
-                               dgram_user *, Sockaddr *);
+                               base_user *, Sockaddr *);
 
 static std::map<int, packet_handler> packet_handlers =
 {
@@ -56,22 +56,6 @@ static std::map<int, packet_handler> packet_handlers =
     { TYPE_LGTREQ, dgram_socket::handle_logout },
     { TYPE_ACTREQ, dgram_socket::handle_action }
 };
-
-dgram_user::dgram_user(uint64_t u, Control *c, listen_socket *l)
-    : base_user(u, c, l)
-{
-}
-
-dgram_user::~dgram_user()
-{
-}
-
-const dgram_user& dgram_user::operator=(const dgram_user& du)
-{
-    this->sa = du.sa;
-    this->base_user::operator=(du);
-    return *this;
-}
 
 dgram_socket::dgram_socket(struct addrinfo *ai)
     : listen_socket(ai)
@@ -101,28 +85,21 @@ void dgram_socket::start(void)
     this->sock.start(dgram_socket::dgram_listen_worker);
 }
 
-void dgram_socket::do_login(uint64_t userid,
-                            Control *con,
-                            access_list& al)
+void dgram_socket::connect_user(base_user *bu, access_list& al)
 {
-    dgram_user *dgu = new dgram_user(userid, con, this);
-    dgu->sa = al.what.login.who.dgram;
-    this->users[userid] = dgu;
-    this->socks[dgu->sa] = dgu;
+    this->socks[al.what.login.who.dgram] = bu;
+    this->user_socks[bu->userid] = al.what.login.who.dgram;
 
-    this->connect_user((base_user *)dgu, al);
+    this->listen_socket::connect_user(bu, al);
 }
 
-/* The do_logout method performs the only dgram_socket-specific work
- * for removing a datagram user from the object.  Everything else is
- * handled in listen_socket::reaper_worker.
- */
-void dgram_socket::do_logout(base_user *bu)
+void dgram_socket::disconnect_user(base_user *bu)
 {
-    dgram_user *dgu = dynamic_cast<dgram_user *>(bu);
+    Sockaddr *sa = this->user_socks[bu->userid];
+    this->socks.erase(sa);
+    this->user_socks.erase(bu->userid);
 
-    if (dgu != NULL)
-        this->socks.erase(dgu->sa);
+    this->listen_socket::disconnect_user(bu);
 }
 
 void *dgram_socket::dgram_listen_worker(void *arg)
@@ -175,20 +152,20 @@ void *dgram_socket::dgram_listen_worker(void *arg)
 
 void dgram_socket::handle_packet(packet& p, Sockaddr *sa)
 {
-    dgram_user *dgu = NULL;
+    base_user *bu = NULL;
     auto handler = packet_handlers.find(p.basic.type);
     auto found = this->socks.find(sa);
 
     if (found != this->socks.end())
-        dgu = found->second;
+        bu = found->second;
 
     if (handler != packet_handlers.end())
-        (handler->second)(this, p, dgu, sa);
+        (handler->second)(this, p, bu, sa);
     delete sa;
 }
 
 void dgram_socket::handle_login(dgram_socket *s, packet& p,
-                                dgram_user *u, Sockaddr *sa)
+                                base_user *u, Sockaddr *sa)
 {
     access_list al;
 
@@ -198,14 +175,14 @@ void dgram_socket::handle_login(dgram_socket *s, packet& p,
 }
 
 void dgram_socket::handle_ack(dgram_socket *s, packet& p,
-                              dgram_user *u, Sockaddr *sa)
+                              base_user *u, Sockaddr *sa)
 {
     if (u != NULL)
         u->timestamp = time(NULL);
 }
 
 void dgram_socket::handle_logout(dgram_socket *s, packet& p,
-                                 dgram_user *u, Sockaddr *sa)
+                                 base_user *u, Sockaddr *sa)
 {
     access_list al;
 
@@ -219,7 +196,7 @@ void dgram_socket::handle_logout(dgram_socket *s, packet& p,
 }
 
 void dgram_socket::handle_action(dgram_socket *s, packet& p,
-                                 dgram_user *u, Sockaddr *sa)
+                                 base_user *u, Sockaddr *sa)
 {
     packet_list pl;
 
@@ -235,7 +212,7 @@ void dgram_socket::handle_action(dgram_socket *s, packet& p,
 void *dgram_socket::dgram_send_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
-    dgram_user *dgu;
+    base_user *bu;
     packet_list req;
     size_t realsize;
 
@@ -248,20 +225,12 @@ void *dgram_socket::dgram_send_worker(void *arg)
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize))
         {
-            /* The users member comes from the listen_socket, and is a
-             * map of userid to base_user; we're 99.99% sure that all
-             * the elements in our users map will be dgram_users, but
-             * we'll dynamic cast and check the return just to be 100%
-             * sure.  If it becomes a problem, we can cast explicitly.
-             */
-            dgu = dynamic_cast<dgram_user *>(dgs->users[req.who->userid]);
-            if (dgu == NULL)
-                continue;
+            bu = req.who;
 
             /* TODO: Encryption */
             if (sendto(dgs->sock.sock,
                        (void *)&req.buf, realsize, 0,
-                       dgu->sa->sockaddr(),
+                       dgs->user_socks[bu->userid]->sockaddr(),
                        sizeof(struct sockaddr_storage)) == -1)
                 std::clog << syslogErr
                           << "error sending packet out datagram port "

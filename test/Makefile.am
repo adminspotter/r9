@@ -15,6 +15,7 @@ if WANT_SERVER
 	t_basesock \
 	t_config_data \
 	t_console \
+	t_control \
 	t_db \
 	t_dgram \
 	t_dgram_worker \
@@ -84,6 +85,15 @@ t_config_data_SOURCES = t_config_data.cc \
 	../server/config_data.cc ../server/config_data.h
 t_config_data_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_config_data_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+
+t_control_SOURCES = t_control.cc \
+	../server/classes/control.cc ../server/classes/control.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_control_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_control_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_console_SOURCES = t_console.cc \
 	../server/classes/modules/console.h \

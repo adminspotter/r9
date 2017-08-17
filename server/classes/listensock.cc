@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 20:19:58 tquirk
+ *   last updated 16 Aug 2017, 17:35:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -37,11 +37,10 @@
 #include "../config_data.h"
 #include "../log.h"
 
-base_user::base_user(uint64_t u, Control *c, listen_socket *l)
+base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
+    : Control(u, g)
 {
     this->parent = l;
-    this->userid = u;
-    this->control = c;
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
@@ -50,24 +49,20 @@ base_user::base_user(uint64_t u, Control *c, listen_socket *l)
 
 base_user::~base_user()
 {
-}
-
-bool base_user::operator<(const base_user& u) const
-{
-    return (this->userid < u.userid);
-}
-
-bool base_user::operator==(const base_user& u) const
-{
-    return (this->userid == u.userid);
+    if (this->slave != NULL)
+    {
+        /* Clean up a user who has logged out */
+        this->slave->natures.insert("invisible");
+        this->slave->natures.insert("non-interactive");
+    }
 }
 
 const base_user& base_user::operator=(const base_user& u)
 {
-    this->userid = u.userid;
-    this->control = u.control;
+    this->Control::operator=((const Control&)u);
     this->timestamp = u.timestamp;
     this->pending_logout = u.pending_logout;
+    this->sequence = u.sequence;
     return *this;
 }
 
@@ -192,7 +187,8 @@ void *listen_socket::access_pool_worker(void *arg)
         if (req.buf.basic.type == TYPE_LOGREQ)
             ls->login_user(req);
         else if (req.buf.basic.type == TYPE_LGTREQ)
-            ls->logout_user(req);
+            ls->logout_user(req.what.logout.who);
+
         /* Otherwise, we don't recognize it, and will ignore it */
     }
     return NULL;
@@ -215,29 +211,15 @@ void *listen_socket::reaper_worker(void *arg)
         {
             pthread_testcancel();
             bu = (*i).second;
-            if (bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
+            if (bu->pending_logout == true
+                || bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
             {
                 /* We'll consider the user link-dead */
-                std::clog << "removing user "
-                          << bu->control->username << " ("
+                std::clog << "removing user " << bu->username << " ("
                           << bu->userid << ") from " << ls->port_type()
                           << " port " << ls->sock.sa->port() << std::endl;
-                if (bu->control->slave != NULL)
-                {
-                    /* Clean up a user who has logged out */
-                    bu->control->slave->natures.insert("invisible");
-                    bu->control->slave->natures.insert("non-interactive");
-                }
-                delete bu->control;
-                ls->do_logout(bu);
-
-                /* i will be invalidated by the following erase, so
-                 * let's move to a valid spot that will let our loop
-                 * continue without missing anything.
-                 */
                 --i;
-
-                ls->users.erase(bu->userid);
+                ls->disconnect_user(bu);
             }
             else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
                      && bu->pending_logout == false)
@@ -251,8 +233,6 @@ void *listen_socket::reaper_worker(void *arg)
 void listen_socket::login_user(access_list& p)
 {
     uint64_t userid = this->get_userid(p.buf.log);
-    std::string charname(p.buf.log.charname, sizeof(p.buf.log.charname));
-    Control *newcontrol = NULL;
 
     if (userid == 0LL)
         return;
@@ -265,26 +245,21 @@ void listen_socket::login_user(access_list& p)
         return;
     }
 
-    /* If we've got a real user, go ahead and make a control object
-     * for them.  If the access level is too low, we'll reap it
-     * immediately, but we do need the control to be able to send
-     * something back.
-     */
-    newcontrol = new Control(userid, NULL);
-    newcontrol->username = std::string(p.buf.log.username,
-                                       sizeof(p.buf.log.username));
+    base_user *bu = this->check_access(userid, p.buf.log);
 
-    /* Perform the derived class's login part. */
-    this->do_login(userid, newcontrol, p);
+    if (bu == NULL)
+        return;
+
+    this->connect_user(bu, p);
 }
 
 uint64_t listen_socket::get_userid(login_request& log)
 {
-    uint64_t userid;
-    std::string username(log.username, sizeof(log.username));
-    std::string password(log.password, sizeof(log.password));
-
-    userid = database->check_authentication(username, password);
+    std::string username(log.username, std::min(sizeof(log.username),
+                                                strlen(log.username)));
+    std::string password(log.password, std::min(sizeof(log.password),
+                                                strlen(log.password)));
+    uint64_t userid = database->check_authentication(username, password);
 
     /* Don't want to keep passwords around in core if we can help it. */
     memset(log.password, 0, sizeof(log.password));
@@ -293,32 +268,33 @@ uint64_t listen_socket::get_userid(login_request& log)
     return userid;
 }
 
-void listen_socket::connect_user(base_user *user, access_list& access)
+base_user *listen_socket::check_access(uint64_t userid, login_request& log)
 {
-    /* Hook the new control up to the appropriate object. */
-    std::string charname(access.buf.log.charname,
-                         sizeof(access.buf.log.charname));
-    uint64_t charid = database->get_character_objectid(user->userid, charname);
-    int auth_level = database->check_authorization(user->userid, charid);
-
-    std::clog << "login request from user "
-              << user->control->username << " (" << user->userid
-              << "), auth " << auth_level << std::endl;
+    std::string charname(log.charname, std::min(sizeof(log.charname),
+                                                strlen(log.charname)));
+    uint64_t charid = database->get_character_objectid(userid, charname);
+    int auth_level = database->check_authorization(userid, charid);
+    GameObject *go = NULL;
 
     if (auth_level < ACCESS_VIEW)
-        /* We still need a control object to be able to send something
-         * back, but since this user has no access, we'll go ahead and
-         * make one that'll be reaped immediately.
-         */
-        user->pending_logout = true;
+        return NULL;
 
     if (auth_level >= ACCESS_MOVE)
-        zone->connect_game_object(user->control, charid);
+        go = zone->find_game_object(charid);
 
-    user->send_ack(TYPE_LOGREQ, (uint8_t)auth_level);
+    base_user *bu = new base_user(userid, go, this);
+    bu->username = std::string(log.username, std::min(sizeof(log.username),
+                                                      strlen(log.username)));
+    bu->auth_level = auth_level;
+
+    std::clog << "login for user " << bu->username << " (" << bu->userid
+              << "), char " << charname << " (" << charid
+              << "), auth " << auth_level << std::endl;
+
+    return bu;
 }
 
-void listen_socket::logout_user(access_list& p)
+void listen_socket::logout_user(uint64_t userid)
 {
     packet_list pkt;
     listen_socket::users_iterator found;
@@ -326,14 +302,24 @@ void listen_socket::logout_user(access_list& p)
     /* The reaper threads take care of the actual removing of the user
      * and whatnot.  We just set the flag.
      */
-    if ((found = this->users.find(p.what.logout.who)) != this->users.end())
+    if ((found = this->users.find(userid)) != this->users.end())
     {
         base_user *bu = found->second;
-        bu->pending_logout = true;
-        std::clog << "logout request from "
-                  << bu->control->username
-                  << " (" << bu->control->userid << ")" << std::endl;
+        std::clog << "logout request from " << bu->username
+                  << " (" << bu->userid << ")" << std::endl;
 
         bu->send_ack(TYPE_LGTREQ, 0);
+        bu->pending_logout = true;
     }
+}
+
+void listen_socket::connect_user(base_user *bu, access_list& al)
+{
+    this->users[bu->userid] = bu;
+    bu->send_ack(TYPE_LOGREQ, bu->auth_level);
+}
+
+void listen_socket::disconnect_user(base_user *bu)
+{
+    this->users.erase(bu->userid);
 }

@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Aug 2017, 21:06:03 tquirk
+ *   last updated 14 Aug 2017, 10:31:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -35,23 +35,13 @@
 #include <cstdint>
 #include <map>
 
-#include "control.h"
 #include "listensock.h"
-
-class stream_user : public base_user
-{
-  public:
-    int fd;
-
-    stream_user(uint64_t, Control *, listen_socket *);
-
-    const stream_user& operator=(const stream_user&);
-};
 
 class stream_socket : public listen_socket
 {
   public:
-    std::map<int, stream_user *> fds;
+    std::map<int, base_user *> fds;
+    std::map<uint64_t, int> user_fds;
 
   private:
     int max_fd;
@@ -66,8 +56,8 @@ class stream_socket : public listen_socket
 
     void start(void) override;
 
-    void do_login(uint64_t, Control *, access_list&) override;
-    void do_logout(base_user *) override;
+    virtual void connect_user(base_user *, access_list&) override;
+    virtual void disconnect_user(base_user *) override;
 
     static void *stream_listen_worker(void *);
     int select_fd_set(void);

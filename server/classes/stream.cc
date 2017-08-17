@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2017, 09:59:41 tquirk
+ *   last updated 14 Aug 2017, 10:31:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -56,19 +56,6 @@
 
 extern volatile int main_loop_exit_flag;
 
-stream_user::stream_user(uint64_t u, Control *c, listen_socket *l)
-    : base_user(u, c, l)
-{
-    this->fd = 0;
-}
-
-const stream_user& stream_user::operator=(const stream_user& su)
-{
-    this->fd = su.fd;
-    this->base_user::operator=(su);
-    return *this;
-}
-
 stream_socket::stream_socket(struct addrinfo *ai)
     : listen_socket(ai), fds()
 {
@@ -102,32 +89,24 @@ void stream_socket::start(void)
     this->sock.start(stream_socket::stream_listen_worker);
 }
 
-void stream_socket::do_login(uint64_t userid,
-                             Control *con,
-                             access_list& al)
+void stream_socket::connect_user(base_user *bu, access_list& al)
 {
-    stream_user *stu = new stream_user(userid, con, this);
-    stu->fd = al.what.login.who.stream;
-    this->users[userid] = stu;
+    this->fds[al.what.login.who.stream] = bu;
+    this->user_fds[bu->userid] = al.what.login.who.stream;
 
-    this->connect_user((base_user *)stu, al);
+    this->listen_socket::connect_user(bu, al);
 }
 
-/* The do_logout method performs the only stream_socket-specific work
- * for removing a stream user from the object.  Everything else is
- * handled in listen_socket::reaper_worker.
- */
-void stream_socket::do_logout(base_user *bu)
+void stream_socket::disconnect_user(base_user *bu)
 {
-    stream_user *stu = dynamic_cast<stream_user *>(bu);
+    int fd = this->user_fds[bu->userid];
+    close(fd);
+    if (fd + 1 == this->max_fd)
+        --this->max_fd;
+    this->fds.erase(fd);
+    this->user_fds.erase(bu->userid);
 
-    if (stu != NULL)
-    {
-        close(stu->fd);
-        if (stu->fd + 1 == this->max_fd)
-            --this->max_fd;
-        this->fds.erase(stu->fd);
-    }
+    this->listen_socket::disconnect_user(bu);
 }
 
 void *stream_socket::stream_listen_worker(void *arg)
@@ -244,7 +223,8 @@ void stream_socket::handle_users(void)
 void *stream_socket::stream_send_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
-    stream_user *stu;
+    base_user *bu;
+    int fd;
     packet_list req;
     size_t realsize;
 
@@ -257,16 +237,13 @@ void *stream_socket::stream_send_worker(void *arg)
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize))
         {
-            stu = dynamic_cast<stream_user *>(sts->users[req.who->userid]);
-            if (stu == NULL)
-                continue;
-
+            fd = sts->user_fds[bu->userid];
             /* TODO: Encryption */
-            if (write(stu->fd, (void *)&req, realsize) == -1)
+            if (write(fd, (void *)&req, realsize) == -1)
                 std::clog << syslogErr
                           << "error sending packet out stream port "
                           << sts->sock.sa->port() << ", user port "
-                          << stu->fd << ": "
+                          << fd << ": "
                           << strerror(errno) << " (" << errno << ")"
                           << std::endl;
         }

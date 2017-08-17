@@ -3,7 +3,6 @@
 #include <gtest/gtest.h>
 
 #include "mock_db.h"
-#include "mock_zone.h"
 #include "mock_server_globals.h"
 
 using ::testing::_;
@@ -11,7 +10,7 @@ using ::testing::Return;
 using ::testing::Invoke;
 
 bool create_error = false, cancel_error = false, join_error = false;
-int create_count, cancel_count, join_count, login_count;
+int create_count, cancel_count, join_count;
 
 int pthread_create(pthread_t *a, const pthread_attr_t *b,
                    void *(*c)(void *), void *d)
@@ -90,68 +89,48 @@ class test_listen_socket : public listen_socket
         {
             return "test";
         };
-
-    virtual void do_login(uint64_t a, Control *b, access_list& c) override
-        {
-            delete b;
-            ++login_count;
-        };
-    virtual void do_logout(base_user *a) override {};
 };
 
 TEST(BaseUserTest, CreateDelete)
 {
-    Control *con = new Control(0LL, NULL);
     base_user *base = NULL;
 
     ASSERT_NO_THROW(
         {
-            base = new base_user(0LL, con, NULL);
+            base = new base_user(0LL, NULL, NULL);
         });
     ASSERT_EQ(base->userid, 0LL);
-    ASSERT_EQ(base->control, con);
     ASSERT_EQ(base->pending_logout, false);
 
     delete base;
-    delete con;
 }
 
 TEST(BaseUserTest, LessThan)
 {
-    Control *con1 = new Control(123LL, NULL);
-    Control *con2 = new Control(124LL, NULL);
-    base_user *base1 = new base_user(123LL, con1, NULL);
-    base_user *base2 = new base_user(124LL, con2, NULL);
+    base_user *base1 = new base_user(123LL, NULL, NULL);
+    base_user *base2 = new base_user(124LL, NULL, NULL);
 
     ASSERT_TRUE(*base1 < *base2);
 
     delete base2;
     delete base1;
-    delete con2;
-    delete con1;
 }
 
 TEST(BaseUserTest, EqualTo)
 {
-    Control *con1 = new Control(123LL, NULL);
-    Control *con2 = new Control(124LL, NULL);
-    base_user *base1 = new base_user(123LL, con1, NULL);
-    base_user *base2 = new base_user(124LL, con2, NULL);
+    base_user *base1 = new base_user(123LL, NULL, NULL);
+    base_user *base2 = new base_user(124LL, NULL, NULL);
 
     ASSERT_FALSE(*base1 == *base2);
 
     delete base2;
     delete base1;
-    delete con2;
-    delete con1;
 }
 
 TEST(BaseUserTest, Assignment)
 {
-    Control *con1 = new Control(123LL, NULL);
-    Control *con2 = new Control(124LL, NULL);
-    base_user *base1 = new base_user(123LL, con1, NULL);
-    base_user *base2 = new base_user(124LL, con2, NULL);
+    base_user *base1 = new base_user(123LL, NULL, NULL);
+    base_user *base2 = new base_user(124LL, NULL, NULL);
 
     ASSERT_FALSE(*base1 == *base2);
 
@@ -161,8 +140,21 @@ TEST(BaseUserTest, Assignment)
 
     delete base2;
     delete base1;
-    delete con2;
-    delete con1;
+}
+
+TEST(BaseUserTest, DisconnectOnDestroy)
+{
+    base_user *base = NULL;
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+
+    base = new base_user(123LL, go, NULL);
+    ASSERT_TRUE(go->natures.size() == 0);
+
+    delete base;
+    ASSERT_TRUE(go->natures.size() == 2);
+    ASSERT_TRUE(go->natures.find("invisible") != go->natures.end());
+    ASSERT_TRUE(go->natures.find("non-interactive") != go->natures.end());
+    delete go;
 }
 
 TEST(ListenSocketTest, CreateDelete)
@@ -179,6 +171,7 @@ TEST(ListenSocketTest, CreateDelete)
     ASSERT_TRUE(listen->access_pool->pool_size() == 0);
 
     delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(ListenSocketTest, StartStop)
@@ -237,6 +230,7 @@ TEST(ListenSocketTest, StartStop)
         });
 
     delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(ListenSocketTest, GetUserid)
@@ -261,7 +255,72 @@ TEST(ListenSocketTest, GetUserid)
     ASSERT_FALSE(strncmp(log.password, "pass", sizeof(log.password)) == 0);
 
     delete listen;
+    freeaddrinfo(addr);
     delete database;
+}
+
+TEST(ListenSocketTest, CheckAccessNoAccess)
+{
+    database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_NONE));
+
+    login_request log;
+
+    memset(&log, 0, sizeof(login_request));
+    strncpy(log.username, "howdy", 6);
+    strncpy(log.password, "pass", 5);
+    strncpy(log.charname, "blah", 5);
+
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    base_user *bu = listen->check_access(123LL, log);
+
+    ASSERT_TRUE(bu == NULL);
+
+    delete listen;
+    freeaddrinfo(addr);
+    delete database;
+}
+
+TEST(ListenSocketTest, CheckAccess)
+{
+    database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
+        .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_MOVE));
+    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+
+    zone = new Zone(1000, 1, database);
+    zone->game_objects[1234LL] = go;
+
+    login_request log;
+
+    memset(&log, 0, sizeof(login_request));
+    strncpy(log.username, "howdy", 6);
+    strncpy(log.password, "pass", 5);
+    strncpy(log.charname, "blah", 5);
+
+    struct addrinfo *addr = create_addrinfo();
+    test_listen_socket *listen = new test_listen_socket(addr);
+
+    base_user *bu = listen->check_access(123LL, log);
+
+    ASSERT_TRUE(bu != NULL);
+
+    delete bu;
+    delete listen;
+    freeaddrinfo(addr);
+    delete zone;
+    delete (mock_DB *)database;
 }
 
 TEST(ListenSocketTest, LoginNoUser)
@@ -291,12 +350,13 @@ TEST(ListenSocketTest, LoginNoUser)
                          sizeof(access.buf.log.password)) == 0);
 
     delete listen;
+    freeaddrinfo(addr);
     delete database;
 }
 
 TEST(ListenSocketTest, LoginAlready)
 {
-    DB *database = new mock_DB("a", "b", "c", "d");
+    database = new mock_DB("a", "b", "c", "d");
 
     EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
         .WillOnce(Return(123LL));
@@ -308,154 +368,158 @@ TEST(ListenSocketTest, LoginAlready)
     strncpy(access.buf.log.password, "pass", 5);
 
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    test_listen_socket *listen = new test_listen_socket(addr);
 
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
     bu->pending_logout = true;
     listen->users[123LL] = bu;
-    login_count = 0;
 
     ASSERT_TRUE(listen->users.size() == 1);
 
     listen->login_user(access);
 
-    ASSERT_EQ(login_count, 0);
     ASSERT_TRUE(listen->users.size() == 1);
     ASSERT_EQ(bu->pending_logout, false);
 
     delete listen;
+    freeaddrinfo(addr);
     delete database;
 }
 
-TEST(ListenSocketTest, Login)
+TEST(ListenSocketTest, LoginNoAccess)
 {
-    DB *database = new mock_DB("a", "b", "c", "d");
+    database = new mock_DB("a", "b", "c", "d");
 
     EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
         .WillOnce(Return(123LL));
-
-    access_list access;
-
-    memset(&access.buf, 0, sizeof(packet));
-    strncpy(access.buf.log.username, "howdy", 6);
-    strncpy(access.buf.log.password, "pass", 5);
-
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
-
-    login_count = 0;
-
-    ASSERT_TRUE(listen->users.size() == 0);
-
-    listen->login_user(access);
-
-    ASSERT_EQ(login_count, 1);
-
-    delete listen;
-    delete database;
-}
-
-TEST(ListenSocketTest, ConnectUserNoAccess)
-{
-    DB *database = new mock_DB("a", "b", "c", "d");
-
     EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
         .WillOnce(Return(1234LL));
     EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
         .WillOnce(Return(ACCESS_NONE));
 
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
-
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
-
     access_list access;
 
     memset(&access.buf, 0, sizeof(packet));
-    strncpy(access.buf.log.charname, "howdy", 6);
+    strncpy(access.buf.log.username, "howdy", 6);
+    strncpy(access.buf.log.password, "pass", 5);
+    strncpy(access.buf.log.charname, "blah", 5);
 
-    listen->users[123LL] = bu;
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
 
-    ASSERT_TRUE(bu->pending_logout == false);
+    ASSERT_TRUE(listen->users.size() == 0);
 
-    listen->connect_user(bu, access);
+    listen->login_user(access);
 
-    ASSERT_TRUE(bu->pending_logout == true);
+    ASSERT_TRUE(listen->users.size() == 0);
 
     delete listen;
-    delete database;
+    freeaddrinfo(addr);
+    delete (mock_DB *)database;
 }
 
-TEST(ListenSocketTest, ConnectUser)
+TEST(ListenSocketTest, Login)
 {
-    DB *database = new mock_DB("a", "b", "c", "d");
+    database = new mock_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_))
-        .WillOnce(Invoke(fake_server_objects));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
-        .WillOnce(Return(ACCESS_MOVE));
+    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
+        .WillOnce(Return(123LL));
     EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
         .WillOnce(Return(1234LL));
+    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+        .WillOnce(Return(ACCESS_MOVE));
+    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
 
-    zone = new mock_Zone(1000, 1, database);
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
-    EXPECT_CALL(*((mock_Zone *)zone), connect_game_object(_, _));
-
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
-
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    zone = new Zone(1000, 1, database);
+    zone->game_objects[1234LL] = go;
 
     access_list access;
 
     memset(&access.buf, 0, sizeof(packet));
-    strncpy(access.buf.log.charname, "howdy", 6);
+    strncpy(access.buf.log.username, "howdy", 6);
+    strncpy(access.buf.log.password, "pass", 5);
+    strncpy(access.buf.log.charname, "blah", 5);
 
-    listen->users[123LL] = bu;
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
 
-    ASSERT_TRUE(bu->pending_logout == false);
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
+    ASSERT_TRUE(listen->users.size() == 0);
 
-    listen->connect_user(bu, access);
+    listen->login_user(access);
 
-    ASSERT_TRUE(bu->pending_logout == false);
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+    ASSERT_TRUE(listen->users.size() == 1);
+    ASSERT_EQ(listen->users[123LL]->auth_level, ACCESS_MOVE);
 
+    delete zone;
     delete listen;
-    delete (mock_Zone *)zone;
-    delete database;
+    freeaddrinfo(addr);
+    delete (mock_DB *)database;
 }
 
 TEST(ListenSocketTest, Logout)
 {
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen;
-    access_list access;
 
     listen = new test_listen_socket(addr);
 
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
 
     listen->users[123LL] = bu;
 
     ASSERT_TRUE(listen->send_pool->queue_size() == 0);
 
-    /* The logout method never looks at the packet (access.buf), so we
-     * won't bother setting anything in it.
-     */
-    access.what.logout.who = 123LL;
-
-    listen->logout_user(access);
+    listen->logout_user(123LL);
 
     ASSERT_TRUE(bu->pending_logout == true);
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
-    delete control;
+    freeaddrinfo(addr);
+}
+
+TEST(ListenSocketTest, ConnectUser)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    access_list access;
+
+    memset(&access.buf, 0, sizeof(packet));
+
+    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
+    ASSERT_TRUE(listen->users.size() == 0);
+
+    listen->connect_user(bu, access);
+
+    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+    ASSERT_TRUE(listen->users.size() == 1);
+
+    delete listen;
+    freeaddrinfo(addr);
+}
+
+TEST(ListenSocketTest, DisconnectUser)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new test_listen_socket(addr);
+
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[123LL] = bu;
+
+    ASSERT_TRUE(listen->users.size() == 1);
+
+    listen->disconnect_user(bu);
+
+    ASSERT_TRUE(listen->users.size() == 0);
+
+    delete listen;
+    freeaddrinfo(addr);
 }
 
 TEST(BaseUserTest, SendPing)
@@ -465,8 +529,7 @@ TEST(BaseUserTest, SendPing)
 
     listen = new test_listen_socket(addr);
 
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
 
     listen->users[123LL] = bu;
 
@@ -477,7 +540,7 @@ TEST(BaseUserTest, SendPing)
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
-    delete control;
+    freeaddrinfo(addr);
 }
 
 TEST(BaseUserTest, SendAck)
@@ -487,8 +550,7 @@ TEST(BaseUserTest, SendAck)
 
     listen = new test_listen_socket(addr);
 
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
 
     listen->users[123LL] = bu;
 
@@ -499,5 +561,5 @@ TEST(BaseUserTest, SendAck)
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
 
     delete listen;
-    delete control;
+    freeaddrinfo(addr);
 }
