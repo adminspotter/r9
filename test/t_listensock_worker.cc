@@ -5,9 +5,13 @@
 #include <unistd.h>
 #include <gtest/gtest.h>
 
+#include "mock_db.h"
 #include "mock_server_globals.h"
 
-int sleep_count, login_count, logout_count;
+using ::testing::_;
+using ::testing::Return;
+
+int sleep_count;
 
 unsigned int sleep(unsigned int a)
 {
@@ -50,25 +54,6 @@ class test_listen_socket : public listen_socket
         {
             return "test";
         };
-
-    virtual void login_user(access_list& a) override
-        {
-            ++login_count;
-        };
-    virtual void logout_user(access_list& a) override
-        {
-            ++logout_count;
-        };
-
-    virtual void do_login(uint64_t a, Control *b, access_list& c) override
-        {
-            delete b;
-            ++login_count;
-        };
-    virtual void do_logout(base_user *a) override
-        {
-            ++logout_count;
-        };
 };
 
 TEST(ListenSocketTest, ReaperWorker)
@@ -80,22 +65,18 @@ TEST(ListenSocketTest, ReaperWorker)
     listen_socket *listen = new test_listen_socket(addr);
 
     /* This user will be sent a ping */
-    Control *control = new Control(123LL, NULL);
-    base_user *bu = new base_user(123LL, control, listen);
+    base_user *bu = new base_user(123LL, NULL, listen);
     bu->pending_logout = false;
     bu->timestamp = time(NULL) - listen_socket::PING_TIMEOUT - 1;
     listen->users[123LL] = bu;
 
     /* This user will be logged out entirely */
-    Control *control2 = new Control(1234LL, NULL);
-    base_user *bu2 = new base_user(1234LL, control2, listen);
+    GameObject *gob = new GameObject(NULL, NULL, 1234LL);
+    base_user *bu2 = new base_user(1234LL, gob, listen);
+    bu2->username = "bobbo";
     bu2->pending_logout = true;
     bu2->timestamp = time(NULL) - listen_socket::LINK_DEAD_TIMEOUT - 1;
     listen->users[1234LL] = bu2;
-    GameObject *gob = new GameObject(NULL, NULL, 1234LL);
-    control2->slave = gob;
-
-    logout_count = 0;
 
     listen->start();
 
@@ -108,15 +89,15 @@ TEST(ListenSocketTest, ReaperWorker)
     listen->stop();
 
     ASSERT_GE(sleep_count, 1);
-    ASSERT_EQ(logout_count, 1);
     ASSERT_TRUE(listen->send_pool->queue_size() > 0);
     ASSERT_TRUE(listen->users.size() == 1);
+
+    delete bu;
+
     ASSERT_TRUE(gob->natures.find("invisible") != gob->natures.end());
     ASSERT_TRUE(gob->natures.find("non-interactive") != gob->natures.end());
 
     delete gob;
-    delete bu;
-    delete control;
     delete listen;
     freeaddrinfo(addr);
 }
@@ -125,6 +106,11 @@ TEST(ListenSocketTest, AccessWorker)
 {
     config.send_threads = 1;
     config.access_threads = 1;
+
+    database = new mock_DB("a", "b", "c", "d");
+
+    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
+        .WillOnce(Return(0LL));
 
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new test_listen_socket(addr);
@@ -136,23 +122,22 @@ TEST(ListenSocketTest, AccessWorker)
     listen->access_pool->push(req);
 
     req.buf.basic.type = TYPE_LGTREQ;
+    req.what.logout.who = 123LL;
     listen->access_pool->push(req);
 
     ASSERT_TRUE(listen->access_pool->queue_size() == 2);
 
-    login_count = logout_count = 0;
-
     listen->start();
 
-    while (logout_count == 0 && login_count == 0)
+    while (listen->users.find(123LL) != listen->users.end()
+           || listen->users[123LL]->pending_logout == false)
         ;
 
     listen->stop();
 
-    ASSERT_GT(login_count, 0);
-    ASSERT_GT(logout_count, 0);
     ASSERT_TRUE(listen->access_pool->queue_size() == 0);
 
     delete listen;
     freeaddrinfo(addr);
+    delete database;
 }
