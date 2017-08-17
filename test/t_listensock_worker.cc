@@ -93,10 +93,6 @@ TEST(ListenSocketTest, ReaperWorker)
     ASSERT_TRUE(listen->users.size() == 1);
 
     delete bu;
-
-    ASSERT_TRUE(gob->natures.find("invisible") != gob->natures.end());
-    ASSERT_TRUE(gob->natures.find("non-interactive") != gob->natures.end());
-
     delete gob;
     delete listen;
     freeaddrinfo(addr);

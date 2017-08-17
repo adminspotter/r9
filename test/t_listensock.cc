@@ -142,6 +142,21 @@ TEST(BaseUserTest, Assignment)
     delete base1;
 }
 
+TEST(BaseUserTest, DisconnectOnDestroy)
+{
+    base_user *base = NULL;
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+
+    base = new base_user(123LL, go, NULL);
+    ASSERT_TRUE(go->natures.size() == 0);
+
+    delete base;
+    ASSERT_TRUE(go->natures.size() == 2);
+    ASSERT_TRUE(go->natures.find("invisible") != go->natures.end());
+    ASSERT_TRUE(go->natures.find("non-interactive") != go->natures.end());
+    delete go;
+}
+
 TEST(ListenSocketTest, CreateDelete)
 {
     struct addrinfo *addr = create_addrinfo();
