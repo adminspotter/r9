@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2017, 17:35:18 tquirk
+ *   last updated 18 Aug 2017, 09:14:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -228,6 +228,41 @@ void *listen_socket::reaper_worker(void *arg)
         pthread_testcancel();
     }
     return NULL;
+}
+
+void listen_socket::handle_ack(listen_socket *s, packet& p,
+                               base_user *u, void *unused)
+{
+    if (u != NULL)
+        u->timestamp = time(NULL);
+}
+
+void listen_socket::handle_action(listen_socket *s, packet& p,
+                                  base_user *u, void *unused)
+{
+    packet_list pl;
+
+    if (u != NULL)
+    {
+        u->timestamp = time(NULL);
+        memcpy(&pl.buf, &p, sizeof(action_request));
+        pl.who = u;
+        action_pool->push(pl);
+    }
+}
+
+void listen_socket::handle_logout(listen_socket *s, packet& p,
+                                  base_user *u, void *unused)
+{
+    access_list al;
+
+    if (u != NULL)
+    {
+        u->timestamp = time(NULL);
+        memcpy(&al.buf, &p, sizeof(logout_request));
+        al.what.logout.who = u->userid;
+        s->access_pool->push(al);
+    }
 }
 
 void listen_socket::login_user(access_list& p)
