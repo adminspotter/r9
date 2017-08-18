@@ -75,6 +75,9 @@ class listen_socket {
 
     typedef std::map<uint64_t, base_user *>::iterator users_iterator;
 
+    typedef void (*packet_handler)(listen_socket *, packet&,
+                                   base_user *, void *);
+
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
     basesock sock;
