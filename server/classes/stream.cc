@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Aug 2017, 10:31:11 tquirk
+ *   last updated 18 Aug 2017, 09:25:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -56,6 +56,14 @@
 
 extern volatile int main_loop_exit_flag;
 
+static std::map<int, listen_socket::packet_handler> packet_handlers =
+{
+    { TYPE_LOGREQ, stream_socket::handle_login },
+    { TYPE_ACKPKT, listen_socket::handle_ack },
+    { TYPE_ACTREQ, listen_socket::handle_action },
+    { TYPE_LGTREQ, listen_socket::handle_logout }
+};
+
 stream_socket::stream_socket(struct addrinfo *ai)
     : listen_socket(ai), fds()
 {
@@ -87,6 +95,29 @@ void stream_socket::start(void)
     this->send_pool->start(stream_socket::stream_send_worker);
     this->sock.listen_arg = (void *)this;
     this->sock.start(stream_socket::stream_listen_worker);
+}
+
+void stream_socket::handle_packet(packet& p, int fd)
+{
+    base_user *bu = NULL;
+    auto handler = packet_handlers.find(p.basic.type);
+    auto found = this->fds.find(fd);
+
+    if (found != this->fds.end())
+        bu = found->second;
+
+    if (handler != packet_handlers.end())
+        (handler->second)(this, p, bu, &fd);
+}
+
+void stream_socket::handle_login(listen_socket *s, packet& p,
+                                 base_user *u, void *fdp)
+{
+    access_list al;
+
+    memcpy(&al.buf, &p, sizeof(login_request));
+    al.what.login.who.stream = *((int *)fdp);
+    s->access_pool->push(al);
 }
 
 void stream_socket::connect_user(base_user *bu, access_list& al)
@@ -192,22 +223,20 @@ void stream_socket::accept_new_connection(void)
 void stream_socket::handle_users(void)
 {
     int len;
-    unsigned char buf[1024];
+    packet buf;
 
     for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
         if (FD_ISSET((*i).first, &this->readfs))
         {
+            memset((char *)&buf, 0, sizeof(packet));
             if ((len = read((*i).first,
-                            buf,
+                            (void *)&buf,
                             sizeof(buf))) > 0)
             {
-                /* We have recieved something. */
-                std::clog << "got something" << std::endl;
+                if (!ntoh_packet(&buf, len))
+                    continue;
 
-                /* The first sizeof(int) bytes will be the socket
-                 * descriptor, and the rest of it will be the actual
-                 * client data that we got.
-                 */
+                this->handle_packet(buf, (*i).first);
             }
             else
             {
