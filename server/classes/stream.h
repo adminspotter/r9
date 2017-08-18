@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Aug 2017, 09:03:10 tquirk
+ *   last updated 18 Aug 2017, 09:17:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -33,44 +33,20 @@
 #include <sys/select.h>
 
 #include <cstdint>
-#include <vector>
+#include <map>
 
-#include "control.h"
 #include "listensock.h"
-
-class stream_user : public base_user
-{
-  public:
-    int subsrv, fd;
-
-    stream_user(uint64_t, Control *, listen_socket *);
-
-    const stream_user& operator=(const stream_user&);
-};
 
 class stream_socket : public listen_socket
 {
-  private:
-    class subserver
-    {
-      public:
-        int sock, pid, connections;
-
-        const subserver& operator=(const subserver&);
-    };
+  public:
+    std::map<int, base_user *> fds;
+    std::map<uint64_t, int> user_fds;
 
   private:
     int max_fd;
-    std::vector<stream_socket::subserver> subservers;
-
-    typedef std::vector<stream_socket::subserver>::iterator subserver_iterator;
 
     fd_set readfs, master_readfs;
-
-  private:
-    int create_subserver(void);
-    int choose_subserver(void);
-    int pass_fd(int, int);
 
   public:
     stream_socket(struct addrinfo *);
@@ -80,14 +56,17 @@ class stream_socket : public listen_socket
 
     void start(void) override;
 
-    void do_login(uint64_t, Control *, access_list&) override;
-    void do_logout(base_user *) override;
+    void handle_packet(packet&, int);
+
+    static void handle_login(listen_socket *, packet&, base_user *, void *);
+
+    virtual void connect_user(base_user *, access_list&) override;
+    virtual void disconnect_user(base_user *) override;
 
     static void *stream_listen_worker(void *);
     int select_fd_set(void);
     void accept_new_connection(void);
-    void handle_subservers(void);
-    void reap_subserver(stream_socket::subserver&);
+    void handle_users(void);
 
     static void *stream_send_worker(void *);
 };

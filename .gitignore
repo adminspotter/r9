@@ -15,7 +15,6 @@ TAGS
 .libs/
 old/
 server/r9d
-server/r9subserver
 client/r9client
 client/ui/uitest
 client/ui/fonttest

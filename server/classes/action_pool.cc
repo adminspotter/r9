@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 20:25:07 tquirk
+ *   last updated 13 Aug 2017, 08:47:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -117,7 +117,7 @@ void *ActionPool::action_pool_worker(void *arg)
 void ActionPool::execute_action(base_user *user, action_request& req)
 {
     ActionPool::actions_iterator i = this->actions.find(req.action_id);
-    Control::actions_iterator j = user->control->actions.find(req.action_id);
+    Control::actions_iterator j = user->actions.find(req.action_id);
     glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
     int retval;
 
@@ -126,8 +126,8 @@ void ActionPool::execute_action(base_user *user, action_request& req)
      * improvement points.
      */
 
-    if (i != this->actions.end() && j != user->control->actions.end()
-        && user->control->slave->get_object_id() == req.object_id)
+    if (i != this->actions.end() && j != user->actions.end()
+        && user->slave->get_object_id() == req.object_id)
     {
         /* If it's not valid on this server, it should at least have
          * a default.
@@ -142,7 +142,7 @@ void ActionPool::execute_action(base_user *user, action_request& req)
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
         req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
 
-        retval = (*(i->second.action))(user->control->slave,
+        retval = (*(i->second.action))(user->slave,
                                        req.power_level,
                                        this->game_objects[req.dest_object_id],
                                        vec);
