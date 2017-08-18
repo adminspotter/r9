@@ -114,6 +114,11 @@ listen_socket::~listen_socket()
     this->users.erase(this->users.begin(), this->users.end());
 }
 
+std::string listen_socket::port_type(void)
+{
+    return "listen";
+}
+
 void listen_socket::start(void)
 {
     int retval;

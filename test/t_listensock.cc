@@ -174,6 +174,17 @@ TEST(ListenSocketTest, CreateDelete)
     freeaddrinfo(addr);
 }
 
+TEST(DgramSocketTest, PortType)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *dgs = new test_listen_socket(addr);
+
+    ASSERT_TRUE(dgs->port_type() == "listen");
+
+    delete dgs;
+    freeaddrinfo(addr);
+}
+
 TEST(ListenSocketTest, StartStop)
 {
     struct addrinfo *addr = create_addrinfo();

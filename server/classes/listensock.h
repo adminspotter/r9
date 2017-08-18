@@ -86,7 +86,7 @@ class listen_socket {
     listen_socket(struct addrinfo *);
     virtual ~listen_socket();
 
-    virtual std::string port_type(void) = 0;
+    virtual std::string port_type(void);
 
     virtual void start(void);
     virtual void stop(void);
