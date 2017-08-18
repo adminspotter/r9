@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Aug 2017, 22:19:00 tquirk
+ *   last updated 18 Aug 2017, 09:16:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -46,15 +46,12 @@
 
 extern volatile int main_loop_exit_flag;
 
-typedef void (*packet_handler)(dgram_socket *, packet&,
-                               base_user *, Sockaddr *);
-
-static std::map<int, packet_handler> packet_handlers =
+static std::map<int, listen_socket::packet_handler> packet_handlers =
 {
     { TYPE_LOGREQ, dgram_socket::handle_login },
-    { TYPE_ACKPKT, dgram_socket::handle_ack },
-    { TYPE_LGTREQ, dgram_socket::handle_logout },
-    { TYPE_ACTREQ, dgram_socket::handle_action }
+    { TYPE_ACKPKT, listen_socket::handle_ack },
+    { TYPE_ACTREQ, listen_socket::handle_action },
+    { TYPE_LGTREQ, listen_socket::handle_logout }
 };
 
 dgram_socket::dgram_socket(struct addrinfo *ai)
@@ -164,49 +161,14 @@ void dgram_socket::handle_packet(packet& p, Sockaddr *sa)
     delete sa;
 }
 
-void dgram_socket::handle_login(dgram_socket *s, packet& p,
-                                base_user *u, Sockaddr *sa)
+void dgram_socket::handle_login(listen_socket *s, packet& p,
+                                base_user *u, void *sa)
 {
     access_list al;
 
     memcpy(&al.buf, &p, sizeof(login_request));
-    al.what.login.who.dgram = build_sockaddr(*sa->sockaddr());
+    al.what.login.who.dgram = build_sockaddr(*((Sockaddr *)sa)->sockaddr());
     s->access_pool->push(al);
-}
-
-void dgram_socket::handle_ack(dgram_socket *s, packet& p,
-                              base_user *u, Sockaddr *sa)
-{
-    if (u != NULL)
-        u->timestamp = time(NULL);
-}
-
-void dgram_socket::handle_logout(dgram_socket *s, packet& p,
-                                 base_user *u, Sockaddr *sa)
-{
-    access_list al;
-
-    if (u != NULL)
-    {
-        u->timestamp = time(NULL);
-        memcpy(&al.buf, &p, sizeof(logout_request));
-        al.what.logout.who = u->userid;
-        s->access_pool->push(al);
-    }
-}
-
-void dgram_socket::handle_action(dgram_socket *s, packet& p,
-                                 base_user *u, Sockaddr *sa)
-{
-    packet_list pl;
-
-    if (u != NULL)
-    {
-        u->timestamp = time(NULL);
-        memcpy(&pl.buf, &p, sizeof(action_request));
-        pl.who = u;
-        action_pool->push(pl);
-    }
 }
 
 void *dgram_socket::dgram_send_worker(void *arg)
