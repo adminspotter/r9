@@ -91,6 +91,31 @@ TEST(StreamSocketTest, StartStop)
     freeaddrinfo(addr);
 }
 
+TEST(StreamSocketTest, HandlePacket)
+{
+    struct addrinfo *addr = create_addrinfo();
+    stream_socket *sts = new stream_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, sts);
+    int fd = 99;
+
+    sts->users[bu->userid] = bu;
+    sts->fds[fd] = bu;
+    sts->user_fds[bu->userid] = fd;
+
+    bu->timestamp = 0;
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_ACKPKT;
+
+    sts->handle_packet(p, fd);
+
+    ASSERT_NE(bu->timestamp, 0);
+
+    delete sts;
+    freeaddrinfo(addr);
+}
+
 TEST(StreamSocketTest, SelectFdSet)
 {
     int retval;
