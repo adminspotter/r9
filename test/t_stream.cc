@@ -141,6 +141,36 @@ TEST(StreamSocketTest, HandleLogin)
     freeaddrinfo(addr);
 }
 
+TEST(StreamSocketTest, ConnectUser)
+{
+    struct addrinfo *addr = create_addrinfo();
+    stream_socket *sts = new stream_socket(addr);
+
+    ASSERT_TRUE(sts->users.size() == 0);
+    ASSERT_TRUE(sts->fds.size() == 0);
+    ASSERT_TRUE(sts->user_fds.size() == 0);
+
+    base_user *bu = new base_user(123LL, NULL, sts);
+
+    access_list al;
+
+    memset(&al, 0, sizeof(access_list));
+    al.what.login.who.stream = 99;
+    al.buf.basic.type = TYPE_LOGREQ;
+    strncpy(al.buf.log.username, "bobbo", sizeof(al.buf.log.username));
+    strncpy(al.buf.log.password, "argh!", sizeof(al.buf.log.password));
+    strncpy(al.buf.log.charname, "howdy", sizeof(al.buf.log.charname));
+
+    sts->connect_user(bu, al);
+
+    ASSERT_TRUE(sts->users.size() == 1);
+    ASSERT_TRUE(sts->fds.size() == 1);
+    ASSERT_TRUE(sts->user_fds.size() == 1);
+
+    delete sts;
+    freeaddrinfo(addr);
+}
+
 TEST(StreamSocketTest, SelectFdSet)
 {
     int retval;
