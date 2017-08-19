@@ -86,7 +86,6 @@ TEST(DgramSocketTest, ConnectUser)
 
     delete dgs;
     freeaddrinfo(addr);
-    delete database;
 }
 
 TEST(DgramSocketTest, DisconnectUser)
