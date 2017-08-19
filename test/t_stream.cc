@@ -1,14 +1,25 @@
 #include "../server/classes/stream.h"
 #include "../server/config_data.h"
 
-#include <unistd.h>
-#include <fcntl.h>
-
 #include <gtest/gtest.h>
 
 #include "mock_server_globals.h"
 
 bool select_failure = false, select_eintr = false;
+
+/* In order to test some of the non-public members, we need to coerce
+ * them into publicness.
+ */
+class test_stream_socket : public stream_socket
+{
+  public:
+    using stream_socket::max_fd;
+    using stream_socket::readfs;
+    using stream_socket::master_readfs;
+
+    test_stream_socket(struct addrinfo *a) : stream_socket(a) {};
+    ~test_stream_socket() {};
+};
 
 struct addrinfo *create_addrinfo(void)
 {
@@ -177,13 +188,14 @@ TEST(StreamSocketTest, ConnectUser)
 TEST(StreamSocketTest, DisconnectUser)
 {
     struct addrinfo *addr = create_addrinfo();
-    stream_socket *sts = new stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket(addr);
     base_user *bu = new base_user(123LL, NULL, sts);
     int fd = 99;
 
     sts->users[bu->userid] = bu;
     sts->fds[fd] = bu;
     sts->user_fds[bu->userid] = fd;
+    sts->max_fd = 100;
 
     ASSERT_TRUE(sts->users.size() == 1);
     ASSERT_TRUE(sts->fds.size() == 1);
@@ -194,6 +206,7 @@ TEST(StreamSocketTest, DisconnectUser)
     ASSERT_TRUE(sts->users.size() == 0);
     ASSERT_TRUE(sts->fds.size() == 0);
     ASSERT_TRUE(sts->user_fds.size() == 0);
+    ASSERT_EQ(sts->max_fd, 99);
 
     delete bu;
     delete sts;
