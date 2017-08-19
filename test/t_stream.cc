@@ -116,6 +116,31 @@ TEST(StreamSocketTest, HandlePacket)
     freeaddrinfo(addr);
 }
 
+TEST(StreamSocketTest, HandleLogin)
+{
+    struct addrinfo *addr = create_addrinfo();
+    stream_socket *sts = new stream_socket(addr);
+    int fd = 99;
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_LOGREQ;
+
+    ASSERT_TRUE(sts->access_pool->queue_size() == 0);
+
+    stream_socket::handle_login(sts, p, NULL, (void *)&fd);
+
+    ASSERT_TRUE(sts->access_pool->queue_size() != 0);
+    access_list al;
+    memset(&al, 0, sizeof(access_list));
+    sts->access_pool->pop(&al);
+    ASSERT_EQ(al.buf.basic.type, TYPE_LOGREQ);
+    ASSERT_EQ(al.what.login.who.stream, fd);
+
+    delete sts;
+    freeaddrinfo(addr);
+}
+
 TEST(StreamSocketTest, SelectFdSet)
 {
     int retval;
