@@ -229,6 +229,29 @@ TEST(ListenSocketTest, StartStop)
     freeaddrinfo(addr);
 }
 
+TEST(ListenSocketTest, HandleAck)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new listen_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[bu->userid] = bu;
+
+    bu->timestamp = 0;
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_ACKPKT;
+
+    listen_socket::handle_ack(listen, p, bu, NULL);
+
+    ASSERT_NE(bu->timestamp, 0);
+
+    delete bu;
+    delete listen;
+    freeaddrinfo(addr);
+}
+
 TEST(ListenSocketTest, HandleAction)
 {
     struct addrinfo *addr = create_addrinfo();
