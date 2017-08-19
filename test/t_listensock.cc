@@ -76,21 +76,6 @@ int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
     return 2;
 }
 
-/* The listen_socket has a couple of pure-virtual methods, so we need
- * to derive something so we can actually test it.
- */
-class test_listen_socket : public listen_socket
-{
-  public:
-    test_listen_socket(struct addrinfo *a) : listen_socket(a) {};
-    virtual ~test_listen_socket() {};
-
-    virtual std::string port_type(void) override
-        {
-            return "test";
-        };
-};
-
 TEST(BaseUserTest, CreateDelete)
 {
     base_user *base = NULL;
@@ -164,7 +149,7 @@ TEST(ListenSocketTest, CreateDelete)
 
     ASSERT_NO_THROW(
         {
-            listen = new test_listen_socket(addr);
+            listen = new listen_socket(addr);
         });
     /* Thread pools should not be started */
     ASSERT_TRUE(listen->send_pool->pool_size() == 0);
@@ -177,7 +162,7 @@ TEST(ListenSocketTest, CreateDelete)
 TEST(DgramSocketTest, PortType)
 {
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *dgs = new test_listen_socket(addr);
+    listen_socket *dgs = new listen_socket(addr);
 
     ASSERT_TRUE(dgs->port_type() == "listen");
 
@@ -191,7 +176,7 @@ TEST(ListenSocketTest, StartStop)
     listen_socket *listen;
 
     create_count = cancel_count = join_count = 0;
-    listen = new test_listen_socket(addr);
+    listen = new listen_socket(addr);
 
     create_error = true;
     ASSERT_THROW(
@@ -258,7 +243,7 @@ TEST(ListenSocketTest, GetUserid)
     strncpy(log.password, "pass", 5);
 
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     uint64_t userid = listen->get_userid(log);
 
@@ -287,7 +272,7 @@ TEST(ListenSocketTest, CheckAccessNoAccess)
     strncpy(log.charname, "blah", 5);
 
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     base_user *bu = listen->check_access(123LL, log);
 
@@ -321,7 +306,7 @@ TEST(ListenSocketTest, CheckAccess)
     strncpy(log.charname, "blah", 5);
 
     struct addrinfo *addr = create_addrinfo();
-    test_listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     base_user *bu = listen->check_access(123LL, log);
 
@@ -349,7 +334,7 @@ TEST(ListenSocketTest, LoginNoUser)
     strncpy(access.buf.log.charname, "bob", 4);
 
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     ASSERT_TRUE(listen->users.size() == 0);
 
@@ -379,7 +364,7 @@ TEST(ListenSocketTest, LoginAlready)
     strncpy(access.buf.log.password, "pass", 5);
 
     struct addrinfo *addr = create_addrinfo();
-    test_listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     base_user *bu = new base_user(123LL, NULL, listen);
     bu->pending_logout = true;
@@ -416,7 +401,7 @@ TEST(ListenSocketTest, LoginNoAccess)
     strncpy(access.buf.log.charname, "blah", 5);
 
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     ASSERT_TRUE(listen->users.size() == 0);
 
@@ -454,7 +439,7 @@ TEST(ListenSocketTest, Login)
     strncpy(access.buf.log.charname, "blah", 5);
 
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     ASSERT_TRUE(listen->users.size() == 0);
 
@@ -472,9 +457,7 @@ TEST(ListenSocketTest, Login)
 TEST(ListenSocketTest, Logout)
 {
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen;
-
-    listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     base_user *bu = new base_user(123LL, NULL, listen);
 
@@ -494,7 +477,7 @@ TEST(ListenSocketTest, Logout)
 TEST(ListenSocketTest, ConnectUser)
 {
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     base_user *bu = new base_user(123LL, NULL, listen);
 
@@ -517,7 +500,7 @@ TEST(ListenSocketTest, ConnectUser)
 TEST(ListenSocketTest, DisconnectUser)
 {
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     base_user *bu = new base_user(123LL, NULL, listen);
 
@@ -536,9 +519,7 @@ TEST(ListenSocketTest, DisconnectUser)
 TEST(BaseUserTest, SendPing)
 {
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen;
-
-    listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     base_user *bu = new base_user(123LL, NULL, listen);
 
@@ -557,9 +538,7 @@ TEST(BaseUserTest, SendPing)
 TEST(BaseUserTest, SendAck)
 {
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen;
-
-    listen = new test_listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
     base_user *bu = new base_user(123LL, NULL, listen);
 
