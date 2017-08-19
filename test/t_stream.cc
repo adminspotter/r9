@@ -1,6 +1,9 @@
 #include "../server/classes/stream.h"
 #include "../server/config_data.h"
 
+#include <unistd.h>
+#include <fcntl.h>
+
 #include <gtest/gtest.h>
 
 #include "mock_server_globals.h"
@@ -167,6 +170,32 @@ TEST(StreamSocketTest, ConnectUser)
     ASSERT_TRUE(sts->fds.size() == 1);
     ASSERT_TRUE(sts->user_fds.size() == 1);
 
+    delete sts;
+    freeaddrinfo(addr);
+}
+
+TEST(StreamSocketTest, DisconnectUser)
+{
+    struct addrinfo *addr = create_addrinfo();
+    stream_socket *sts = new stream_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, sts);
+    int fd = 99;
+
+    sts->users[bu->userid] = bu;
+    sts->fds[fd] = bu;
+    sts->user_fds[bu->userid] = fd;
+
+    ASSERT_TRUE(sts->users.size() == 1);
+    ASSERT_TRUE(sts->fds.size() == 1);
+    ASSERT_TRUE(sts->user_fds.size() == 1);
+
+    sts->disconnect_user(bu);
+
+    ASSERT_TRUE(sts->users.size() == 0);
+    ASSERT_TRUE(sts->fds.size() == 0);
+    ASSERT_TRUE(sts->user_fds.size() == 0);
+
+    delete bu;
     delete sts;
     freeaddrinfo(addr);
 }
