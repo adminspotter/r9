@@ -229,6 +229,40 @@ TEST(ListenSocketTest, StartStop)
     freeaddrinfo(addr);
 }
 
+TEST(ListenSocketTest, HandleAction)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new listen_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[bu->userid] = bu;
+
+    bu->timestamp = 0;
+
+    /* Creating an actual ActionPool will be prohibitive, since it
+     * requires so many other objects to make it go.  All we need here
+     * is the push() method, and the queue_size() method to make sure
+     * our function is doing what we expect it to.
+     */
+    action_pool = (ActionPool *)new ThreadPool<packet_list>("test", 1);
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_ACTREQ;
+
+    ASSERT_TRUE(action_pool->queue_size() == 0);
+
+    listen_socket::handle_action(listen, p, bu, NULL);
+
+    ASSERT_NE(bu->timestamp, 0);
+    ASSERT_TRUE(action_pool->queue_size() != 0);
+
+    delete (ThreadPool<packet_list> *)action_pool;
+    delete bu;
+    delete listen;
+    freeaddrinfo(addr);
+}
+
 TEST(ListenSocketTest, HandleLogout)
 {
     struct addrinfo *addr = create_addrinfo();
