@@ -229,6 +229,37 @@ TEST(ListenSocketTest, StartStop)
     freeaddrinfo(addr);
 }
 
+TEST(ListenSocketTest, HandleLogout)
+{
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new listen_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[bu->userid] = bu;
+
+    bu->timestamp = 0;
+
+    packet p;
+    memset(&p, 0, sizeof(packet));
+    p.basic.type = TYPE_LGTREQ;
+
+    ASSERT_TRUE(listen->access_pool->queue_size() == 0);
+
+    listen_socket::handle_logout(listen, p, bu, NULL);
+
+    ASSERT_NE(bu->timestamp, 0);
+    ASSERT_TRUE(listen->access_pool->queue_size() != 0);
+    access_list al;
+    memset(&al, 0, sizeof(access_list));
+    listen->access_pool->pop(&al);
+    ASSERT_EQ(al.buf.basic.type, TYPE_LGTREQ);
+    ASSERT_EQ(al.what.logout.who, 123LL);
+
+    delete bu;
+    delete listen;
+    freeaddrinfo(addr);
+}
+
 TEST(ListenSocketTest, GetUserid)
 {
     database = new mock_DB("a", "b", "c", "d");
