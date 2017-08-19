@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Aug 2017, 09:25:51 tquirk
+ *   last updated 19 Aug 2017, 08:59:20 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -132,6 +132,7 @@ void stream_socket::disconnect_user(base_user *bu)
 {
     int fd = this->user_fds[bu->userid];
     close(fd);
+    FD_CLR(fd, &this->master_readfs);
     if (fd + 1 == this->max_fd)
         --this->max_fd;
     this->fds.erase(fd);

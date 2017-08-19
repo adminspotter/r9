@@ -195,7 +195,8 @@ TEST(StreamSocketTest, DisconnectUser)
     sts->users[bu->userid] = bu;
     sts->fds[fd] = bu;
     sts->user_fds[bu->userid] = fd;
-    sts->max_fd = 100;
+    sts->max_fd = fd + 1;
+    FD_SET(fd, &sts->master_readfs);
 
     ASSERT_TRUE(sts->users.size() == 1);
     ASSERT_TRUE(sts->fds.size() == 1);
@@ -206,7 +207,8 @@ TEST(StreamSocketTest, DisconnectUser)
     ASSERT_TRUE(sts->users.size() == 0);
     ASSERT_TRUE(sts->fds.size() == 0);
     ASSERT_TRUE(sts->user_fds.size() == 0);
-    ASSERT_EQ(sts->max_fd, 99);
+    ASSERT_EQ(sts->max_fd, fd);
+    ASSERT_TRUE(!FD_ISSET(fd, &sts->master_readfs));
 
     delete bu;
     delete sts;
