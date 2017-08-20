@@ -103,6 +103,7 @@ TEST(StreamSocketTest, CreateDelete)
         });
 
     delete sts;
+    freeaddrinfo(addr);
 }
 
 TEST(StreamSocketTest, PortType)
@@ -302,6 +303,7 @@ TEST(StreamSocketTest, AcceptNewConnection)
      */
 
     delete sts;
+    freeaddrinfo(addr);
 }
 
 TEST(StreamSocketTest, HandleUsersBadPacket)
@@ -328,6 +330,7 @@ TEST(StreamSocketTest, HandleUsersBadPacket)
     read_bad_packet = false;
 
     delete sts;
+    freeaddrinfo(addr);
 }
 
 TEST(StreamSocketTest, HandleUsersReadError)
@@ -353,6 +356,7 @@ TEST(StreamSocketTest, HandleUsersReadError)
     read_nothing = false;
 
     delete sts;
+    freeaddrinfo(addr);
 }
 
 TEST(StreamSocketTest, HandleUsers)
@@ -375,4 +379,5 @@ TEST(StreamSocketTest, HandleUsers)
     ASSERT_NE(bu->timestamp, 0);
 
     delete sts;
+    freeaddrinfo(addr);
 }
