@@ -354,3 +354,25 @@ TEST(StreamSocketTest, HandleUsersReadError)
 
     delete sts;
 }
+
+TEST(StreamSocketTest, HandleUsers)
+{
+    struct addrinfo *addr = create_addrinfo();
+    test_stream_socket *sts = new test_stream_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, sts);
+    int fd = 99;
+
+    sts->users[bu->userid] = bu;
+    sts->fds[fd] = bu;
+    sts->user_fds[bu->userid] = fd;
+    sts->max_fd = fd + 1;
+    FD_SET(fd, &sts->readfs);
+
+    bu->timestamp = 0;
+
+    sts->handle_users();
+
+    ASSERT_NE(bu->timestamp, 0);
+
+    delete sts;
+}
