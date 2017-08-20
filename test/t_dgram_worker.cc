@@ -149,9 +149,8 @@ TEST(DgramSocketTest, ListenWorker)
 
 /* Send queue test
  *
- * 4 packet_list elements in the send queue:
+ * 3 packet_list elements in the send queue:
  *   - one that won't hton
- *   - one that references a non-dgram user
  *   - one that fails to send
  *   - one that sends correctly
  */
@@ -173,26 +172,13 @@ TEST(DgramSocketTest, SendWorker)
     dgs->socks[sa1] = bu;
     dgs->user_socks[bu->userid] = sa1;
 
-    base_user *bu2 = new base_user(124LL, NULL, NULL);
-
-    memset(&sin, 0, sizeof(struct sockaddr_in));
-    sin.sin_family = AF_UNIX;
-    Sockaddr *sa2 = build_sockaddr((struct sockaddr&)sin);
-
-    dgs->users[bu2->userid] = bu2;
-    dgs->socks[sa2] = bu2;
-    dgs->user_socks[bu2->userid] = sa2;
-
     packet_list pl;
 
     memset(&pl, 0, sizeof(packet_list));
     pl.buf.basic.type = TYPE_ACKPKT;
 
-    pl.who = bu2;
-    dgs->send_pool->push(pl);
-    dgs->send_pool->push(pl);
-
     pl.who = bu;
+    dgs->send_pool->push(pl);
     dgs->send_pool->push(pl);
     dgs->send_pool->push(pl);
     std::cerr << "about to start" << std::endl;
