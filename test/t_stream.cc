@@ -7,6 +7,7 @@
 
 bool select_failure = false, select_eintr = false;
 bool linger_valid = false, keepalive_valid = false;
+bool read_nothing = false, read_bad_packet = false;
 
 /* In order to test some of the non-public members, we need to coerce
  * them into publicness.
@@ -78,6 +79,17 @@ int setsockopt(int a, int b, int c, const void *d, socklen_t e)
         if (*(int *)d == (config.use_keepalive ? 1 : 0))
             keepalive_valid = true;
     return 0;
+}
+
+ssize_t read(int a, void *b, size_t c)
+{
+    if (read_nothing == true)
+        return 0;
+
+    ((ack_packet *)b)->type = TYPE_ACKPKT;
+    if (read_bad_packet == true)
+        return 1;
+    return sizeof(ack_packet);
 }
 
 TEST(StreamSocketTest, CreateDelete)
@@ -288,6 +300,32 @@ TEST(StreamSocketTest, AcceptNewConnection)
     /* Attempts to mock out ioctl have failed, so we won't worry about
      * that setting, and will have no assertion for it.
      */
+
+    delete sts;
+}
+
+TEST(StreamSocketTest, HandleUsersBadPacket)
+{
+    struct addrinfo *addr = create_addrinfo();
+    test_stream_socket *sts = new test_stream_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, sts);
+    int fd = 99;
+
+    sts->users[bu->userid] = bu;
+    sts->fds[fd] = bu;
+    sts->user_fds[bu->userid] = fd;
+    sts->max_fd = fd + 1;
+    FD_SET(fd, &sts->readfs);
+
+    bu->timestamp = 0;
+
+    read_bad_packet = true;
+
+    sts->handle_users();
+
+    ASSERT_EQ(bu->timestamp, 0);
+
+    read_bad_packet = false;
 
     delete sts;
 }
