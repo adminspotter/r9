@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Aug 2017, 09:16:35 tquirk
+ *   last updated 20 Aug 2017, 11:04:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -135,6 +135,7 @@ void stream_socket::disconnect_user(base_user *bu)
     FD_CLR(fd, &this->master_readfs);
     if (fd + 1 == this->max_fd)
         --this->max_fd;
+    this->fds[fd] = NULL;
     this->fds.erase(fd);
     this->user_fds.erase(bu->userid);
 
@@ -244,11 +245,14 @@ void stream_socket::handle_users(void)
             }
             else
             {
-                /* A 0 indicates that the other end closed the socket. */
-                auto j = this->users.find((*i).second->userid);
-                (*i).second = NULL;
-                this->fds.erase(i--);
-                this->users.erase(j);
+                /* It's either that the other end closed the socket,
+                 * or we have an error; either way, we should drop
+                 * this socket.  Prevent the select from actually
+                 * looking at it, and have the reaper take care of the
+                 * rest of things.
+                 */
+                FD_CLR((*i).first, &this->master_readfs);
+                (*i).second->pending_logout = true;
             }
         }
 }

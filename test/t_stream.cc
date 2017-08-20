@@ -329,3 +329,28 @@ TEST(StreamSocketTest, HandleUsersBadPacket)
 
     delete sts;
 }
+
+TEST(StreamSocketTest, HandleUsersReadError)
+{
+    struct addrinfo *addr = create_addrinfo();
+    test_stream_socket *sts = new test_stream_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, sts);
+    int fd = 99;
+
+    sts->users[bu->userid] = bu;
+    sts->fds[fd] = bu;
+    sts->user_fds[bu->userid] = fd;
+    sts->max_fd = fd + 1;
+    FD_SET(fd, &sts->readfs);
+
+    read_nothing = true;
+
+    sts->handle_users();
+
+    ASSERT_EQ(bu->pending_logout, true);
+    ASSERT_TRUE(!FD_ISSET(fd, &sts->master_readfs));
+
+    read_nothing = false;
+
+    delete sts;
+}
