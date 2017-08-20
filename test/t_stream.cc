@@ -6,6 +6,7 @@
 #include "mock_server_globals.h"
 
 bool select_failure = false, select_eintr = false;
+bool linger_valid = false, keepalive_valid = false;
 
 /* In order to test some of the non-public members, we need to coerce
  * them into publicness.
@@ -56,6 +57,26 @@ int select(int a, fd_set *b, fd_set *c, fd_set *d, struct timeval *e)
             errno = EINVAL;
         return -1;
     }
+    return 0;
+}
+
+int accept(int a, struct sockaddr *b, socklen_t *c)
+{
+    return 99;
+}
+
+int setsockopt(int a, int b, int c, const void *d, socklen_t e)
+{
+    if (c == SO_LINGER)
+    {
+        struct linger *ls = (struct linger *)d;
+        if (ls->l_onoff == (config.use_linger ? 1 : 0)
+            && ls->l_linger == config.use_linger)
+            linger_valid = true;
+    }
+    if (c == SO_KEEPALIVE)
+        if (*(int *)d == (config.use_keepalive ? 1 : 0))
+            keepalive_valid = true;
     return 0;
 }
 
@@ -241,4 +262,32 @@ TEST(StreamSocketTest, SelectFdSet)
 
     delete sts;
     freeaddrinfo(addr);
+}
+
+TEST(StreamSocketTest, AcceptNewConnection)
+{
+    config.use_linger = 123;
+    config.use_keepalive = true;
+
+    struct addrinfo *addr = create_addrinfo();
+    test_stream_socket *sts = new test_stream_socket(addr);
+
+    FD_SET(sts->sock.sock, &sts->readfs);
+
+    sts->accept_new_connection();
+
+    /* Our fake accept() returns 99 */
+    ASSERT_TRUE(sts->fds.find(99) != sts->fds.end());
+    ASSERT_TRUE(sts->fds[99] == NULL);
+    ASSERT_TRUE(FD_ISSET(99, &sts->master_readfs));
+    ASSERT_EQ(sts->max_fd, 100);
+
+    ASSERT_EQ(linger_valid, true);
+    ASSERT_EQ(keepalive_valid, true);
+
+    /* Attempts to mock out ioctl have failed, so we won't worry about
+     * that setting, and will have no assertion for it.
+     */
+
+    delete sts;
 }

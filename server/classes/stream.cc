@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Aug 2017, 08:59:20 tquirk
+ *   last updated 19 Aug 2017, 09:16:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -201,20 +201,23 @@ void stream_socket::accept_new_connection(void)
 {
     struct sockaddr_in sin;
     socklen_t slen;
-    struct linger ls;
-    int fd, which;
+    int fd;
 
     if (FD_ISSET(this->sock.sock, &this->readfs)
         && (fd = accept(this->sock.sock,
                         (struct sockaddr *)&sin, &slen)) > 0)
     {
+        struct linger ls;
+        int keepalive = (config.use_keepalive == true ? 1 : 0);
+        int nonblock = (config.use_nonblock == true ? 1 : 0);
+
         ls.l_onoff = (config.use_linger > 0);
         ls.l_linger = config.use_linger;
         setsockopt(fd, SOL_SOCKET, SO_LINGER,
                    &ls, sizeof(struct linger));
         setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
-                   &config.use_keepalive, sizeof(int));
-        ioctl(fd, FIONBIO, &config.use_nonblock);
+                   &keepalive, sizeof(int));
+        ioctl(fd, FIONBIO, &nonblock);
         this->fds[fd] = NULL;
         FD_SET(fd, &this->master_readfs);
         this->max_fd = std::max(this->max_fd, fd + 1);
