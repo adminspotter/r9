@@ -27,6 +27,7 @@ if WANT_SERVER
 	t_motion_pool \
 	t_sockaddr \
 	t_stream \
+	t_stream_worker \
 	t_threadpool \
 	t_update_pool \
 	t_zone
@@ -184,6 +185,16 @@ t_stream_SOURCES = t_stream.cc \
 	../server/config_data.cc ../server/config_data.h
 t_stream_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_stream_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
+
+t_stream_worker_SOURCES = t_stream_worker.cc \
+	../server/classes/stream.cc ../server/classes/stream.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_stream_worker_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_stream_worker_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 

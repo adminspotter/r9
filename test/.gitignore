@@ -25,6 +25,7 @@ t_motion_pool
 t_perl
 t_sockaddr
 t_stream
+t_stream_worker
 t_tcl
 t_tcl_exception
 t_texture_parser
