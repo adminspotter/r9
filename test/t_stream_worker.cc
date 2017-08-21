@@ -100,6 +100,8 @@ TEST(StreamSocketTest, SendWorker)
     sts->send_pool->push(pl);
     sts->send_pool->push(pl);
 
+    main_loop_exit_flag = 1;
+
     sts->start();
 
     while (write_stage < 1)
