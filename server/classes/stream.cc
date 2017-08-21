@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Aug 2017, 11:04:35 tquirk
+ *   last updated 21 Aug 2017, 07:22:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -260,7 +260,6 @@ void stream_socket::handle_users(void)
 void *stream_socket::stream_send_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
-    base_user *bu;
     int fd;
     packet_list req;
     size_t realsize;
@@ -274,7 +273,7 @@ void *stream_socket::stream_send_worker(void *arg)
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize))
         {
-            fd = sts->user_fds[bu->userid];
+            fd = sts->user_fds[req.who->userid];
             /* TODO: Encryption */
             if (write(fd, (void *)&req, realsize) == -1)
                 std::clog << syslogErr

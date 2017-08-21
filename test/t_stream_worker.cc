@@ -65,3 +65,46 @@ int hton_packet(packet *p, size_t s)
         return 0;
     return 1;
 }
+
+/* Send queue test
+ *
+ * 3 packet_list elements in the send queue:
+ *   - one that won't hton
+ *   - one that fails to send
+ *   - one that sends correctly
+ */
+TEST(StreamSocketTest, SendWorker)
+{
+    config.send_threads = 1;
+    config.access_threads = 1;
+
+    struct addrinfo *addr = create_addrinfo();
+    test_stream_socket *sts = new test_stream_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, sts);
+    int fd = 99;
+
+    sts->users[bu->userid] = bu;
+    sts->fds[fd] = bu;
+    sts->user_fds[bu->userid] = fd;
+    sts->max_fd = fd + 1;
+    FD_SET(fd, &sts->master_readfs);
+    bu->timestamp = time(NULL);
+
+    packet_list pl;
+
+    memset(&pl, 0, sizeof(packet_list));
+    pl.buf.basic.type = TYPE_ACKPKT;
+
+    pl.who = bu;
+    sts->send_pool->push(pl);
+    sts->send_pool->push(pl);
+    sts->send_pool->push(pl);
+
+    sts->start();
+
+    while (write_stage < 1)
+        ;
+
+    delete sts;
+    freeaddrinfo(addr);
+}
