@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Aug 2017, 09:14:04 tquirk
+ *   last updated 21 Aug 2017, 07:12:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -204,7 +204,7 @@ void *listen_socket::reaper_worker(void *arg)
     listen_socket *ls = (listen_socket *)arg;
     listen_socket::users_iterator i;
     base_user *bu;
-    time_t now;
+    time_t now, link_dead, sleepy;
 
     std::clog << "started reaper thread for " << ls->port_type()
               << " port " << ls->sock.sa->port() << std::endl;
@@ -212,23 +212,26 @@ void *listen_socket::reaper_worker(void *arg)
     {
         sleep(listen_socket::REAP_TIMEOUT);
         now = time(NULL);
-        for (i = ls->users.begin(); i != ls->users.end(); ++i)
+        link_dead = now - listen_socket::LINK_DEAD_TIMEOUT;
+        sleepy = now - listen_socket::PING_TIMEOUT;
+        i = ls->users.begin();
+        while (i != ls->users.end())
         {
             pthread_testcancel();
             bu = (*i).second;
-            if (bu->pending_logout == true
-                || bu->timestamp < now - listen_socket::LINK_DEAD_TIMEOUT)
+            if (bu->pending_logout == true || bu->timestamp < link_dead)
             {
                 /* We'll consider the user link-dead */
                 std::clog << "removing user " << bu->username << " ("
                           << bu->userid << ") from " << ls->port_type()
                           << " port " << ls->sock.sa->port() << std::endl;
-                --i;
+                ++i;
                 ls->disconnect_user(bu);
+                continue;
             }
-            else if (bu->timestamp < now - listen_socket::PING_TIMEOUT
-                     && bu->pending_logout == false)
+            else if (bu->timestamp < sleepy && bu->pending_logout == false)
                 bu->send_ping();
+            ++i;
         }
         pthread_testcancel();
     }
