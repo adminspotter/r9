@@ -46,6 +46,20 @@ struct addrinfo *create_addrinfo(void)
     return addr;
 }
 
+int select(int a, fd_set *b, fd_set *c, fd_set *d, struct timeval *e)
+{
+    FD_ZERO(b);
+    FD_SET(99, b);
+    return 1;
+}
+
+ssize_t read(int a, void *b, size_t c)
+{
+    std::cerr << "fake read" << std::endl;
+    ((ack_packet *)b)->type = TYPE_ACKPKT;
+    return sizeof(ack_packet);
+}
+
 ssize_t write(int a, const void *b, size_t c)
 {
     std::cerr << "fake write, stage " << write_stage << std::endl;
@@ -57,6 +71,10 @@ ssize_t write(int a, const void *b, size_t c)
     return 0;
 }
 
+void pthread_testcancel(void)
+{
+}
+
 int hton_packet(packet *p, size_t s)
 {
     static int stage = 0;
@@ -64,6 +82,38 @@ int hton_packet(packet *p, size_t s)
     if (stage++ == 0)
         return 0;
     return 1;
+}
+
+TEST(StreamSocketTest, ListenWorker)
+{
+    config.send_threads = 1;
+    config.access_threads = 1;
+
+    struct addrinfo *addr = create_addrinfo();
+    test_stream_socket *sts = new test_stream_socket(addr);
+    base_user *bu = new base_user(123LL, NULL, sts);
+    int fd = 99;
+
+    sts->users[bu->userid] = bu;
+    sts->fds[fd] = bu;
+    sts->user_fds[bu->userid] = fd;
+    sts->max_fd = fd + 1;
+    FD_SET(fd, &sts->master_readfs);
+
+    time_t now = time(NULL) - 2;
+    bu->timestamp = now;
+
+    main_loop_exit_flag = 0;
+
+    sts->start();
+
+    while (bu->timestamp == now)
+        ;
+
+    main_loop_exit_flag = 1;
+
+    delete sts;
+    freeaddrinfo(addr);
 }
 
 /* Send queue test
