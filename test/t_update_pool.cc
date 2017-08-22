@@ -34,7 +34,6 @@ TEST(UpdatePoolTest, Operate)
     struct addrinfo hints, *ai;
     int ret;
     listen_socket *sock;
-    Control *con = NULL;
     UpdatePool *pool;
     mock_SendPool *send_pool = new mock_SendPool("t_send", 1);
     GameObject *go = new GameObject(NULL, NULL, 12345LL);
@@ -56,9 +55,9 @@ TEST(UpdatePoolTest, Operate)
     sock->send_pool = send_pool;
     sockets.push_back(sock);
 
-    sock->users[1LL] = new base_user(1LL, con, NULL);
-    sock->users[2LL] = new base_user(2LL, con, NULL);
-    sock->users[3LL] = new base_user(3LL, con, NULL);
+    sock->users[1LL] = new base_user(1LL, NULL, NULL);
+    sock->users[2LL] = new base_user(2LL, NULL, NULL);
+    sock->users[3LL] = new base_user(3LL, NULL, NULL);
     ASSERT_EQ(sock->users.size(), 3);
 
     database = new mock_DB("a", "b", "c", "d");

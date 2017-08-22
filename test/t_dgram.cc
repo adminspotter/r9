@@ -8,6 +8,21 @@
 using ::testing::_;
 using ::testing::Return;
 
+bool stop_error = false;
+
+class test_dgram_socket : public dgram_socket
+{
+  public:
+    test_dgram_socket(struct addrinfo *a) : dgram_socket(a) {};
+    ~test_dgram_socket() {};
+
+    void stop(void) override
+        {
+            if (stop_error == true)
+                throw std::runtime_error("oh noes!");
+        };
+};
+
 struct addrinfo *create_addrinfo(void)
 {
     struct addrinfo hints, *addr = NULL;
@@ -33,43 +48,6 @@ struct addrinfo *create_addrinfo(void)
     return addr;
 }
 
-TEST(DgramUserTest, CreateDelete)
-{
-    Control *control = new Control(0LL, NULL);
-    dgram_user *dgu;
-
-    ASSERT_NO_THROW(
-        {
-            dgu = new dgram_user(control->userid, control, NULL);
-        });
-
-    delete dgu;
-    delete control;
-}
-
-TEST(DgramUserTest, Assignment)
-{
-    Control *control1 = new Control(0LL, NULL);
-    Control *control2 = new Control(123LL, NULL);
-    dgram_user *dgu1, *dgu2;
-
-    dgu1 = new dgram_user(control1->userid, control1, NULL);
-    dgu2 = new dgram_user(control2->userid, control2, NULL);
-
-    ASSERT_NE(dgu1->userid, dgu2->userid);
-    ASSERT_NE(dgu1->control, dgu2->control);
-
-    *dgu2 = *dgu1;
-
-    ASSERT_EQ(dgu1->userid, dgu2->userid);
-    ASSERT_EQ(dgu1->control, dgu2->control);
-
-    delete dgu2;
-    delete dgu1;
-    delete control2;
-    delete control1;
-}
-
 TEST(DgramSocketTest, CreateDelete)
 {
     struct addrinfo *addr = create_addrinfo();
@@ -84,6 +62,25 @@ TEST(DgramSocketTest, CreateDelete)
     freeaddrinfo(addr);
 }
 
+TEST(DgramSocketTest, CreateDeleteStopError)
+{
+    struct addrinfo *addr = create_addrinfo();
+    test_dgram_socket *dgs;
+
+    ASSERT_NO_THROW(
+        {
+            dgs = new test_dgram_socket(addr);
+        });
+
+    stop_error = true;
+    ASSERT_NO_THROW(
+        {
+            delete dgs;
+        });
+    stop_error = false;
+    freeaddrinfo(addr);
+}
+
 TEST(DgramSocketTest, PortType)
 {
     struct addrinfo *addr = create_addrinfo();
@@ -95,22 +92,16 @@ TEST(DgramSocketTest, PortType)
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, DoLogin)
+TEST(DgramSocketTest, ConnectUser)
 {
-    database = new mock_DB("a", "b", "c", "d");
-
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
-        .WillOnce(Return(ACCESS_NONE));
-
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
 
     ASSERT_TRUE(dgs->users.size() == 0);
     ASSERT_TRUE(dgs->socks.size() == 0);
+    ASSERT_TRUE(dgs->user_socks.size() == 0);
 
-    Control *control = new Control(123LL, NULL);
+    base_user *bu = new base_user(123LL, NULL, dgs);
 
     access_list al;
 
@@ -121,36 +112,42 @@ TEST(DgramSocketTest, DoLogin)
     strncpy(al.buf.log.password, "argh!", sizeof(al.buf.log.password));
     strncpy(al.buf.log.charname, "howdy", sizeof(al.buf.log.charname));
 
-    dgs->do_login(123LL, control, al);
+    dgs->connect_user(bu, al);
 
     ASSERT_TRUE(dgs->users.size() == 1);
     ASSERT_TRUE(dgs->socks.size() == 1);
+    ASSERT_TRUE(dgs->user_socks.size() == 1);
 
     delete dgs;
     freeaddrinfo(addr);
-    delete database;
 }
 
-TEST(DgramSocketTest, DoLogout)
+TEST(DgramSocketTest, DisconnectUser)
 {
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    base_user *bu = new base_user(123LL, NULL, dgs);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET;
-    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sin);
 
-    dgs->socks[dgu->sa] = dgu;
+    dgs->users[bu->userid] = bu;
+    dgs->socks[sa] = bu;
+    dgs->user_socks[bu->userid] = sa;
 
+    ASSERT_TRUE(dgs->users.size() == 1);
     ASSERT_TRUE(dgs->socks.size() == 1);
+    ASSERT_TRUE(dgs->user_socks.size() == 1);
 
-    dgs->do_logout((base_user *)dgu);
+    dgs->disconnect_user(bu);
 
+    ASSERT_TRUE(dgs->users.size() == 0);
     ASSERT_TRUE(dgs->socks.size() == 0);
+    ASSERT_TRUE(dgs->user_socks.size() == 0);
 
-    delete dgu;
+    delete bu;
     delete dgs;
     freeaddrinfo(addr);
 }
@@ -183,24 +180,26 @@ TEST(DgramSocketTest, HandlePacket)
 {
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    base_user *bu = new base_user(123LL, NULL, dgs);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET;
-    dgu->sa = build_sockaddr((struct sockaddr&)sin);
+    Sockaddr *sa = build_sockaddr((struct sockaddr&)sin);
 
-    dgs->socks[dgu->sa] = dgu;
+    dgs->users[bu->userid] = bu;
+    dgs->socks[sa] = bu;
+    dgs->user_socks[bu->userid] = sa;
 
-    dgu->timestamp = 0;
+    bu->timestamp = 0;
 
     packet p;
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACKPKT;
 
-    dgs->handle_packet(p, dgu->sa);
+    dgs->handle_packet(p, sa);
 
-    ASSERT_NE(dgu->timestamp, 0);
+    ASSERT_NE(bu->timestamp, 0);
 
     delete dgs;
     freeaddrinfo(addr);
@@ -233,83 +232,6 @@ TEST(DgramSocketTest, HandleLogin)
 
     delete al.what.login.who.dgram;
     delete sa;
-    delete dgs;
-    freeaddrinfo(addr);
-}
-
-TEST(DgramSocketTest, HandleLogout)
-{
-    struct addrinfo *addr = create_addrinfo();
-    dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
-    struct sockaddr_in sin;
-
-    memset(&sin, 0, sizeof(struct sockaddr_in));
-    sin.sin_family = AF_INET;
-    dgu->sa = build_sockaddr((struct sockaddr&)sin);
-
-    dgs->socks[dgu->sa] = dgu;
-
-    dgu->timestamp = 0;
-
-    packet p;
-    memset(&p, 0, sizeof(packet));
-    p.basic.type = TYPE_LGTREQ;
-
-    ASSERT_TRUE(dgs->access_pool->queue_size() == 0);
-
-    dgram_socket::handle_logout(dgs, p, dgu, dgu->sa);
-
-    ASSERT_NE(dgu->timestamp, 0);
-    ASSERT_TRUE(dgs->access_pool->queue_size() != 0);
-    access_list al;
-    memset(&al, 0, sizeof(access_list));
-    dgs->access_pool->pop(&al);
-    ASSERT_EQ(al.buf.basic.type, TYPE_LGTREQ);
-    ASSERT_EQ(al.what.logout.who, 123LL);
-
-    delete dgu->sa;
-    delete dgu;
-    delete dgs;
-    freeaddrinfo(addr);
-}
-
-TEST(DgramSocketTest, HandleAction)
-{
-    struct addrinfo *addr = create_addrinfo();
-    dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
-    struct sockaddr_in sin;
-
-    memset(&sin, 0, sizeof(struct sockaddr_in));
-    sin.sin_family = AF_INET;
-    dgu->sa = build_sockaddr((struct sockaddr&)sin);
-
-    dgs->socks[dgu->sa] = dgu;
-
-    dgu->timestamp = 0;
-
-    /* Creating an actual ActionPool will be prohibitive, since it
-     * requires so many other objects to make it go.  All we need here
-     * is the push() method, and the queue_size() method to make sure
-     * our function is doing what we expect it to.
-     */
-    action_pool = (ActionPool *)new ThreadPool<packet_list>("test", 1);
-
-    packet p;
-    memset(&p, 0, sizeof(packet));
-    p.basic.type = TYPE_ACTREQ;
-
-    ASSERT_TRUE(action_pool->queue_size() == 0);
-
-    dgram_socket::handle_action(dgs, p, dgu, dgu->sa);
-
-    ASSERT_NE(dgu->timestamp, 0);
-    ASSERT_TRUE(action_pool->queue_size() != 0);
-
-    delete (ThreadPool<packet_list> *)action_pool;
-    delete dgu->sa;
-    delete dgu;
     delete dgs;
     freeaddrinfo(addr);
 }

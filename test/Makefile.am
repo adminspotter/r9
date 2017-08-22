@@ -15,6 +15,7 @@ if WANT_SERVER
 	t_basesock \
 	t_config_data \
 	t_console \
+	t_control \
 	t_db \
 	t_dgram \
 	t_dgram_worker \
@@ -25,7 +26,8 @@ if WANT_SERVER
 	t_log \
 	t_motion_pool \
 	t_sockaddr \
-	t_subserver \
+	t_stream \
+	t_stream_worker \
 	t_threadpool \
 	t_update_pool \
 	t_zone
@@ -84,6 +86,15 @@ t_config_data_SOURCES = t_config_data.cc \
 	../server/config_data.cc ../server/config_data.h
 t_config_data_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_config_data_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+
+t_control_SOURCES = t_control.cc \
+	../server/classes/control.cc ../server/classes/control.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_control_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_control_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_console_SOURCES = t_console.cc \
 	../server/classes/modules/console.h \
@@ -167,9 +178,25 @@ t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
-t_subserver_SOURCES = t_subserver.cc ../server/r9subserver
-t_subserver_CXXFLAGS = -DIN_SUBSERVER $(GTEST_INCLUDES)
-t_subserver_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+t_stream_SOURCES = t_stream.cc \
+	../server/classes/stream.cc ../server/classes/stream.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_stream_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_stream_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
+
+t_stream_worker_SOURCES = t_stream_worker.cc \
+	../server/classes/stream.cc ../server/classes/stream.h \
+	../server/classes/modules/db.cc ../server/classes/modules/db.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
+t_stream_worker_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_stream_worker_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_threadpool_SOURCES = t_threadpool.cc ../server/classes/thread_pool.h
 t_threadpool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)

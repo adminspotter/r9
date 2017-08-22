@@ -149,9 +149,8 @@ TEST(DgramSocketTest, ListenWorker)
 
 /* Send queue test
  *
- * 4 packet_list elements in the send queue:
+ * 3 packet_list elements in the send queue:
  *   - one that won't hton
- *   - one that references a non-dgram user
  *   - one that fails to send
  *   - one that sends correctly
  */
@@ -162,16 +161,16 @@ TEST(DgramSocketTest, SendWorker)
 
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    dgram_user *dgu = new dgram_user(123LL, NULL, dgs);
+    base_user *bu = new base_user(123LL, NULL, dgs);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET;
-    dgu->sa = build_sockaddr((struct sockaddr&)sin);
-    dgs->users[123LL] = dgu;
+    Sockaddr *sa1 = build_sockaddr((struct sockaddr&)sin);
 
-    base_user *bu = new base_user(124LL, NULL, NULL);
-    dgs->users[124LL] = bu;
+    dgs->users[bu->userid] = bu;
+    dgs->socks[sa1] = bu;
+    dgs->user_socks[bu->userid] = sa1;
 
     packet_list pl;
 
@@ -181,16 +180,14 @@ TEST(DgramSocketTest, SendWorker)
     pl.who = bu;
     dgs->send_pool->push(pl);
     dgs->send_pool->push(pl);
-
-    pl.who = dgu;
     dgs->send_pool->push(pl);
-    dgs->send_pool->push(pl);
-
+    std::cerr << "about to start" << std::endl;
     dgs->start();
 
     while (sendto_stage < 1)
         ;
 
+    std::cerr << "about to delete" << std::endl;
     delete dgs;
     freeaddrinfo(addr);
 }

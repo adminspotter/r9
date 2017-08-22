@@ -1,9 +1,9 @@
 /* log.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Nov 2015, 06:35:09 tquirk
+ *   last updated 09 Aug 2017, 10:05:10 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,9 +30,6 @@
 #include <cstring>
 
 #include "log.h"
-#ifndef IN_SUBSERVER
-#include "config_data.h"
-#endif /* IN_SUBSERVER */
 
 Log::Log(std::string ident, int fac)
 {
@@ -76,9 +73,6 @@ int Log::overflow(int c)
 
 std::ostream& operator<<(std::ostream& os, const LogPriority& prio)
 {
-#ifndef IN_SUBSERVER
-    if (config.daemonize)
-#endif /* IN_SUBSERVER */
-        static_cast<Log *>(os.rdbuf())->priority = (int)prio;
+    static_cast<Log *>(os.rdbuf())->priority = (int)prio;
     return os;
 }

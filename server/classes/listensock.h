@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 09:18:29 tquirk
+ *   last updated 18 Aug 2017, 09:05:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -40,22 +40,19 @@
 
 class listen_socket;
 
-class base_user {
+class base_user : public Control {
   public:
-    uint64_t userid, sequence;
-    Control *control;
+    uint64_t sequence;
     time_t timestamp;
     bool pending_logout;
+    uint8_t auth_level;
 
   protected:
     listen_socket *parent;
 
   public:
-    base_user(uint64_t, Control *, listen_socket *);
+    base_user(uint64_t, GameObject *, listen_socket *);
     virtual ~base_user();
-
-    virtual bool operator<(const base_user&) const;
-    virtual bool operator==(const base_user&) const;
 
     virtual const base_user& operator=(const base_user&);
 
@@ -78,6 +75,9 @@ class listen_socket {
 
     typedef std::map<uint64_t, base_user *>::iterator users_iterator;
 
+    typedef void (*packet_handler)(listen_socket *, packet&,
+                                   base_user *, void *);
+
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
     basesock sock;
@@ -86,7 +86,7 @@ class listen_socket {
     listen_socket(struct addrinfo *);
     virtual ~listen_socket();
 
-    virtual std::string port_type(void) = 0;
+    virtual std::string port_type(void);
 
     virtual void start(void);
     virtual void stop(void);
@@ -94,14 +94,18 @@ class listen_socket {
     static void *access_pool_worker(void *);
     static void *reaper_worker(void *);
 
-    virtual void login_user(access_list&);
-    virtual uint64_t get_userid(login_request&);
+    static void handle_ack(listen_socket *, packet&, base_user *, void *);
+    static void handle_action(listen_socket *, packet&, base_user *, void *);
+    static void handle_logout(listen_socket *, packet&, base_user *, void *);
+
+    void login_user(access_list&);
+    uint64_t get_userid(login_request&);
+    base_user *check_access(uint64_t, login_request&);
+
+    void logout_user(uint64_t);
+
     virtual void connect_user(base_user *, access_list&);
-
-    virtual void logout_user(access_list&);
-
-    virtual void do_login(uint64_t, Control *, access_list&) = 0;
-    virtual void do_logout(base_user *) = 0;
+    virtual void disconnect_user(base_user *);
 };
 
 #endif /* __INC_LISTENSOCK_H__ */

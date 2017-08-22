@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jul 2017, 14:07:39 tquirk
+ *   last updated 14 Aug 2017, 09:30:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -147,7 +147,7 @@ glm::ivec3 Zone::which_sector(glm::dvec3& pos)
     return sector;
 }
 
-void Zone::connect_game_object(Control *con, uint64_t objid)
+GameObject *Zone::find_game_object(uint64_t objid)
 {
     GameObject *go;
     Zone::objects_iterator gi = this->game_objects.find(objid);
@@ -156,13 +156,22 @@ void Zone::connect_game_object(Control *con, uint64_t objid)
     if (gi == this->game_objects.end())
     {
         /* Object doesn't exist, so we'll make it. */
-        go = new GameObject(NULL, con, objid);
+        go = new GameObject(NULL, NULL, objid);
         this->game_objects[objid] = go;
         go->position = glm::dvec3(0.0, 0.0, 0.0);
         this->sector_contains(go->position)->insert(go);
     }
     else
         go = gi->second;
+
+    return go;
+}
+
+void Zone::connect_game_object(Control *con, uint64_t objid)
+{
+    GameObject *go = this->find_game_object(objid);
+    Zone::objects_iterator gi;
+
     go->connect(con);
     update_pool->push(go);
 

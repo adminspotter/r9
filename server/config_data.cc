@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jul 2017, 00:04:11 tquirk
+ *   last updated 09 Aug 2017, 23:52:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -35,8 +35,6 @@
  *   DBUser <username>      the database username
  *   LogFacility <string>   the facility that the program will use for syslog
  *   LogPrefix <string>     the prefix that the program will use in syslog
- *   MaxSubservers <num>    the maximum number of subservers
- *   MinSubservers <num>    the minimum number of subservers
  *   MotionThreads <num>    number of motion threads to start
  *   PidFile <fname>        the pid/lock file to use
  *   Port <port type>       port specification for a server listener
@@ -45,7 +43,6 @@
  *   ServerRoot <path>      the server's root directory
  *   ServerUID <user>       the server will run as user id <user>
  *   UpdateThreads <num>    number of update threads to start
- *   UseBalance <thresh>    uses load-balancing to delegate clients
  *   UseKeepAlive           use keepalive on all sockets
  *   UseLinger <period>     linger for <period> seconds on all sockets
  *   UseNonBlock            use non-blocking IO on all sockets
@@ -122,12 +119,9 @@
 
 const int config_data::LINGER_LEN     = 0;
 const int config_data::LOG_FACILITY   = LOG_DAEMON;
-const int config_data::MIN_SUBSERV    = 1;
-const int config_data::MAX_SUBSERV    = 250;
 const int config_data::NUM_THREADS    = 8;
 const int config_data::ZONE_SIZE      = 1000;
 const int config_data::ZONE_STEPS     = 2;
-const float config_data::LOAD_THRESH  = 0.75;
 const char config_data::SERVER_ROOT[] = SERVER_ROOT_DIR;
 const char config_data::LOG_PREFIX[]  = "r9";
 const char config_data::PID_FNAME[]   = SERVER_PID_FNAME;
@@ -140,7 +134,6 @@ typedef void (*config_elem_t)(const std::string&, const std::string&, void *);
 
 static void config_string_element(const std::string&, const std::string&, void *);
 static void config_integer_element(const std::string&, const std::string&, void *);
-static void config_float_element(const std::string&, const std::string&, void *);
 static void config_boolean_element(const std::string&, const std::string&, void *);
 static void config_user_element(const std::string&, const std::string&, void *);
 static void config_group_element(const std::string&, const std::string&, void *);
@@ -172,8 +165,6 @@ handlers[] =
     { "DBUser",        off(db_user),        &config_string_element   },
     { "LogFacility",   off(log_facility),   &config_logfac_element   },
     { "LogPrefix",     off(log_prefix),     &config_string_element   },
-    { "MaxSubservers", off(max_subservers), &config_integer_element  },
-    { "MinSubservers", off(min_subservers), &config_integer_element  },
     { "MotionThreads", off(motion_threads), &config_integer_element  },
     { "PidFile",       off(pid_fname),      &config_string_element   },
     { "Port",          off(listen_ports),   &config_port_element     },
@@ -183,7 +174,6 @@ handlers[] =
     { "ServerUID",     NULL,                &config_user_element     },
     { "SpawnPoint",    off(spawn),          &config_location_element },
     { "UpdateThreads", off(update_threads), &config_integer_element  },
-    { "UseBalance",    off(load_threshold), &config_float_element    },
     { "UseKeepAlive",  off(use_keepalive),  &config_boolean_element  },
     { "UseLinger",     off(use_linger),     &config_integer_element  },
     { "UseNonBlock",   off(use_nonblock),   &config_boolean_element  },
@@ -240,10 +230,6 @@ void config_data::set_defaults(void)
     this->use_linger     = config_data::LINGER_LEN;
 
     this->log_facility   = config_data::LOG_FACILITY;
-
-    this->load_threshold = config_data::LOAD_THRESH;
-    this->min_subservers = config_data::MIN_SUBSERV;
-    this->max_subservers = config_data::MAX_SUBSERV;
 
     this->access_threads = config_data::NUM_THREADS;
     this->action_threads = config_data::NUM_THREADS;
@@ -367,15 +353,6 @@ static void config_integer_element(const std::string& key,
     int *element = (int *)ptr;
 
     *element = std::stoi(value);
-}
-
-static void config_float_element(const std::string& key,
-                                 const std::string& value,
-                                 void *ptr)
-{
-    float *element = (float *)ptr;
-
-    *element = std::stof(value);
 }
 
 static void config_boolean_element(const std::string& key,
