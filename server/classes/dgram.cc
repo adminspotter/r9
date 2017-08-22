@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Aug 2017, 09:16:51 tquirk
+ *   last updated 22 Aug 2017, 07:58:57 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -61,6 +61,12 @@ dgram_socket::dgram_socket(struct addrinfo *ai)
 
 dgram_socket::~dgram_socket()
 {
+    /* In order to prevent any races between our various user maps and
+     * the worker loops, we'll stop ourselves first.
+     */
+    try { this->stop(); }
+    catch (std::exception& e) { /* Do nothing */ }
+
     /* Should we send logout messages to everybody? */
 
     /* Thread pools are handled by the listen_socket destructor */

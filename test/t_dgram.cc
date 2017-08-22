@@ -8,6 +8,21 @@
 using ::testing::_;
 using ::testing::Return;
 
+bool stop_error = false;
+
+class test_dgram_socket : public dgram_socket
+{
+  public:
+    test_dgram_socket(struct addrinfo *a) : dgram_socket(a) {};
+    ~test_dgram_socket() {};
+
+    void stop(void) override
+        {
+            if (stop_error == true)
+                throw std::runtime_error("oh noes!");
+        };
+};
+
 struct addrinfo *create_addrinfo(void)
 {
     struct addrinfo hints, *addr = NULL;
@@ -44,6 +59,25 @@ TEST(DgramSocketTest, CreateDelete)
         });
 
     delete dgs;
+    freeaddrinfo(addr);
+}
+
+TEST(DgramSocketTest, CreateDeleteStopError)
+{
+    struct addrinfo *addr = create_addrinfo();
+    test_dgram_socket *dgs;
+
+    ASSERT_NO_THROW(
+        {
+            dgs = new test_dgram_socket(addr);
+        });
+
+    stop_error = true;
+    ASSERT_NO_THROW(
+        {
+            delete dgs;
+        });
+    stop_error = false;
     freeaddrinfo(addr);
 }
 
