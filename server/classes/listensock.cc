@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Aug 2017, 07:12:52 tquirk
+ *   last updated 22 Aug 2017, 07:27:56 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -103,8 +103,6 @@ listen_socket::listen_socket(struct addrinfo *ai)
 
 listen_socket::~listen_socket()
 {
-    listen_socket::users_iterator i;
-
     try { this->stop(); }
     catch (std::exception& e) { /* Do nothing */ }
 
