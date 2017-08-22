@@ -5,6 +5,7 @@
 
 #include "mock_server_globals.h"
 
+bool stop_error = false;
 bool select_failure = false, select_eintr = false;
 bool linger_valid = false, keepalive_valid = false;
 bool read_nothing = false, read_bad_packet = false;
@@ -21,6 +22,12 @@ class test_stream_socket : public stream_socket
 
     test_stream_socket(struct addrinfo *a) : stream_socket(a) {};
     ~test_stream_socket() {};
+
+    void stop(void) override
+        {
+            if (stop_error == true)
+                throw std::runtime_error("oh noes!");
+        };
 };
 
 struct addrinfo *create_addrinfo(void)
@@ -103,6 +110,25 @@ TEST(StreamSocketTest, CreateDelete)
         });
 
     delete sts;
+    freeaddrinfo(addr);
+}
+
+TEST(StreamSocketTest, CreateDeleteStopError)
+{
+    struct addrinfo *addr = create_addrinfo();
+    test_stream_socket *sts;
+
+    ASSERT_NO_THROW(
+        {
+            sts = new test_stream_socket(addr);
+        });
+
+    stop_error = true;
+    ASSERT_NO_THROW(
+        {
+            delete sts;
+        });
+    stop_error = false;
     freeaddrinfo(addr);
 }
 

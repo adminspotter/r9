@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Aug 2017, 07:22:37 tquirk
+ *   last updated 22 Aug 2017, 07:27:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -74,6 +74,12 @@ stream_socket::stream_socket(struct addrinfo *ai)
 
 stream_socket::~stream_socket()
 {
+    /* In order to not have a race between the fd map and the worker
+     * loops, we'll stop ourselves first.
+     */
+    try { this->stop(); }
+    catch (std::exception& e) { /* Do nothing */ }
+
     for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
         close((*i).first);
     this->fds.clear();
