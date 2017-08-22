@@ -104,7 +104,7 @@ TEST(StreamSocketTest, SendWorker)
 
     sts->start();
 
-    while (write_stage < 1)
+    while (write_stage < 2)
         ;
 
     delete sts;
