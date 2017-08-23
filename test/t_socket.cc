@@ -57,3 +57,35 @@ TEST(SocketCreateTest, Unix)
         },
         std::runtime_error);
 }
+
+TEST(SocketCreateTest, Stream)
+{
+    struct addrinfo *addr = create_addrinfo(SOCK_STREAM);
+    listen_socket *listen = NULL;
+
+    ASSERT_NO_THROW(
+        {
+            listen = socket_create(addr);
+        });
+
+    ASSERT_TRUE(dynamic_cast<stream_socket *>(listen) != NULL);
+
+    delete listen;
+    freeaddrinfo(addr);
+}
+
+TEST(SocketCreateTest, Dgram)
+{
+    struct addrinfo *addr = create_addrinfo(SOCK_DGRAM);
+    listen_socket *listen = NULL;
+
+    ASSERT_NO_THROW(
+        {
+            listen = socket_create(addr);
+        });
+
+    ASSERT_TRUE(dynamic_cast<dgram_socket *>(listen) != NULL);
+
+    delete listen;
+    freeaddrinfo(addr);
+}
