@@ -25,6 +25,7 @@ if WANT_SERVER
 	t_listensock_worker \
 	t_log \
 	t_motion_pool \
+	t_octree \
 	t_sockaddr \
 	t_socket \
 	t_stream \
@@ -175,6 +176,11 @@ t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
+
+t_octree_SOURCES = t_octree.cc \
+	../server/classes/octree.cc ../server/classes/octree.h
+t_octree_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_octree_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
