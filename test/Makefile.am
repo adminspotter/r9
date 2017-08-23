@@ -180,6 +180,7 @@ t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_socket_SOURCES = t_socket.cc ../server/classes/socket.cc \
+	../server/log.cc ../server/log.h \
 	../server/config_data.cc ../server/config_data.h
 t_socket_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_socket_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
