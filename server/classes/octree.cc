@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 11:42:15 tquirk
+ *   last updated 23 Aug 2017, 08:17:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -211,7 +211,7 @@ void Octree::build(std::list<GameObject *>& objs)
         /* Recurse if required for each octant. */
         for (j = 0; j < 8; ++j)
         {
-            if (!obj_list[j].empty())
+            if (!obj_list[j].empty() || this->depth < Octree::MIN_DEPTH)
             {
                 glm::dvec3 mn = this->octant_min(j);
                 glm::dvec3 mx = this->octant_max(j);
