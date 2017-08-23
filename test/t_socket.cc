@@ -32,3 +32,28 @@ struct addrinfo *create_addrinfo(int type)
 
     return addr;
 }
+
+TEST(SocketCreateTest, Unix)
+{
+    struct sockaddr_un sun;
+    struct addrinfo addr;
+
+    memset(&addr, 0, sizeof(struct addrinfo));
+    addr.ai_family = AF_UNIX;
+    addr.ai_socktype = SOCK_STREAM;
+    addr.ai_protocol = 0;
+    addr.ai_addrlen = sizeof(struct sockaddr_un);
+    addr.ai_addr = (struct sockaddr *)&sun;
+
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strncpy(sun.sun_path, "/no/such/path", 14);
+
+    listen_socket *listen = NULL;
+
+    ASSERT_THROW(
+        {
+            listen = socket_create(&addr);
+        },
+        std::runtime_error);
+}
