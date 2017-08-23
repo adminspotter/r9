@@ -24,6 +24,7 @@ t_logbuf
 t_motion_pool
 t_perl
 t_sockaddr
+t_socket
 t_stream
 t_stream_worker
 t_tcl

@@ -26,6 +26,7 @@ if WANT_SERVER
 	t_log \
 	t_motion_pool \
 	t_sockaddr \
+	t_socket \
 	t_stream \
 	t_stream_worker \
 	t_threadpool \
@@ -177,6 +178,12 @@ t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+
+t_socket_SOURCES = t_socket.cc ../server/classes/socket.cc \
+	../server/config_data.cc ../server/config_data.h
+t_socket_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_socket_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../server/classes/libr9_classes.la $(SERVER_LDLIBS)
 
 t_stream_SOURCES = t_stream.cc \
 	../server/classes/stream.cc ../server/classes/stream.h \
