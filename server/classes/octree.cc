@@ -180,7 +180,7 @@ Octree::~Octree()
     /* Allowing the map destructor to clear itself out will delete all
      * the things in the map... not what we want.
      */
-    this->objects.erase(this->objects.begin(), this->objects.end());
+    this->objects.clear();
 }
 
 bool Octree::empty(void)
