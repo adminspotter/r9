@@ -92,6 +92,8 @@ TEST(OctreeTest, Build)
             tree->build(objs);
         });
 
+    ASSERT_TRUE(tree->empty() == false);
+
     Octree *sub = tree->octants[0];
     ASSERT_TRUE(sub != NULL);
     while (sub->octants[0] != NULL)

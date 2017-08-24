@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Aug 2017, 08:17:32 tquirk
+ *   last updated 24 Aug 2017, 08:45:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -194,16 +194,11 @@ void Octree::build(std::list<GameObject *>& objs)
     std::list<GameObject *>::iterator i;
     int j;
 
-    if (this->depth == Octree::MAX_DEPTH
-        || (this->depth >= Octree::MIN_DEPTH
-            && objs.size() <= Octree::MAX_LEAF_OBJECTS))
-    {
-        /* Copy the list's elements into the node and stop recursing
-         * along this branch of the tree.
-         */
-        this->objects.insert(objs.begin(), objs.end());
-    }
-    else
+    this->objects.insert(objs.begin(), objs.end());
+
+    if (this->depth < Octree::MAX_DEPTH
+        && (this->depth < Octree::MIN_DEPTH
+            || objs.size() > Octree::MAX_LEAF_OBJECTS))
     {
         for (i = objs.begin(); i != objs.end(); ++i)
             obj_list[this->which_octant((*i)->position)].push_back(*i);
