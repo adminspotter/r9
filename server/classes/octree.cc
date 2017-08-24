@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Aug 2017, 08:45:13 tquirk
+ *   last updated 24 Aug 2017, 18:04:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -225,14 +225,14 @@ void Octree::build(std::list<GameObject *>& objs)
         this->compute_neighbors();
 }
 
-void Octree::insert(GameObject *mot)
+void Octree::insert(GameObject *gobj)
 {
-    this->objects.insert(mot);
+    this->objects.insert(gobj);
     if (this->depth < Octree::MAX_DEPTH
         && this->objects.size() > Octree::MAX_LEAF_OBJECTS)
     {
         /* Classify it and insert it into the appropriate subtree */
-        int octant = this->which_octant(mot->position);
+        int octant = this->which_octant(gobj->position);
 
         if (this->octants[octant] == NULL)
         {
@@ -242,19 +242,19 @@ void Octree::insert(GameObject *mot)
             this->octants[octant] = new Octree(this, mn, mx, octant);
             this->octants[octant]->compute_neighbors();
         }
-        this->octants[octant]->insert(mot);
+        this->octants[octant]->insert(gobj);
     }
 }
 
-void Octree::remove(GameObject *mot)
+void Octree::remove(GameObject *gobj)
 {
-    if (this->objects.find(mot) != this->objects.end())
+    if (this->objects.find(gobj) != this->objects.end())
     {
-        int octant = this->which_octant(mot->position);
+        int octant = this->which_octant(gobj->position);
 
         if (this->octants[octant] != NULL)
-            this->octants[octant]->remove(mot);
-        this->objects.erase(mot);
+            this->octants[octant]->remove(gobj);
+        this->objects.erase(gobj);
     }
     /* If our subtree doesn't have enough objects to warrant a
      * subtree, delete ourselves.
