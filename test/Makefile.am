@@ -178,9 +178,13 @@ t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	$(SERVER_LDLIBS)
 
 t_octree_SOURCES = t_octree.cc \
-	../server/classes/octree.cc ../server/classes/octree.h
+	../server/classes/octree.cc ../server/classes/octree.h \
+	../server/log.cc ../server/log.h \
+	../server/config_data.cc ../server/config_data.h
 t_octree_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_octree_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+t_octree_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
