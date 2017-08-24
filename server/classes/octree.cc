@@ -256,7 +256,10 @@ void Octree::remove(GameObject *mot)
             this->octants[octant]->remove(mot);
         this->objects.erase(mot);
     }
-    /* If we're an empty subtree, delete ourselves */
-    if (this->objects.size() == 0 && this->depth > Octree::MIN_DEPTH)
+    /* If our subtree doesn't have enough objects to warrant a
+     * subtree, delete ourselves.
+     */
+    if (this->objects.size() < Octree::MAX_LEAF_OBJECTS
+        && this->depth > Octree::MIN_DEPTH)
         delete this;
 }
