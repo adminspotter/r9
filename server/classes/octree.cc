@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 11:42:15 tquirk
+ *   last updated 24 Aug 2017, 18:04:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -180,7 +180,7 @@ Octree::~Octree()
     /* Allowing the map destructor to clear itself out will delete all
      * the things in the map... not what we want.
      */
-    this->objects.erase(this->objects.begin(), this->objects.end());
+    this->objects.clear();
 }
 
 bool Octree::empty(void)
@@ -194,16 +194,11 @@ void Octree::build(std::list<GameObject *>& objs)
     std::list<GameObject *>::iterator i;
     int j;
 
-    if (this->depth == Octree::MAX_DEPTH
-        || (this->depth >= Octree::MIN_DEPTH
-            && objs.size() <= Octree::MAX_LEAF_OBJECTS))
-    {
-        /* Copy the list's elements into the node and stop recursing
-         * along this branch of the tree.
-         */
-        this->objects.insert(objs.begin(), objs.end());
-    }
-    else
+    this->objects.insert(objs.begin(), objs.end());
+
+    if (this->depth < Octree::MAX_DEPTH
+        && (this->depth < Octree::MIN_DEPTH
+            || objs.size() > Octree::MAX_LEAF_OBJECTS))
     {
         for (i = objs.begin(); i != objs.end(); ++i)
             obj_list[this->which_octant((*i)->position)].push_back(*i);
@@ -211,7 +206,7 @@ void Octree::build(std::list<GameObject *>& objs)
         /* Recurse if required for each octant. */
         for (j = 0; j < 8; ++j)
         {
-            if (!obj_list[j].empty())
+            if (!obj_list[j].empty() || this->depth < Octree::MIN_DEPTH)
             {
                 glm::dvec3 mn = this->octant_min(j);
                 glm::dvec3 mx = this->octant_max(j);
@@ -230,14 +225,14 @@ void Octree::build(std::list<GameObject *>& objs)
         this->compute_neighbors();
 }
 
-void Octree::insert(GameObject *mot)
+void Octree::insert(GameObject *gobj)
 {
-    this->objects.insert(mot);
+    this->objects.insert(gobj);
     if (this->depth < Octree::MAX_DEPTH
         && this->objects.size() > Octree::MAX_LEAF_OBJECTS)
     {
         /* Classify it and insert it into the appropriate subtree */
-        int octant = this->which_octant(mot->position);
+        int octant = this->which_octant(gobj->position);
 
         if (this->octants[octant] == NULL)
         {
@@ -247,21 +242,24 @@ void Octree::insert(GameObject *mot)
             this->octants[octant] = new Octree(this, mn, mx, octant);
             this->octants[octant]->compute_neighbors();
         }
-        this->octants[octant]->insert(mot);
+        this->octants[octant]->insert(gobj);
     }
 }
 
-void Octree::remove(GameObject *mot)
+void Octree::remove(GameObject *gobj)
 {
-    if (this->objects.find(mot) != this->objects.end())
+    if (this->objects.find(gobj) != this->objects.end())
     {
-        int octant = this->which_octant(mot->position);
+        int octant = this->which_octant(gobj->position);
 
         if (this->octants[octant] != NULL)
-            this->octants[octant]->remove(mot);
-        this->objects.erase(mot);
+            this->octants[octant]->remove(gobj);
+        this->objects.erase(gobj);
     }
-    /* If we're an empty subtree, delete ourselves */
-    if (this->objects.size() == 0 && this->depth > Octree::MIN_DEPTH)
+    /* If our subtree doesn't have enough objects to warrant a
+     * subtree, delete ourselves.
+     */
+    if (this->objects.size() < Octree::MAX_LEAF_OBJECTS
+        && this->depth > Octree::MIN_DEPTH)
         delete this;
 }

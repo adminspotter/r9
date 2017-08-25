@@ -167,16 +167,11 @@ TEST(BasesockTest, CreateDelete)
     socket_zero = false;
 }
 
-/* We are not verifying anything in this test under a Linux system,
- * because for whatever reason, changing the rdbuf of std::clog is
- * causing unexplainable segfaults on Linux.  Works fine on OSX.
- */
 TEST(BasesockTest, DeleteUnix)
 {
-#ifdef __APPLE__
-    std::stringstream new_clog;
-    auto old_clog_rdbuf = std::clog.rdbuf(new_clog.rdbuf());
-#endif /* __APPLE__ */
+    std::stringstream *new_clog = new std::stringstream;
+    auto old_clog_rdbuf = std::clog.rdbuf(new_clog->rdbuf());
+
     struct addrinfo ai;
     struct sockaddr_un sun;
     basesock *base;
@@ -199,11 +194,21 @@ TEST(BasesockTest, DeleteUnix)
     unlink_error = true;
 
     delete base;
-#ifdef __APPLE__
+
+    unlink_error = false;
+
     std::clog.rdbuf(old_clog_rdbuf);
-    ASSERT_TRUE(new_clog.str().find("could not unlink path")
+    ASSERT_TRUE(new_clog->str().find("could not unlink path")
                 != std::string::npos);
-#endif /* __APPLE__ */
+
+    /* We explicitly leak the new_clog object here because we're
+     * seeing segfaults on Linux hosts when we try to delete it.  It's
+     * a test, so it's not super-critical that we are leaking
+     * something, nor is this object that we're leaking important to
+     * the test itself.  We're just trying to make sure that the
+     * failure clause was actually executed, and that's what the
+     * clause does:  generate an error message in the log.
+     */
 }
 
 TEST(BasesockTest, BadSocket)

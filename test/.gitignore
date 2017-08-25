@@ -22,8 +22,10 @@ t_listensock_worker
 t_log
 t_logbuf
 t_motion_pool
+t_octree
 t_perl
 t_sockaddr
+t_socket
 t_stream
 t_stream_worker
 t_tcl
