@@ -22,6 +22,20 @@
  *
  * This file contains the class implementation for embedding python.
  *
+ * We'll have a single global interpreter, and each instance of our
+ * class will be a thread under that instance.
+ *
+ * Python uses the standard file descriptors for I/O, but of course
+ * those will be unavailable in our context.  We'll have to have a
+ * mechanism to grab hold of the output, so we can return it in our
+ * execute method.  We'll want to completely turn off standard input,
+ * since there will be no available source to get any.
+ *
+ * We'll embed the interpreters in such a way that we will remap the
+ * stdin/stdout file descriptors to something that we control, based
+ * on the work in:
+ * https://github.com/mloskot/workshop/blob/master/python/emb/emb.cpp
+ *
  * Things to do
  *
  */
