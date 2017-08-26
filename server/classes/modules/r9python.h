@@ -1,6 +1,6 @@
 /* r9python.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Mar 2017, 10:11:31 tquirk
+ *   last updated 28 Mar 2018, 07:31:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -35,6 +35,9 @@
 
 class PythonLanguage : public Language
 {
+  private:
+    PyThreadState *sub_interp;
+
   public:
     PythonLanguage();
     ~PythonLanguage();

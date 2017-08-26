@@ -1,6 +1,6 @@
 /* r9python.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Mar 2017, 10:14:11 tquirk
+ *   last updated 28 Mar 2018, 07:42:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -23,7 +23,7 @@
  * This file contains the class implementation for embedding python.
  *
  * We'll have a single global interpreter, and each instance of our
- * class will be a thread under that instance.
+ * class will be a sub-interpreter under that instance.
  *
  * Python uses the standard file descriptors for I/O, but of course
  * those will be unavailable in our context.  We'll have to have a
@@ -42,14 +42,49 @@
 
 #include "r9python.h"
 
+int count = 0;
+
 PythonLanguage::PythonLanguage()
 {
+    PyThreadState *tmp = PyThreadState_Get();
+    this->sub_interp = Py_NewInterpreter();
+    PyThreadState_Swap(tmp);
 }
 
 PythonLanguage::~PythonLanguage()
 {
+    PyThreadState *tmp = PyThreadState_Swap(this->sub_interp);
+    Py_EndInterpreter(this->sub_interp);
+    PyThreadState_Swap(tmp);
 }
 
 std::string PythonLanguage::execute(const std::string &s)
 {
+    PyEval_AcquireLock();
+    PyThreadState *thread = PyThreadState_New(this->sub_interp->interp);
+    PyThreadState *tmp = PyThreadState_Swap(thread);
+    PyRun_SimpleString(s.c_str());
+    PyThreadState_Swap(tmp);
+    PyThreadState_Clear(thread);
+    PyThreadState_Delete(thread);
+    PyEval_ReleaseLock();
+    return "";
+}
+
+extern "C" Language *create_language(void)
+{
+    if (!Py_IsInitialized())
+    {
+        Py_InitializeEx(0);
+        PyEval_InitThreads();
+    }
+    ++count;
+    return new PythonLanguage();
+}
+
+extern "C" void destroy_language(Language *lang)
+{
+    delete lang;
+    if (--count == 0)
+        Py_Finalize();
 }
