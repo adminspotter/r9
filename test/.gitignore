@@ -23,6 +23,7 @@ t_log
 t_logbuf
 t_motion_pool
 t_octree
+t_python
 t_sockaddr
 t_socket
 t_stream
