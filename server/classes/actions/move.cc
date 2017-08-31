@@ -1,9 +1,9 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 11:03:29 tquirk
+ *   last updated 31 Aug 2017, 18:05:55 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,6 +29,9 @@
 
 #include <glm/vec3.hpp>
 
+#include <algorithm>
+
+#include "../../server.h"
 #include "../game_obj.h"
 
 int action_move(GameObject *source,
@@ -36,7 +39,26 @@ int action_move(GameObject *source,
                 GameObject *target,
                 glm::dvec3& direction)
 {
-    return -1;
+    glm::dvec3 move = glm::normalize(direction);
+
+    intensity = std::min(intensity, 100);
+    move *= intensity / 100.0;
+
+    source->movement = move;
+    motion_pool->push(source);
+    return intensity;
+}
+
+int action_stop(GameObject *source,
+                int intensity,
+                GameObject *target,
+                glm::dvec3& direction)
+{
+    glm::dvec3 stop(0.0, 0.0, 0.0);
+
+    source->movement = stop;
+    source->rotation = stop;
+    return 1;
 }
 
 int action_rotate(GameObject *source,

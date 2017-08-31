@@ -1,9 +1,9 @@
 /* register.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 11:04:34 tquirk
+ *   last updated 31 Aug 2017, 14:52:15 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,31 +32,28 @@
 
 #include "../game_obj.h"
 
-typedef int action_routine_t(GameObject *, int,
-                             GameObject *, glm::dvec3&);
+typedef int (*action_routine_t)(GameObject *, int, GameObject *, glm::dvec3&);
 
 /* Prototypes for each action function */
-int action_control_object(GameObject *, int,
-                          GameObject *, glm::dvec3&);
-int action_uncontrol_object(GameObject *, int,
-                            GameObject *, glm::dvec3&);
-int action_move(GameObject *, int,
-                GameObject *, glm::dvec3&);
-int action_rotate(GameObject *, int,
-                  GameObject *, glm::dvec3&);
+int action_control_object(GameObject *, int, GameObject *, glm::dvec3&);
+int action_uncontrol_object(GameObject *, int, GameObject *, glm::dvec3&);
+int action_move(GameObject *, int, GameObject *, glm::dvec3&);
+int action_stop(GameObject *, int, GameObject *, glm::dvec3&);
+int action_rotate(GameObject *, int, GameObject *, glm::dvec3&);
 
 struct action_routines_list_tag
 {
     int action_number;
     const char *action_name;
-    action_routine_t *action_routine;
+    action_routine_t action_routine;
 }
 actions[] =
 {
     { 1, "Control object",   action_control_object   },
     { 2, "Uncontrol object", action_uncontrol_object },
     { 3, "Move",             action_move             },
-    { 4, "Rotate",           action_rotate           }
+    { 4, "Rotate",           action_rotate           },
+    { 5, "Stop",             action_stop             }
 };
 
 #endif /* __INC_REGISTER_H__ */
