@@ -1,9 +1,9 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Aug 2017, 20:59:17 tquirk
+ *   last updated 01 Sep 2017, 15:08:30 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -116,11 +116,5 @@ typedef struct action_level_tag
     time_t last_level;
 }
 action_level;
-
-/* Typedefs we can use for casting things to come out of a dynamically
- * loaded library.
- */
-typedef void action_reg_t(std::map<uint16_t, action_rec>&);
-typedef void action_unreg_t(std::map<uint16_t, action_rec>&);
 
 #endif /* __INC_DEFS_H__ */

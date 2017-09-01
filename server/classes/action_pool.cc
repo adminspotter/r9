@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Sep 2017, 14:37:22 tquirk
+ *   last updated 01 Sep 2017, 15:01:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -37,6 +37,9 @@
 #include "listensock.h"
 
 #include "../../proto/proto.h"
+
+typedef void action_reg_t(std::map<uint16_t, action_rec>&);
+typedef void action_unreg_t(std::map<uint16_t, action_rec>&);
 
 void ActionPool::load_actions(void)
 {
