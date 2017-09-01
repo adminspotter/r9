@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Aug 2017, 08:47:07 tquirk
+ *   last updated 01 Sep 2017, 14:37:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -89,16 +89,6 @@ void ActionPool::start(void)
 {
     this->startup_arg = (void *)this;
     this->ThreadPool<packet_list>::start(ActionPool::action_pool_worker);
-}
-
-/* pop() should return a ready-to-use item for the queue to process,
- * so we'll handle the network-to-host translation here.  Once crypto
- * is added, we'll take care of decrypting as well.
- */
-void ActionPool::pop(packet_list *req)
-{
-    this->ThreadPool::pop(req);
-    ntoh_packet(&(req->buf), sizeof(packet));
 }
 
 void *ActionPool::action_pool_worker(void *arg)

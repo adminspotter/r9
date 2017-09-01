@@ -1,6 +1,5 @@
 #include "../server/classes/action_pool.h"
 #include "../server/classes/game_obj.h"
-#include "../proto/proto.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -20,7 +19,7 @@ int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 Library *lib;
 std::map<uint64_t, GameObject *> *game_objs;
 mock_listen_socket *listensock;
-int ntoh_count, register_count, unregister_count, action_count;
+int register_count, unregister_count, action_count;
 
 struct addrinfo *create_addrinfo(void)
 {
@@ -42,12 +41,6 @@ struct addrinfo *create_addrinfo(void)
     }
 
     return addr;
-}
-
-int ntoh_packet(packet *p, size_t s)
-{
-    ++ntoh_count;
-    return 1;
 }
 
 void register_actions(std::map<uint16_t, action_rec>& a)
@@ -288,7 +281,7 @@ TEST_F(ActionPoolTest, Worker)
     pl.who = bu;
     action_pool->push(pl);
 
-    action_count = ntoh_count = 0;
+    action_count = 0;
 
     action_pool->start();
 
@@ -297,7 +290,6 @@ TEST_F(ActionPoolTest, Worker)
 
     action_pool->stop();
     ASSERT_EQ(action_count, 1);
-    ASSERT_GT(ntoh_count, 0);
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
