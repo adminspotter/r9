@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2017, 18:05:55 tquirk
+ *   last updated 01 Sep 2017, 14:48:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -31,8 +31,10 @@
 
 #include <algorithm>
 
-#include "../../server.h"
+#include "../motion_pool.h"
 #include "../game_obj.h"
+
+extern MotionPool *motion;
 
 int action_move(GameObject *source,
                 int intensity,
@@ -45,7 +47,7 @@ int action_move(GameObject *source,
     move *= intensity / 100.0;
 
     source->movement = move;
-    motion_pool->push(source);
+    motion->push(source);
     return intensity;
 }
 

@@ -1,6 +1,6 @@
 /* register.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Feb 2016, 10:12:44 tquirk
+ *   last updated 01 Sep 2017, 14:53:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -30,15 +30,21 @@
 #include <map>
 
 #include "../defs.h"
+#include "../motion_pool.h"
 #include "register.h"
 
 #define ENTRIES(x)  (int)(sizeof(x) / sizeof(x[0]))
 
+MotionPool *motion = NULL;
+
 extern "C"
 {
-    void actions_register(std::map<uint16_t, action_rec> &am)
+    void actions_register(std::map<uint16_t, action_rec> &am,
+                          MotionPool *mp)
     {
         int i;
+
+        motion = mp;
 
         for (i = 0; i < ENTRIES(actions); ++i)
         {

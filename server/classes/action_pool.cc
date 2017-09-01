@@ -37,8 +37,9 @@
 #include "listensock.h"
 
 #include "../../proto/proto.h"
+#include "../server.h"
 
-typedef void action_reg_t(std::map<uint16_t, action_rec>&);
+typedef void action_reg_t(std::map<uint16_t, action_rec>&, MotionPool *);
 typedef void action_unreg_t(std::map<uint16_t, action_rec>&);
 
 void ActionPool::load_actions(void)
@@ -48,7 +49,7 @@ void ActionPool::load_actions(void)
         std::clog << "loading action routines" << std::endl;
         action_reg_t *reg
             = (action_reg_t *)this->action_lib->symbol("actions_register");
-        (*reg)(this->actions);
+        (*reg)(this->actions, motion_pool);
     }
 }
 
