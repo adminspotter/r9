@@ -165,9 +165,23 @@ void error_callback(int err, const char *desc)
     std::cout << "glfw error: " << desc << " (" << err << ')' << std::endl;
 }
 
+int convert_glfw_mods(int mods)
+{
+    int retval = 0;
+
+    if (mods & GLFW_MOD_SHIFT)
+        retval |= ui::key_mod::shift;
+    if (mods & GLFW_MOD_CONTROL)
+        retval |= ui::key_mod::ctrl;
+    if (mods & GLFW_MOD_ALT)
+        retval |= ui::key_mod::alt;
+    if (mods & GLFW_MOD_SUPER)
+        retval |= ui::key_mod::super;
+}
+
 void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
 {
-    int ui_key = 0, ui_state, ui_mods = 0;
+    int ui_key = 0, ui_state, ui_mods;
 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(w, GL_TRUE);
@@ -184,30 +198,16 @@ void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
       default:              return;
     }
     ui_state = (action == GLFW_PRESS ? ui::key::down : ui::key::up);
-    if (mods & GLFW_MOD_SHIFT)
-        ui_mods |= ui::key_mod::shift;
-    if (mods & GLFW_MOD_CONTROL)
-        ui_mods |= ui::key_mod::ctrl;
-    if (mods & GLFW_MOD_ALT)
-        ui_mods |= ui::key_mod::alt;
-    if (mods & GLFW_MOD_SUPER)
-        ui_mods |= ui::key_mod::super;
+    ui_mods = convert_glfw_mods(mods);
+
     ctx->key_callback(ui_key, 0, ui_state, ui_mods);
 }
 
 void char_callback(GLFWwindow *w, unsigned int c, int mods)
 {
-    int ui_mods = 0;
+    int ui_mods = convert_glfw_mods(mods);
 
-    if (mods & GLFW_MOD_SHIFT)
-        ui_mods |= ui::key_mod::shift;
-    if (mods & GLFW_MOD_CONTROL)
-        ui_mods |= ui::key_mod::ctrl;
-    if (mods & GLFW_MOD_ALT)
-        ui_mods |= ui::key_mod::alt;
-    if (mods & GLFW_MOD_SUPER)
-        ui_mods |= ui::key_mod::super;
-    ctx->key_callback(ui::key::no_key, c, ui::key::down, mods);
+    ctx->key_callback(ui::key::no_key, c, ui::key::down, ui_mods);
 }
 
 void mouse_position_callback(GLFWwindow *w, double xpos, double ypos)
