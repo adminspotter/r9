@@ -183,14 +183,15 @@ void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
 {
     int ui_key = 0, ui_state, ui_mods;
 
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(w, GL_TRUE);
     if (glfw_key_map.find(key) == glfw_key_map.end())
         return;
 
     ui_key = glfw_key_map[key];
     ui_state = glfw_key_map[action];
     ui_mods = convert_glfw_mods(mods);
+
+    if (ui_key == ui::key::esc && ui_state == ui::key::down)
+        glfwSetWindowShouldClose(w, GL_TRUE);
 
     ctx->key_callback(ui_key, 0, ui_state, ui_mods);
 }
