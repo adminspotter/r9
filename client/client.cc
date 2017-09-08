@@ -185,19 +185,11 @@ void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(w, GL_TRUE);
-    switch (key)
-    {
-      case GLFW_KEY_LEFT:       ui_key = ui::key::l_arrow;  break;
-      case GLFW_KEY_RIGHT:      ui_key = ui::key::r_arrow;  break;
-      case GLFW_KEY_UP:         ui_key = ui::key::u_arrow;  break;
-      case GLFW_KEY_DOWN:       ui_key = ui::key::d_arrow;  break;
-      case GLFW_KEY_HOME:       ui_key = ui::key::home;     break;
-      case GLFW_KEY_END:        ui_key = ui::key::end;      break;
-      case GLFW_KEY_BACKSPACE:  ui_key = ui::key::bkspc;    break;
-      case GLFW_KEY_DELETE:     ui_key = ui::key::del;      break;
-      default:              return;
-    }
-    ui_state = (action == GLFW_PRESS ? ui::key::down : ui::key::up);
+    if (glfw_key_map.find(key) == glfw_key_map.end())
+        return;
+
+    ui_key = glfw_key_map[key];
+    ui_state = glfw_key_map[action];
     ui_mods = convert_glfw_mods(mods);
 
     ctx->key_callback(ui_key, 0, ui_state, ui_mods);
@@ -219,25 +211,8 @@ void mouse_button_callback(GLFWwindow *w, int button, int action, int mods)
 {
     int btn, act;
 
-    switch (button)
-    {
-      default:
-      case GLFW_MOUSE_BUTTON_1:  btn = ui::mouse::button0;  break;
-      case GLFW_MOUSE_BUTTON_2:  btn = ui::mouse::button1;  break;
-      case GLFW_MOUSE_BUTTON_3:  btn = ui::mouse::button2;  break;
-      case GLFW_MOUSE_BUTTON_4:  btn = ui::mouse::button3;  break;
-      case GLFW_MOUSE_BUTTON_5:  btn = ui::mouse::button4;  break;
-      case GLFW_MOUSE_BUTTON_6:  btn = ui::mouse::button5;  break;
-      case GLFW_MOUSE_BUTTON_7:  btn = ui::mouse::button6;  break;
-      case GLFW_MOUSE_BUTTON_8:  btn = ui::mouse::button7;  break;
-    }
-
-    switch (action)
-    {
-      default:
-      case GLFW_PRESS:    act = ui::mouse::down;  break;
-      case GLFW_RELEASE:  act = ui::mouse::up;    break;
-    }
+    btn = glfw_mouse_map[button];
+    act = glfw_mouse_map[action];
 
     ctx->mouse_btn_callback(btn, act);
 }
