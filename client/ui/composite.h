@@ -1,6 +1,6 @@
 /* composite.h                                             -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2017, 21:50:47 tquirk
+ *   last updated 06 Sep 2017, 12:48:34 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -69,6 +69,8 @@ namespace ui
         void regenerate_search_tree(void);
 
         void clear_removed_children(void);
+
+        void leave_child(glm::ivec2&);
 
       public:
         composite(composite *, GLuint, GLuint);
