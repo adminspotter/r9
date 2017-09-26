@@ -1,6 +1,6 @@
 #include "../server/classes/update_pool.h"
 #include "../server/classes/listensock.h"
-#include "../server/config_data.h"
+#include "../server/classes/config_data.h"
 #include "../server/classes/modules/db.h"
 #include "../server/classes/zone.h"
 

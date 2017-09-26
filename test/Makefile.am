@@ -69,9 +69,7 @@ endif
 
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_action_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
@@ -79,20 +77,18 @@ t_action_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 
 t_basesock_SOURCES = t_basesock.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/log.cc ../server/classes/log.h \
+	../server/classes/config_data.cc ../server/classes/config_data.h
 t_basesock_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_basesock_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_config_data_SOURCES = t_config_data.cc \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/config_data.cc ../server/classes/config_data.h
 t_config_data_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_config_data_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_control_SOURCES = t_control.cc \
-	../server/classes/control.cc ../server/classes/control.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/control.cc ../server/classes/control.h
 t_control_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_control_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../server/classes/libr9_classes.la \
@@ -102,8 +98,8 @@ t_console_SOURCES = t_console.cc \
 	../server/classes/modules/console.h \
 	../server/classes/modules/console.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/log.cc ../server/classes/log.h \
+	../server/classes/config_data.cc ../server/classes/config_data.h
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_console_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(WRAP_LDLIBS)
 
@@ -113,9 +109,7 @@ t_db_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_dgram_SOURCES = t_dgram.cc \
 	../server/classes/dgram.cc ../server/classes/dgram.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_dgram_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_dgram_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
@@ -123,9 +117,7 @@ t_dgram_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 
 t_dgram_worker_SOURCES = t_dgram_worker.cc \
 	../server/classes/dgram.cc ../server/classes/dgram.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_dgram_worker_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_dgram_worker_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
@@ -143,9 +135,7 @@ t_library_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS)
 
 t_listensock_SOURCES = t_listensock.cc \
 	../server/classes/listensock.cc ../server/classes/listensock.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_listensock_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_listensock_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
@@ -153,34 +143,28 @@ t_listensock_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 
 t_listensock_worker_SOURCES = t_listensock_worker.cc \
 	../server/classes/listensock.cc ../server/classes/listensock.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_listensock_worker_CXXFLAGS = $(CONFIG_DEFS) \
 	$(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_listensock_worker_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
-t_log_SOURCES = t_log.cc ../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+t_log_SOURCES = t_log.cc ../server/classes/log.cc ../server/classes/log.h \
+	../server/classes/config_data.cc ../server/classes/config_data.h
 t_log_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_log_LDADD = $(GTEST_LIBS)
 
 t_motion_pool_SOURCES = t_motion_pool.cc \
 	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
 t_octree_SOURCES = t_octree.cc \
-	../server/classes/octree.cc ../server/classes/octree.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/octree.cc ../server/classes/octree.h
 t_octree_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_octree_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
@@ -189,18 +173,14 @@ t_octree_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
 t_sockaddr_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
-t_socket_SOURCES = t_socket.cc ../server/classes/socket.cc \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+t_socket_SOURCES = t_socket.cc ../server/classes/socket.cc
 t_socket_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_socket_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../server/classes/libr9_classes.la $(SERVER_LDLIBS)
 
 t_stream_SOURCES = t_stream.cc \
 	../server/classes/stream.cc ../server/classes/stream.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_stream_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_stream_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
@@ -208,9 +188,7 @@ t_stream_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 
 t_stream_worker_SOURCES = t_stream_worker.cc \
 	../server/classes/stream.cc ../server/classes/stream.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_stream_worker_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
 t_stream_worker_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
@@ -221,9 +199,7 @@ t_threadpool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_update_pool_SOURCES = t_update_pool.cc \
 	../server/classes/update_pool.cc ../server/classes/update_pool.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_update_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_update_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
@@ -231,9 +207,7 @@ t_update_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
 
 t_zone_SOURCES = t_zone.cc \
 	../server/classes/zone.cc ../server/classes/zone.h \
-	../server/classes/modules/db.cc ../server/classes/modules/db.h \
-	../server/log.cc ../server/log.h \
-	../server/config_data.cc ../server/config_data.h
+	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_zone_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
 t_zone_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
