@@ -1,6 +1,6 @@
 /* signals.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Feb 2016, 13:34:29 tquirk
+ *   last updated 26 Sep 2017, 13:28:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -47,8 +47,9 @@
 
 #include "signals.h"
 #include "server.h"
-#include "config_data.h"
-#include "log.h"
+
+#include "classes/config_data.h"
+#include "classes/log.h"
 
 /* Function prototypes */
 static void sighup_handler(int);
@@ -163,13 +164,13 @@ static void sigint_handler(int sig)
 
 static void sigsegv_handler(int sig)
 {
+    std::clog << syslogInfo << "received SIGSEGV, detonating" << std::endl;
+
+#if HAVE_BACKTRACE
     void *stack_trace[10];
     char **strings;
     size_t trace_size, i;
 
-    std::clog << syslogInfo << "received SIGSEGV, detonating" << std::endl;
-
-#if HAVE_BACKTRACE
     /* Generate a stack dump.  This seems like it might be dangerous in
      * a signal handler (for SIGSEGV, even) because it appears that quite
      * a bit of memory will be allocated.  We'll go with it, and if it

@@ -1,5 +1,5 @@
 #include "../server/classes/dgram.h"
-#include "../server/config_data.h"
+#include "../server/classes/config_data.h"
 
 #include <gtest/gtest.h>
 

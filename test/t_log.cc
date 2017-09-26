@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <syslog.h>
 
-#include "../server/log.h"
+#include "../server/classes/log.h"
 #include <gtest/gtest.h>
 
 bool opened = false, closed = false;

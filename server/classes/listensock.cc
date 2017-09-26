@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Aug 2017, 07:27:56 tquirk
+ *   last updated 26 Sep 2017, 12:59:27 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -32,10 +32,10 @@
 #include <errno.h>
 
 #include "listensock.h"
+#include "config_data.h"
+#include "log.h"
 
 #include "../server.h"
-#include "../config_data.h"
-#include "../log.h"
 
 base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     : Control(u, g)

@@ -1,6 +1,6 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jul 2017, 09:50:07 tquirk
+ *   last updated 26 Sep 2017, 13:00:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -42,7 +42,7 @@
 
 #if HAVE_LIBWRAP
 #include <tcpd.h>
-#include "../../config_data.h"
+#include "../config_data.h"
 
 static char string_unknown[] = STRING_UNKNOWN;
 #endif /* HAVE_LIBWRAP */

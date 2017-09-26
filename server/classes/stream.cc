@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Aug 2017, 07:27:54 tquirk
+ *   last updated 26 Sep 2017, 12:59:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -51,8 +51,8 @@
 #include "stream.h"
 #include "game_obj.h"
 
-#include "../config_data.h"
-#include "../log.h"
+#include "config_data.h"
+#include "log.h"
 
 extern volatile int main_loop_exit_flag;
 
