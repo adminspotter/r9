@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Aug 2017, 07:58:57 tquirk
+ *   last updated 26 Sep 2017, 13:07:27 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -40,9 +40,9 @@
 #include <stdexcept>
 
 #include "dgram.h"
+#include "log.h"
 
 #include "../server.h"
-#include "../log.h"
 
 extern volatile int main_loop_exit_flag;
 

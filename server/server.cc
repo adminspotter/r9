@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2017, 07:41:55 tquirk
+ *   last updated 26 Sep 2017, 13:01:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -68,11 +68,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "log.h"
 #include "server.h"
 #include "signals.h"
-#include "config_data.h"
 
+#include "classes/log.h"
+#include "classes/config_data.h"
 #include "classes/library.h"
 #include "classes/basesock.h"
 #include "classes/socket.h"

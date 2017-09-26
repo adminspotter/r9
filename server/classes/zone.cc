@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Aug 2017, 09:30:18 tquirk
+ *   last updated 26 Sep 2017, 13:00:03 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -37,8 +37,8 @@
 
 #include "zone.h"
 #include "thread_pool.h"
-#include "../config_data.h"
-#include "../log.h"
+#include "config_data.h"
+#include "log.h"
 #include "../server.h"
 
 /* Private methods */

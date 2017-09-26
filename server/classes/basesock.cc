@@ -1,9 +1,9 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jan 2016, 10:14:15 tquirk
+ *   last updated 26 Sep 2017, 13:11:55 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -40,8 +40,7 @@
 #include <stdexcept>
 
 #include "basesock.h"
-
-#include "../log.h"
+#include "log.h"
 
 basesock::basesock(struct addrinfo *ai)
 {

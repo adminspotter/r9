@@ -1,9 +1,9 @@
 /* geometry.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 09:49:24 tquirk
+ *   last updated 26 Sep 2017, 12:58:24 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,7 +27,7 @@
  */
 
 #include "geometry.h"
-#include "../config_data.h"
+#include "config_data.h"
 
 Geometry::Geometry()
     : center()

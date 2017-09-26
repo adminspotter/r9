@@ -1,6 +1,6 @@
 /* signals.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Feb 2016, 13:34:29 tquirk
+ *   last updated 26 Sep 2017, 13:28:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -47,8 +47,9 @@
 
 #include "signals.h"
 #include "server.h"
-#include "config_data.h"
-#include "log.h"
+
+#include "classes/config_data.h"
+#include "classes/log.h"
 
 /* Function prototypes */
 static void sighup_handler(int);
