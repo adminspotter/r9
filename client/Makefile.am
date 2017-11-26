@@ -1,4 +1,4 @@
-SUBDIRS = ui shaders
+SUBDIRS = cuddly-gl shaders
 
 bin_PROGRAMS = r9client
 
@@ -18,7 +18,8 @@ r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 	-DSHADER_SRC_PATH=\"$(shaderdir)\" \
 	-DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \
 	-DGL_GLEXT_PROTOTYPES
-r9client_LDADD = ui/libr9_client_ui.la ../proto/libr9_proto.la $(CLIENT_LDLIBS)
+r9client_LDADD = cuddly-gl/libcuddly_gl.la \
+	../proto/libr9_proto.la $(CLIENT_LDLIBS)
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov

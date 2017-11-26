@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Aug 2017, 22:16:27 tquirk
+ *   last updated 26 Nov 2017, 08:03:45 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -43,9 +43,9 @@
 
 #include "configdata.h"
 
-#include "ui/ui_defs.h"
+#include "cuddly-gl/ui_defs.h"
 #include "log_display.h"
-#include "ui/multi_label.h"
+#include "cuddly-gl/multi_label.h"
 
 #define DISTANCE_FROM_BOTTOM 10
 #define LABEL_WIDTH 225

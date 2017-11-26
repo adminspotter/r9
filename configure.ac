@@ -453,7 +453,7 @@ CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
 LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
 LIBS="$LIBS $PROFILE_LDLIBS"
 
-AC_CONFIG_SUBDIRS([test/gmock-1.7.0])
+AC_CONFIG_SUBDIRS([test/gmock-1.7.0 client/cuddly-gl])
 
 # Checks for header files.
 AC_CHECK_HEADERS([architecture/byte_order.h arpa/inet.h byteswap.h endian.h execinfo.h fcntl.h grp.h inttypes.h limits.h netdb.h netinet/in.h pwd.h signal.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/resource.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
