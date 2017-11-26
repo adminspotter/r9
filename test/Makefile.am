@@ -44,9 +44,7 @@ if WANT_CLIENT
   TC += t_cache \
 	t_comm \
 	t_comm_exception \
-	t_configdata \
-	t_font \
-	t_image
+	t_configdata
 endif
 
 TESTS = $(TC)
@@ -269,16 +267,6 @@ t_comm_exception_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
 t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
-
-t_font_SOURCES = t_font.cc ../client/ui/font.h ../client/ui/font.cc
-t_font_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
-	$(GTEST_INCLUDES) \
-	-DSTORE_PREFIX=\"../client\"
-t_font_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
-	$(XERCES_LDLIBS) $(FREETYPE_LDLIBS)
-
-t_image_SOURCES = t_image.cc ../client/ui/image.h
-t_image_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov

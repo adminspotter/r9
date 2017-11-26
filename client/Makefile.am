@@ -21,5 +21,7 @@ r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 r9client_LDADD = cuddly-gl/libcuddly_gl.la \
 	../proto/libr9_proto.la $(CLIENT_LDLIBS)
 
+check: SUBDIRS =
+
 clean-local:
 	rm -f *.gcno *.gcda *.gcov
