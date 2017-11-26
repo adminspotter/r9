@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Sep 2016, 19:17:52 tquirk
+ *   last updated 26 Nov 2017, 10:38:24 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -41,6 +41,7 @@
 #include <functional>
 
 #include "client_core.h"
+#include "shader.h"
 
 #include "object.h"
 
