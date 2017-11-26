@@ -33,7 +33,6 @@
 
 #include <iostream>
 #include <vector>
-#include <map>
 
 #include <glm/vec2.hpp>
 
@@ -44,55 +43,23 @@
 #include "l10n.h"
 
 #include "cuddly-gl/ui.h"
+#include "cuddly-gl/connect_glfw.h"
 #include "log_display.h"
 
 void error_callback(int, const char *);
-void key_callback(GLFWwindow *, int, int, int, int);
-void char_callback(GLFWwindow *, unsigned int, int);
-void mouse_position_callback(GLFWwindow *, double, double);
-void mouse_button_callback(GLFWwindow *, int, int, int);
+void close_key_callback(ui::active *, void *, void *);
 void resize_callback(GLFWwindow *, int, int);
 void move_key_callback(ui::active *, void *, void *);
 void stop_key_callback(ui::active *, void *, void *);
 
-static std::map<int, int> glfw_key_map =
-{
-    { GLFW_KEY_LEFT, ui::key::l_arrow },
-    { GLFW_KEY_RIGHT, ui::key::r_arrow },
-    { GLFW_KEY_UP, ui::key::u_arrow },
-    { GLFW_KEY_DOWN, ui::key::d_arrow },
-    { GLFW_KEY_HOME, ui::key::home },
-    { GLFW_KEY_END, ui::key::end },
-    { GLFW_KEY_BACKSPACE, ui::key::bkspc },
-    { GLFW_KEY_DELETE, ui::key::del },
-    { GLFW_KEY_ESCAPE, ui::key::esc },
-    { GLFW_PRESS, ui::key::down },
-    { GLFW_RELEASE, ui::key::up }
-};
-
-static std::map<int, int> glfw_mouse_map =
-{
-    { GLFW_MOUSE_BUTTON_1, ui::mouse::button0 },
-    { GLFW_MOUSE_BUTTON_2, ui::mouse::button1 },
-    { GLFW_MOUSE_BUTTON_3, ui::mouse::button2 },
-    { GLFW_MOUSE_BUTTON_4, ui::mouse::button3 },
-    { GLFW_MOUSE_BUTTON_5, ui::mouse::button4 },
-    { GLFW_MOUSE_BUTTON_6, ui::mouse::button5 },
-    { GLFW_MOUSE_BUTTON_7, ui::mouse::button6 },
-    { GLFW_MOUSE_BUTTON_8, ui::mouse::button7 },
-    { GLFW_PRESS, ui::mouse::down },
-    { GLFW_RELEASE, ui::mouse::up }
-};
-
 std::vector<Comm *> comm;
 ConfigData config;
+GLFWwindow *w;
 ui::context *ctx;
 log_display *log_disp;
 
 int main(int argc, char **argv)
 {
-    GLFWwindow *w;
-
 #if WANT_LOCALES && HAVE_LIBINTL_H
     setlocale(LC_ALL, "");
     bindtextdomain(PACKAGE, LOCALE_DIR);
@@ -128,14 +95,13 @@ int main(int argc, char **argv)
 
     glfwMakeContextCurrent(w);
     ctx = new ui::context(800, 600);
+    ui_connect_glfw(ctx, w);
+    ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
+
     log_disp = new log_display(ctx, 0, 0);
     init_client_core();
 
     glfwSetWindowSizeCallback(w, resize_callback);
-    glfwSetKeyCallback(w, key_callback);
-    glfwSetCharModsCallback(w, char_callback);
-    glfwSetMouseButtonCallback(w, mouse_button_callback);
-    glfwSetCursorPosCallback(w, mouse_position_callback);
 
     /* Set the initial projection matrix */
     resize_callback(w, 800, 600);
@@ -165,57 +131,12 @@ void error_callback(int err, const char *desc)
     std::cout << "glfw error: " << desc << " (" << err << ')' << std::endl;
 }
 
-int convert_glfw_mods(int mods)
+void close_key_callback(ui::active *a, void *call, void *client)
 {
-    int retval = 0;
+    ui::key_call_data *call_data = (ui::key_call_data *)call;
 
-    if (mods & GLFW_MOD_SHIFT)
-        retval |= ui::key_mod::shift;
-    if (mods & GLFW_MOD_CONTROL)
-        retval |= ui::key_mod::ctrl;
-    if (mods & GLFW_MOD_ALT)
-        retval |= ui::key_mod::alt;
-    if (mods & GLFW_MOD_SUPER)
-        retval |= ui::key_mod::super;
-}
-
-void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
-{
-    int ui_key = 0, ui_state, ui_mods;
-
-    if (glfw_key_map.find(key) == glfw_key_map.end())
-        return;
-
-    ui_key = glfw_key_map[key];
-    ui_state = glfw_key_map[action];
-    ui_mods = convert_glfw_mods(mods);
-
-    if (ui_key == ui::key::esc && ui_state == ui::key::down)
+    if (call_data->key == ui::key::esc && call_data->state == ui::key::down)
         glfwSetWindowShouldClose(w, GL_TRUE);
-
-    ctx->key_callback(ui_key, 0, ui_state, ui_mods);
-}
-
-void char_callback(GLFWwindow *w, unsigned int c, int mods)
-{
-    int ui_mods = convert_glfw_mods(mods);
-
-    ctx->key_callback(ui::key::no_key, c, ui::key::down, ui_mods);
-}
-
-void mouse_position_callback(GLFWwindow *w, double xpos, double ypos)
-{
-    ctx->mouse_pos_callback((int)xpos, (int)ypos);
-}
-
-void mouse_button_callback(GLFWwindow *w, int button, int action, int mods)
-{
-    int btn, act;
-
-    btn = glfw_mouse_map[button];
-    act = glfw_mouse_map[action];
-
-    ctx->mouse_btn_callback(btn, act);
 }
 
 void resize_callback(GLFWwindow *w, int width, int height)
