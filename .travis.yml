@@ -15,6 +15,7 @@ addons:
     - gettext
     - cmake
     - tcl8.6-dev
+    - libboost-dev
     - libgl1-mesa-dev
     - libmysqlclient-dev
     - libpq-dev
