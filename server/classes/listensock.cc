@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2017, 07:20:06 tquirk
+ *   last updated 27 Nov 2017, 08:28:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -186,8 +186,6 @@ void *listen_socket::access_pool_worker(void *arg)
     for (;;)
     {
         ls->access_pool->pop(&req);
-
-        ntoh_packet(&(req.buf), sizeof(packet));
 
         if (req.buf.basic.type == TYPE_LOGREQ)
             ls->login_user(req);
