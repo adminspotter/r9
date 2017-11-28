@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Aug 2017, 07:27:56 tquirk
+ *   last updated 28 Nov 2017, 07:20:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -313,13 +313,13 @@ base_user *listen_socket::check_access(uint64_t userid, login_request& log)
 {
     std::string charname(log.charname, std::min(sizeof(log.charname),
                                                 strlen(log.charname)));
-    uint64_t charid = database->get_character_objectid(userid, charname);
-    int auth_level = database->check_authorization(userid, charid);
+    int auth_level = database->check_authorization(userid, charname);
     GameObject *go = NULL;
 
     if (auth_level < ACCESS_VIEW)
         return NULL;
 
+    uint64_t charid = database->get_character_objectid(userid, charname);
     if (auth_level >= ACCESS_MOVE)
         go = zone->find_game_object(charid);
 
