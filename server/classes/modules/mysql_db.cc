@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2017, 07:20:19 tquirk
+ *   last updated 28 Nov 2017, 07:58:41 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -141,7 +141,7 @@ int MySQL::check_authorization(uint64_t userid, const std::string& charname)
              "AND b.characterid=c.characterid "
              "AND c.serverid=d.serverid "
              "AND d.ip='%s'",
-             userid, charname, this->host_ip);
+             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
     this->db_connect();
 
     if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0

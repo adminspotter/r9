@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2017, 07:23:12 tquirk
+ *   last updated 28 Nov 2017, 07:58:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -122,7 +122,7 @@ int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
              "AND b.characterid=c.characterid "
              "AND c.serverid=d.serverid "
              "AND d.ip='%s'",
-             userid, charname, this->host_ip);
+             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
     this->db_connect();
 
     res = PQexec(this->db_handle, str);
