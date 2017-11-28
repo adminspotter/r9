@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2017, 09:21:24 tquirk
+ *   last updated 28 Nov 2017, 07:20:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -111,6 +111,37 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
              "AND c.serverid=d.serverid "
              "AND d.ip='%s'",
              userid, charid, this->host_ip);
+    this->db_connect();
+
+    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
+        && (res = mysql_use_result(&(this->db_handle))) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
+    {
+        retval = atoi(row[0]);
+        mysql_free_result(res);
+    }
+    mysql_close(&(this->db_handle));
+    return retval;
+}
+
+int MySQL::check_authorization(uint64_t userid, const std::string& charname)
+{
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    char str[256];
+    int retval = ACCESS_NONE;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.access_type "
+             "FROM players AS a, characters AS b, server_access AS c, "
+             "servers AS d "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s' "
+             "AND b.characterid=c.characterid "
+             "AND c.serverid=d.serverid "
+             "AND d.ip='%s'",
+             userid, charname, this->host_ip);
     this->db_connect();
 
     if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
