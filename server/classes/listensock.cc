@@ -21,8 +21,10 @@
  *
  *
  * This file contains the listening thread handling and user tracking
- * for our sockets.  This is not directly instantiable, as there are
- * pure-virtual methods in this class.
+ * for our sockets.  Most of the login and logout mechanisms are also
+ * here; each protocol-specific class extends connect_user() and
+ * disconnect_user() slightly for its own needs, but the bulk of the
+ * logic is in this class.
  *
  * Things to do
  *
