@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2017, 15:48:51 tquirk
+ *   last updated 28 Nov 2017, 07:23:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -96,6 +96,33 @@ int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
              "AND c.serverid=d.serverid "
              "AND d.ip='%s'",
              userid, charid, this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = atol(PQgetvalue(res, 0, 0));
+    PQclear(res);
+    this->db_close();
+    return retval;
+}
+
+int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
+{
+    PGresult *res;
+    char str[256];
+    int retval = ACCESS_NONE;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.access_type "
+             "FROM players AS a, characters AS b, server_access AS c, "
+             "servers AS d "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s' "
+             "AND b.characterid=c.characterid "
+             "AND c.serverid=d.serverid "
+             "AND d.ip='%s'",
+             userid, charname, this->host_ip);
     this->db_connect();
 
     res = PQexec(this->db_handle, str);
