@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Sep 2017, 15:08:30 tquirk
+ *   last updated 01 Nov 2017, 10:11:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -44,10 +44,8 @@
 #include "../../proto/proto.h"
 
 /* Eliminate the multiple-include problems */
-class Control;
 class GameObject;
 class base_user;
-class listen_socket;
 class Sockaddr;
 
 typedef struct sequence_tag
