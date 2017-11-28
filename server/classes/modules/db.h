@@ -1,6 +1,6 @@
 /* db.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jul 2017, 09:48:40 tquirk
+ *   last updated 28 Nov 2017, 07:12:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -66,6 +66,7 @@ class DB
     virtual uint64_t check_authentication(const std::string&,
                                            const std::string&) = 0;
     virtual int check_authorization(uint64_t, uint64_t) = 0;
+    virtual int check_authorization(uint64_t, const std::string&) = 0;
     virtual uint64_t get_character_objectid(uint64_t, const std::string&) = 0;
     virtual int open_new_login(uint64_t, uint64_t, Sockaddr *) = 0;
     virtual int check_open_login(uint64_t, uint64_t) = 0;
