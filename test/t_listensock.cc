@@ -6,6 +6,7 @@
 #include "mock_server_globals.h"
 
 using ::testing::_;
+using ::testing::A;
 using ::testing::Return;
 using ::testing::Invoke;
 
@@ -321,7 +322,8 @@ TEST(ListenSocketTest, GetUserid)
 {
     database = new mock_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authentication(_, A<const std::string&>()))
         .WillOnce(Return(0LL));
 
     login_request log;
@@ -349,7 +351,8 @@ TEST(ListenSocketTest, CheckAccessNoAccess)
 
     EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
         .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_NONE));
 
     login_request log;
@@ -377,7 +380,8 @@ TEST(ListenSocketTest, CheckAccess)
 
     EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
         .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_MOVE));
     EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
 
@@ -478,7 +482,8 @@ TEST(ListenSocketTest, LoginNoAccess)
         .WillOnce(Return(123LL));
     EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
         .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_NONE));
 
     access_list access;
@@ -510,7 +515,8 @@ TEST(ListenSocketTest, Login)
         .WillOnce(Return(123LL));
     EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
         .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_MOVE));
     EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
 
