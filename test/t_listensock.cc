@@ -349,8 +349,6 @@ TEST(ListenSocketTest, CheckAccessNoAccess)
 {
     database = new mock_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
     EXPECT_CALL(*((mock_DB *)database),
                 check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_NONE));
@@ -480,8 +478,6 @@ TEST(ListenSocketTest, LoginNoAccess)
 
     EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
         .WillOnce(Return(123LL));
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
     EXPECT_CALL(*((mock_DB *)database),
                 check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_NONE));
