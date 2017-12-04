@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Aug 2017, 09:29:31 tquirk
+ *   last updated 04 Dec 2017, 08:00:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -45,7 +45,6 @@
 #include <map>
 
 #include "defs.h"
-#include "control.h"
 #include "octree.h"
 
 #include "modules/db.h"
@@ -75,7 +74,7 @@ class Zone
     glm::ivec3 which_sector(glm::dvec3&);
 
     GameObject *find_game_object(uint64_t);
-    virtual void connect_game_object(Control *, uint64_t);
+    virtual void send_nearby_objects(uint64_t);
 };
 
 #endif /* __INC_ZONE_H__ */

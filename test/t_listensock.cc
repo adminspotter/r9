@@ -4,6 +4,7 @@
 
 #include "mock_db.h"
 #include "mock_server_globals.h"
+#include "mock_zone.h"
 
 using ::testing::_;
 using ::testing::A;
@@ -383,10 +384,11 @@ TEST(ListenSocketTest, CheckAccess)
         .WillOnce(Return(ACCESS_MOVE));
     EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
 
-    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+    zone = new mock_Zone(1000, 1, database);
 
-    zone = new Zone(1000, 1, database);
-    zone->game_objects[1234LL] = go;
+    EXPECT_CALL(*((mock_Zone *)zone), send_nearby_objects(_));
+
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
     login_request log;
 
@@ -405,7 +407,7 @@ TEST(ListenSocketTest, CheckAccess)
     delete bu;
     delete listen;
     freeaddrinfo(addr);
-    delete zone;
+    delete (mock_Zone *)zone;
     delete (mock_DB *)database;
 }
 
@@ -518,8 +520,8 @@ TEST(ListenSocketTest, Login)
 
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
-    zone = new Zone(1000, 1, database);
-    zone->game_objects[1234LL] = go;
+    zone = new mock_Zone(1000, 1, database);
+    EXPECT_CALL(*((mock_Zone *)zone), send_nearby_objects(_));
 
     access_list access;
 
@@ -538,7 +540,7 @@ TEST(ListenSocketTest, Login)
     ASSERT_TRUE(listen->users.size() == 1);
     ASSERT_EQ(listen->users[123LL]->auth_level, ACCESS_MOVE);
 
-    delete zone;
+    delete (mock_Zone *)zone;
     delete listen;
     freeaddrinfo(addr);
     delete (mock_DB *)database;

@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Nov 2017, 08:28:15 tquirk
+ *   last updated 04 Dec 2017, 07:59:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -34,6 +34,7 @@
 #include <errno.h>
 
 #include "listensock.h"
+#include "zone.h"
 
 #include "../server.h"
 #include "../config_data.h"
@@ -331,6 +332,8 @@ base_user *listen_socket::check_access(uint64_t userid, login_request& log)
     std::clog << "login for user " << bu->username << " (" << bu->userid
               << "), char " << charname << " (" << charid
               << "), auth " << auth_level << std::endl;
+
+    zone->send_nearby_objects(charid);
 
     return bu;
 }
