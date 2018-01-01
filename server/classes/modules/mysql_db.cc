@@ -1,9 +1,9 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2017, 07:58:41 tquirk
+ *   last updated 01 Jan 2018, 09:58:01 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -97,7 +97,7 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[350];
     int retval = ACCESS_NONE;
 
     snprintf(str, sizeof(str),
@@ -128,7 +128,7 @@ int MySQL::check_authorization(uint64_t userid, const std::string& charname)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[350];
     int retval = ACCESS_NONE;
 
     snprintf(str, sizeof(str),
@@ -160,7 +160,7 @@ uint64_t MySQL::get_character_objectid(uint64_t userid,
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[350];
     uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
@@ -275,7 +275,7 @@ int MySQL::get_player_server_skills(uint64_t userid,
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[420];
     int count = 0;
 
     snprintf(str, sizeof(str),
@@ -336,7 +336,7 @@ int MySQL::check_open_login(uint64_t userid, uint64_t charid)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[400];
     int retval = 0;
 
     snprintf(str, sizeof(str),

@@ -1,9 +1,9 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Nov 2017, 07:58:30 tquirk
+ *   last updated 01 Jan 2018, 09:58:07 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -82,7 +82,7 @@ uint64_t PgSQL::check_authentication(const std::string& user,
 int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
 {
     PGresult *res;
-    char str[256];
+    char str[350];
     int retval = ACCESS_NONE;
 
     snprintf(str, sizeof(str),
@@ -109,7 +109,7 @@ int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
 int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 {
     PGresult *res;
-    char str[256];
+    char str[350];
     int retval = ACCESS_NONE;
 
     snprintf(str, sizeof(str),
@@ -137,12 +137,13 @@ uint64_t PgSQL::get_character_objectid(uint64_t userid,
                                        const std::string& charname)
 {
     PGresult *res;
-    char str[256];
+    char str[350];
     uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
              "SELECT d.objectid "
-             "FROM players AS a, characters AS a, servers AS b, server_objects AS c "
+             "FROM players AS a, characters AS a, "
+             "servers AS b, server_objects AS c "
              "WHERE a.playerid=%" PRIu64 " "
              "AND a.playerid=b.owner "
              "AND b.charactername='%.*s' "
@@ -241,7 +242,7 @@ int PgSQL::get_player_server_skills(uint64_t userid,
                                     std::map<uint16_t, action_level>& actions)
 {
     PGresult *res;
-    char str[256];
+    char str[420];
     int count = 0, num_tuples;
 
     snprintf(str, sizeof(str),
@@ -301,7 +302,7 @@ int PgSQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
 {
     PGresult *res;
-    char str[256];
+    char str[400];
     int retval = 0;
 
     snprintf(str, sizeof(str),
