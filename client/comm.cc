@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 May 2017, 14:19:31 tquirk
+ *   last updated 14 Jan 2018, 12:05:22 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -371,7 +371,7 @@ void Comm::send_login(const std::string& user,
 {
     packet *req = new packet;
 
-    memset((void *)req, 0, sizeof(login_request));
+    memset(req, 0, sizeof(packet));
     req->log.type = TYPE_LOGREQ;
     req->log.version = 1;
     req->log.sequence = this->sequence++;
@@ -387,6 +387,7 @@ void Comm::send_action_request(uint16_t actionid,
 {
     packet *req = new packet;
 
+    memset(req, 0, sizeof(packet));
     req->act.type = TYPE_ACTREQ;
     req->act.version = 1;
     req->act.sequence = sequence++;
@@ -400,6 +401,7 @@ void Comm::send_logout(void)
 {
     packet *req = new packet;
 
+    memset(req, 0, sizeof(packet));
     req->lgt.type = TYPE_LGTREQ;
     req->lgt.version = 1;
     req->lgt.sequence = sequence++;
@@ -410,6 +412,7 @@ void Comm::send_ack(uint8_t type)
 {
     packet *req = new packet;
 
+    memset(req, 0, sizeof(packet));
     req->ack.type = TYPE_ACKPKT;
     req->ack.version = 1;
     req->ack.sequence = sequence++;
