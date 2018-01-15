@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Nov 2017, 08:01:49 tquirk
+ *   last updated 14 Jan 2018, 13:07:56 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -50,7 +50,6 @@ void error_callback(int, const char *);
 void close_key_callback(ui::active *, void *, void *);
 void resize_callback(GLFWwindow *, int, int);
 void move_key_callback(ui::active *, void *, void *);
-void stop_key_callback(ui::active *, void *, void *);
 
 std::vector<Comm *> comm;
 ConfigData config;
@@ -97,6 +96,8 @@ int main(int argc, char **argv)
     ctx = new ui::context(800, 600);
     ui_connect_glfw(ctx, w);
     ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
+    ctx->add_callback(ui::callback::key_down, move_key_callback, NULL);
+    ctx->add_callback(ui::callback::key_up, move_key_callback, NULL);
 
     log_disp = new log_display(ctx, 0, 0);
     init_client_core();
@@ -145,6 +146,26 @@ void resize_callback(GLFWwindow *w, int width, int height)
 
     ctx->set(ui::element::size, ui::size::all, &sz);
     resize_window(width, height);
+}
+
+void move_key_callback(ui::active *a, void *call, void *client)
+{
+    ui::key_call_data *call_data = (ui::key_call_data *)call;
+
+    if (call_data->key == ui::key::u_arrow)
+    {
+        uint16_t action;
+
+        if (call_data->state == ui::key::down)
+            action = 3;
+        else if (call_data->state == ui::key::up)
+            action = 5;
+        else
+            return;
+
+        if (comm.size() > 0)
+            comm[0]->send_action_request(action, 0LL, 100);
+    }
 }
 
 void setup_comm(struct addrinfo *ai,
