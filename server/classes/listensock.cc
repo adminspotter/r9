@@ -365,7 +365,9 @@ void listen_socket::logout_user(uint64_t userid)
 void listen_socket::connect_user(base_user *bu, access_list& al)
 {
     this->users[bu->userid] = bu;
-    bu->send_ack(TYPE_LOGREQ, bu->auth_level);
+    bu->send_ack(TYPE_LOGREQ,
+                 bu->auth_level,
+                 bu->default_slave->get_object_id());
 }
 
 void listen_socket::disconnect_user(base_user *bu)

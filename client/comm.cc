@@ -293,6 +293,8 @@ Comm::Comm(struct addrinfo *ai)
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
+
+    this->src_object_id = 0LL;
 }
 
 Comm::~Comm()
@@ -392,6 +394,7 @@ void Comm::send_action_request(uint16_t actionid,
     req->act.type = TYPE_ACTREQ;
     req->act.version = 1;
     req->act.sequence = sequence++;
+    req->act.object_id = this->src_object_id;
     req->act.action_id = actionid;
     req->act.power_level = power;
     req->act.dest_object_id = target;

@@ -1,9 +1,9 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Dec 2015, 18:05:51 tquirk
+ *   last updated 20 Jan 2018, 08:43:12 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -64,6 +64,7 @@ class Comm
     std::queue<packet *> send_queue;
 
     static uint64_t sequence;
+    uint64_t src_object_id;
     volatile bool thread_exit_flag;
 
     typedef void (Comm::*pkt_handler)(packet&);
