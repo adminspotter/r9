@@ -357,7 +357,7 @@ void listen_socket::logout_user(uint64_t userid)
         std::clog << "logout request from " << bu->username
                   << " (" << bu->userid << ")" << std::endl;
 
-        bu->send_ack(TYPE_LGTREQ, 0);
+        bu->send_ack(TYPE_LGTREQ);
         bu->pending_logout = true;
     }
 }
