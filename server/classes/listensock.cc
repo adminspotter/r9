@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jan 2018, 08:43:24 tquirk
+ *   last updated 20 Jan 2018, 14:02:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -364,10 +364,12 @@ void listen_socket::logout_user(uint64_t userid)
 
 void listen_socket::connect_user(base_user *bu, access_list& al)
 {
+    uint64_t obj_id = 0LL;
+
     this->users[bu->userid] = bu;
-    bu->send_ack(TYPE_LOGREQ,
-                 bu->auth_level,
-                 bu->default_slave->get_object_id());
+    if (bu->default_slave != NULL)
+        obj_id = bu->default_slave->get_object_id();
+    bu->send_ack(TYPE_LOGREQ, bu->auth_level, obj_id);
 }
 
 void listen_socket::disconnect_user(base_user *bu)
