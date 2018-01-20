@@ -1,9 +1,9 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2017, 07:59:31 tquirk
+ *   last updated 20 Jan 2018, 08:43:24 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -80,7 +80,9 @@ void base_user::send_ping(void)
     this->parent->send_pool->push(pkt);
 }
 
-void base_user::send_ack(uint8_t req, uint8_t misc)
+void base_user::send_ack(uint8_t req,
+                         uint64_t misc0, uint64_t misc1,
+                         uint64_t misc2, uint64_t misc3)
 {
     packet_list pkt;
 
@@ -88,7 +90,10 @@ void base_user::send_ack(uint8_t req, uint8_t misc)
     pkt.buf.ack.version = 1;
     pkt.buf.ack.sequence = this->sequence++;
     pkt.buf.ack.request = req;
-    pkt.buf.ack.misc = misc;
+    pkt.buf.ack.misc[0] = misc0;
+    pkt.buf.ack.misc[1] = misc1;
+    pkt.buf.ack.misc[2] = misc2;
+    pkt.buf.ack.misc[3] = misc3;
     pkt.who = this;
     this->parent->send_pool->push(pkt);
 }

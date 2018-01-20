@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Aug 2017, 09:05:58 tquirk
+ *   last updated 20 Jan 2018, 07:55:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -57,7 +57,9 @@ class base_user : public Control {
     virtual const base_user& operator=(const base_user&);
 
     void send_ping(void);
-    void send_ack(uint8_t, uint8_t);
+    void send_ack(uint8_t,
+                  uint64_t = 0LL, uint64_t = 0LL,
+                  uint64_t = 0LL, uint64_t = 0LL);
 };
 
 class listen_socket {

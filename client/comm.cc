@@ -1,9 +1,9 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Jan 2018, 12:05:22 tquirk
+ *   last updated 20 Jan 2018, 08:43:17 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -221,19 +221,20 @@ void Comm::handle_ackpkt(packet& p)
       case TYPE_LOGREQ:
         /* The response to our login request */
         std::clog << "Login response, type ";
-        if (a.misc < 1 || a.misc >= sizeof(access_type))
+        if (a.misc[0] < 1 || a.misc[0] >= sizeof(access_type))
             std::clog << "unknown" << std::endl;
         else
-            std::clog << access_type[a.misc] << " access" << std::endl;
+            std::clog << access_type[a.misc[0]] << " access" << std::endl;
+        this->src_object_id = a.misc[1];
         break;
 
       case TYPE_LGTREQ:
         /* The response to our logout request */
         std::clog << "Logout response, type ";
-        if (a.misc < 1 || a.misc >= sizeof(access_type))
+        if (a.misc[0] < 1 || a.misc[0] >= sizeof(access_type))
             std::clog << "unknown" << std::endl;
         else
-            std::clog << access_type[a.misc] << " access" << std::endl;
+            std::clog << access_type[a.misc[0]] << " access" << std::endl;
         break;
 
       default:

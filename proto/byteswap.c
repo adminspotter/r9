@@ -1,9 +1,9 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2016, 07:53:42 tquirk
+ *   last updated 20 Jan 2018, 08:42:57 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -132,6 +132,10 @@ static int hton_ack_packet(packet *ap, size_t s)
     if (s < sizeof(ack_packet))
         return 0;
     ap->ack.sequence = htonll(ap->ack.sequence);
+    ap->ack.misc[0] = htonll(ap->ack.misc[0]);
+    ap->ack.misc[1] = htonll(ap->ack.misc[1]);
+    ap->ack.misc[2] = htonll(ap->ack.misc[2]);
+    ap->ack.misc[3] = htonll(ap->ack.misc[3]);
     return 1;
 }
 
@@ -141,6 +145,10 @@ static int ntoh_ack_packet(packet *ap, size_t s)
     if (s < sizeof(ack_packet))
         return 0;
     ap->ack.sequence = ntohll(ap->ack.sequence);
+    ap->ack.misc[0] = ntohll(ap->ack.misc[0]);
+    ap->ack.misc[1] = ntohll(ap->ack.misc[1]);
+    ap->ack.misc[2] = ntohll(ap->ack.misc[2]);
+    ap->ack.misc[3] = ntohll(ap->ack.misc[3]);
     return 1;
 }
 

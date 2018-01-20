@@ -1,9 +1,9 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2016, 09:36:42 tquirk
+ *   last updated 20 Jan 2018, 08:42:49 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -100,7 +100,7 @@ typedef struct basic_packet_tag
 } __attribute__ ((__packed__))
 basic_packet;
 
-/* We can ACK any kind of packet with this, thus the orig_request and
+/* We can ACK any kind of packet with this, thus the request and
  * timestamp/sequence elements.
  */
 typedef struct ack_packet_tag
@@ -109,7 +109,7 @@ typedef struct ack_packet_tag
     uint8_t version;        /* protocol version number */
     uint64_t sequence;      /* timestamp / sequence number */
     uint8_t request;        /* packet type of original request */
-    uint8_t misc;           /* miscellaneous data */
+    uint64_t misc[4];       /* miscellaneous data */
 } __attribute__ ((__packed__))
 ack_packet;
 
