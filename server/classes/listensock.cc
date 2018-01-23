@@ -335,11 +335,12 @@ base_user *listen_socket::check_access(uint64_t userid, login_request& log)
                                                       strlen(log.username)));
     bu->characterid = database->get_characterid(userid, charname);
     bu->auth_level = auth_level;
+    database->get_player_server_skills(userid, bu->characterid, bu->actions);
 
     std::clog << "login for user " << bu->username << " (" << bu->userid
               << "), char " << charname << " (id " << bu->characterid
-              << ", obj " << charid
-              << "), auth " << auth_level << std::endl;
+              << ", obj " << charid << ", " << bu->actions.size()
+              << " actions), auth " << auth_level << std::endl;
 
     zone->send_nearby_objects(charid);
 
