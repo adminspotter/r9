@@ -157,8 +157,28 @@ int MySQL::check_authorization(uint64_t userid, const std::string& charname)
 
 uint64_t MySQL::get_characterid(uint64_t userid, const std::string& charname)
 {
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    char str[256];
     uint64_t retval = 0;
 
+    snprintf(str, sizeof(str),
+             "SELECT b.characterid "
+             "FROM players AS a, characters AS b "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s'",
+             userid, DB::MAX_CHARNAME, charname.c_str());
+    this->db_connect();
+
+    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
+        && (res = mysql_use_result(&(this->db_handle))) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
+    {
+        retval = strtoull(row[0], NULL, 10);
+        mysql_free_result(res);
+    }
+    mysql_close(&(this->db_handle));
     return retval;
 }
 

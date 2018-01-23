@@ -135,8 +135,24 @@ int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 
 uint64_t PgSQL::get_characterid(uint64_t userid, const std::string& charname)
 {
+    PGresult *res;
+    char str[256];
     uint64_t retval = 0;
 
+    snprintf(str, sizeof(str),
+             "SELECT b.characterid "
+             "FROM players AS a, characters AS b "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s'",
+             userid, DB::MAX_CHARNAME, charname.c_str());
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
+    PQclear(res);
+    this->db_close();
     return retval;
 }
 
