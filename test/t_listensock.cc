@@ -382,6 +382,9 @@ TEST(ListenSocketTest, CheckAccess)
     EXPECT_CALL(*((mock_DB *)database),
                 check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_MOVE));
+    EXPECT_CALL(*((mock_DB *)database),
+                get_characterid(_, _))
+        .WillOnce(Return(12345678LL));
     EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
 
     zone = new mock_Zone(1000, 1, database);

@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jan 2018, 14:02:21 tquirk
+ *   last updated 21 Jan 2018, 11:17:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -47,7 +47,8 @@ base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
-    this->sequence = 0L;
+    this->sequence = 0LL;
+    this->characterid = 0LL;
 }
 
 base_user::~base_user()
@@ -332,10 +333,12 @@ base_user *listen_socket::check_access(uint64_t userid, login_request& log)
     base_user *bu = new base_user(userid, go, this);
     bu->username = std::string(log.username, std::min(sizeof(log.username),
                                                       strlen(log.username)));
+    bu->characterid = database->get_characterid(userid, charname);
     bu->auth_level = auth_level;
 
     std::clog << "login for user " << bu->username << " (" << bu->userid
-              << "), char " << charname << " (" << charid
+              << "), char " << charname << " (id " << bu->characterid
+              << ", obj " << charid
               << "), auth " << auth_level << std::endl;
 
     zone->send_nearby_objects(charid);
