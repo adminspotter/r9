@@ -1,6 +1,6 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jan 2018, 09:58:07 tquirk
+ *   last updated 23 Jan 2018, 07:21:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -130,6 +130,13 @@ int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
         retval = atol(PQgetvalue(res, 0, 0));
     PQclear(res);
     this->db_close();
+    return retval;
+}
+
+uint64_t PgSQL::get_characterid(uint64_t userid, const std::string& charname)
+{
+    uint64_t retval = 0;
+
     return retval;
 }
 

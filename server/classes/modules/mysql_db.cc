@@ -1,6 +1,6 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Jan 2018, 09:58:01 tquirk
+ *   last updated 21 Jan 2018, 09:22:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -152,6 +152,13 @@ int MySQL::check_authorization(uint64_t userid, const std::string& charname)
         mysql_free_result(res);
     }
     mysql_close(&(this->db_handle));
+    return retval;
+}
+
+uint64_t MySQL::get_characterid(uint64_t userid, const std::string& charname)
+{
+    uint64_t retval = 0;
+
     return retval;
 }
 
