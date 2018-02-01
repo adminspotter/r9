@@ -72,7 +72,6 @@ ActionPool::ActionPool(unsigned int pool_size,
 
 ActionPool::~ActionPool()
 {
-    /* Unregister all the action routines. */
     if (this->action_lib != NULL)
     {
         std::clog << "cleaning up action routines" << std::endl;
@@ -125,7 +124,8 @@ void ActionPool::execute_action(base_user *user, action_request& req)
      * improvement points.
      */
 
-    if (i != this->actions.end() && j != user->actions.end()
+    if (i != this->actions.end()
+        && j != user->actions.end()
         && user->slave->get_object_id() == req.object_id)
     {
         /* If it's not valid on this server, it should at least have
