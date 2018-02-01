@@ -1,9 +1,9 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Sep 2017, 15:01:30 tquirk
+ *   last updated 01 Feb 2018, 09:15:54 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -50,6 +50,11 @@ void ActionPool::load_actions(void)
         action_reg_t *reg
             = (action_reg_t *)this->action_lib->symbol("actions_register");
         (*reg)(this->actions, motion_pool);
+        for (auto &i : this->actions)
+            std::clog << "  loaded " << i.second.name
+                      << " ("
+                      << std::hex << (void *)i.second.action << std::dec << ')'
+                      << std::endl;
     }
 }
 
