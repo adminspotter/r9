@@ -27,6 +27,8 @@
  *
  */
 
+#include <sys/time.h>
+
 #include <glm/vec3.hpp>
 
 #include <algorithm>
@@ -50,6 +52,7 @@ int action_move(GameObject *source,
     move *= intensity / 100.0;
 
     source->movement = move;
+    gettimeofday(&source->last_updated, NULL);
     motion->push(source);
     return intensity;
 }
