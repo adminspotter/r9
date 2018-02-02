@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Sep 2017, 14:48:44 tquirk
+ *   last updated 02 Feb 2018, 08:40:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -41,6 +41,9 @@ int action_move(GameObject *source,
                 GameObject *target,
                 glm::dvec3& direction)
 {
+    if (glm::length(direction) == 0)
+        return 0;
+
     glm::dvec3 move = glm::normalize(direction);
 
     intensity = std::min(intensity, 100);
