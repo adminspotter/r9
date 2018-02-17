@@ -1,9 +1,9 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Jan 2018, 13:07:56 tquirk
+ *   last updated 17 Feb 2018, 12:38:19 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -181,6 +181,8 @@ void cleanup_comm(void)
 {
     while (!comm.empty())
     {
+        comm.back()->send_logout();
+        sleep(1);
         delete comm.back();
         comm.pop_back();
     }
