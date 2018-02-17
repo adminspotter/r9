@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Feb 2018, 09:15:54 tquirk
+ *   last updated 17 Feb 2018, 11:48:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -116,8 +116,14 @@ void ActionPool::execute_action(base_user *user, action_request& req)
 {
     ActionPool::actions_iterator i = this->actions.find(req.action_id);
     Control::actions_iterator j = user->actions.find(req.action_id);
+    std::map<uint64_t, GameObject *>::iterator k =
+        this->game_objects.find(req.dest_object_id);
     glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
+    GameObject *target = NULL;
     int retval;
+
+    if (k != this->game_objects.end())
+        target = k->second;
 
     /* TODO:  if the user doesn't have the skill, but it is valid, we
      * should add it at level 0 so they can start accumulating
@@ -143,7 +149,7 @@ void ActionPool::execute_action(base_user *user, action_request& req)
 
         retval = (*(i->second.action))(user->slave,
                                        req.power_level,
-                                       this->game_objects[req.dest_object_id],
+                                       target,
                                        vec);
         user->send_ack(TYPE_ACTREQ, (uint8_t)retval);
     }
