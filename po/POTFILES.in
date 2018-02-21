@@ -1,5 +1,4 @@
 # List of source files which contain translatable strings.
-client/cache.h
 client/client.cc
 client/client.h
 client/client_core.cc
@@ -10,18 +9,3 @@ client/comm_dialog.cc
 client/configdata.cc
 client/configdata.h
 client/object.h
-client/ui/button.cc
-client/ui/button.h
-client/ui/font.cc
-client/ui/font.h
-client/ui/label.cc
-client/ui/label.h
-client/ui/panel.cc
-client/ui/panel.h
-client/ui/quadtree.cc
-client/ui/quadtree.h
-client/ui/shader.cc
-client/ui/shader.h
-client/ui/ui.cc
-client/ui/ui.h
-client/ui/ui_defs.h
