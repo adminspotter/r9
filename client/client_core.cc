@@ -1,9 +1,9 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Nov 2017, 10:38:24 tquirk
+ *   last updated 21 Feb 2018, 13:20:15 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,8 +42,6 @@
 
 #include "client_core.h"
 #include "shader.h"
-
-#include "object.h"
 
 #include <GL/gl.h>
 #include <GL/glext.h>

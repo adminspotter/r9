@@ -1,9 +1,9 @@
 /* client_core.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Mar 2016, 14:19:41 tquirk
+ *   last updated 21 Feb 2018, 13:20:28 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,6 +33,10 @@
 #include <GL/gl.h>
 
 #include <string>
+
+#include "object.h"
+
+extern ObjectCache *obj;
 
 void init_client_core(void);
 void cleanup_client_core(void);
