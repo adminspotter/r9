@@ -41,8 +41,7 @@ if WANT_TCL
   TC += t_tcl t_tcl_exception
 endif
 if WANT_CLIENT
-  TC += t_cache \
-	t_comm \
+  TC += t_comm \
 	t_comm_exception \
 	t_configdata
 endif
@@ -249,12 +248,6 @@ t_tcl_exception_SOURCES = t_tcl_exception.cc \
 	../server/classes/modules/tcl.cc ../server/classes/modules/r9tcl.h
 t_tcl_exception_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS) \
 	$(TCL_LDLIBS)
-
-t_cache_SOURCES = t_cache.cc ../client/cache.h
-t_cache_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
-	$(GTEST_INCLUDES) $(GMOCK_INCLUDES) \
-	-DSTORE_PREFIX=\"../client\"
-t_cache_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) $(XERCES_LDLIBS)
 
 t_comm_SOURCES = t_comm.cc ../client/comm.cc ../client/comm.h
 t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
