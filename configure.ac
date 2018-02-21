@@ -3,7 +3,6 @@
 
 AC_PREREQ([2.63])
 AC_INIT([Revision9], [0.1], [], [r9], [])
-AC_CONFIG_SRCDIR([client/cache.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 

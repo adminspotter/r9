@@ -12,7 +12,7 @@ r9client_SOURCES = client.cc client.h \
 	configdata.cc configdata.h \
 	log_display.cc log_display.h \
 	comm_dialog.cc \
-	cache.h dtdresolver.h object.h l10n.h cuddly-gl/connect_glfw.cc
+	object.h l10n.h cuddly-gl/connect_glfw.cc
 r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 	-DDTD_PATH=\"$(dtddir)/\" \
 	-DSHADER_SRC_PATH=\"$(shaderdir)\" \
