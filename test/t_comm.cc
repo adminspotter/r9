@@ -1,9 +1,13 @@
 #include "../client/comm.h"
+#include "../client/object.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 using ::testing::_;
+
+ObjectCache *obj;
+struct object *self_obj;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
 bool bad_ntoh = false, bad_hton = false, sendto_error = false;

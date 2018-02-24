@@ -1,6 +1,10 @@
 #include "../client/comm.h"
+#include "../client/object.h"
 
 #include <gtest/gtest.h>
+
+ObjectCache *obj;
+struct object *self_obj;
 
 bool socket_error = false, mutex_error = false, cond_error = false;
 bool create_send_error = false, create_recv_error = false;
