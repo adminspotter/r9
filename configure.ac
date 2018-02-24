@@ -114,27 +114,6 @@ AC_ARG_WITH([client],
             [],
             [with_client="no"])
 
-AC_ARG_WITH([xerces],
-            AS_HELP_STRING([--with-xerces=<path>],
-                           [Build using libxerces-c at <path>]),
-            [
-              if test "x$with_xerces_includes" == "x"
-              then
-                with_xerces_includes="${with_xerces}/include"
-              fi
-              if test "x$with_xerces_libraries" == "x"
-              then
-                with_xerces_libraries="${with_xerces}/lib"
-              fi
-            ],
-            [])
-AC_ARG_WITH([xerces-includes],
-            AS_HELP_STRING([--with-xerces-includes=<path>],
-                           [Use libxerces-c includes at <path>]))
-AC_ARG_WITH([xerces-libraries],
-            AS_HELP_STRING([--with-xerces-libraries=<path>],
-                           [Use libxerces-c libraries at <path>]))
-
 # Development flags (debugging, profiling)
 if test "$enable_debug" == "yes"
 then
@@ -190,76 +169,6 @@ then
           fi
       ],
       [AC_MSG_ERROR([libm not valid, can not build client program.])])
-
-  AC_MSG_NOTICE([checking for xerces])
-  # Try to use the specified libxerces-c
-  if test "x$with_xerces_includes" != "x"
-  then
-    XERCES_INCLUDES="-I$with_xerces_includes"
-  fi
-  if test "x$with_xerces_libraries" != "x"
-  then
-    XERCES_LDFLAGS="-L$with_xerces_libraries"
-  fi
-
-  XERCES_CXXFLAGS_SAVE="$CXXFLAGS"
-  CXXFLAGS="$CLIENT_CXXFLAGS $XERCES_INCLUDES"
-  AC_CHECK_HEADERS([xercesc/sax/AttributeList.hpp],
-      [CLIENT_INCLUDES="$CLIENT_INCLUDES $XERCES_INCLUDES"],
-      [AC_MSG_ERROR([xerces includes not valid, can not build client program])])
-
-  # This is an inline of a hacked version of AC_SEARCH_LIBS
-  AS_VAR_PUSHDEF([ac_Search], [ac_cv_search_XMLPlatformUtils__Initialize])
-  AC_CACHE_CHECK(
-    [for library containing XMLPlatformUtils::Initialize],
-    [ac_Search],
-    [
-      ac_func_search_save_LIBS=$LIBS
-      AC_LANG_CONFTEST([AC_LANG_PROGRAM(
-        [
-#include <xercesc/util/PlatformUtils.hpp>
-#ifdef XERCES_CPP_NAMESPACE_USE
-XERCES_CPP_NAMESPACE_USE
-#endif
-        ],
-        [
-try
-{
-   XMLPlatformUtils::Initialize();
-}
-catch (...)
-{
-   // ...
-}
-XMLPlatformUtils::Terminate();
-        ])])
-      for ac_lib in '' xerces-c
-      do
-        if test -z "$ac_lib"
-        then
-          ac_res="none required"
-        else
-          ac_res=-l$ac_lib
-          LIBS="-l$ac_lib $XERCES_LDFLAGS $ac_func_search_save_LIBS"
-        fi
-        AC_LINK_IFELSE([], [AS_VAR_SET([ac_Search], [$ac_res])])
-        AS_VAR_SET_IF([ac_Search], [break])
-      done
-      AS_VAR_SET_IF([ac_Search], , [AS_VAR_SET([ac_Search], [no])])
-      rm conftest.$ac_ext
-      LIBS=$ac_func_search_save_LIBS
-    ])
-  ac_res=AS_VAR_GET([ac_Search])
-  AS_IF(
-    [test "$ac_res" != no],
-    [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"],
-    [AC_MSG_ERROR([libxerces-c not valid, can not build client program])])
-  AS_VAR_POPDEF([ac_Search])
-  CXXFLAGS="$XERCES_CXXFLAGS_SAVE"
-
-  XERCES_LDLIBS="$ac_cv_search_XMLPlatformUtils__Initialize"
-  CLIENT_LDFLAGS="$CLIENT_LDFLAGS $XERCES_LDFLAGS"
-  CLIENT_LDLIBS="$XERCES_LDLIBS $CLIENT_LDLIBS"
 
   # We're currently only doing l10n in the client, so we'll check that
   # header here.
@@ -323,7 +232,6 @@ XMLPlatformUtils::Terminate();
   AC_SUBST(CLIENT_CXXFLAGS)
   AC_SUBST(CLIENT_INCLUDES)
   AC_SUBST(CLIENT_LDFLAGS)
-  AC_SUBST(XERCES_LDLIBS)
   AC_SUBST(FREETYPE_LDLIBS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
