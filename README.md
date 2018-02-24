@@ -81,7 +81,6 @@ any platform-specific stuff to its own files.
 * The GNU autotools
 * [glm](http://glm.g-truc.net/)
 * [GLFW](http://www.glfw.org/) 3.2
-* [Xerces-C++](https://xerces.apache.org/xerces-c/)
 
 ## Contributing ##
 
