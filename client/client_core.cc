@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Feb 2018, 13:20:15 tquirk
+ *   last updated 24 Feb 2018, 14:50:45 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -53,6 +53,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 ObjectCache *obj = NULL;
+struct object *self_obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
 GLuint model_loc, view_loc, proj_loc;
 GLint position_attr, color_attr;

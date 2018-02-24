@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Feb 2018, 12:38:19 tquirk
+ *   last updated 24 Feb 2018, 15:25:03 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -164,7 +164,10 @@ void move_key_callback(ui::active *a, void *call, void *client)
             return;
 
         if (comm.size() > 0)
-            comm[0]->send_action_request(action, 0LL, 100);
+        {
+            glm::vec3 dir = self_obj->orientation * glm::vec3(0.0, 1.0, 0.0);
+            comm[0]->send_action_request(action, dir, 100);
+        }
     }
 }
 

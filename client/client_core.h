@@ -1,6 +1,6 @@
 /* client_core.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Feb 2018, 13:20:28 tquirk
+ *   last updated 24 Feb 2018, 14:50:37 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -37,6 +37,7 @@
 #include "object.h"
 
 extern ObjectCache *obj;
+extern struct object *self_obj;
 
 void init_client_core(void);
 void cleanup_client_core(void);

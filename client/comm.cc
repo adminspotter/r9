@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Feb 2018, 10:41:20 tquirk
+ *   last updated 24 Feb 2018, 15:19:25 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -226,6 +226,7 @@ void Comm::handle_ackpkt(packet& p)
         else
             std::clog << access_type[a.misc[0]] << " access" << std::endl;
         this->src_object_id = a.misc[1];
+        self_obj = &((*obj)[this->src_object_id]);
         break;
 
       case TYPE_LGTREQ:
