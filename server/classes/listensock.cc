@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jan 2018, 11:17:12 tquirk
+ *   last updated 25 Feb 2018, 15:21:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -35,7 +35,7 @@
 
 #include "listensock.h"
 #include "zone.h"
-
+#include "config_data.h"
 
 #include "../server.h"
 
