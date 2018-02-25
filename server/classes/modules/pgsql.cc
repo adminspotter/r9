@@ -1,9 +1,9 @@
 /* pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2017, 15:48:51 tquirk
+ *   last updated 23 Jan 2018, 07:21:48 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -82,7 +82,7 @@ uint64_t PgSQL::check_authentication(const std::string& user,
 int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
 {
     PGresult *res;
-    char str[256];
+    char str[350];
     int retval = ACCESS_NONE;
 
     snprintf(str, sizeof(str),
@@ -106,16 +106,67 @@ int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
     return retval;
 }
 
-uint64_t PgSQL::get_character_objectid(uint64_t userid,
-                                       const std::string& charname)
+int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
+{
+    PGresult *res;
+    char str[350];
+    int retval = ACCESS_NONE;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.access_type "
+             "FROM players AS a, characters AS b, server_access AS c, "
+             "servers AS d "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s' "
+             "AND b.characterid=c.characterid "
+             "AND c.serverid=d.serverid "
+             "AND d.ip='%s'",
+             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = atol(PQgetvalue(res, 0, 0));
+    PQclear(res);
+    this->db_close();
+    return retval;
+}
+
+uint64_t PgSQL::get_characterid(uint64_t userid, const std::string& charname)
 {
     PGresult *res;
     char str[256];
     uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
+             "SELECT b.characterid "
+             "FROM players AS a, characters AS b "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s'",
+             userid, DB::MAX_CHARNAME, charname.c_str());
+    this->db_connect();
+
+    res = PQexec(this->db_handle, str);
+    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
+        retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
+    PQclear(res);
+    this->db_close();
+    return retval;
+}
+
+uint64_t PgSQL::get_character_objectid(uint64_t userid,
+                                       const std::string& charname)
+{
+    PGresult *res;
+    char str[350];
+    uint64_t retval = 0;
+
+    snprintf(str, sizeof(str),
              "SELECT d.objectid "
-             "FROM players AS a, characters AS a, servers AS b, server_objects AS c "
+             "FROM players AS a, characters AS a, "
+             "servers AS b, server_objects AS c "
              "WHERE a.playerid=%" PRIu64 " "
              "AND a.playerid=b.owner "
              "AND b.charactername='%.*s' "
@@ -214,7 +265,7 @@ int PgSQL::get_player_server_skills(uint64_t userid,
                                     std::map<uint16_t, action_level>& actions)
 {
     PGresult *res;
-    char str[256];
+    char str[420];
     int count = 0, num_tuples;
 
     snprintf(str, sizeof(str),
@@ -274,7 +325,7 @@ int PgSQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
 int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
 {
     PGresult *res;
-    char str[256];
+    char str[400];
     int retval = 0;
 
     snprintf(str, sizeof(str),

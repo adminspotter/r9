@@ -1,6 +1,6 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 May 2017, 07:38:26 tquirk
+ *   last updated 26 Nov 2017, 08:04:00 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -38,8 +38,8 @@
 #include <list>
 #include <string>
 
-#include "ui/row_column.h"
-#include "ui/font.h"
+#include "cuddly-gl/row_column.h"
+#include "cuddly-gl/font.h"
 
 class log_display : public ui::row_column,
                     public std::basic_streambuf<char, std::char_traits<char> >

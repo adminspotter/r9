@@ -9,7 +9,7 @@ class mock_Zone : public Zone
     mock_Zone(uint64_t a, uint16_t b, DB *c) : Zone(a, b, c) {};
     virtual ~mock_Zone() {};
 
-    MOCK_METHOD2(connect_game_object, void(Control *, uint64_t));
+    MOCK_METHOD1(send_nearby_objects, void(uint64_t));
 
     MOCK_METHOD1(sector_contains, Octree *(glm::dvec3&));
     MOCK_METHOD1(which_sector, glm::ivec3(glm::dvec3&));

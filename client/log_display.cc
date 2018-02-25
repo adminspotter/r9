@@ -1,9 +1,9 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 May 2017, 07:45:20 tquirk
+ *   last updated 26 Nov 2017, 08:03:45 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -43,9 +43,9 @@
 
 #include "configdata.h"
 
-#include "ui/ui_defs.h"
+#include "cuddly-gl/ui_defs.h"
 #include "log_display.h"
-#include "ui/multi_label.h"
+#include "cuddly-gl/multi_label.h"
 
 #define DISTANCE_FROM_BOTTOM 10
 #define LABEL_WIDTH 225
@@ -166,8 +166,8 @@ void *log_display::cleanup_entries(void *arg)
 }
 
 log_display::log_display(ui::composite *p, GLuint w, GLuint h)
-    : ui::row_column(p, w, h), ui::rect(w, h), buf(), fname(), entries(),
-      entry_lifetime(ENTRY_LIFETIME)
+    : ui::row_column(p, w, h), ui::active::active(w, h), ui::rect(w, h),
+      buf(), fname(), entries(), entry_lifetime(ENTRY_LIFETIME)
 {
     int border = 1, ret;
 

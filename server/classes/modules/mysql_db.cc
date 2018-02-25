@@ -1,9 +1,9 @@
 /* mysql_db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Jul 2017, 09:21:24 tquirk
+ *   last updated 21 Jan 2018, 09:22:26 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -97,7 +97,7 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[350];
     int retval = ACCESS_NONE;
 
     snprintf(str, sizeof(str),
@@ -124,12 +124,70 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
     return retval;
 }
 
+int MySQL::check_authorization(uint64_t userid, const std::string& charname)
+{
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    char str[350];
+    int retval = ACCESS_NONE;
+
+    snprintf(str, sizeof(str),
+             "SELECT c.access_type "
+             "FROM players AS a, characters AS b, server_access AS c, "
+             "servers AS d "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s' "
+             "AND b.characterid=c.characterid "
+             "AND c.serverid=d.serverid "
+             "AND d.ip='%s'",
+             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
+    this->db_connect();
+
+    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
+        && (res = mysql_use_result(&(this->db_handle))) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
+    {
+        retval = atoi(row[0]);
+        mysql_free_result(res);
+    }
+    mysql_close(&(this->db_handle));
+    return retval;
+}
+
+uint64_t MySQL::get_characterid(uint64_t userid, const std::string& charname)
+{
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    char str[256];
+    uint64_t retval = 0;
+
+    snprintf(str, sizeof(str),
+             "SELECT b.characterid "
+             "FROM players AS a, characters AS b "
+             "WHERE a.playerid=%" PRIu64 " "
+             "AND a.playerid=b.owner "
+             "AND b.charactername='%.*s'",
+             userid, DB::MAX_CHARNAME, charname.c_str());
+    this->db_connect();
+
+    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
+        && (res = mysql_use_result(&(this->db_handle))) != NULL
+        && (row = mysql_fetch_row(res)) != NULL)
+    {
+        retval = strtoull(row[0], NULL, 10);
+        mysql_free_result(res);
+    }
+    mysql_close(&(this->db_handle));
+    return retval;
+}
+
 uint64_t MySQL::get_character_objectid(uint64_t userid,
                                        const std::string& charname)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[350];
     uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
@@ -244,7 +302,7 @@ int MySQL::get_player_server_skills(uint64_t userid,
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[420];
     int count = 0;
 
     snprintf(str, sizeof(str),
@@ -305,7 +363,7 @@ int MySQL::check_open_login(uint64_t userid, uint64_t charid)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[400];
     int retval = 0;
 
     snprintf(str, sizeof(str),

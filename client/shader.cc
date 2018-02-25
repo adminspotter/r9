@@ -1,6 +1,6 @@
 /* shader.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Mar 2016, 10:36:56 tquirk
+ *   last updated 26 Nov 2017, 10:39:29 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -38,7 +38,7 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 
-#include "../l10n.h"
+#include "l10n.h"
 
 #include "shader.h"
 

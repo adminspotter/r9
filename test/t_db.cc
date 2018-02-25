@@ -63,6 +63,14 @@ class fake_DB : public DB
         {
             return 0;
         };
+    virtual int check_authorization(uint64_t a, const std::string& b)
+        {
+            return 0;
+        };
+    virtual uint64_t get_characterid(uint64_t a, const std::string& b)
+        {
+            return 0LL;
+        };
     virtual uint64_t get_character_objectid(uint64_t a, const std::string& b)
         {
             return 0LL;

@@ -1,9 +1,9 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Aug 2017, 08:47:07 tquirk
+ *   last updated 17 Feb 2018, 11:48:34 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,6 +37,10 @@
 #include "listensock.h"
 
 #include "../../proto/proto.h"
+#include "../server.h"
+
+typedef void action_reg_t(std::map<uint16_t, action_rec>&, MotionPool *);
+typedef void action_unreg_t(std::map<uint16_t, action_rec>&);
 
 void ActionPool::load_actions(void)
 {
@@ -45,7 +49,12 @@ void ActionPool::load_actions(void)
         std::clog << "loading action routines" << std::endl;
         action_reg_t *reg
             = (action_reg_t *)this->action_lib->symbol("actions_register");
-        (*reg)(this->actions);
+        (*reg)(this->actions, motion_pool);
+        for (auto &i : this->actions)
+            std::clog << "  loaded " << i.second.name
+                      << " ("
+                      << std::hex << (void *)i.second.action << std::dec << ')'
+                      << std::endl;
     }
 }
 
@@ -63,7 +72,6 @@ ActionPool::ActionPool(unsigned int pool_size,
 
 ActionPool::~ActionPool()
 {
-    /* Unregister all the action routines. */
     if (this->action_lib != NULL)
     {
         std::clog << "cleaning up action routines" << std::endl;
@@ -91,16 +99,6 @@ void ActionPool::start(void)
     this->ThreadPool<packet_list>::start(ActionPool::action_pool_worker);
 }
 
-/* pop() should return a ready-to-use item for the queue to process,
- * so we'll handle the network-to-host translation here.  Once crypto
- * is added, we'll take care of decrypting as well.
- */
-void ActionPool::pop(packet_list *req)
-{
-    this->ThreadPool::pop(req);
-    ntoh_packet(&(req->buf), sizeof(packet));
-}
-
 void *ActionPool::action_pool_worker(void *arg)
 {
     ActionPool *act = (ActionPool *)arg;
@@ -118,15 +116,22 @@ void ActionPool::execute_action(base_user *user, action_request& req)
 {
     ActionPool::actions_iterator i = this->actions.find(req.action_id);
     Control::actions_iterator j = user->actions.find(req.action_id);
+    std::map<uint64_t, GameObject *>::iterator k =
+        this->game_objects.find(req.dest_object_id);
     glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
+    GameObject *target = NULL;
     int retval;
+
+    if (k != this->game_objects.end())
+        target = k->second;
 
     /* TODO:  if the user doesn't have the skill, but it is valid, we
      * should add it at level 0 so they can start accumulating
      * improvement points.
      */
 
-    if (i != this->actions.end() && j != user->actions.end()
+    if (i != this->actions.end()
+        && j != user->actions.end()
         && user->slave->get_object_id() == req.object_id)
     {
         /* If it's not valid on this server, it should at least have
@@ -144,7 +149,7 @@ void ActionPool::execute_action(base_user *user, action_request& req)
 
         retval = (*(i->second.action))(user->slave,
                                        req.power_level,
-                                       this->game_objects[req.dest_object_id],
+                                       target,
                                        vec);
         user->send_ack(TYPE_ACTREQ, (uint8_t)retval);
     }

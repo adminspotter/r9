@@ -1,9 +1,9 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 May 2017, 14:19:31 tquirk
+ *   last updated 24 Feb 2018, 15:19:25 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -221,19 +221,21 @@ void Comm::handle_ackpkt(packet& p)
       case TYPE_LOGREQ:
         /* The response to our login request */
         std::clog << "Login response, type ";
-        if (a.misc < 1 || a.misc >= sizeof(access_type))
+        if (a.misc[0] < 1 || a.misc[0] >= sizeof(access_type))
             std::clog << "unknown" << std::endl;
         else
-            std::clog << access_type[a.misc] << " access" << std::endl;
+            std::clog << access_type[a.misc[0]] << " access" << std::endl;
+        this->src_object_id = a.misc[1];
+        self_obj = &((*obj)[this->src_object_id]);
         break;
 
       case TYPE_LGTREQ:
         /* The response to our logout request */
         std::clog << "Logout response, type ";
-        if (a.misc < 1 || a.misc >= sizeof(access_type))
+        if (a.misc[0] < 1 || a.misc[0] >= sizeof(access_type))
             std::clog << "unknown" << std::endl;
         else
-            std::clog << access_type[a.misc] << " access" << std::endl;
+            std::clog << access_type[a.misc[0]] << " access" << std::endl;
         break;
 
       default:
@@ -292,6 +294,8 @@ Comm::Comm(struct addrinfo *ai)
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
+
+    this->src_object_id = 0LL;
 }
 
 Comm::~Comm()
@@ -371,7 +375,7 @@ void Comm::send_login(const std::string& user,
 {
     packet *req = new packet;
 
-    memset((void *)req, 0, sizeof(login_request));
+    memset(req, 0, sizeof(packet));
     req->log.type = TYPE_LOGREQ;
     req->log.version = 1;
     req->log.sequence = this->sequence++;
@@ -387,12 +391,33 @@ void Comm::send_action_request(uint16_t actionid,
 {
     packet *req = new packet;
 
+    memset(req, 0, sizeof(packet));
     req->act.type = TYPE_ACTREQ;
     req->act.version = 1;
     req->act.sequence = sequence++;
+    req->act.object_id = this->src_object_id;
     req->act.action_id = actionid;
     req->act.power_level = power;
     req->act.dest_object_id = target;
+    this->send(req, sizeof(action_request));
+}
+
+void Comm::send_action_request(uint16_t actionid,
+                               glm::vec3& direction,
+                               uint8_t power)
+{
+    packet *req = new packet;
+
+    memset(req, 0, sizeof(packet));
+    req->act.type = TYPE_ACTREQ;
+    req->act.version = 1;
+    req->act.sequence = sequence++;
+    req->act.object_id = this->src_object_id;
+    req->act.action_id = actionid;
+    req->act.x_pos_dest = (uint64_t)(direction.x * 100.0);
+    req->act.y_pos_dest = (uint64_t)(direction.y * 100.0);
+    req->act.z_pos_dest = (uint64_t)(direction.z * 100.0);
+    req->act.power_level = power;
     this->send(req, sizeof(action_request));
 }
 
@@ -400,6 +425,7 @@ void Comm::send_logout(void)
 {
     packet *req = new packet;
 
+    memset(req, 0, sizeof(packet));
     req->lgt.type = TYPE_LGTREQ;
     req->lgt.version = 1;
     req->lgt.sequence = sequence++;
@@ -410,6 +436,7 @@ void Comm::send_ack(uint8_t type)
 {
     packet *req = new packet;
 
+    memset(req, 0, sizeof(packet));
     req->ack.type = TYPE_ACKPKT;
     req->ack.version = 1;
     req->ack.sequence = sequence++;

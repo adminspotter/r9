@@ -1,9 +1,13 @@
 #include "../client/comm.h"
+#include "../client/object.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 using ::testing::_;
+
+ObjectCache *obj;
+struct object *self_obj;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
 bool bad_ntoh = false, bad_hton = false, sendto_error = false;
@@ -93,6 +97,8 @@ class mock_Comm : public Comm
                                   const std::string& c));
     MOCK_METHOD3(send_action_request,
                  void(uint16_t a, uint64_t b, uint8_t c));
+    MOCK_METHOD3(send_action_request,
+                 void(uint16_t a, glm::vec3& b, uint8_t c));
     MOCK_METHOD0(send_logout, void(void));
     MOCK_METHOD1(send_ack, void(uint8_t));
 };
@@ -317,7 +323,7 @@ TEST(CommSendTest, SendAck)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommSendTest, SendActionReq)
+TEST(CommSendTest, SendActionReqObj)
 {
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
     std::stringstream new_clog;
@@ -346,6 +352,48 @@ TEST(CommSendTest, SendActionReq)
             comm->start();
         });
     comm->send_action_request(1, 1, 1);
+    sleep(1);
+    ASSERT_NO_THROW(
+        {
+            comm->stop();
+        });
+    delete comm;
+
+    ASSERT_EQ(packet_type, TYPE_ACTREQ);
+    ASSERT_STREQ(new_clog.str().c_str(), "");
+    std::clog.rdbuf(old_clog_rdbuf);
+}
+
+TEST(CommSendTest, SendActionReqVec)
+{
+    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
+    std::stringstream new_clog;
+    std::clog.rdbuf(new_clog.rdbuf());
+    Comm *comm = NULL;
+    struct addrinfo ai;
+
+    /* send_worker will delete this */
+    packet *pkt = new packet;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    ASSERT_NO_THROW(
+        {
+            comm = new Comm(&ai);
+            comm->start();
+        });
+    glm::vec3 dest(1.0, 2.0, 3.0);
+    comm->send_action_request(1, dest, 1);
     sleep(1);
     ASSERT_NO_THROW(
         {

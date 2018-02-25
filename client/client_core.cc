@@ -1,9 +1,9 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Sep 2016, 19:17:52 tquirk
+ *   last updated 24 Feb 2018, 14:50:45 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,8 +41,7 @@
 #include <functional>
 
 #include "client_core.h"
-
-#include "object.h"
+#include "shader.h"
 
 #include <GL/gl.h>
 #include <GL/glext.h>
@@ -54,6 +53,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 ObjectCache *obj = NULL;
+struct object *self_obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
 GLuint model_loc, view_loc, proj_loc;
 GLint position_attr, color_attr;

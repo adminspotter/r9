@@ -41,12 +41,9 @@ if WANT_TCL
   TC += t_tcl t_tcl_exception
 endif
 if WANT_CLIENT
-  TC += t_cache \
-	t_comm \
+  TC += t_comm \
 	t_comm_exception \
-	t_configdata \
-	t_font \
-	t_image
+	t_configdata
 endif
 
 TESTS = $(TC)
@@ -226,12 +223,6 @@ t_tcl_exception_SOURCES = t_tcl_exception.cc \
 t_tcl_exception_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS) \
 	$(TCL_LDLIBS)
 
-t_cache_SOURCES = t_cache.cc ../client/cache.h
-t_cache_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
-	$(GTEST_INCLUDES) $(GMOCK_INCLUDES) \
-	-DSTORE_PREFIX=\"../client\"
-t_cache_LDADD = $(GMOCK_MAIN_OBJ) $(GTEST_LIBS) $(GMOCK_LIBS) $(XERCES_LDLIBS)
-
 t_comm_SOURCES = t_comm.cc ../client/comm.cc ../client/comm.h
 t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 	../proto/libr9_proto.la
@@ -243,16 +234,6 @@ t_comm_exception_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
 t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
-
-t_font_SOURCES = t_font.cc ../client/ui/font.h ../client/ui/font.cc
-t_font_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
-	$(GTEST_INCLUDES) \
-	-DSTORE_PREFIX=\"../client\"
-t_font_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
-	$(XERCES_LDLIBS) $(FREETYPE_LDLIBS)
-
-t_image_SOURCES = t_image.cc ../client/ui/image.h
-t_image_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov

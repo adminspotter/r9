@@ -1,9 +1,9 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Dec 2015, 18:05:51 tquirk
+ *   last updated 18 Feb 2018, 10:59:01 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -49,6 +49,8 @@
 #include <string>
 #include <queue>
 
+#include <glm/vec3.hpp>
+
 #include "../proto/proto.h"
 
 class Comm
@@ -64,6 +66,7 @@ class Comm
     std::queue<packet *> send_queue;
 
     static uint64_t sequence;
+    uint64_t src_object_id;
     volatile bool thread_exit_flag;
 
     typedef void (Comm::*pkt_handler)(packet&);
@@ -93,6 +96,7 @@ class Comm
                             const std::string&,
                             const std::string&);
     virtual void send_action_request(uint16_t, uint64_t, uint8_t);
+    virtual void send_action_request(uint16_t, glm::vec3&, uint8_t);
     virtual void send_logout(void);
     virtual void send_ack(uint8_t);
 };

@@ -1,6 +1,6 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Feb 2017, 11:09:09 tquirk
+ *   last updated 26 Nov 2017, 08:02:08 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2016  Trinity Annabelle Quirk
@@ -36,7 +36,7 @@
 
 #include <string>
 
-#include "ui/ui.h"
+#include "cuddly-gl/ui.h"
 
 void setup_comm(struct addrinfo *, const char *, const char *, const char *);
 void cleanup_comm(void);

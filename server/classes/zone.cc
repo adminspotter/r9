@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Sep 2017, 13:00:03 tquirk
+ *   last updated 04 Dec 2017, 08:02:43 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -167,12 +167,11 @@ GameObject *Zone::find_game_object(uint64_t objid)
     return go;
 }
 
-void Zone::connect_game_object(Control *con, uint64_t objid)
+void Zone::send_nearby_objects(uint64_t objid)
 {
     GameObject *go = this->find_game_object(objid);
     Zone::objects_iterator gi;
 
-    go->connect(con);
     update_pool->push(go);
 
     /* Send updates on all objects within visual range */

@@ -1,9 +1,9 @@
 /* object.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Feb 2016, 16:14:58 tquirk
+ *   last updated 21 Feb 2018, 13:18:21 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,7 +41,7 @@
 #include <glm/vec3.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "cache.h"
+#include "cuddly-gl/cache.h"
 
 struct object
 {

@@ -1,9 +1,9 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Aug 2017, 20:59:17 tquirk
+ *   last updated 01 Nov 2017, 10:11:44 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,10 +44,8 @@
 #include "../../proto/proto.h"
 
 /* Eliminate the multiple-include problems */
-class Control;
 class GameObject;
 class base_user;
-class listen_socket;
 class Sockaddr;
 
 typedef struct sequence_tag
@@ -116,11 +114,5 @@ typedef struct action_level_tag
     time_t last_level;
 }
 action_level;
-
-/* Typedefs we can use for casting things to come out of a dynamically
- * loaded library.
- */
-typedef void action_reg_t(std::map<uint16_t, action_rec>&);
-typedef void action_unreg_t(std::map<uint16_t, action_rec>&);
 
 #endif /* __INC_DEFS_H__ */

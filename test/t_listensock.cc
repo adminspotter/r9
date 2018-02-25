@@ -4,8 +4,10 @@
 
 #include "mock_db.h"
 #include "mock_server_globals.h"
+#include "mock_zone.h"
 
 using ::testing::_;
+using ::testing::A;
 using ::testing::Return;
 using ::testing::Invoke;
 
@@ -321,7 +323,8 @@ TEST(ListenSocketTest, GetUserid)
 {
     database = new mock_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authentication(_, A<const std::string&>()))
         .WillOnce(Return(0LL));
 
     login_request log;
@@ -347,9 +350,8 @@ TEST(ListenSocketTest, CheckAccessNoAccess)
 {
     database = new mock_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_NONE));
 
     login_request log;
@@ -377,14 +379,21 @@ TEST(ListenSocketTest, CheckAccess)
 
     EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
         .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_MOVE));
+    EXPECT_CALL(*((mock_DB *)database),
+                get_characterid(_, _))
+        .WillOnce(Return(12345678LL));
+    EXPECT_CALL(*((mock_DB *)database),
+                get_player_server_skills(_, _, _));
     EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
 
-    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+    zone = new mock_Zone(1000, 1, database);
 
-    zone = new Zone(1000, 1, database);
-    zone->game_objects[1234LL] = go;
+    EXPECT_CALL(*((mock_Zone *)zone), send_nearby_objects(_));
+
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
     login_request log;
 
@@ -403,7 +412,7 @@ TEST(ListenSocketTest, CheckAccess)
     delete bu;
     delete listen;
     freeaddrinfo(addr);
-    delete zone;
+    delete (mock_Zone *)zone;
     delete (mock_DB *)database;
 }
 
@@ -476,9 +485,8 @@ TEST(ListenSocketTest, LoginNoAccess)
 
     EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
         .WillOnce(Return(123LL));
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_NONE));
 
     access_list access;
@@ -510,14 +518,15 @@ TEST(ListenSocketTest, Login)
         .WillOnce(Return(123LL));
     EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
         .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database), check_authorization(_, _))
+    EXPECT_CALL(*((mock_DB *)database),
+                check_authorization(_, A<const std::string&>()))
         .WillOnce(Return(ACCESS_MOVE));
     EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
 
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
-    zone = new Zone(1000, 1, database);
-    zone->game_objects[1234LL] = go;
+    zone = new mock_Zone(1000, 1, database);
+    EXPECT_CALL(*((mock_Zone *)zone), send_nearby_objects(_));
 
     access_list access;
 
@@ -536,7 +545,7 @@ TEST(ListenSocketTest, Login)
     ASSERT_TRUE(listen->users.size() == 1);
     ASSERT_EQ(listen->users[123LL]->auth_level, ACCESS_MOVE);
 
-    delete zone;
+    delete (mock_Zone *)zone;
     delete listen;
     freeaddrinfo(addr);
     delete (mock_DB *)database;

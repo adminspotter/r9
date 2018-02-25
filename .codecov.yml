@@ -3,3 +3,4 @@ ignore:
   - test/mock_*.h
   - test/t_*
   - test/gmock-1.7.0
+  - client/cuddly-gl

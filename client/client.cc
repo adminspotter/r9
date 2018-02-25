@@ -1,9 +1,9 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jan 2017, 08:34:29 tquirk
+ *   last updated 24 Feb 2018, 15:25:03 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,25 +42,23 @@
 #include "client_core.h"
 #include "l10n.h"
 
-#include "ui/ui.h"
+#include "cuddly-gl/ui.h"
+#include "cuddly-gl/connect_glfw.h"
 #include "log_display.h"
 
 void error_callback(int, const char *);
-void key_callback(GLFWwindow *, int, int, int, int);
-void char_callback(GLFWwindow *, unsigned int, int);
-void mouse_position_callback(GLFWwindow *, double, double);
-void mouse_button_callback(GLFWwindow *, int, int, int);
+void close_key_callback(ui::active *, void *, void *);
 void resize_callback(GLFWwindow *, int, int);
+void move_key_callback(ui::active *, void *, void *);
 
 std::vector<Comm *> comm;
 ConfigData config;
+GLFWwindow *w;
 ui::context *ctx;
 log_display *log_disp;
 
 int main(int argc, char **argv)
 {
-    GLFWwindow *w;
-
 #if WANT_LOCALES && HAVE_LIBINTL_H
     setlocale(LC_ALL, "");
     bindtextdomain(PACKAGE, LOCALE_DIR);
@@ -96,14 +94,15 @@ int main(int argc, char **argv)
 
     glfwMakeContextCurrent(w);
     ctx = new ui::context(800, 600);
+    ui_connect_glfw(ctx, w);
+    ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
+    ctx->add_callback(ui::callback::key_down, move_key_callback, NULL);
+    ctx->add_callback(ui::callback::key_up, move_key_callback, NULL);
+
     log_disp = new log_display(ctx, 0, 0);
     init_client_core();
 
     glfwSetWindowSizeCallback(w, resize_callback);
-    glfwSetKeyCallback(w, key_callback);
-    glfwSetCharModsCallback(w, char_callback);
-    glfwSetMouseButtonCallback(w, mouse_button_callback);
-    glfwSetCursorPosCallback(w, mouse_position_callback);
 
     /* Set the initial projection matrix */
     resize_callback(w, 800, 600);
@@ -133,81 +132,12 @@ void error_callback(int err, const char *desc)
     std::cout << "glfw error: " << desc << " (" << err << ')' << std::endl;
 }
 
-void key_callback(GLFWwindow *w, int key, int scan, int action, int mods)
+void close_key_callback(ui::active *a, void *call, void *client)
 {
-    int ui_key = 0, ui_state, ui_mods = 0;
+    ui::key_call_data *call_data = (ui::key_call_data *)call;
 
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (call_data->key == ui::key::esc && call_data->state == ui::key::down)
         glfwSetWindowShouldClose(w, GL_TRUE);
-    switch (key)
-    {
-      case GLFW_KEY_LEFT:       ui_key = ui::key::l_arrow;  break;
-      case GLFW_KEY_RIGHT:      ui_key = ui::key::r_arrow;  break;
-      case GLFW_KEY_UP:         ui_key = ui::key::u_arrow;  break;
-      case GLFW_KEY_DOWN:       ui_key = ui::key::d_arrow;  break;
-      case GLFW_KEY_HOME:       ui_key = ui::key::home;     break;
-      case GLFW_KEY_END:        ui_key = ui::key::end;      break;
-      case GLFW_KEY_BACKSPACE:  ui_key = ui::key::bkspc;    break;
-      case GLFW_KEY_DELETE:     ui_key = ui::key::del;      break;
-      default:              return;
-    }
-    ui_state = (action == GLFW_PRESS ? ui::key::down : ui::key::up);
-    if (mods & GLFW_MOD_SHIFT)
-        ui_mods |= ui::key_mod::shift;
-    if (mods & GLFW_MOD_CONTROL)
-        ui_mods |= ui::key_mod::ctrl;
-    if (mods & GLFW_MOD_ALT)
-        ui_mods |= ui::key_mod::alt;
-    if (mods & GLFW_MOD_SUPER)
-        ui_mods |= ui::key_mod::super;
-    ctx->key_callback(ui_key, 0, ui_state, ui_mods);
-}
-
-void char_callback(GLFWwindow *w, unsigned int c, int mods)
-{
-    int ui_mods = 0;
-
-    if (mods & GLFW_MOD_SHIFT)
-        ui_mods |= ui::key_mod::shift;
-    if (mods & GLFW_MOD_CONTROL)
-        ui_mods |= ui::key_mod::ctrl;
-    if (mods & GLFW_MOD_ALT)
-        ui_mods |= ui::key_mod::alt;
-    if (mods & GLFW_MOD_SUPER)
-        ui_mods |= ui::key_mod::super;
-    ctx->key_callback(ui::key::no_key, c, ui::key::down, mods);
-}
-
-void mouse_position_callback(GLFWwindow *w, double xpos, double ypos)
-{
-    ctx->mouse_pos_callback((int)xpos, (int)ypos);
-}
-
-void mouse_button_callback(GLFWwindow *w, int button, int action, int mods)
-{
-    int btn, act;
-
-    switch (button)
-    {
-      default:
-      case GLFW_MOUSE_BUTTON_1:  btn = ui::mouse::button0;  break;
-      case GLFW_MOUSE_BUTTON_2:  btn = ui::mouse::button1;  break;
-      case GLFW_MOUSE_BUTTON_3:  btn = ui::mouse::button2;  break;
-      case GLFW_MOUSE_BUTTON_4:  btn = ui::mouse::button3;  break;
-      case GLFW_MOUSE_BUTTON_5:  btn = ui::mouse::button4;  break;
-      case GLFW_MOUSE_BUTTON_6:  btn = ui::mouse::button5;  break;
-      case GLFW_MOUSE_BUTTON_7:  btn = ui::mouse::button6;  break;
-      case GLFW_MOUSE_BUTTON_8:  btn = ui::mouse::button7;  break;
-    }
-
-    switch (action)
-    {
-      default:
-      case GLFW_PRESS:    act = ui::mouse::down;  break;
-      case GLFW_RELEASE:  act = ui::mouse::up;    break;
-    }
-
-    ctx->mouse_btn_callback(btn, act);
 }
 
 void resize_callback(GLFWwindow *w, int width, int height)
@@ -216,6 +146,29 @@ void resize_callback(GLFWwindow *w, int width, int height)
 
     ctx->set(ui::element::size, ui::size::all, &sz);
     resize_window(width, height);
+}
+
+void move_key_callback(ui::active *a, void *call, void *client)
+{
+    ui::key_call_data *call_data = (ui::key_call_data *)call;
+
+    if (call_data->key == ui::key::u_arrow)
+    {
+        uint16_t action;
+
+        if (call_data->state == ui::key::down)
+            action = 3;
+        else if (call_data->state == ui::key::up)
+            action = 5;
+        else
+            return;
+
+        if (comm.size() > 0)
+        {
+            glm::vec3 dir = self_obj->orientation * glm::vec3(0.0, 1.0, 0.0);
+            comm[0]->send_action_request(action, dir, 100);
+        }
+    }
 }
 
 void setup_comm(struct addrinfo *ai,
@@ -231,6 +184,8 @@ void cleanup_comm(void)
 {
     while (!comm.empty())
     {
+        comm.back()->send_logout();
+        sleep(1);
         delete comm.back();
         comm.pop_back();
     }
