@@ -36,9 +36,8 @@
 #include "listensock.h"
 #include "zone.h"
 
+
 #include "../server.h"
-#include "../config_data.h"
-#include "../log.h"
 
 base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     : Control(u, g)

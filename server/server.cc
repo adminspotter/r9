@@ -68,11 +68,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "log.h"
 #include "server.h"
 #include "signals.h"
-#include "config_data.h"
 
+#include "classes/log.h"
+#include "classes/config_data.h"
 #include "classes/library.h"
 #include "classes/basesock.h"
 #include "classes/socket.h"

@@ -14,7 +14,7 @@ extern "C" void console_destroy(Console *);
 
 #if HAVE_LIBWRAP
 #include <tcpd.h>
-#include "../server/config_data.h"
+#include "../server/classes/config_data.h"
 
 extern config_data config;
 

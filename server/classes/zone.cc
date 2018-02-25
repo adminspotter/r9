@@ -37,8 +37,8 @@
 
 #include "zone.h"
 #include "thread_pool.h"
-#include "../config_data.h"
-#include "../log.h"
+#include "config_data.h"
+#include "log.h"
 #include "../server.h"
 
 /* Private methods */

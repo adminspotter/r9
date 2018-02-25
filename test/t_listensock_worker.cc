@@ -1,5 +1,5 @@
 #include "../server/classes/listensock.h"
-#include "../server/config_data.h"
+#include "../server/classes/config_data.h"
 
 #include <stdlib.h>
 #include <unistd.h>

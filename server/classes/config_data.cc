@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2017, 23:52:22 tquirk
+ *   last updated 26 Sep 2017, 13:12:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -112,8 +112,9 @@
 #include <sstream>
 
 #include "config_data.h"
-#include "server.h"
 #include "log.h"
+
+#include "../server.h"
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 

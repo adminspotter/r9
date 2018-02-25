@@ -1,9 +1,9 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Jun 2017, 08:33:15 tquirk
+ *   last updated 26 Sep 2017, 13:10:29 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -73,7 +73,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "../log.h"
+#include "log.h"
 
 template <class T>
 class ThreadPool

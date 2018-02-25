@@ -1,4 +1,4 @@
-#include "../server/config_data.h"
+#include "../server/classes/config_data.h"
 
 #include <sys/types.h>
 #include <unistd.h>
