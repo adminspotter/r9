@@ -1,9 +1,9 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Nov 2017, 08:03:45 tquirk
+ *   last updated 26 Feb 2018, 07:40:44 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -194,8 +194,11 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
                               log_display::cleanup_entries, (void *)this)) != 0)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(ret, err, sizeof(err));
         s << "Couldn't start log display cleanup thread: "
-          << strerror(ret) << " (" << ret << ")";
+          << err << " (" << ret << ")";
         throw std::runtime_error(s.str());
     }
 
@@ -212,15 +215,30 @@ log_display::~log_display()
     std::clog.rdbuf(this->orig_rdbuf);
 
     if ((ret = pthread_cancel(this->cleanup_thread)) != 0)
+    {
+        char err[128];
+
+        strerror_r(ret, err, sizeof(err));
         std::clog << "Couldn't cancel log display cleanup thread: "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
+                  << err << " (" << ret << ")" << std::endl;
+    }
     sleep(0);
     if ((ret = pthread_join(this->cleanup_thread, NULL)) != 0)
+    {
+        char err[128];
+
+        strerror_r(ret, err, sizeof(err));
         std::clog << "Couldn't reap log display cleanup thread: "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
+                  << err << " (" << ret << ")" << std::endl;
+    }
     if ((ret = pthread_mutex_destroy(&this->queue_mutex)) != 0)
+    {
+        char err[128];
+
+        strerror_r(ret, err, sizeof(err));
         std::clog << "Couldn't destroy log display mutex: "
-                  << strerror(ret) << " (" << ret << ")" << std::endl;
+                  << err << " (" << ret << ")" << std::endl;
+    }
 
     this->sync_to_file();
 }
