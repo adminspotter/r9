@@ -1,9 +1,9 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Sep 2017, 13:11:55 tquirk
+ *   last updated 27 Feb 2018, 07:25:08 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -66,10 +66,15 @@ basesock::~basesock()
         {
             struct sockaddr_un *sun = (struct sockaddr_un *)this->sa->sockaddr();
             if (unlink(sun->sun_path))
+            {
+                char err[128];
+
+                strerror_r(errno, err, sizeof(err));
                 std::clog << syslogWarn << "could not unlink path "
                           << sun->sun_path
-                          << ": " << strerror(errno) << " (" << errno << ')'
+                          << ": " << err << " (" << errno << ')'
                           << std::endl;
+            }
         }
         delete this->sa;
     }
@@ -89,8 +94,11 @@ void basesock::create_socket(struct addrinfo *ai)
                              ai->ai_protocol)) < 0)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         s << "socket creation failed for " << typestr << this->get_port_string()
-          << ": " << strerror(errno) << " (" << errno << ")";
+          << ": " << err << " (" << errno << ")";
         this->sock = 0;
         throw std::runtime_error(s.str());
     }
@@ -124,8 +132,11 @@ void basesock::create_socket(struct addrinfo *ai)
     if (ret < 0)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         s << "bind failed for " << typestr << this->get_port_string()
-          << ": " << strerror(errno) << " (" << errno << ")";
+          << ": " << err << " (" << errno << ")";
         close(this->sock);
         this->sock = 0;
         throw std::runtime_error(s.str());
@@ -136,8 +147,11 @@ void basesock::create_socket(struct addrinfo *ai)
         if (listen(this->sock, basesock::LISTEN_BACKLOG) < 0)
         {
             std::ostringstream s;
+            char err[128];
+
+            strerror_r(errno, err, sizeof(err));
             s << "listen failed for " << typestr << this->get_port_string()
-              << ": " << strerror(errno) << " (" << errno << ")";
+              << ": " << err << " (" << errno << ")";
             close(this->sock);
             this->sock = 0;
             throw std::runtime_error(s.str());
@@ -173,8 +187,11 @@ void basesock::start(void *(*func)(void *))
         if (this->sock == 0)
         {
             std::ostringstream s;
+            char err[128];
+
+            strerror_r(ENOTSOCK, err, sizeof(err));
             s << "no socket available to listen for " << this->get_port_string()
-              << ": " << strerror(ENOTSOCK) << " (" << ENOTSOCK << ")";
+              << ": " << err << " (" << ENOTSOCK << ")";
             throw std::runtime_error(s.str());
         }
         if ((ret = pthread_create(&(this->listen_thread),
@@ -183,8 +200,11 @@ void basesock::start(void *(*func)(void *))
                                   this->listen_arg)) != 0)
         {
             std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
             s << "couldn't start listen thread for " << this->get_port_string()
-              << ": " << strerror(ret) << " (" << ret << ")";
+              << ": " << err << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
         this->thread_started = true;
@@ -200,16 +220,22 @@ void basesock::stop(void)
         if ((ret = pthread_cancel(this->listen_thread)) != 0)
         {
             std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
             s << "couldn't cancel listen thread for " << this->get_port_string()
-              << ": " << strerror(ret) << " (" << ret << ")";
+              << ": " << err << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
         sleep(0);
         if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
         {
             std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
             s << "couldn't join listen thread for " << this->get_port_string()
-              << ": " << strerror(ret) << " (" << ret << ")";
+              << ": " << err << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
         this->thread_started = false;
