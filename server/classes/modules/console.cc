@@ -1,9 +1,9 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Sep 2017, 13:00:22 tquirk
+ *   last updated 27 Feb 2018, 07:47:47 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -62,8 +62,10 @@ ConsoleSession::ConsoleSession(int sock)
                               (void *)this)) != 0)
     {
         std::ostringstream s;
-        s << "error creating console thread: "
-          << strerror(ret) << " (" << ret << ")";
+        char err[128];
+
+        strerror_r(ret, err, sizeof(err));
+        s << "error creating console thread: " << err << " (" << ret << ")";
         throw std::runtime_error(s.str());
     }
 }
