@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Feb 2018, 08:28:05 tquirk
+ *   last updated 27 Feb 2018, 07:54:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -178,7 +178,10 @@ static void setup_daemon(void)
         if ((pid = fork()) < 0)
         {
             std::ostringstream s;
-            s << "failed to fork: " << strerror(errno) << " (" << errno << ")";
+            char err[128];
+
+            strerror_r(errno, err, sizeof(err));
+            s << "failed to fork: " << err << " (" << errno << ")";
             throw std::runtime_error(s.str());
         }
         else if (pid != 0)
@@ -203,8 +206,10 @@ static void setup_daemon(void)
     {
         /* Apparently another invocation is running, so we can't. */
         std::ostringstream s;
-        s << "couldn't create lock file: " << strerror(errno)
-          << " (" << errno << ")";
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "couldn't create lock file: " << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
     if (config.daemonize)
