@@ -1,9 +1,9 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Sep 2016, 19:29:38 tquirk
+ *   last updated 26 Feb 2018, 07:36:54 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -236,8 +236,11 @@ void ConfigData::make_config_dirs(void)
     if (mkdir(dirname.c_str(), 0700) == -1 && errno != EEXIST)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         s << "Error creating r9 preferences directory " << dirname << ": "
-          << strerror(errno) << " (" << errno << ")";
+          << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
 
@@ -246,8 +249,11 @@ void ConfigData::make_config_dirs(void)
     if (mkdir(subdirname.c_str(), 0700) == -1 && errno != EEXIST)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         s << "Can't make config directory " << subdirname << ": "
-          << strerror(errno) << " (" << errno << ")";
+          << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
 
@@ -255,8 +261,11 @@ void ConfigData::make_config_dirs(void)
     if (mkdir(subdirname.c_str(), 0700) == -1 && errno != EEXIST)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         s << "Can't make config directory " << subdirname << ": "
-          << strerror(errno) << " (" << errno << ")";
+          << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
 
@@ -264,8 +273,11 @@ void ConfigData::make_config_dirs(void)
     if (mkdir(subdirname.c_str(), 0700) == -1 && errno != EEXIST)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         s << "Can't make config directory " << subdirname << ": "
-          << strerror(errno) << " (" << errno << ")";
+          << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
 }

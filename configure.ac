@@ -381,7 +381,7 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 AC_FUNC_FORK
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday getrlimit htonll kill memset mkdir nanosleep ntohll select socket strdup strerror strtoull])
+AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday getrlimit htonll kill memset mkdir nanosleep ntohll select socket strdup strerror_r strtoull])
 
 # One of the mocks in our test suite needs a possibly-different
 # prototype, depending on the system we're building on.

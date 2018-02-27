@@ -1,9 +1,9 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Sep 2017, 13:10:29 tquirk
+ *   last updated 27 Feb 2018, 07:43:46 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -105,15 +105,21 @@ class ThreadPool
             if ((ret = pthread_mutex_init(&(this->queue_lock), NULL)) != 0)
             {
                 std::ostringstream s;
+                char err[128];
+
+                strerror_r(ret, err, sizeof(err));
                 s << "couldn't init " << this->name << " queue mutex: "
-                  << strerror(ret) << " (" << ret << ")";
+                  << err << " (" << ret << ")";
                 throw std::runtime_error(s.str());
             }
             if ((ret = pthread_cond_init(&(this->queue_not_empty), NULL)) != 0)
             {
                 std::ostringstream s;
+                char err[128];
+
+                strerror_r(ret, err, sizeof(err));
                 s << "couldn't init " << this->name << " queue not-empty cond: "
-                  << strerror(ret) << " (" << ret << ")";
+                  << err << " (" << ret << ")";
                 pthread_mutex_destroy(&(this->queue_lock));
                 throw std::runtime_error(s.str());
             }
@@ -148,8 +154,11 @@ class ThreadPool
                                           this->startup_arg)) != 0)
                 {
                     std::ostringstream s;
+                    char err[128];
+
+                    strerror_r(ret, err, sizeof(err));
                     s << "couldn't start a " << this->name << " thread: "
-                      << strerror(ret) << " (" << ret << ")";
+                      << err << " (" << ret << ")";
                     /* Something's messed up; stop all the threads */
                     pthread_mutex_unlock(&(this->queue_lock));
                     this->stop();

@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Feb 2018, 15:19:25 tquirk
+ *   last updated 26 Feb 2018, 07:28:26 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -90,8 +90,10 @@ void Comm::create_socket(struct addrinfo *ai)
                              ai->ai_protocol)) < 0)
     {
         std::ostringstream s;
-        s << "Couldn't open socket: "
-          << strerror(errno) << " (" << errno << ")";
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "Couldn't open socket: " << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
     memcpy(&this->remote, ai->ai_addr, sizeof(sockaddr_storage));
@@ -144,8 +146,13 @@ void *Comm::send_worker(void *arg)
                    0,
                    (struct sockaddr *)&comm->remote,
                    comm->remote_size) == -1)
+        {
+            char err[128];
+
+            strerror_r(errno, err, sizeof(err));
             std::clog << "got a send error: "
-                      << strerror(errno) << " (" << errno << ')' << std::endl;
+                      << err << " (" << errno << ')' << std::endl;
+        }
         pthread_mutex_unlock(&(comm->send_lock));
         memset(pkt, 0, sizeof(packet));
         delete pkt;
@@ -171,8 +178,11 @@ void *Comm::recv_worker(void *arg)
         if ((len = recvfrom(comm->sock, (void *)&buf, sizeof(packet), 0,
                             (struct sockaddr *)&sin, &fromlen)) < 0)
         {
+            char err[128];
+
+            strerror_r(errno, err, sizeof(err));
             std::clog << "Error receiving packet: "
-                      << strerror(errno) << " (" << errno << ')' << std::endl;
+                      << err << " (" << errno << ')' << std::endl;
             continue;
         }
         /* Verify that the sender is who we think it should be */
@@ -281,16 +291,21 @@ Comm::Comm(struct addrinfo *ai)
     /* Init the mutex and cond variables */
     if ((ret = pthread_mutex_init(&(this->send_lock), NULL)) != 0)
     {
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << "Couldn't init queue mutex: "
-          << strerror(ret) << " (" << ret << ")";
+        s << "Couldn't init queue mutex: " << err << " (" << ret << ")";
         throw std::runtime_error(s.str());
     }
     if ((ret = pthread_cond_init(&send_queue_not_empty, NULL)) != 0)
     {
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
         s << "Couldn't init queue-not-empty cond: "
-          << strerror(ret) << " (" << ret << ")";
+          << err << " (" << ret << ")";
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
@@ -317,8 +332,10 @@ void Comm::start(void)
                               (void *)this)) != 0)
     {
         std::ostringstream s;
-        s << "Couldn't start send thread: "
-          << strerror(ret) << " (" << ret << ")";
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "Couldn't start send thread: " << err << " (" << ret << ")";
         pthread_cond_destroy(&(this->send_queue_not_empty));
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
@@ -329,8 +346,10 @@ void Comm::start(void)
                               (void *)this)) != 0)
     {
         std::ostringstream s;
-        s << "Couldn't start recv thread: "
-          << strerror(ret) << " (" << ret << ")";
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "Couldn't start recv thread: " << err << " (" << ret << ")";
         pthread_cancel(this->send_thread);
         sleep(0);
         pthread_join(this->send_thread, NULL);

@@ -1,9 +1,9 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Sep 2017, 13:07:27 tquirk
+ *   last updated 27 Feb 2018, 07:40:14 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -200,11 +200,16 @@ void *dgram_socket::dgram_send_worker(void *arg)
                        (void *)&req.buf, realsize, 0,
                        dgs->user_socks[bu->userid]->sockaddr(),
                        sizeof(struct sockaddr_storage)) == -1)
+            {
+                char err[128];
+
+                strerror_r(errno, err, sizeof(err));
                 std::clog << syslogErr
                           << "error sending packet out datagram port "
                           << dgs->sock.sa->port() << ": "
-                          << strerror(errno) << " (" << errno << ")"
+                          << err << " (" << errno << ")"
                           << std::endl;
+            }
         }
     }
     std::clog << "exiting send pool worker for datagram port "

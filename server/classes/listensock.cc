@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Feb 2018, 15:21:42 tquirk
+ *   last updated 27 Feb 2018, 07:31:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -138,10 +138,13 @@ void listen_socket::start(void)
                                  reaper_worker, (void *)this)) != 0)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(retval, err, sizeof(err));
         s << "couldn't create reaper thread for "
           << this->port_type() << " port "
           << this->sock.sa->port() << ": "
-          << strerror(retval) << " (" << retval << ")";
+          << err << " (" << retval << ")";
         throw std::runtime_error(s.str());
     }
     this->reaper_running = true;
@@ -160,18 +163,24 @@ void listen_socket::stop(void)
         if ((retval = pthread_cancel(this->reaper)) != 0)
         {
             std::ostringstream s;
+            char err[128];
+
+            strerror_r(retval, err, sizeof(err));
             s << "couldn't cancel reaper thread for " << this->port_type()
               << " port " << this->sock.sa->port() << ": "
-              << strerror(retval) << " (" << retval << ")";
+              << err << " (" << retval << ")";
             throw std::runtime_error(s.str());
         }
         sleep(0);
         if ((retval = pthread_join(this->reaper, NULL)) != 0)
         {
             std::ostringstream s;
+            char err[128];
+
+            strerror_r(retval, err, sizeof(err));
             s << "couldn't join reaper thread for " << this->port_type()
               << " port " << this->sock.sa->port() << ": "
-              << strerror(retval) << " (" << retval << ")";
+              << err << " (" << retval << ")";
             throw std::runtime_error(s.str());
         }
         this->reaper_running = false;

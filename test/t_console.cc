@@ -51,7 +51,10 @@ void send_data_to(short port)
     if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
     {
         std::ostringstream s;
-        s << "socket error: " << strerror(errno) << " (" << errno << ')';
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "socket error: " << err << " (" << errno << ')';
         throw std::runtime_error(s.str());
     }
     std::cerr << "sock opened" << std::endl;
@@ -59,7 +62,10 @@ void send_data_to(short port)
     if (connect(sock, ai->ai_addr, ai->ai_addrlen) < 0)
     {
         std::ostringstream s;
-        s << "connect error: " << strerror(errno) << " (" << errno << ')';
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "connect error: " << err << " (" << errno << ')';
         throw std::runtime_error(s.str());
     }
     std::cerr << "connected" << std::endl;

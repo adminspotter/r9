@@ -1,9 +1,9 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Nov 2015, 16:59:39 tquirk
+ *   last updated 27 Feb 2018, 07:51:03 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -52,8 +52,10 @@ void DB::get_host_address(void)
     if ((ret = gethostname(hostname, sizeof(hostname))) != 0)
     {
         std::ostringstream s;
-        s << "couldn't get hostname: "
-          << strerror(errno) << " (" << errno << ")";
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "couldn't get hostname: " << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
     if ((ret = getaddrinfo(hostname, NULL, NULL, &info)) != 0)
@@ -70,8 +72,11 @@ void DB::get_host_address(void)
                   this->host_ip, INET6_ADDRSTRLEN) == NULL)
     {
         std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
         s << "couldn't convert IP for " << hostname << " into a string: "
-          << strerror(errno) << " (" << errno << ")";
+          << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
     freeaddrinfo(info);

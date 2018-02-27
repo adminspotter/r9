@@ -1,9 +1,9 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Sep 2017, 12:59:47 tquirk
+ *   last updated 27 Feb 2018, 07:39:20 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -194,10 +194,13 @@ int stream_socket::select_fd_set(void)
         }
         else
         {
+            char err[128];
+
+            strerror_r(errno, err, sizeof(err));
             std::clog << syslogErr
                       << "select error in stream port "
                       << this->sock.sa->port() << ": "
-                      << strerror(errno) << " (" << errno << ")"
+                      << err << " (" << errno << ")"
                       << std::endl;
         }
     }
@@ -282,12 +285,17 @@ void *stream_socket::stream_send_worker(void *arg)
             fd = sts->user_fds[req.who->userid];
             /* TODO: Encryption */
             if (write(fd, (void *)&req, realsize) == -1)
+            {
+                char err[128];
+
+                strerror_r(errno, err, sizeof(err));
                 std::clog << syslogErr
                           << "error sending packet out stream port "
                           << sts->sock.sa->port() << ", user port "
                           << fd << ": "
-                          << strerror(errno) << " (" << errno << ")"
+                          << err << " (" << errno << ")"
                           << std::endl;
+            }
         }
     }
     std::clog << "exiting send pool worker for stream port "
