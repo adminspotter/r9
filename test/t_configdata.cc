@@ -244,8 +244,8 @@ TEST_F(ConfigdataTest, ParseCommandLine)
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
     std::stringstream new_clog;
     std::clog.rdbuf(new_clog.rdbuf());
-    char *args[7] = { "r9client", "-c", (char *)conf_dir.c_str(),
-                      "-f", (char *)conf_file.c_str(), "-q", NULL};
+    const char *args[7] = { "r9client", "-c", (char *)conf_dir.c_str(),
+                            "-f", (char *)conf_file.c_str(), "-q", NULL};
     struct stat st;
 
     ConfigData *conf;

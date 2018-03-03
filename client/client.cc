@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Feb 2018, 15:25:03 tquirk
+ *   last updated 03 Mar 2018, 17:56:11 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     textdomain(PACKAGE);
 #endif /* WANT_LOCALES && HAVE_LIBINTL_H */
 
-    config.parse_command_line(argc, argv);
+    config.parse_command_line(argc, (const char **)argv);
 
     if (glfwInit() == GL_FALSE)
     {

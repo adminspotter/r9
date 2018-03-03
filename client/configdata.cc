@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Feb 2018, 07:36:54 tquirk
+ *   last updated 03 Mar 2018, 17:55:42 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -141,7 +141,7 @@ void ConfigData::set_defaults(void)
     }
 }
 
-void ConfigData::parse_command_line(int count, char **args)
+void ConfigData::parse_command_line(int count, const char **args)
 {
     int i;
     std::vector<std::string>::iterator j;
