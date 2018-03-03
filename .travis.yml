@@ -15,10 +15,10 @@ addons:
     - gettext
     - cmake
     - tcl8.6-dev
+    - libboost-dev
     - libgl1-mesa-dev
     - libmysqlclient-dev
     - libpq-dev
-    - libxerces-c-dev
     - libglm-dev
     - libfreetype6-dev
     - libwrap0-dev
