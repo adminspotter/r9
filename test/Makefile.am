@@ -1,6 +1,6 @@
 GMOCK_DIR = gmock-1.7.0
 
-SUBDIRS = $(GMOCK_DIR)
+SUBDIRS = tap++ $(GMOCK_DIR) .
 
 GTEST_INCLUDES = -I$(GMOCK_DIR)/gtest/include
 GMOCK_INCLUDES = -I$(GMOCK_DIR)/include
@@ -51,7 +51,7 @@ TESTS = $(TC)
 check_PROGRAMS = $(TC)
 EXTRA_DIST = t_texture_parser.xml
 
-check: SUBDIRS =
+check: SUBDIRS = tap++ .
 
 install-exec-local:
 	@echo "Nothing to install"
