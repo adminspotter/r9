@@ -127,17 +127,31 @@ void test_socket_failure(void)
     socket_error = false;
 }
 
-TEST(CommTest, MutexFailure)
+void test_mutex_failure(void)
 {
+    std::string test = "mutex failure: ";
     Comm *obj = NULL;
     struct addrinfo a;
+    struct sockaddr_storage s;
+    a.ai_addr = (struct sockaddr *)&s;
 
     mutex_error = true;
-    ASSERT_THROW(
-        {
-            obj = new Comm(&a);
-        },
-        std::runtime_error);
+    try
+    {
+        obj = new Comm(&a);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't init queue mutex"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+
     mutex_error = false;
 }
 
@@ -204,10 +218,11 @@ TEST(CommTest, StartFailure)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(1);
+    plan(2);
 
     int gtests = RUN_ALL_TESTS();
 
     test_socket_failure();
+    test_mutex_failure();
     return (gtests & exit_status());
 }
