@@ -14,6 +14,7 @@ using namespace TAP;
 
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
 
 #include <gtest/gtest.h>
@@ -236,9 +237,12 @@ void test_make_config_dirs(void)
     cleanup_fixture();
 }
 
-TEST_F(ConfigdataTest, ParseCommandLine)
+void test_parse_command_line(void)
 {
+    std::string test = "parse command line: ";
     int ret;
+
+    setup_fixture();
     std::string conf_dir = tmpdir + "/haha";
     std::string conf_file = tmpdir + "/fake.conf";
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
@@ -250,31 +254,40 @@ TEST_F(ConfigdataTest, ParseCommandLine)
 
     ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     mkdir_count = 0;
     mkdir_fail_index = 5;
     conf->parse_command_line(6, args);
 
-    ASSERT_EQ(conf->argv.size(), 6);
+    is(conf->argv.size(), 6, test + "expected arg count");
 
     std::string expected = tmpdir + "/haha";
-    ASSERT_EQ(conf->config_dir, expected);
-    ASSERT_EQ(mkdir_count, 4);
+    is(conf->config_dir, expected, test + "expected config dir");
+    is(mkdir_count, 4, test + "expected mkdir count");
 
     expected = tmpdir + "/fake.conf";
-    ASSERT_EQ(conf->config_fname, expected);
+    is(conf->config_fname, expected, test + "expected config fname");
 
-    ASSERT_EQ(new_clog.str(), "WARNING: Unknown option -q");
+    is(new_clog.str(), "WARNING: Unknown option -q", test + "expected warning");
     std::clog.rdbuf(old_clog_rdbuf);
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
 TEST_F(ConfigdataTest, ReadConfigFile)
@@ -379,11 +392,12 @@ TEST_F(ConfigdataTest, WriteConfigFile)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(14);
+    plan(21);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_make_config_dirs();
+    test_parse_command_line();
     return gtests & exit_status();
 }
