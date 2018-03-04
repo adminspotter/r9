@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/config_data.h"
 
 #include <sys/types.h>
@@ -67,38 +71,55 @@ int chdir(const char *a)
  * we'll worry about it for those two tests.
  */
 
-TEST(ConfigDataTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     config_data *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new config_data;
-        });
+    try
+    {
+        conf = new config_data;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
-    ASSERT_EQ(conf->server_root, config_data::SERVER_ROOT);
-    ASSERT_EQ(conf->log_prefix, config_data::LOG_PREFIX);
-    ASSERT_EQ(conf->pid_fname, config_data::PID_FNAME);
-    ASSERT_EQ(conf->db_type, config_data::DB_TYPE);
-    ASSERT_EQ(conf->db_host, config_data::DB_HOST);
-    ASSERT_EQ(conf->db_name, config_data::DB_NAME);
-    ASSERT_EQ(conf->action_lib, config_data::ACTION_LIB);
-    ASSERT_EQ(conf->daemonize, true);
-    ASSERT_EQ(conf->use_keepalive, false);
-    ASSERT_EQ(conf->use_nonblock, false);
-    ASSERT_EQ(conf->use_reuse, true);
-    ASSERT_EQ(conf->use_linger, config_data::LINGER_LEN);
-    ASSERT_EQ(conf->log_facility, config_data::LOG_FACILITY);
-    ASSERT_EQ(conf->access_threads, config_data::NUM_THREADS);
-    ASSERT_EQ(conf->motion_threads, config_data::NUM_THREADS);
-    ASSERT_EQ(conf->send_threads, config_data::NUM_THREADS);
-    ASSERT_EQ(conf->update_threads, config_data::NUM_THREADS);
-    ASSERT_EQ(conf->size.dim[0], config_data::ZONE_SIZE);
-    ASSERT_EQ(conf->size.dim[1], config_data::ZONE_SIZE);
-    ASSERT_EQ(conf->size.dim[2], config_data::ZONE_SIZE);
-    ASSERT_EQ(conf->size.steps[0], config_data::ZONE_STEPS);
-    ASSERT_EQ(conf->size.steps[1], config_data::ZONE_STEPS);
-    ASSERT_EQ(conf->size.steps[2], config_data::ZONE_STEPS);
+    is(conf->server_root, config_data::SERVER_ROOT,
+       test + "expected server root");
+    is(conf->log_prefix, config_data::LOG_PREFIX, test + "expected log prefix");
+    is(conf->pid_fname, config_data::PID_FNAME, test + "expected pid fname");
+    is(conf->db_type, config_data::DB_TYPE, test + "expected db type");
+    is(conf->db_host, config_data::DB_HOST, test + "expected db host");
+    is(conf->db_name, config_data::DB_NAME, test + "expected db name");
+    is(conf->action_lib, config_data::ACTION_LIB, test + "expected action lib");
+    is(conf->daemonize, true, test + "expected daemonize");
+    is(conf->use_keepalive, false, test + "expected keepalive");
+    is(conf->use_nonblock, false, test + "expected nonblock");
+    is(conf->use_reuse, true, test + "expected reuse");
+    is(conf->use_linger, config_data::LINGER_LEN, test + "expected linger");
+    is(conf->log_facility, config_data::LOG_FACILITY,
+       test + "expected log facility");
+    is(conf->access_threads, config_data::NUM_THREADS,
+       test + "expected access count");
+    is(conf->motion_threads, config_data::NUM_THREADS,
+       test + "expected motion count");
+    is(conf->send_threads, config_data::NUM_THREADS,
+       test + "expected send count");
+    is(conf->update_threads, config_data::NUM_THREADS,
+       test + "expected update count");
+    is(conf->size.dim[0], config_data::ZONE_SIZE,
+       test + "expected zone x size");
+    is(conf->size.dim[1], config_data::ZONE_SIZE,
+       test + "expected zone y size");
+    is(conf->size.dim[2], config_data::ZONE_SIZE,
+       test + "expected zone z size");
+    is(conf->size.steps[0], config_data::ZONE_STEPS,
+       test + "expected zone x steps");
+    is(conf->size.steps[1], config_data::ZONE_STEPS,
+       test + "expected zone y steps");
+    is(conf->size.steps[2], config_data::ZONE_STEPS,
+       test + "expected zone z steps");
 
     delete conf;
 }
@@ -268,4 +289,15 @@ TEST(ConfigDataTest, ParseConfigLine)
     ASSERT_EQ(config.size.steps[0], 25);
     ASSERT_EQ(config.size.steps[1], 30);
     ASSERT_EQ(config.size.steps[2], 35);
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(23);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    return gtests & exit_status();
 }

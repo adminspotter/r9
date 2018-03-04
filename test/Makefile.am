@@ -84,8 +84,8 @@ t_basesock_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
 
 t_config_data_SOURCES = t_config_data.cc \
 	../server/classes/config_data.cc ../server/classes/config_data.h
-t_config_data_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_config_data_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+t_config_data_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES) $(TAP_INCLUDES)
+t_config_data_LDADD = $(GTEST_LIBS) $(TAP_LDADD)
 
 t_control_SOURCES = t_control.cc \
 	../server/classes/control.cc ../server/classes/control.h
