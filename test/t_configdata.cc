@@ -17,8 +17,6 @@ using namespace TAP;
 #include <sstream>
 #include <stdexcept>
 
-#include <gtest/gtest.h>
-
 #define TMP_ROOT "/tmp"
 
 std::string tmpdir;
@@ -120,20 +118,6 @@ void cleanup_fixture(void)
     is(ret, 0, "fixture: removed temp dir tree");
     tmpdir = "";
 }
-
-class ConfigdataTest : public ::testing::Test
-{
-  protected:
-    void SetUp()
-        {
-            setup_fixture();
-        };
-
-    void TearDown()
-        {
-            cleanup_fixture();
-        };
-};
 
 class fake_ConfigData : public ConfigData
 {
@@ -342,15 +326,22 @@ void test_read_config_file(void)
  * write_config_file to write one out, and then read_config_file into
  * a new object to make sure the file was written as expected.
  */
-TEST_F(ConfigdataTest, WriteConfigFile)
+void test_write_config_file(void)
 {
+    std::string test = "write config file: ", st;
     int ret;
     ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    setup_fixture();
+    st = "initial object: ";
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + st + "constructor exception");
+    }
 
     conf->server_addr = "whoa";
     conf->server_port = 9876;
@@ -365,16 +356,25 @@ TEST_F(ConfigdataTest, WriteConfigFile)
 
     conf->write_config_file();
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + st + "destructor exception");
+    }
 
     /* Now for the new object */
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    st = "reloaded object: ";
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + st + "constructor exception");
+    }
 
     conf->config_dir = tmpdir;
     conf->config_fname = tmpdir + "/the_big_test.conf";
@@ -382,34 +382,37 @@ TEST_F(ConfigdataTest, WriteConfigFile)
     conf->read_config_file();
 
     std::string expected = "whoa";
-    ASSERT_EQ(conf->server_addr, expected);
-    ASSERT_EQ(conf->server_port, 9876);
+    is(conf->server_addr, expected, test + st + "expected server addr");
+    is(conf->server_port, 9876, test + st + "expected server port");
     expected = "howdy";
-    ASSERT_EQ(conf->username, expected);
+    is(conf->username, expected, test + st + "expected username");
     expected = "anotherreallybadcharname";
-    ASSERT_EQ(conf->charname, expected);
-    ASSERT_TRUE(conf->font_paths.size() == 2);
+    is(conf->charname, expected, test + st + "expected charname");
+    is(conf->font_paths.size(), 2, test + st + "expected font path size");
     expected = "/a/b/c";
-    ASSERT_EQ(conf->font_paths[0], expected);
+    is(conf->font_paths[0], expected, test + st + "expected font path 1");
     expected = "~/d/e/f";
-    ASSERT_EQ(conf->font_paths[1], expected);
+    is(conf->font_paths[1], expected, test + st + "expected font path 2");
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + st + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(31);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(40);
 
     test_create_delete();
     test_make_config_dirs();
     test_parse_command_line();
     test_read_config_file();
-    return gtests & exit_status();
+    test_write_config_file();
+    return exit_status();
 }
