@@ -290,15 +290,21 @@ void test_parse_command_line(void)
     cleanup_fixture();
 }
 
-TEST_F(ConfigdataTest, ReadConfigFile)
+void test_read_config_file(void)
 {
+    std::string test = "read config file: ";
     int ret;
     ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    setup_fixture();
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     conf->config_dir = tmpdir;
     conf->config_fname = tmpdir + "/config";
@@ -307,24 +313,29 @@ TEST_F(ConfigdataTest, ReadConfigFile)
     conf->read_config_file();
 
     std::string expected = "haha";
-    ASSERT_EQ(conf->server_addr, expected);
-    ASSERT_EQ(conf->server_port, 12345);
+    is(conf->server_addr, expected, test + "expected server addr");
+    is(conf->server_port, 12345, test + "expected server port");
     expected = "someuser";
-    ASSERT_EQ(conf->username, expected);
+    is(conf->username, expected, test + "expected username");
     expected = "worstcharnameintheworld";
-    ASSERT_EQ(conf->charname, expected);
-    ASSERT_TRUE(conf->font_paths.size() == 3);
+    is(conf->charname, expected, test + "expected charname");
+    is(conf->font_paths.size(), 3, test + "expected font path size");
     expected = "/a/b/c";
-    ASSERT_EQ(conf->font_paths[0], expected);
+    is(conf->font_paths[0], expected, test + "expected font path 1");
     expected = "~/d/e/f";
-    ASSERT_EQ(conf->font_paths[1], expected);
+    is(conf->font_paths[1], expected, test + "expected font path 2");
     expected = "/g/h/i";
-    ASSERT_EQ(conf->font_paths[2], expected);
+    is(conf->font_paths[2], expected, test + "expected font path 3");
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
 /* Previous test proved that read_config_file works, so we'll use
@@ -392,12 +403,13 @@ TEST_F(ConfigdataTest, WriteConfigFile)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(21);
+    plan(31);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_make_config_dirs();
     test_parse_command_line();
+    test_read_config_file();
     return gtests & exit_status();
 }
