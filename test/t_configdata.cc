@@ -95,27 +95,37 @@ void create_temp_config_file(std::string& fname)
  * create and remove a temporary directory tree that we can use for
  * our "home directory".
  */
+void setup_fixture(void)
+{
+    char temp_name[1024], *ret;
+
+    strcpy(temp_name, TMP_ROOT "/configdata_testXXXXXX");
+    /* Create temp dir tree */
+    ret = mkdtemp(temp_name);
+    not_ok(ret == NULL, "fixture: created temp dir");
+
+    tmpdir = temp_name;
+}
+
+void cleanup_fixture(void)
+{
+    /* Remove temp dir tree */
+    int ret = clean_dir(tmpdir.c_str());
+    is(ret, 0, "fixture: removed temp dir tree");
+    tmpdir = "";
+}
+
 class ConfigdataTest : public ::testing::Test
 {
   protected:
     void SetUp()
         {
-            char temp_name[1024], *ret;
-
-            strcpy(temp_name, TMP_ROOT "/configdata_testXXXXXX");
-            /* Create temp dir tree */
-            ret = mkdtemp(temp_name);
-            ASSERT_TRUE(ret != NULL);
-
-            tmpdir = temp_name;
+            setup_fixture();
         };
 
     void TearDown()
         {
-            /* Remove temp dir tree */
-            int ret = clean_dir(tmpdir.c_str());
-            ASSERT_EQ(ret, 0);
-            tmpdir = "";
+            cleanup_fixture();
         };
 };
 
@@ -319,4 +329,11 @@ TEST_F(ConfigdataTest, WriteConfigFile)
         {
             delete conf;
         });
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
 }
