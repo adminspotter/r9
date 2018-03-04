@@ -193,8 +193,9 @@ void test_setup_cleanup(void)
     is(chdir_count, 1, test + st + "expected chdirs");
 }
 
-TEST(ConfigDataTest, ParseCommandLine)
+void test_parse_command_line(void)
 {
+    std::string test = "parse command line: ";
     std::string fname = "./t_config_data.fake";
     char prog[] = "r9d", d_arg[] = "-d", f_arg[] = "-f", n_arg[] = "-n";
     char *args[5] = { prog, d_arg, f_arg, (char *)fname.c_str(), n_arg };
@@ -205,12 +206,17 @@ TEST(ConfigDataTest, ParseCommandLine)
     ofs.close();
 
     conf->daemonize = true;
-    ASSERT_NO_THROW(
-        {
-            conf->parse_command_line(5, args);
-        });
-    ASSERT_TRUE(conf->argv.size() == 5);
-    ASSERT_EQ(conf->daemonize, false);
+    try
+    {
+        conf->parse_command_line(5, args);
+    }
+    catch (...)
+    {
+        fail(test + "parse exception");
+        return;
+    }
+    is(conf->argv.size(), 5, test + "expected args size");
+    is(conf->daemonize, false, test + "expected daemonize");
 
     unlink(fname.c_str());
     delete conf;
@@ -310,11 +316,12 @@ TEST(ConfigDataTest, ParseConfigLine)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(53);
+    plan(55);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_setup_cleanup();
+    test_parse_command_line();
     return gtests & exit_status();
 }
