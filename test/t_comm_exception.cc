@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../client/comm.h"
 #include "../client/object.h"
 
@@ -97,17 +101,29 @@ int pthread_cond_broadcast(pthread_cond_t *a)
     return 0;
 }
 
-TEST(CommTest, SocketFailure)
+void test_socket_failure(void)
 {
+    std::string test = "socket failure: ";
     Comm *obj = NULL;
     struct addrinfo a;
 
     socket_error = true;
-    ASSERT_THROW(
-        {
-            obj = new Comm(&a);
-        },
-        std::runtime_error);
+    try
+    {
+        obj = new Comm(&a);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't open socket"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+
     socket_error = false;
 }
 
@@ -183,4 +199,15 @@ TEST(CommTest, StartFailure)
     ASSERT_EQ(mutex_destroy_calls, 1);
     cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
         = create_calls = 0;
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(1);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_socket_failure();
+    return (gtests & exit_status());
 }
