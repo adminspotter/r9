@@ -152,8 +152,8 @@ t_listensock_worker_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 
 t_log_SOURCES = t_log.cc ../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
-t_log_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_log_LDADD = $(GTEST_LIBS)
+t_log_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_log_LDADD = $(TAP_LDADD)
 
 t_motion_pool_SOURCES = t_motion_pool.cc \
 	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \

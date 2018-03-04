@@ -1,10 +1,13 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <syslog.h>
 
 #include "../server/classes/log.h"
-#include <gtest/gtest.h>
 
 bool opened = false, closed = false;
 int options = 0, facility = 0, priority = 0;
@@ -34,56 +37,65 @@ void closelog(void)
     closed = true;
 }
 
-TEST(LogTest, Opened)
+void test_opened(void)
 {
-    ASSERT_EQ(opened, true);
+    is(opened, true, "opened: expected value");
 }
 
-TEST(LogTest, Identity)
+void test_identity(void)
 {
-    ASSERT_STREQ(identity, "testing");
+    is(strncmp(identity, "testing", 8), 0, "identity: expected value");
     free(identity);
 }
 
-TEST(LogTest, Options)
+void test_options(void)
 {
-    ASSERT_EQ(options, LOG_PID);
+    is(options, LOG_PID, "options: expected value");
 }
 
-TEST(LogTest, Facility)
+void test_facility(void)
 {
-    ASSERT_EQ(facility, 1);
+    is(facility, 1, "facility: expected value");
 }
 
-TEST(LogTest, Priority)
+void test_priority(void)
 {
-    ASSERT_EQ(priority, syslogErr);
+    is(priority, syslogErr, "priority: expected value");
 }
 
-TEST(LogTest, Format)
+void test_format(void)
 {
-    ASSERT_STREQ(format, "%s");
+    is(strncmp(format, "%s", 3), 0, "format: expected value");
     free(format);
 }
 
-TEST(LogTest, LogMsg)
+void test_logmsg(void)
 {
-    ASSERT_STREQ(str, "success\n");
+    is(strncmp(str, "success\n", 8), 0, "logmsg: expected value");
     free(str);
 }
 
-TEST(LogTest, Closed)
+void test_closed(void)
 {
-    ASSERT_EQ(closed, true);
+    is(closed, true, "closed: expected value");
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
+    plan(8);
 
     std::clog.rdbuf(new Log("testing", 1));
     std::clog << syslogErr << "success" << std::endl;
     dynamic_cast<Log *>(std::clog.rdbuf())->close();
 
-    return RUN_ALL_TESTS();
+    test_opened();
+    test_identity();
+    test_options();
+    test_facility();
+    test_priority();
+    test_format();
+    test_logmsg();
+    test_closed();
+
+    return exit_status();
 }
