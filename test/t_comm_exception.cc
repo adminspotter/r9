@@ -155,17 +155,30 @@ void test_mutex_failure(void)
     mutex_error = false;
 }
 
-TEST(CommTest, CondFailure)
+void test_cond_failure(void)
 {
+    std::string test = "cond failure: ";
     Comm *obj = NULL;
     struct addrinfo a;
+    struct sockaddr_storage s;
+    a.ai_addr = (struct sockaddr *)&s;
 
     cond_error = true;
-    ASSERT_THROW(
-        {
-            obj = new Comm(&a);
-        },
-        std::runtime_error);
+    try
+    {
+        obj = new Comm(&a);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't init queue-not-empty cond"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     cond_error = false;
 }
 
@@ -218,11 +231,12 @@ TEST(CommTest, StartFailure)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(2);
+    plan(3);
 
     int gtests = RUN_ALL_TESTS();
 
     test_socket_failure();
     test_mutex_failure();
+    test_cond_failure();
     return (gtests & exit_status());
 }
