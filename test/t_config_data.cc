@@ -124,8 +124,9 @@ void test_create_delete(void)
     delete conf;
 }
 
-TEST(ConfigDataTest, SetupCleanup)
+void test_setup_cleanup(void)
 {
+    std::string test = "setup/cleanup: ", st;
     std::string fname = "./t_config_data.fake";
     char prog[] = "r9d", f_arg[] = "-f";
     char *args[3] = { prog, f_arg, (char *)fname.c_str() };
@@ -136,45 +137,60 @@ TEST(ConfigDataTest, SetupCleanup)
     ofs << "ZoneSize 3000 4000 5000 3 4 5" << std::endl;
     ofs.close();
 
-    ASSERT_EQ(config.size.dim[0], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.dim[1], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.dim[2], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.steps[0], config_data::ZONE_STEPS);
-    ASSERT_EQ(config.size.steps[1], config_data::ZONE_STEPS);
-    ASSERT_EQ(config.size.steps[2], config_data::ZONE_STEPS);
-    ASSERT_TRUE(config.listen_ports.size() == 0);
-    ASSERT_TRUE(config.consoles.size() == 0);
+    st = "default values: ";
+    is(config.size.dim[0], config_data::ZONE_SIZE,
+       test + st + "expected zone x size");
+    is(config.size.dim[1], config_data::ZONE_SIZE,
+       test + st + "expected zone y size");
+    is(config.size.dim[2], config_data::ZONE_SIZE,
+       test + st + "expected zone z size");
+    is(config.size.steps[0], config_data::ZONE_STEPS,
+       test + st + "expected zone x steps");
+    is(config.size.steps[1], config_data::ZONE_STEPS,
+       test + st + "expected zone y steps");
+    is(config.size.steps[2], config_data::ZONE_STEPS,
+       test + st + "expected zone z steps");
+    is(config.listen_ports.size(), 0, test + st + "expected port size");
+    is(config.consoles.size(), 0, test + st + "expected console size");
 
     seteuid_count = setegid_count = chdir_count = 0;
 
     setup_configuration(3, args);
     unlink(fname.c_str());
 
-    ASSERT_EQ(config.size.dim[0], 3000);
-    ASSERT_EQ(config.size.dim[1], 4000);
-    ASSERT_EQ(config.size.dim[2], 5000);
-    ASSERT_EQ(config.size.steps[0], 3);
-    ASSERT_EQ(config.size.steps[1], 4);
-    ASSERT_EQ(config.size.steps[2], 5);
-    ASSERT_TRUE(config.listen_ports.size() == 1);
-    ASSERT_TRUE(config.consoles.size() == 1);
-    ASSERT_EQ(seteuid_count, 0);
-    ASSERT_EQ(setegid_count, 0);
-    ASSERT_EQ(chdir_count, 0);
+    st = "setup values: ";
+    is(config.size.dim[0], 3000, test + st + "expected zone x size");
+    is(config.size.dim[1], 4000, test + st + "expected zone y size");
+    is(config.size.dim[2], 5000, test + st + "expected zone z size");
+    is(config.size.steps[0], 3, test + st + "expected zone x steps");
+    is(config.size.steps[1], 4, test + st + "expected zone x steps");
+    is(config.size.steps[2], 5, test + st + "expected zone x steps");
+    is(config.listen_ports.size(), 1, test + st + "expected port size");
+    is(config.consoles.size(), 1, test + st + "expected console size");
+    is(seteuid_count, 0, test + st + "expected seteuids");
+    is(setegid_count, 0, test + st + "expected setegids");
+    is(chdir_count, 0, test + st + "expected chdirs");
 
     cleanup_configuration();
 
-    ASSERT_EQ(config.size.dim[0], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.dim[1], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.dim[2], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.steps[0], config_data::ZONE_STEPS);
-    ASSERT_EQ(config.size.steps[1], config_data::ZONE_STEPS);
-    ASSERT_EQ(config.size.steps[2], config_data::ZONE_STEPS);
-    ASSERT_TRUE(config.listen_ports.size() == 0);
-    ASSERT_TRUE(config.consoles.size() == 0);
-    ASSERT_EQ(seteuid_count, 1);
-    ASSERT_EQ(setegid_count, 1);
-    ASSERT_EQ(chdir_count, 1);
+    st = "cleaned up values: ";
+    is(config.size.dim[0], config_data::ZONE_SIZE,
+       test + st + "expected zone x size");
+    is(config.size.dim[1], config_data::ZONE_SIZE,
+       test + st + "expected zone y size");
+    is(config.size.dim[2], config_data::ZONE_SIZE,
+       test + st + "expected zone z size");
+    is(config.size.steps[0], config_data::ZONE_STEPS,
+       test + st + "expected zone x steps");
+    is(config.size.steps[1], config_data::ZONE_STEPS,
+       test + st + "expected zone y steps");
+    is(config.size.steps[2], config_data::ZONE_STEPS,
+       test + st + "expected zone z steps");
+    is(config.listen_ports.size(), 0, test + st + "expected port size");
+    is(config.consoles.size(), 0, test + st + "expected console size");
+    is(seteuid_count, 1, test + st + "expected seteuids");
+    is(setegid_count, 1, test + st + "expected setegids");
+    is(chdir_count, 1, test + st + "expected chdirs");
 }
 
 TEST(ConfigDataTest, ParseCommandLine)
@@ -294,10 +310,11 @@ TEST(ConfigDataTest, ParseConfigLine)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(23);
+    plan(53);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
+    test_setup_cleanup();
     return gtests & exit_status();
 }
