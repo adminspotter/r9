@@ -4,6 +4,7 @@ using namespace TAP;
 
 #include "../server/classes/config_data.h"
 
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pwd.h>
@@ -11,8 +12,6 @@ using namespace TAP;
 #include <syslog.h>
 
 #include <fstream>
-
-#include <gtest/gtest.h>
 
 extern void setup_configuration(int, char **);
 extern void cleanup_configuration(void);
@@ -228,8 +227,9 @@ void test_parse_command_line(void)
  * read_config_file method, so we can tailor the lines in our file to
  * test each of the specific functions.
  */
-TEST(ConfigDataTest, ParseConfigLine)
+void test_parse_config_file(void)
 {
+    std::string test = "parse config file: ", st;
     std::string fname = "./t_config_data.fake";
     std::ofstream ofs(fname);
     ofs << std::endl;
@@ -278,17 +278,27 @@ TEST(ConfigDataTest, ParseConfigLine)
     ofs << "ZoneSize 10 15 20 25 30 35" << std::endl;
     ofs.close();
 
-    ASSERT_EQ(config.pid_fname, config_data::PID_FNAME);
-    ASSERT_EQ(config.access_threads, config_data::NUM_THREADS);
-    ASSERT_EQ(config.use_keepalive, false);
-    ASSERT_EQ(config.log_facility, config_data::LOG_FACILITY);
-    ASSERT_TRUE(config.listen_ports.size() == 0);
-    ASSERT_EQ(config.size.dim[0], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.dim[1], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.dim[2], config_data::ZONE_SIZE);
-    ASSERT_EQ(config.size.steps[0], config_data::ZONE_STEPS);
-    ASSERT_EQ(config.size.steps[1], config_data::ZONE_STEPS);
-    ASSERT_EQ(config.size.steps[2], config_data::ZONE_STEPS);
+    st = "default values: ";
+    is(config.pid_fname, config_data::PID_FNAME,
+       test + st + "expected pid fname");
+    is(config.access_threads, config_data::NUM_THREADS,
+       test + st + "expected access count");
+    is(config.use_keepalive, false, test + st + "expected keepalive");
+    is(config.log_facility, config_data::LOG_FACILITY,
+       test + st + "expected log facility");
+    is(config.listen_ports.size(), 0, test + st + "expcted port size");
+    is(config.size.dim[0], config_data::ZONE_SIZE,
+       test + st + "expected zone x size");
+    is(config.size.dim[1], config_data::ZONE_SIZE,
+       test + st + "expected zone y size");
+    is(config.size.dim[2], config_data::ZONE_SIZE,
+       test + st + "expected zone z size");
+    is(config.size.steps[0], config_data::ZONE_STEPS,
+       test + st + "expected zone x steps");
+    is(config.size.steps[1], config_data::ZONE_STEPS,
+       test + st + "expected zone y steps");
+    is(config.size.steps[2], config_data::ZONE_STEPS,
+       test + st + "expected zone z steps");
 
     getpwnam_count = seteuid_count = 0;
     getgrnam_count = setegid_count = 0;
@@ -296,32 +306,31 @@ TEST(ConfigDataTest, ParseConfigLine)
     config.read_config_file(fname);
     unlink(fname.c_str());
 
-    ASSERT_EQ(config.pid_fname, "some_file");
-    ASSERT_EQ(config.access_threads, 987);
-    ASSERT_EQ(config.use_keepalive, true);
-    ASSERT_EQ(getpwnam_count, 2);
-    ASSERT_EQ(seteuid_count, 1);
-    ASSERT_EQ(getgrnam_count, 2);
-    ASSERT_EQ(setegid_count, 1);
-    ASSERT_EQ(config.log_facility, LOG_UUCP);
-    ASSERT_TRUE(config.listen_ports.size() == 3);
-    ASSERT_EQ(config.size.dim[0], 10);
-    ASSERT_EQ(config.size.dim[1], 15);
-    ASSERT_EQ(config.size.dim[2], 20);
-    ASSERT_EQ(config.size.steps[0], 25);
-    ASSERT_EQ(config.size.steps[1], 30);
-    ASSERT_EQ(config.size.steps[2], 35);
+    st = "read values: ";
+    is(config.pid_fname, "some_file", test + st + "expected pid fname");
+    is(config.access_threads, 987, test + st + "expected access count");
+    is(config.use_keepalive, true, test + st + "expected keepalive");
+    is(getpwnam_count, 2, test + st + "expected getpwnams");
+    is(seteuid_count, 1, test + st + "expected seteuids");
+    is(getgrnam_count, 2, test + st + "expected getgrnams");
+    is(setegid_count, 1, test + st + "expected setegids");
+    is(config.log_facility, LOG_UUCP, test + st + "expected log facility");
+    is(config.listen_ports.size(), 3, test + st + "expected port size");
+    is(config.size.dim[0], 10, test + st + "expected zone x size");
+    is(config.size.dim[1], 15, test + st + "expected zone y size");
+    is(config.size.dim[2], 20, test + st + "expected zone z size");
+    is(config.size.steps[0], 25, test + st + "expected zone x steps");
+    is(config.size.steps[1], 30, test + st + "expected zone y steps");
+    is(config.size.steps[2], 35, test + st + "expected zone z steps");
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(55);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(81);
 
     test_create_delete();
     test_setup_cleanup();
     test_parse_command_line();
-    return gtests & exit_status();
+    test_parse_config_file();
+    return exit_status();
 }
