@@ -233,7 +233,7 @@ t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 t_comm_exception_SOURCES = t_comm_exception.cc ../client/comm.cc \
 	../client/comm.h
 t_comm_exception_CXXFLAGS = $(TAP_INCLUDES)
-t_comm_exception_LDADD = $(GTEST_LIBS) $(TAP_LDADD)
+t_comm_exception_LDADD = $(TAP_LDADD)
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
