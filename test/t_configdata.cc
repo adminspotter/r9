@@ -14,6 +14,7 @@ using namespace TAP;
 
 #include <string>
 #include <fstream>
+#include <stdexcept>
 
 #include <gtest/gtest.h>
 
@@ -133,6 +134,15 @@ class ConfigdataTest : public ::testing::Test
         };
 };
 
+class fake_ConfigData : public ConfigData
+{
+  public:
+    fake_ConfigData() : ConfigData() {};
+    virtual ~fake_ConfigData() {};
+
+    using ConfigData::make_config_dirs;
+};
+
 void test_create_delete(void)
 {
     std::string test = "create/delete: ";
@@ -168,42 +178,62 @@ void test_create_delete(void)
     cleanup_fixture();
 }
 
-TEST_F(ConfigdataTest, MakeConfigDirs)
+void test_make_config_dirs(void)
 {
+    std::string test = "make config dirs: ", st;
     int ret;
     char *args[] = {};
 
-    ConfigData *conf;
+    fake_ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    setup_fixture();
+    try
+    {
+        conf = new fake_ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
-    /* If there's nothing to parse, that won't get done, and if there
-     * is no config file, nothing will happen there either.
-     */
+    st = "success: ";
     mkdir_count = 0;
     mkdir_fail_index = 5;
-    conf->parse_command_line(0, args);
+    conf->make_config_dirs();
 
-    ASSERT_EQ(mkdir_count, 4);
+    is(mkdir_count, 4, test + st + "no failures");
+
+    st = "failures: ";
     for (mkdir_fail_index = 1; mkdir_fail_index <= 4; ++mkdir_fail_index)
     {
         mkdir_count = 0;
-        ASSERT_THROW(
-            {
-                conf->parse_command_line(0, args);
-            },
-            std::runtime_error);
+        try
+        {
+            conf->make_config_dirs();
+        }
+        catch (std::runtime_error& e)
+        {
+            std::string err(e.what());
+            isnt(err.find("directory"), std::string::npos,
+                 test + st + "failed with correct error");
+        }
+        catch (...)
+        {
+            fail(test + "wrong exception type");
+        }
     }
     mkdir_count = 0;
     mkdir_fail_index = 5;
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
 TEST_F(ConfigdataTest, ParseCommandLine)
@@ -349,10 +379,11 @@ TEST_F(ConfigdataTest, WriteConfigFile)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(7);
+    plan(14);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
+    test_make_config_dirs();
     return gtests & exit_status();
 }

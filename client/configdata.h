@@ -58,7 +58,7 @@ class ConfigData
     void read_config_file(void);
     void write_config_file(void);
 
-  private:
+  protected:
     void make_config_dirs(void);
     void parse_config_line(std::string&);
 };
