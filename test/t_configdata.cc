@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -129,28 +133,39 @@ class ConfigdataTest : public ::testing::Test
         };
 };
 
-TEST_F(ConfigdataTest, BasicCreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    setup_fixture();
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     /* Test what defaults have been set. */
     std::string expected = tmpdir + "/.r9";
-    ASSERT_EQ(conf->config_dir, expected);
+    is(conf->config_dir, expected, test + "expected config dir");
     expected += "/config";
-    ASSERT_EQ(conf->config_fname, expected);
-    ASSERT_EQ(conf->server_addr, ConfigData::SERVER_ADDR);
-    ASSERT_EQ(conf->server_port, ConfigData::SERVER_PORT);
-    ASSERT_TRUE(conf->font_paths.size() > 0);
+    is(conf->config_fname, expected, test + "expected config fname");
+    is(conf->server_addr, ConfigData::SERVER_ADDR, test + "expected addr");
+    is(conf->server_port, ConfigData::SERVER_PORT, test + "expected port");
+    ok(conf->font_paths.size() > 0, "contents in font path");
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
 TEST_F(ConfigdataTest, MakeConfigDirs)
@@ -334,6 +349,10 @@ TEST_F(ConfigdataTest, WriteConfigFile)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
+    plan(7);
 
-    return RUN_ALL_TESTS();
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    return gtests & exit_status();
 }

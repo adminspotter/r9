@@ -237,7 +237,8 @@ t_comm_exception_LDADD = $(TAP_LDADD)
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
-t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+t_configdata_CXXFLAGS = $(TAP_INCLUDES)
+t_configdata_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(TAP_LDADD)
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov
