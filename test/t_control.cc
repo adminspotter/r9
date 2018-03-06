@@ -68,13 +68,14 @@ void test_create_delete_connected(void)
     delete go1;
 }
 
-TEST(ControlTest, LessThan)
+void test_less_than(void)
 {
+    std::string test = "less-than: ";
     Control *con1 = new Control(1LL, NULL);
     Control *con2 = new Control(2LL, NULL);
 
-    ASSERT_TRUE(*con1 < *con2);
-    ASSERT_FALSE(*con2 < *con1);
+    is(*con1 < *con2, true, test + "lesser is less than greater");
+    is(*con2 < *con1, false, test + "greater is not less than lesser");
 
     delete con2;
     delete con1;
@@ -143,11 +144,12 @@ TEST(ControlTest, TakeOver)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(5);
+    plan(7);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_create_delete_connected();
+    test_less_than();
     return gtests & exit_status();
 }
