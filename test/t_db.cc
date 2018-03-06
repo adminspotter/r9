@@ -1,3 +1,9 @@
+#include <tap++.h>
+
+using namespace TAP;
+
+#include <stdexcept>
+
 #include "../server/classes/modules/db.h"
 
 #include <gtest/gtest.h>
@@ -105,16 +111,27 @@ class fake_DB : public DB
         };
 };
 
-TEST(DBTest, BadGethostbyname)
+void test_bad_gethostbyname(void)
 {
+    std::string test = "bad gethostbyname: ";
     fake_DB *database;
 
     gethostname_failure = true;
-    ASSERT_THROW(
-        {
-            database = new fake_DB("a", "b", "c", "d");
-        },
-        std::runtime_error);
+    try
+    {
+        database = new fake_DB("a", "b", "c", "d");
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't get hostname"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     gethostname_failure = false;
 }
 
@@ -153,4 +170,15 @@ TEST(DBTest, Success)
             database = new fake_DB("a", "b", "c", "d");
         });
     delete database;
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(1);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_bad_gethostbyname();
+    return gtests & exit_status();
 }
