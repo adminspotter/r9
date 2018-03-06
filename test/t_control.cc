@@ -35,25 +35,34 @@ void test_create_delete(void)
     }
 }
 
-TEST(ControlTest, CreateDeleteConnected)
+void test_create_delete_connected(void)
 {
+    std::string test = "create/delete connected: ";
     Control *con;
     GameObject *go1 = new GameObject(NULL, NULL, 123LL);
     GameObject *go2 = new GameObject(NULL, NULL, 124LL);
 
-    ASSERT_NO_THROW(
-        {
-            con = new Control(123LL, go1);
-        });
-    ASSERT_TRUE(con->default_slave == go1);
-    ASSERT_TRUE(con->slave == go1);
+    try
+    {
+        con = new Control(123LL, go1);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(con->default_slave, go1, test + "expected default slave");
+    is(con->slave, go1, test + "expected slave");
 
     con->slave = go2;
 
-    ASSERT_NO_THROW(
-        {
-            delete con;
-        });
+    try
+    {
+        delete con;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
 
     delete go2;
     delete go1;
@@ -134,10 +143,11 @@ TEST(ControlTest, TakeOver)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(3);
+    plan(5);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
+    test_create_delete_connected();
     return gtests & exit_status();
 }
