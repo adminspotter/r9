@@ -159,16 +159,27 @@ void test_bad_getaddrinfo(void)
     getaddrinfo_failure = false;
 }
 
-TEST(DBTest, BadNtop)
+void test_bad_ntop(void)
 {
+    std::string test = "bad ntop: ";
     fake_DB *database;
 
     ntop_failure = true;
-    ASSERT_THROW(
-        {
-            database = new fake_DB("a", "b", "c", "d");
-        },
-        std::runtime_error);
+    try
+    {
+        database = new fake_DB("a", "b", "c", "d");
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't convert IP"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     ntop_failure = false;
 }
 
@@ -186,11 +197,12 @@ TEST(DBTest, Success)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(2);
+    plan(3);
 
     int gtests = RUN_ALL_TESTS();
 
     test_bad_gethostbyname();
     test_bad_getaddrinfo();
+    test_bad_ntop();
     return gtests & exit_status();
 }
