@@ -89,8 +89,8 @@ t_config_data_LDADD = $(TAP_LDADD)
 
 t_control_SOURCES = t_control.cc \
 	../server/classes/control.cc ../server/classes/control.h
-t_control_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES) $(TAP_INCLUDES)
-t_control_LDADD = $(GTEST_LIBS) $(TAP_LDADD) \
+t_control_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_control_LDADD = $(TAP_LDADD) \
 	../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 

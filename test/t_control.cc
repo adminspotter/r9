@@ -4,8 +4,6 @@ using namespace TAP;
 
 #include "../server/classes/control.h"
 
-#include <gtest/gtest.h>
-
 #include "mock_server_globals.h"
 
 void test_create_delete(void)
@@ -129,34 +127,33 @@ void test_assignment(void)
     delete go1;
 }
 
-TEST(ControlTest, TakeOver)
+void test_take_over(void)
 {
+    std::string test = "take over: ";
     GameObject *go1 = new GameObject(NULL, NULL, 123LL);
     Control *con = new Control(123LL, NULL);
 
     bool result = con->take_over(go1);
 
-    ASSERT_TRUE(result);
+    is(result, true, test + "took over object");
 
     result = con->take_over(go1);
 
-    ASSERT_FALSE(result);
+    is(result, false, test + "couldn't take over object again");
 
     delete con;
     delete go1;
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(17);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(19);
 
     test_create_delete();
     test_create_delete_connected();
     test_less_than();
     test_equality();
     test_assignment();
-    return gtests & exit_status();
+    test_take_over();
+    return exit_status();
 }
