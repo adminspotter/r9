@@ -60,7 +60,7 @@ install-exec-local:
 	@echo "Nothing to install"
 	false
 
-AM_CXXFLAGS = $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
+AM_CXXFLAGS = $(GMOCK_INCLUDES) $(GTEST_INCLUDES) $(TAP_INCLUDES)
 
 CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
 if HAVE_LIBWRAP
@@ -232,12 +232,10 @@ t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 
 t_comm_exception_SOURCES = t_comm_exception.cc ../client/comm.cc \
 	../client/comm.h
-t_comm_exception_CXXFLAGS = $(TAP_INCLUDES)
 t_comm_exception_LDADD = $(TAP_LDADD)
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
-t_configdata_CXXFLAGS = $(TAP_INCLUDES)
 t_configdata_LDADD = $(TAP_LDADD)
 
 clean-local:
