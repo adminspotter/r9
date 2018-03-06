@@ -97,8 +97,9 @@ void test_equality(void)
     delete con1;
 }
 
-TEST(ControlTest, Assignment)
+void test_assignment(void)
 {
+    std::string test = "assignment: ";
     GameObject *go1 = new GameObject(NULL, NULL, 123LL);
     GameObject *go2 = new GameObject(NULL, NULL, 124LL);
     Control *con1 = new Control(123LL, go1);
@@ -107,17 +108,20 @@ TEST(ControlTest, Assignment)
 
     Control *con2 = new Control(987LL, NULL);
 
-    ASSERT_NE(con1->userid, con2->userid);
-    ASSERT_FALSE(con1->default_slave == con2->default_slave);
-    ASSERT_FALSE(con1->slave == con2->slave);
-    ASSERT_FALSE(con1->username == con2->username);
+    isnt(con1->userid, con2->userid, test + "userids are not equal");
+    is(con1->default_slave == con2->default_slave, false,
+       test + "default slaves are not equal");
+    is(con1->slave == con2->slave, false, test + "slaves are not equal");
+    is(con1->username == con2->username, false,
+       test + "usernames are not equal");
 
     *con2 = *con1;
 
-    ASSERT_EQ(con1->userid, con2->userid);
-    ASSERT_TRUE(con1->default_slave == con2->default_slave);
-    ASSERT_TRUE(con1->slave == con2->slave);
-    ASSERT_TRUE(con1->username == con2->username);
+    is(con1->userid, con2->userid, test + "userids are equal");
+    is(con1->default_slave, con2->default_slave,
+       test + "default slaves are equal");
+    is(con1->slave, con2->slave, test + "slaves are equal");
+    is(con1->username, con2->username, test + "usernames are equal");
 
     delete con2;
     delete con1;
@@ -145,7 +149,7 @@ TEST(ControlTest, TakeOver)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(9);
+    plan(17);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -153,5 +157,6 @@ GTEST_API_ int main(int argc, char **argv)
     test_create_delete_connected();
     test_less_than();
     test_equality();
+    test_assignment();
     return gtests & exit_status();
 }
