@@ -1,25 +1,38 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/control.h"
 
 #include <gtest/gtest.h>
 
 #include "mock_server_globals.h"
 
-TEST(ControlTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     Control *con;
 
-    ASSERT_NO_THROW(
-        {
-            con = new Control(0LL, NULL);
-        });
-    ASSERT_EQ(con->userid, 0LL);
-    ASSERT_TRUE(con->default_slave == NULL);
-    ASSERT_TRUE(con->slave == NULL);
+    try
+    {
+        con = new Control(0LL, NULL);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(con->userid, 0LL, test + "expected userid");
+    is(con->default_slave == NULL, true, test + "expected default slave");
+    is(con->slave == NULL, true, test + "expected slave");
 
-    ASSERT_NO_THROW(
-        {
-            delete con;
-        });
+    try
+    {
+        delete con;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
 }
 
 TEST(ControlTest, CreateDeleteConnected)
@@ -116,4 +129,15 @@ TEST(ControlTest, TakeOver)
 
     delete con;
     delete go1;
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(3);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    return gtests & exit_status();
 }
