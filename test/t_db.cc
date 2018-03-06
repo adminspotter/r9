@@ -135,16 +135,27 @@ void test_bad_gethostbyname(void)
     gethostname_failure = false;
 }
 
-TEST(DBTest, BadGetaddrinfo)
+void test_bad_getaddrinfo(void)
 {
+    std::string test = "bad getaddrinfo: ";
     fake_DB *database;
 
     getaddrinfo_failure = true;
-    ASSERT_THROW(
-        {
-            database = new fake_DB("a", "b", "c", "d");
-        },
-        std::runtime_error);
+    try
+    {
+        database = new fake_DB("a", "b", "c", "d");
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't get address"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     getaddrinfo_failure = false;
 }
 
@@ -175,10 +186,11 @@ TEST(DBTest, Success)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(1);
+    plan(2);
 
     int gtests = RUN_ALL_TESTS();
 
     test_bad_gethostbyname();
+    test_bad_getaddrinfo();
     return gtests & exit_status();
 }
