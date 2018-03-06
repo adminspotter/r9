@@ -105,7 +105,7 @@ t_console_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(WRAP_LDLIBS)
 
 t_db_SOURCES = t_db.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_db_LDADD = $(GTEST_LIBS) $(TAP_LDADD)
+t_db_LDADD = $(TAP_LDADD)
 
 t_dgram_SOURCES = t_dgram.cc \
 	../server/classes/dgram.cc ../server/classes/dgram.h \

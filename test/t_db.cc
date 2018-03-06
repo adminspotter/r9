@@ -6,8 +6,6 @@ using namespace TAP;
 
 #include "../server/classes/modules/db.h"
 
-#include <gtest/gtest.h>
-
 bool gethostname_failure = false, getaddrinfo_failure = false;
 bool ntop_failure = false;
 const char address[] = "1.2.3.4";
@@ -183,26 +181,29 @@ void test_bad_ntop(void)
     ntop_failure = false;
 }
 
-TEST(DBTest, Success)
+void test_success(void)
 {
+    std::string test = "success: ";
     fake_DB *database;
 
-    ASSERT_NO_THROW(
-        {
-            database = new fake_DB("a", "b", "c", "d");
-        });
+    try
+    {
+        database = new fake_DB("a", "b", "c", "d");
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
     delete database;
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
     plan(3);
-
-    int gtests = RUN_ALL_TESTS();
 
     test_bad_gethostbyname();
     test_bad_getaddrinfo();
     test_bad_ntop();
-    return gtests & exit_status();
+    test_success();
+    return exit_status();
 }
