@@ -81,16 +81,17 @@ void test_less_than(void)
     delete con1;
 }
 
-TEST(ControlTest, Equality)
+void test_equality(void)
 {
+    std::string test = "equality: ";
     Control *con1 = new Control(1LL, NULL);
     Control *con2 = new Control(2LL, NULL);
 
-    ASSERT_FALSE(*con1 == *con2);
+    is(*con1 == *con2, false, test + "objects are not equal");
 
     con1->userid = con2->userid;
 
-    ASSERT_TRUE(*con1 == *con2);
+    is(*con1 == *con2, true, test + "objects are equal");
 
     delete con2;
     delete con1;
@@ -144,12 +145,13 @@ TEST(ControlTest, TakeOver)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(7);
+    plan(9);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_create_delete_connected();
     test_less_than();
+    test_equality();
     return gtests & exit_status();
 }
