@@ -1,5 +1,10 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/basesock.h"
 
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -119,8 +124,9 @@ int unlink(const char *a)
     return 0;
 }
 
-TEST(BasesockTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -130,16 +136,21 @@ TEST(BasesockTest, CreateDelete)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "v4 addrinfo created successfully");
 
     socket_zero = true;
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_STREQ(base->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(base->sa->port(), 1235);
-    ASSERT_GE(base->sock, 0);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
+       test + "expected address");
+    is(base->sa->port(), 1235, test + "expected port");
+    ok(base->sock >= 0, test + "socket created");
 
     delete(base);
     freeaddrinfo(ai);
@@ -151,19 +162,25 @@ TEST(BasesockTest, CreateDelete)
         hints.ai_socktype = SOCK_DGRAM;
         hints.ai_flags = AI_PASSIVE;
         ret = getaddrinfo("localhost", "1235", &hints, &ai);
-        ASSERT_EQ(ret, 0);
+        is(ret, 0, test + "v6 addrinfo created successfully");
 
-        ASSERT_NO_THROW(
-            {
-                base = new basesock(ai);
-            });
-        ASSERT_STREQ(base->sa->ntop(), "::1");
-        ASSERT_EQ(base->sa->port(), 1235);
-        ASSERT_GE(base->sock, 0);
+        try
+        {
+            base = new basesock(ai);
+        }
+        catch (...)
+        {
+            fail(test + "constructor exception");
+        }
+        is(strncmp(base->sa->ntop(), "::1", 4), 0, test + "expected address");
+        is(base->sa->port(), 1235, test + "expected port");
+        ok(base->sock >= 0, test + "socket created");
 
         delete(base);
         freeaddrinfo(ai);
     }
+    else
+        skip(5, test + "no IPv6");
     socket_zero = false;
 }
 
@@ -531,4 +548,15 @@ TEST(BasesockTest, StopJoinFail)
         });
     freeaddrinfo(ai);
     pthread_join_error = false;
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(9);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    return gtests & exit_status();
 }

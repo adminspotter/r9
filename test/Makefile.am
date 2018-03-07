@@ -79,8 +79,8 @@ t_basesock_SOURCES = t_basesock.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
 	../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
-t_basesock_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_basesock_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+t_basesock_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES) $(TAP_INCLUDES)
+t_basesock_LDADD = $(GTEST_LIBS) $(TAP_LDADD)
 
 t_config_data_SOURCES = t_config_data.cc \
 	../server/classes/config_data.cc ../server/classes/config_data.h
