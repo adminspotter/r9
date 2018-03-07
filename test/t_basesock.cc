@@ -11,8 +11,6 @@ using namespace TAP;
 #include <stdexcept>
 #include <typeinfo>
 
-#include <gtest/gtest.h>
-
 bool socket_error = false, socket_zero = false, bind_error = false;
 bool am_root = false, listen_error = false, pthread_create_error = false;
 bool pthread_cancel_error = false, pthread_join_error = false;
@@ -627,8 +625,9 @@ void test_stop_cancel_fail(void)
     pthread_cancel_error = false;
 }
 
-TEST(BasesockTest, StopJoinFail)
+void test_stop_join_fail(void)
 {
+    std::string test = "stop w/bad pthread_join: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -638,43 +637,63 @@ TEST(BasesockTest, StopJoinFail)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_STREQ(base->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(base->sa->port(), 1235);
-    ASSERT_GE(base->sock, 0);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
+       test + "expected address");
+    is(base->sa->port(), 1235, test + "expected port");
+    ok(base->sock >= 0, test + "socket created");
 
     base->listen_arg = base;
-    ASSERT_NO_THROW(
-        {
-            base->start(test_thread_worker);
-        });
+    try
+    {
+        base->start(test_thread_worker);
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
 
     pthread_join_error = true;
-    ASSERT_THROW(
-        {
-            base->stop();
-        },
-        std::runtime_error);
+    try
+    {
+        base->stop();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
 
-    ASSERT_NO_THROW(
-        {
-            delete(base);
-        });
+        isnt(err.find("couldn't join listen thread"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+
+    try
+    {
+        delete(base);
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
     freeaddrinfo(ai);
     pthread_join_error = false;
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(39);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(44);
 
     test_create_delete();
     test_delete_unix();
@@ -686,5 +705,6 @@ GTEST_API_ int main(int argc, char **argv)
     test_start_bad_socket();
     test_start_create_thread_fail();
     test_stop_cancel_fail();
-    return gtests & exit_status();
+    test_stop_join_fail();
+    return exit_status();
 }
