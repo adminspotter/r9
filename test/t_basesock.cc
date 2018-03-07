@@ -184,8 +184,9 @@ void test_create_delete(void)
     socket_zero = false;
 }
 
-TEST(BasesockTest, DeleteUnix)
+void test_delete_unix(void)
 {
+    std::string test = "delete unix: ";
     std::stringstream *new_clog = new std::stringstream;
     auto old_clog_rdbuf = std::clog.rdbuf(new_clog->rdbuf());
 
@@ -203,10 +204,14 @@ TEST(BasesockTest, DeleteUnix)
     sun.sun_family = AF_UNIX;
     strncpy(sun.sun_path, "t_basesock.sock", 16);
 
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(&ai);
-        });
+    try
+    {
+        base = new basesock(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     unlink_error = true;
 
@@ -215,8 +220,8 @@ TEST(BasesockTest, DeleteUnix)
     unlink_error = false;
 
     std::clog.rdbuf(old_clog_rdbuf);
-    ASSERT_TRUE(new_clog->str().find("could not unlink path")
-                != std::string::npos);
+    isnt(new_clog->str().find("could not unlink path"), std::string::npos,
+         test + "expected unlink failure");
 
     /* We explicitly leak the new_clog object here because we're
      * seeing segfaults on Linux hosts when we try to delete it.  It's
@@ -553,10 +558,11 @@ TEST(BasesockTest, StopJoinFail)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(9);
+    plan(10);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
+    test_delete_unix();
     return gtests & exit_status();
 }
