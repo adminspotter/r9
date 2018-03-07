@@ -267,8 +267,9 @@ void test_bad_socket(void)
     freeaddrinfo(ai);
 }
 
-TEST(BasesockTest, SocketRoot)
+void test_privileged_socket(void)
 {
+    std::string test = "privileged socket creation: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -278,25 +279,39 @@ TEST(BasesockTest, SocketRoot)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "123", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     am_root = false;
     seteuid_count = setegid_count = 0;
-    ASSERT_THROW(
-        {
-            base = new basesock(ai);
-        },
-        std::runtime_error);
-    ASSERT_EQ(seteuid_count, 0);
-    ASSERT_EQ(setegid_count, 0);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("non-root user"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+    is(seteuid_count, 0, test + "expected seteuid count");
+    is(setegid_count, 0, test + "expected setegid count");
 
     am_root = true;
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_EQ(seteuid_count, 2);
-    ASSERT_EQ(setegid_count, 2);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "create_socket exception");
+    }
+    is(seteuid_count, 2, test + "expected seteuid count");
+    is(setegid_count, 2, test + "expected setegid count");
 
     delete base;
     freeaddrinfo(ai);
@@ -569,12 +584,13 @@ TEST(BasesockTest, StopJoinFail)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(12);
+    plan(18);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_delete_unix();
     test_bad_socket();
+    test_privileged_socket();
     return gtests & exit_status();
 }
