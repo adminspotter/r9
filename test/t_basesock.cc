@@ -319,8 +319,9 @@ void test_privileged_socket(void)
     am_root = false;
 }
 
-TEST(BasesockTest, BadBind)
+void test_bad_bind(void)
 {
+    std::string test = "bad bind: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -330,14 +331,24 @@ TEST(BasesockTest, BadBind)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     bind_error = true;
-    ASSERT_THROW(
-        {
-            base = new basesock(ai);
-        },
-        std::runtime_error);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("bind failed for"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
 
     freeaddrinfo(ai);
     bind_error = false;
@@ -584,7 +595,7 @@ TEST(BasesockTest, StopJoinFail)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(18);
+    plan(20);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -592,5 +603,6 @@ GTEST_API_ int main(int argc, char **argv)
     test_delete_unix();
     test_bad_socket();
     test_privileged_socket();
+    test_bad_bind();
     return gtests & exit_status();
 }
