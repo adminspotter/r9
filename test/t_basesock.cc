@@ -469,8 +469,9 @@ void test_start_stop(void)
         skip(4, test + "no IPv6");
 }
 
-TEST(BasesockTest, StartBadSocket)
+void test_start_bad_socket(void)
 {
+    std::string test = "start w/bad socket: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -480,20 +481,34 @@ TEST(BasesockTest, StartBadSocket)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     socket_zero = true;
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     base->listen_arg = base;
-    ASSERT_THROW(
-        {
-            base->start(test_thread_worker);
-        },
-        std::runtime_error);
+    try
+    {
+        base->start(test_thread_worker);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("no socket available"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
 
     delete base;
     freeaddrinfo(ai);
@@ -618,7 +633,7 @@ TEST(BasesockTest, StopJoinFail)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(30);
+    plan(32);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -629,5 +644,6 @@ GTEST_API_ int main(int argc, char **argv)
     test_bad_bind();
     test_bad_listen();
     test_start_stop();
+    test_start_bad_socket();
     return gtests & exit_status();
 }
