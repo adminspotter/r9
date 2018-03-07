@@ -233,8 +233,9 @@ void test_delete_unix(void)
      */
 }
 
-TEST(BasesockTest, BadSocket)
+void test_bad_socket(void)
 {
+    std::string test = "bad socket: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -244,14 +245,24 @@ TEST(BasesockTest, BadSocket)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     socket_error = true;
-    ASSERT_THROW(
-        {
-            base = new basesock(ai);
-        },
-        std::runtime_error);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("socket creation failed"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     socket_error = false;
     freeaddrinfo(ai);
 }
@@ -558,11 +569,12 @@ TEST(BasesockTest, StopJoinFail)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(10);
+    plan(12);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_delete_unix();
+    test_bad_socket();
     return gtests & exit_status();
 }
