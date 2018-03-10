@@ -635,7 +635,6 @@ void test_recv_no_ntoh(void)
         ;
     delete comm;
 
-    is(recvfrom_calls, 2, test + "expected recvfrom count");
     isnt(new_clog.str().find("Error while ntoh'ing packet"),
          std::string::npos,
          test + "expected log entry");
@@ -863,7 +862,7 @@ void test_recv_unsupported(void)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(19);
+    plan(18);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
