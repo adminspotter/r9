@@ -559,12 +559,10 @@ TEST(CommRecvTest, RecvBadSender)
     std::clog.rdbuf(old_clog_rdbuf);
  }
 
-TEST(CommRecvTest, RecvBadPacket)
+void test_recv_bad_packet(void)
 {
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
-    mock_Comm *comm = NULL;
+    std::string test = "unknown packet: ";
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -585,17 +583,22 @@ TEST(CommRecvTest, RecvBadPacket)
     bad_ntoh = false;
     recvfrom_calls = 0;
 
-    ASSERT_NO_THROW(
-        {
-            comm = new mock_Comm(&ai);
-            comm->start();
-        });
-    sleep(1);
+    try
+    {
+        comm = new fake_Comm(&ai);
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
+    while (new_clog.str().size() == 0)
+        ;
     delete comm;
 
-    ASSERT_THAT(new_clog.str(),
-                testing::HasSubstr("Unknown packet type"));
-    std::clog.rdbuf(old_clog_rdbuf);
+    isnt(new_clog.str().find("Unknown packet type"), std::string::npos,
+         test + "expected log entry");
+    new_clog.str(std::string());
 }
 
 void test_recv_no_ntoh(void)
@@ -862,12 +865,13 @@ void test_recv_unsupported(void)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(18);
+    plan(19);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
     int gtests = RUN_ALL_TESTS();
 
+    test_recv_bad_packet();
     test_recv_no_ntoh();
     test_recv_ping();
     test_recv_ack();
