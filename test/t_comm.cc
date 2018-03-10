@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../client/comm.h"
 #include "../client/object.h"
 
@@ -101,6 +105,26 @@ class mock_Comm : public Comm
                  void(uint16_t a, glm::vec3& b, uint8_t c));
     MOCK_METHOD0(send_logout, void(void));
     MOCK_METHOD1(send_ack, void(uint8_t));
+};
+
+int send_ack_count = 0;
+
+class fake_Comm : public Comm
+{
+  public:
+    fake_Comm(struct addrinfo *ai) : Comm(ai) {};
+    virtual ~fake_Comm() {};
+
+    using Comm::handle_pngpkt;
+    using Comm::handle_ackpkt;
+    using Comm::handle_posupd;
+    using Comm::handle_srvnot;
+    using Comm::handle_unsupported;
+
+    virtual void send_ack(uint8_t a)
+        {
+            ++send_ack_count;
+        };
 };
 
 TEST(CommSendTest, SendBadHton)
@@ -603,12 +627,13 @@ TEST(CommRecvTest, RecvNoNtoh)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommRecvTest, RecvPing)
+void test_recv_ping(void)
 {
+    std::string test = "handle_pngpkt: ";
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
     std::stringstream new_clog;
     std::clog.rdbuf(new_clog.rdbuf());
-    mock_Comm *comm = NULL;
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -623,25 +648,19 @@ TEST(CommRecvTest, RecvPing)
     expected_packet.basic.type = TYPE_PNGPKT;
     expected_packet.basic.version = 1;
 
-    recvfrom_error = false;
-    bad_sender = false;
-    bad_packet = false;
-    bad_ntoh = false;
-    recvfrom_calls = 0;
-
-    ASSERT_NO_THROW(
-        {
-            comm = new mock_Comm(&ai);
-        });
-    EXPECT_CALL(*comm, handle_pngpkt(_)).Times(1);
-    ASSERT_NO_THROW(
-        {
-            comm->start();
-        });
-    sleep(1);
+    try
+    {
+        comm = new fake_Comm(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    comm->handle_pngpkt(expected_packet);
+    is(send_ack_count, 1, test + "expected ack sent");
     delete comm;
 
-    ASSERT_STREQ(new_clog.str().c_str(), "");
+    is(new_clog.str().size(), 0, test + "no log entry");
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
@@ -811,4 +830,15 @@ TEST(CommRecvTest, RecvUnsupported)
 
     ASSERT_STREQ(new_clog.str().c_str(), "");
     std::clog.rdbuf(old_clog_rdbuf);
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(2);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_recv_ping();
+    return gtests & exit_status();
 }

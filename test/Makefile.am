@@ -227,7 +227,7 @@ t_tcl_exception_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS) \
 	$(TCL_LDLIBS)
 
 t_comm_SOURCES = t_comm.cc ../client/comm.cc ../client/comm.h
-t_comm_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
+t_comm_LDADD = $(GMOCK_LIBS) $(GTEST_LIBS) $(TAP_LDADD) \
 	../proto/libr9_proto.la
 
 t_comm_exception_SOURCES = t_comm_exception.cc ../client/comm.cc \
