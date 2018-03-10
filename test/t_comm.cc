@@ -24,7 +24,13 @@ void move_object(uint64_t a, uint16_t b,
                  float c, float d, float e,
                  float f, float g, float h, float i)
 {
-    return;
+    is(c, 0.12, "move: expected x pos");
+    is(d, 0.34, "move: expected y pos");
+    is(e, 0.56, "move: expected z pos");
+    is(f, 7.89, "move: expected x orientation");
+    is(g, 1.23, "move: expected y orientation");
+    is(h, 4.56, "move: expected z orientation");
+    is(i, 7.89, "move: expected w orientation");
 }
 
 ssize_t recvfrom(int a,
@@ -745,12 +751,13 @@ void test_recv_ack(void)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommRecvTest, RecvPosUpdate)
+void test_recv_pos_update(void)
 {
+    std::string test = "handle_posupd: ";
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
     std::stringstream new_clog;
     std::clog.rdbuf(new_clog.rdbuf());
-    mock_Comm *comm = NULL;
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -764,26 +771,26 @@ TEST(CommRecvTest, RecvPosUpdate)
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_POSUPD;
     expected_packet.basic.version = 1;
+    expected_packet.pos.x_pos = 12;
+    expected_packet.pos.y_pos = 34;
+    expected_packet.pos.z_pos = 56;
+    expected_packet.pos.x_orient = 789;
+    expected_packet.pos.y_orient = 123;
+    expected_packet.pos.z_orient = 456;
+    expected_packet.pos.w_orient = 789;
 
-    recvfrom_error = false;
-    bad_sender = false;
-    bad_packet = false;
-    bad_ntoh = false;
-    recvfrom_calls = 0;
-
-    ASSERT_NO_THROW(
-        {
-            comm = new mock_Comm(&ai);
-        });
-    EXPECT_CALL(*comm, handle_posupd(_)).Times(1);
-    ASSERT_NO_THROW(
-        {
-            comm->start();
-        });
-    sleep(1);
+    try
+    {
+        comm = new fake_Comm(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    comm->handle_posupd(expected_packet);
     delete comm;
 
-    ASSERT_STREQ(new_clog.str().c_str(), "");
+    is(new_clog.str().size(), 0, test + "no log entry");
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
@@ -874,11 +881,12 @@ TEST(CommRecvTest, RecvUnsupported)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(7);
+    plan(15);
 
     int gtests = RUN_ALL_TESTS();
 
     test_recv_ping();
     test_recv_ack();
+    test_recv_pos_update();
     return gtests & exit_status();
 }
