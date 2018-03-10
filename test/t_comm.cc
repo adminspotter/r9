@@ -730,6 +730,16 @@ void test_recv_ack(void)
     isnt(new_clog.str().find("Logout response, type unknown"),
          std::string::npos,
          test + st + "bad access: expected log entry");
+
+    st = "unknown response: ";
+
+    expected_packet.ack.request = 123;
+
+    comm->handle_ackpkt(expected_packet);
+    isnt(new_clog.str().find("Got an unknown ack packet"),
+         std::string::npos,
+         test + st + "expected log entry");
+
     delete comm;
 
     std::clog.rdbuf(old_clog_rdbuf);
@@ -864,7 +874,7 @@ TEST(CommRecvTest, RecvUnsupported)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(6);
+    plan(7);
 
     int gtests = RUN_ALL_TESTS();
 
