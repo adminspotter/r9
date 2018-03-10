@@ -10,6 +10,8 @@ using namespace TAP;
 
 using ::testing::_;
 
+std::stringstream new_clog;
+
 ObjectCache *obj = new ObjectCache("fake");
 struct object *self_obj;
 
@@ -599,9 +601,6 @@ TEST(CommRecvTest, RecvBadPacket)
 void test_recv_no_ntoh(void)
 {
     std::string test = "ntoh failure: ";
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
     fake_Comm *comm = NULL;
     struct addrinfo ai;
 
@@ -640,15 +639,12 @@ void test_recv_no_ntoh(void)
     isnt(new_clog.str().find("Error while ntoh'ing packet"),
          std::string::npos,
          test + "expected log entry");
-    std::clog.rdbuf(old_clog_rdbuf);
+    new_clog.str(std::string());
 }
 
 void test_recv_ping(void)
 {
     std::string test = "handle_pngpkt: ";
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
     fake_Comm *comm = NULL;
     struct addrinfo ai;
 
@@ -677,15 +673,11 @@ void test_recv_ping(void)
     delete comm;
 
     is(new_clog.str().size(), 0, test + "no log entry");
-    std::clog.rdbuf(old_clog_rdbuf);
 }
 
 void test_recv_ack(void)
 {
     std::string test = "handle_ackpkt: ", st;
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
     fake_Comm *comm = NULL;
     struct addrinfo ai;
 
@@ -756,15 +748,12 @@ void test_recv_ack(void)
 
     delete comm;
 
-    std::clog.rdbuf(old_clog_rdbuf);
+    new_clog.str(std::string());
 }
 
 void test_recv_pos_update(void)
 {
     std::string test = "handle_posupd: ";
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
     fake_Comm *comm = NULL;
     struct addrinfo ai;
 
@@ -799,15 +788,11 @@ void test_recv_pos_update(void)
     delete comm;
 
     is(new_clog.str().size(), 0, test + "no log entry");
-    std::clog.rdbuf(old_clog_rdbuf);
 }
 
 void test_recv_server_notice(void)
 {
     std::string test = "handle_srvnot: ";
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
     fake_Comm *comm = NULL;
     struct addrinfo ai;
 
@@ -837,15 +822,12 @@ void test_recv_server_notice(void)
     isnt(new_clog.str().find("Got a server notice"),
          std::string::npos,
          test + "expected log entry");
-    std::clog.rdbuf(old_clog_rdbuf);
+    new_clog.str(std::string());
 }
 
 void test_recv_unsupported(void)
 {
     std::string test = "handle_unsupported: ";
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
     fake_Comm *comm = NULL;
     struct addrinfo ai;
 
@@ -875,13 +857,15 @@ void test_recv_unsupported(void)
     isnt(new_clog.str().find("Got an unexpected packet type: 123"),
          std::string::npos,
          test + "expected log entry");
-    std::clog.rdbuf(old_clog_rdbuf);
+    new_clog.str(std::string());
 }
 
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
     plan(19);
+
+    std::clog.rdbuf(new_clog.rdbuf());
 
     int gtests = RUN_ALL_TESTS();
 
