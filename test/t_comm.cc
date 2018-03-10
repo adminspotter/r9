@@ -91,30 +91,6 @@ int hton_packet(packet *a, size_t b)
     return 1;
 }
 
-class mock_Comm : public Comm
-{
-  public:
-    mock_Comm(struct addrinfo *ai) : Comm(ai) {};
-    ~mock_Comm() {};
-
-    MOCK_METHOD1(handle_pngpkt, void(packet& a));
-    MOCK_METHOD1(handle_ackpkt, void(packet& a));
-    MOCK_METHOD1(handle_posupd, void(packet& a));
-    MOCK_METHOD1(handle_srvnot, void(packet& a));
-    MOCK_METHOD1(handle_unsupported, void(packet& a));
-
-    MOCK_METHOD2(send, void(packet *a, size_t b));
-    MOCK_METHOD3(send_login, void(const std::string& a,
-                                  const std::string& b,
-                                  const std::string& c));
-    MOCK_METHOD3(send_action_request,
-                 void(uint16_t a, uint64_t b, uint8_t c));
-    MOCK_METHOD3(send_action_request,
-                 void(uint16_t a, glm::vec3& b, uint8_t c));
-    MOCK_METHOD0(send_logout, void(void));
-    MOCK_METHOD1(send_ack, void(uint8_t));
-};
-
 int send_ack_count = 0;
 
 class fake_Comm : public Comm
@@ -481,12 +457,10 @@ TEST(CommSendTest, SendLogout)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommRecvTest, RecvBadResult)
+void test_recv_bad_result(void)
 {
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
-    mock_Comm *comm = NULL;
+    std::string test = "recvfrom failure: ";
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -507,17 +481,23 @@ TEST(CommRecvTest, RecvBadResult)
     bad_ntoh = false;
     recvfrom_calls = 0;
 
-    ASSERT_NO_THROW(
-        {
-            comm = new mock_Comm(&ai);
-            comm->start();
-        });
-    sleep(1);
+    try
+    {
+        comm = new fake_Comm(&ai);
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
+    while (new_clog.str().size() == 0)
+        ;
     delete comm;
 
-    ASSERT_THAT(new_clog.str(),
-                testing::HasSubstr("Error receiving packet:"));
-    std::clog.rdbuf(old_clog_rdbuf);
+    isnt(new_clog.str().find("Error receiving packet:"),
+         std::string::npos,
+         test + "expected log entry");
+    new_clog.str(std::string());
 }
 
 void test_recv_bad_sender(void)
@@ -869,12 +849,13 @@ void test_recv_unsupported(void)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(20);
+    plan(21);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
     int gtests = RUN_ALL_TESTS();
 
+    test_recv_bad_result();
     test_recv_bad_sender();
     test_recv_bad_packet();
     test_recv_no_ntoh();
