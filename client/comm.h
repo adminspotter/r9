@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Mar 2018, 06:49:09 tquirk
+ *   last updated 10 Mar 2018, 06:53:45 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -78,7 +78,7 @@ class Comm
     static void *recv_worker(void *);
 
     void handle_pngpkt(packet&);
-    virtual void handle_ackpkt(packet&);
+    void handle_ackpkt(packet&);
     virtual void handle_posupd(packet&);
     virtual void handle_srvnot(packet&);
     virtual void handle_unsupported(packet&);

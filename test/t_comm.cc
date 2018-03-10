@@ -10,7 +10,7 @@ using namespace TAP;
 
 using ::testing::_;
 
-ObjectCache *obj;
+ObjectCache *obj = new ObjectCache("fake");
 struct object *self_obj;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
@@ -114,6 +114,8 @@ class fake_Comm : public Comm
   public:
     fake_Comm(struct addrinfo *ai) : Comm(ai) {};
     virtual ~fake_Comm() {};
+
+    using Comm::src_object_id;
 
     using Comm::handle_pngpkt;
     using Comm::handle_ackpkt;
@@ -664,12 +666,13 @@ void test_recv_ping(void)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommRecvTest, RecvAck)
+void test_recv_ack(void)
 {
+    std::string test = "handle_ackpkt: ", st;
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
     std::stringstream new_clog;
     std::clog.rdbuf(new_clog.rdbuf());
-    mock_Comm *comm = NULL;
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -684,25 +687,34 @@ TEST(CommRecvTest, RecvAck)
     expected_packet.basic.type = TYPE_ACKPKT;
     expected_packet.basic.version = 1;
 
-    recvfrom_error = false;
-    bad_sender = false;
-    bad_packet = false;
-    bad_ntoh = false;
-    recvfrom_calls = 0;
+    try
+    {
+        comm = new fake_Comm(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
-    ASSERT_NO_THROW(
-        {
-            comm = new mock_Comm(&ai);
-        });
-    EXPECT_CALL(*comm, handle_ackpkt(_)).Times(1);
-    ASSERT_NO_THROW(
-        {
-            comm->start();
-        });
-    sleep(1);
+    st = "login response: ";
+
+    expected_packet.ack.request = TYPE_LOGREQ;
+    expected_packet.ack.misc[0] = ACCESS_NONE;
+    expected_packet.ack.misc[1] = 12345;
+
+    comm->handle_ackpkt(expected_packet);
+    isnt(new_clog.str().find("Login response, type ACCESS_NONE"),
+         std::string::npos,
+         test + st + "good access: expected log entry");
+
+    expected_packet.ack.misc[0] = 12345;
+
+    comm->handle_ackpkt(expected_packet);
+    isnt(new_clog.str().find("Login response, type unknown"),
+         std::string::npos,
+         test + st + "bad access: expected log entry");
     delete comm;
 
-    ASSERT_STREQ(new_clog.str().c_str(), "");
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
@@ -835,10 +847,11 @@ TEST(CommRecvTest, RecvUnsupported)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(2);
+    plan(4);
 
     int gtests = RUN_ALL_TESTS();
 
     test_recv_ping();
+    test_recv_ack();
     return gtests & exit_status();
 }
