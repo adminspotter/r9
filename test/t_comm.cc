@@ -99,6 +99,7 @@ class fake_Comm : public Comm
     fake_Comm(struct addrinfo *ai) : Comm(ai) {};
     virtual ~fake_Comm() {};
 
+    using Comm::send_queue;
     using Comm::src_object_id;
 
     using Comm::handle_pngpkt;
@@ -416,16 +417,11 @@ TEST(CommSendTest, SendActionReqVec)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommSendTest, SendLogout)
+void test_send_logout(void)
 {
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
-    Comm *comm = NULL;
+    std::string test = "send_logout: ";
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
-
-    /* send_worker will delete this */
-    packet *pkt = new packet;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;
@@ -435,26 +431,20 @@ TEST(CommSendTest, SendLogout)
     memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
     expected_sockaddr.ss_family = AF_INET;
 
-    sendto_error = false;
-    recvfrom_calls = 1;
-    packet_type = -1;
-
-    ASSERT_NO_THROW(
-        {
-            comm = new Comm(&ai);
-            comm->start();
-        });
+    try
+    {
+        comm = new fake_Comm(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(comm->send_queue.size(), 0, test + "queue empty before call");
     comm->send_logout();
-    sleep(1);
-    ASSERT_NO_THROW(
-        {
-            comm->stop();
-        });
+    is(comm->send_queue.size(), 1, test + "expected queue entry");
     delete comm;
 
-    ASSERT_EQ(packet_type, TYPE_LGTREQ);
-    ASSERT_STREQ(new_clog.str().c_str(), "");
-    std::clog.rdbuf(old_clog_rdbuf);
+    is(new_clog.str().size(), 0, test + "no log entry");
 }
 
 void test_recv_bad_result(void)
@@ -849,12 +839,13 @@ void test_recv_unsupported(void)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(21);
+    plan(24);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
     int gtests = RUN_ALL_TESTS();
 
+    test_send_logout();
     test_recv_bad_result();
     test_recv_bad_sender();
     test_recv_bad_packet();
