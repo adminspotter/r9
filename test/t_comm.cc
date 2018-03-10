@@ -596,12 +596,13 @@ TEST(CommRecvTest, RecvBadPacket)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommRecvTest, RecvNoNtoh)
+void test_recv_no_ntoh(void)
 {
+    std::string test = "ntoh failure: ";
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
     std::stringstream new_clog;
     std::clog.rdbuf(new_clog.rdbuf());
-    mock_Comm *comm = NULL;
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -622,16 +623,23 @@ TEST(CommRecvTest, RecvNoNtoh)
     bad_ntoh = true;
     recvfrom_calls = 0;
 
-    ASSERT_NO_THROW(
-        {
-            comm = new mock_Comm(&ai);
-            comm->start();
-        });
-    sleep(1);
+    try
+    {
+        comm = new fake_Comm(&ai);
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
+    while (new_clog.str().size() == 0)
+        ;
     delete comm;
 
-    ASSERT_THAT(new_clog.str(),
-                testing::HasSubstr("Error while ntoh'ing packet"));
+    is(recvfrom_calls, 2, test + "expected recvfrom count");
+    isnt(new_clog.str().find("Error while ntoh'ing packet"),
+         std::string::npos,
+         test + "expected log entry");
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
@@ -873,10 +881,11 @@ void test_recv_unsupported(void)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(17);
+    plan(19);
 
     int gtests = RUN_ALL_TESTS();
 
+    test_recv_no_ntoh();
     test_recv_ping();
     test_recv_ack();
     test_recv_pos_update();
