@@ -832,12 +832,13 @@ void test_recv_server_notice(void)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommRecvTest, RecvUnsupported)
+void test_recv_unsupported(void)
 {
+    std::string test = "handle_unsupported: ";
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
     std::stringstream new_clog;
     std::clog.rdbuf(new_clog.rdbuf());
-    mock_Comm *comm = NULL;
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -849,35 +850,30 @@ TEST(CommRecvTest, RecvUnsupported)
     expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
-    expected_packet.basic.type = TYPE_LOGREQ;
+    expected_packet.basic.type = 123;
     expected_packet.basic.version = 1;
 
-    recvfrom_error = false;
-    bad_sender = false;
-    bad_packet = false;
-    bad_ntoh = false;
-    recvfrom_calls = 0;
-
-    ASSERT_NO_THROW(
-        {
-            comm = new mock_Comm(&ai);
-        });
-    EXPECT_CALL(*comm, handle_unsupported(_)).Times(1);
-    ASSERT_NO_THROW(
-        {
-            comm->start();
-        });
-    sleep(1);
+    try
+    {
+        comm = new fake_Comm(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    comm->handle_unsupported(expected_packet);
     delete comm;
 
-    ASSERT_STREQ(new_clog.str().c_str(), "");
+    isnt(new_clog.str().find("Got an unexpected packet type: 123"),
+         std::string::npos,
+         test + "expected log entry");
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(16);
+    plan(17);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -885,5 +881,6 @@ GTEST_API_ int main(int argc, char **argv)
     test_recv_ack();
     test_recv_pos_update();
     test_recv_server_notice();
+    test_recv_unsupported();
     return gtests & exit_status();
 }

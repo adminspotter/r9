@@ -81,7 +81,7 @@ class Comm
     void handle_ackpkt(packet&);
     void handle_posupd(packet&);
     void handle_srvnot(packet&);
-    virtual void handle_unsupported(packet&);
+    void handle_unsupported(packet&);
 
   public:
     Comm(struct addrinfo *);
