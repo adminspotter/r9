@@ -4,8 +4,6 @@ using namespace TAP;
 
 #include "../server/classes/game_obj.h"
 
-#include <gtest/gtest.h>
-
 bool pthread_mutex_lock_error = false, pthread_mutex_unlock_error = false;
 int lock_count, unlock_count;
 
@@ -157,38 +155,37 @@ void test_reset_id(void)
     delete con;
 }
 
-TEST(GameObjTest, Distance)
+void test_distance(void)
 {
+    std::string test = "distance_from: ";
     GameObject *go = NULL;
     Geometry *geom = new Geometry();
     Control *con = new Control(1LL, NULL);
 
     lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 123LL);
-    ASSERT_EQ(go->get_object_id(), 123LL);
-    ASSERT_TRUE(go->master == con);
-    ASSERT_TRUE(go->geometry == geom);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_GT(lock_count, 0);
+    is(go->get_object_id(), 123LL, test + "expected objectid");
+    is(go->master, con, test + "expected master");
+    is(go->geometry, geom, test + "expected geometry");
+    ok(lock_count > 0, test + "performed locks");
+    is(lock_count, unlock_count, test + "all locks unlocked");
 
     glm::dvec3 pt = {0.0, 0.0, 0.0};
     go->position.x = 1.0;
-    ASSERT_EQ(go->distance_from(pt), 1.0);
+    is(go->distance_from(pt), 1.0, test + "expected distance");
 
     delete go;
     delete con;
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(34);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(40);
 
     test_create_delete();
     test_clone();
     test_connect_disconnect();
     test_reset_id();
-    return gtests & exit_status();
+    test_distance();
+    return exit_status();
 }
