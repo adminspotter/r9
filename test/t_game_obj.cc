@@ -121,36 +121,37 @@ void test_connect_disconnect(void)
     delete con;
 }
 
-TEST(GameObjTest, ResetId)
+void test_reset_id(void)
 {
+    std::string test = "reset_max_id: ";
     GameObject *go = NULL;
     Geometry *geom = new Geometry();
     Control *con = new Control(1LL, NULL);
 
     lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 123LL);
-    ASSERT_EQ(go->get_object_id(), 123LL);
-    ASSERT_TRUE(go->master == con);
-    ASSERT_TRUE(go->geometry == geom);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_GT(lock_count, 0);
+    is(go->get_object_id(), 123LL, test + "expected objectid");
+    is(go->master, con, test + "expected master");
+    is(go->geometry, geom, test + "expected geometry");
+    ok(lock_count > 0, test + "performed locks");
+    is(lock_count, unlock_count, test + "all locks unlocked");
 
     delete go;
 
     geom = new Geometry();
     go = new GameObject(geom, con);
-    ASSERT_EQ(go->get_object_id(), 124LL);
+    is(go->get_object_id(), 124LL, test + "expected objectid");
 
     delete go;
 
     lock_count = unlock_count = 0;
     GameObject::reset_max_id();
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_GT(lock_count, 0);
+    ok(lock_count > 0, test + "performed locks");
+    is(lock_count, unlock_count, test + "all locks unlocked");
 
     geom = new Geometry();
     go = new GameObject(geom, con);
-    ASSERT_EQ(go->get_object_id(), 0LL);
+    is(go->get_object_id(), 0LL, test + "expected objectid");
 
     delete go;
     delete con;
@@ -181,12 +182,13 @@ TEST(GameObjTest, Distance)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(25);
+    plan(34);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_clone();
     test_connect_disconnect();
+    test_reset_id();
     return gtests & exit_status();
 }
