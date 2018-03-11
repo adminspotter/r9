@@ -107,11 +107,6 @@ class fake_Comm : public Comm
     using Comm::handle_posupd;
     using Comm::handle_srvnot;
     using Comm::handle_unsupported;
-
-    virtual void send_ack(uint8_t a)
-        {
-            ++send_ack_count;
-        };
 };
 
 TEST(CommSendTest, SendBadHton)
@@ -626,7 +621,7 @@ void test_recv_ping(void)
         fail(test + "constructor exception");
     }
     comm->handle_pngpkt(expected_packet);
-    is(send_ack_count, 1, test + "expected ack sent");
+    is(comm->send_queue.size(), 1, test + "expected queue entry");
     delete comm;
 
     is(new_clog.str().size(), 0, test + "no log entry");
