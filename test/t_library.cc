@@ -2,8 +2,9 @@
 
 using namespace TAP;
 
+#include <stdexcept>
+
 #include "../server/classes/library.h"
-#include <gtest/gtest.h>
 
 #include <config.h>
 #include <string.h>
@@ -142,37 +143,58 @@ void test_good_symbol(void)
     delete lib1;
 }
 
-TEST(LibraryTest, BadClose)
+void test_bad_close(void)
 {
+    std::string test = "close failure: ";
     Library *lib1 = NULL;
-    ASSERT_NO_THROW(
-        {
-            std::string libname = good_lib;
-            lib1 = new Library(libname);
-        });
-    ASSERT_TRUE(lib1 != NULL);
+
+    try
+    {
+        std::string libname = good_lib;
+        lib1 = new Library(libname);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    ok(lib1 != NULL, test + "library created");
 
     error_fail = true;
-    ASSERT_THROW(
-        {
-            lib1->close();
-        },
-        std::runtime_error);
+    try
+    {
+        lib1->close();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
 
-    ASSERT_NO_THROW(delete lib1);
+        isnt(err.find("error closing library"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+
+    try
+    {
+        delete lib1;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
     error_fail = false;
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(6);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(8);
 
     test_bad_constructor();
     test_good_constructor();
     test_missing_symbol();
     test_good_symbol();
-    return gtests & exit_status();
+    test_bad_close();
+    return exit_status();
 }
