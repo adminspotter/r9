@@ -80,38 +80,41 @@ void test_clone(void)
     delete con;
 }
 
-TEST(GameObjTest, ConnectDisconnect)
+void test_connect_disconnect(void)
 {
+    std::string test = "connect/disconnect: ";
     GameObject *go = NULL;
     Geometry *geom = new Geometry();
     Control *con = new Control(1LL, NULL);
 
+    GameObject::reset_max_id();
+
     lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 45LL);
-    ASSERT_EQ(go->get_object_id(), 45LL);
-    ASSERT_TRUE(go->master == con);
-    ASSERT_TRUE(go->geometry == geom);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_GT(lock_count, 0);
+    is(go->get_object_id(), 45LL, test + "expected objectid");
+    is(go->master, con, test + "expected master");
+    is(go->geometry, geom, test + "expected geometry");
+    ok(lock_count > 0, test + "performed locks");
+    is(lock_count, unlock_count, test + "all locks unlocked");
 
     Control *con2 = new Control(2LL, NULL);
 
-    ASSERT_TRUE(go->connect(con2));
-    ASSERT_TRUE(go->master == con2);
+    is(go->connect(con2), true, test + "connect succeeded");
+    is(go->master, con2, test + "set master");
 
     Control *con3 = new Control(3LL, NULL);
 
-    ASSERT_FALSE(go->connect(con3));
-    ASSERT_TRUE(go->master == con2);
+    is(go->connect(con3), false, test + "connect failed");
+    is(go->master, con2, test + "didn't set master");
 
     delete con3;
 
     /* Disconnect something that's not the current master, should be no-op. */
     go->disconnect(con);
-    ASSERT_TRUE(go->master == con2);
+    is(go->master, con2, test + "didn't reset master");
 
     go->disconnect(con2);
-    ASSERT_TRUE(go->master == con);
+    is(go->master, con, test + "reset master");
 
     delete con2;
     delete go;
@@ -178,11 +181,12 @@ TEST(GameObjTest, Distance)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(14);
+    plan(25);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_clone();
+    test_connect_disconnect();
     return gtests & exit_status();
 }
