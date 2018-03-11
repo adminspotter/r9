@@ -80,40 +80,65 @@ void test_good_constructor(void)
     delete lib1;
 }
 
-TEST(LibraryTest, MissingSymbol)
+void test_missing_symbol(void)
 {
+    std::string test = "symbol failure: ";
     Library *lib1 = NULL;
-    ASSERT_NO_THROW(
-        {
-            std::string libname = good_lib;
-            lib1 = new Library(libname);
-        });
-    ASSERT_TRUE(lib1 != NULL);
+    try
+    {
+        std::string libname = good_lib;
+        lib1 = new Library(libname);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    ok(lib1 != NULL, test + "library created");
     error_fail = true;
-    ASSERT_THROW(
-        {
-            lib1->symbol("symbol that doesn't exist");
-        },
-        std::runtime_error);
+    try
+    {
+        lib1->symbol("symbol that doesn't exist");
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("error finding symbol"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     error_fail = false;
     delete lib1;
 }
 
-TEST(LibraryTest, GoodSymbol)
+void test_good_symbol(void)
 {
+    std::string test = "symbol: ";
     Library *lib1 = NULL;
-    ASSERT_NO_THROW(
-        {
-            std::string libname = good_lib;
-            lib1 = new Library(libname);
-        });
-    ASSERT_TRUE(lib1 != NULL);
+
+    try
+    {
+        std::string libname = good_lib;
+        lib1 = new Library(libname);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    ok(lib1 != NULL, test + "library created");
     void *sym1 = NULL;
-    ASSERT_NO_THROW(
-        {
-            sym1 = lib1->symbol("symbol that does exist");
-        });
-    ASSERT_TRUE(sym1 != NULL);
+    try
+    {
+        sym1 = lib1->symbol("symbol that does exist");
+    }
+    catch (...)
+    {
+        fail(test + "symbol exception");
+    }
+    ok(sym1 != NULL, test + "expected symbol");
     delete lib1;
 }
 
@@ -141,11 +166,13 @@ TEST(LibraryTest, BadClose)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(2);
+    plan(6);
 
     int gtests = RUN_ALL_TESTS();
 
     test_bad_constructor();
     test_good_constructor();
+    test_missing_symbol();
+    test_good_symbol();
     return gtests & exit_status();
 }
