@@ -127,7 +127,7 @@ t_game_obj_SOURCES = t_game_obj.cc \
 	../server/classes/game_obj.cc ../server/classes/game_obj.h \
 	../server/classes/control.cc ../server/classes/control.h \
 	../server/classes/geometry.cc ../server/classes/geometry.h
-t_game_obj_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+t_game_obj_LDADD = $(GTEST_LIBS) $(TAP_LDADD)
 
 t_library_SOURCES = t_library.cc \
 	../server/classes/library.cc ../server/classes/library.h

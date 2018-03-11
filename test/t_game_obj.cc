@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/game_obj.h"
 
 #include <gtest/gtest.h>
@@ -21,26 +25,29 @@ int pthread_mutex_unlock(pthread_mutex_t *a)
     return 0;
 }
 
-TEST(GameObjTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     GameObject *go = NULL;
     Geometry *geom = new Geometry(), *geom2 = new Geometry();
     Control *con = new Control(1LL, NULL);
 
+    GameObject::reset_max_id();
+
     lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 38LL);
-    ASSERT_EQ(go->get_object_id(), 38LL);
-    ASSERT_TRUE(go->master == con);
-    ASSERT_TRUE(go->geometry == geom);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_GT(lock_count, 0);
+    is(go->get_object_id(), 38LL, test + "expected objectid");
+    is(go->master, con, test + "expected master");
+    is(go->geometry, geom, test + "expected geometry");
+    ok(lock_count > 0, test + "performed locks");
+    is(lock_count, unlock_count, test + "all locks unlocked");
 
     delete go;
 
     geom = new Geometry();
     go = new GameObject(geom, con);
     go->geometry = geom2;
-    ASSERT_EQ(go->get_object_id(), 39LL);
+    is(go->get_object_id(), 39LL, test + "expected objectid");
 
     delete go;
     delete con;
@@ -163,4 +170,15 @@ TEST(GameObjTest, Distance)
 
     delete go;
     delete con;
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(6);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    return gtests & exit_status();
 }
