@@ -375,12 +375,10 @@ TEST(CommSendTest, SendActionReqObj)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommSendTest, SendActionReqVec)
+void test_send_action_req_vec(void)
 {
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
-    Comm *comm = NULL;
+    std::string test = "send_action_request (vector): ";
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
     /* send_worker will delete this */
@@ -394,27 +392,21 @@ TEST(CommSendTest, SendActionReqVec)
     memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
     expected_sockaddr.ss_family = AF_INET;
 
-    sendto_error = false;
-    recvfrom_calls = 1;
-    packet_type = -1;
-
-    ASSERT_NO_THROW(
-        {
-            comm = new Comm(&ai);
-            comm->start();
-        });
+    try
+    {
+        comm = new fake_Comm(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(comm->send_queue.size(), 0, test + "queue empty before call");
     glm::vec3 dest(1.0, 2.0, 3.0);
     comm->send_action_request(1, dest, 1);
-    sleep(1);
-    ASSERT_NO_THROW(
-        {
-            comm->stop();
-        });
+    is(comm->send_queue.size(), 1, test + "expected queue entry");
     delete comm;
 
-    ASSERT_EQ(packet_type, TYPE_ACTREQ);
-    ASSERT_STREQ(new_clog.str().c_str(), "");
-    std::clog.rdbuf(old_clog_rdbuf);
+    is(new_clog.str().size(), 0, test + "no log entry");
 }
 
 void test_send_logout(void)
@@ -839,12 +831,13 @@ void test_recv_unsupported(void)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(24);
+    plan(27);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
     int gtests = RUN_ALL_TESTS();
 
+    test_send_action_req_vec();
     test_send_logout();
     test_recv_bad_result();
     test_recv_bad_sender();
