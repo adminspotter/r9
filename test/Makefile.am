@@ -131,7 +131,7 @@ t_game_obj_LDADD = $(TAP_LDADD)
 
 t_library_SOURCES = t_library.cc \
 	../server/classes/library.cc ../server/classes/library.h
-t_library_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) $(SERVER_LDLIBS)
+t_library_LDADD = $(GTEST_LIBS) $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_listensock_SOURCES = t_listensock.cc \
 	../server/classes/listensock.cc ../server/classes/listensock.h \

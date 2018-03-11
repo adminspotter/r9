@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/library.h"
 #include <gtest/gtest.h>
 
@@ -36,27 +40,43 @@ extern "C" {
     }
 }
 
-TEST(LibraryTest, BadConstructor)
+void test_bad_constructor(void)
 {
+    std::string test = "constructor failure: ";
     error_fail = true;
-    ASSERT_THROW(
-        {
-            std::string badname = "this doesn't exist";
-            Library *lib1 = new Library(badname);
-        },
-        std::runtime_error);
+    try
+    {
+        std::string badname = "this doesn't exist";
+        Library *lib1 = new Library(badname);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("error opening library"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     error_fail = false;
 }
 
-TEST(LibraryTest, GoodConstructor)
+void test_good_constructor(void)
 {
+    std::string test = "constructor: ";
     Library *lib1 = NULL;
-    ASSERT_NO_THROW(
-        {
-            std::string libname = good_lib;
-            lib1 = new Library(libname);
-        });
-    ASSERT_TRUE(lib1 != NULL);
+    try
+    {
+        std::string libname = good_lib;
+        lib1 = new Library(libname);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    ok(lib1 != NULL, test + "library created");
     delete lib1;
 }
 
@@ -116,4 +136,16 @@ TEST(LibraryTest, BadClose)
 
     ASSERT_NO_THROW(delete lib1);
     error_fail = false;
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(2);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_bad_constructor();
+    test_good_constructor();
+    return gtests & exit_status();
 }
