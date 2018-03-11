@@ -554,6 +554,49 @@ void test_recv_no_ntoh(void)
     new_clog.str(std::string());
 }
 
+void test_recv_packet(void)
+{
+    std::string test = "recv_worker: ";
+    fake_Comm *comm = NULL;
+    struct addrinfo ai;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    memset((void *)&expected_packet, 0, sizeof(packet));
+    expected_packet.basic.type = TYPE_SRVNOT;
+    expected_packet.basic.version = 1;
+
+    recvfrom_error = false;
+    bad_sender = false;
+    bad_packet = false;
+    bad_ntoh = false;
+    recvfrom_calls = 0;
+
+    try
+    {
+        comm = new fake_Comm(&ai);
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
+    while (new_clog.str().size() == 0)
+        ;
+    delete comm;
+
+    isnt(new_clog.str().find("Got a server notice"),
+         std::string::npos,
+         test + "expected log entry");
+    new_clog.str(std::string());
+}
+
 void test_recv_ping(void)
 {
     std::string test = "handle_pngpkt: ";
@@ -774,7 +817,7 @@ void test_recv_unsupported(void)
 
 int main(int argc, char **argv)
 {
-    plan(41);
+    plan(42);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
@@ -790,6 +833,7 @@ int main(int argc, char **argv)
     test_recv_bad_sender();
     test_recv_bad_packet();
     test_recv_no_ntoh();
+    test_recv_packet();
     test_recv_ping();
     test_recv_ack();
     test_recv_pos_update();
