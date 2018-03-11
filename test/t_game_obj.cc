@@ -53,24 +53,27 @@ void test_create_delete(void)
     delete con;
 }
 
-TEST(GameObjTest, Clone)
+void test_clone(void)
 {
+    std::string test = "clone: ";
     GameObject *go = NULL;
     Geometry *geom = new Geometry();
     Control *con = new Control(1LL, NULL);
 
+    GameObject::reset_max_id();
+
     lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 45LL);
-    ASSERT_EQ(go->get_object_id(), 45LL);
-    ASSERT_TRUE(go->master == con);
-    ASSERT_TRUE(go->geometry == geom);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_GT(lock_count, 0);
+    is(go->get_object_id(), 45LL, test + "expected objectid");
+    is(go->master, con, test + "expected master");
+    is(go->geometry, geom, test + "expected geometry");
+    ok(lock_count > 0, test + "performed locks");
+    is(lock_count, unlock_count, test + "all locks unlocked");
 
     GameObject *go2 = go->clone();
-    ASSERT_EQ(go2->get_object_id(), 46LL);
-    ASSERT_TRUE(go2->master == con);
-    ASSERT_TRUE(go2->geometry != geom);
+    is(go2->get_object_id(), 46LL, test + "expected objectid");
+    is(go2->master, con, test + "expected master");
+    isnt(go2->geometry, geom, test + "expected geometry");
 
     delete go;
     delete go2;
@@ -175,10 +178,11 @@ TEST(GameObjTest, Distance)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(6);
+    plan(14);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
+    test_clone();
     return gtests & exit_status();
 }
