@@ -201,15 +201,12 @@ TEST(CommSendTest, SendBadSend)
     std::clog.rdbuf(old_clog_rdbuf);
 }
 
-TEST(CommSendTest, SendPacket)
+void test_send_packet(void)
 {
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
-    Comm *comm = NULL;
+    std::string test = "send: ";
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
-    /* send_worker will delete this */
     packet *pkt = new packet;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -224,26 +221,20 @@ TEST(CommSendTest, SendPacket)
     pkt->basic.type = TYPE_PNGPKT;
     pkt->basic.version = 1;
 
-    sendto_error = false;
-    recvfrom_calls = 1;
-    packet_type = -1;
-
-    ASSERT_NO_THROW(
-        {
-            comm = new Comm(&ai);
-            comm->start();
-        });
+    try
+    {
+        comm = new fake_Comm(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(comm->send_queue.size(), 0, test + "queue empty before call");
     comm->send(pkt, sizeof(packet));
-    sleep(1);
-    ASSERT_NO_THROW(
-        {
-            comm->stop();
-        });
+    is(comm->send_queue.size(), 1, test + "expected queue entry");
     delete comm;
 
-    ASSERT_EQ(packet_type, TYPE_PNGPKT);
-    ASSERT_STREQ(new_clog.str().c_str(), "");
-    std::clog.rdbuf(old_clog_rdbuf);
+    is(new_clog.str().size(), 0, test + "no log entry");
 }
 
 void test_send_login(void)
@@ -793,12 +784,13 @@ void test_recv_unsupported(void)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(36);
+    plan(39);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
     int gtests = RUN_ALL_TESTS();
 
+    test_send_packet();
     test_send_login();
     test_send_ack();
     test_send_action_req_obj();
