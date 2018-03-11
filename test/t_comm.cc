@@ -5,11 +5,6 @@ using namespace TAP;
 #include "../client/comm.h"
 #include "../client/object.h"
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-using ::testing::_;
-
 std::stringstream new_clog;
 
 ObjectCache *obj = new ObjectCache("fake");
@@ -91,8 +86,6 @@ int hton_packet(packet *a, size_t b)
     return 1;
 }
 
-int send_ack_count = 0;
-
 class fake_Comm : public Comm
 {
   public:
@@ -109,15 +102,12 @@ class fake_Comm : public Comm
     using Comm::handle_unsupported;
 };
 
-TEST(CommSendTest, SendBadHton)
+void test_send_bad_hton(void)
 {
-    std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
-    std::stringstream new_clog;
-    std::clog.rdbuf(new_clog.rdbuf());
-    Comm *comm = NULL;
+    std::string test = "hton failure: ";
+    fake_Comm *comm = NULL;
     struct addrinfo ai;
 
-    /* send_worker will delete this */
     packet *pkt = new packet;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
@@ -137,22 +127,24 @@ TEST(CommSendTest, SendBadHton)
     recvfrom_calls = 1;
     packet_type = -1;
 
-    ASSERT_NO_THROW(
-        {
-            comm = new Comm(&ai);
-            comm->start();
-        });
+    try
+    {
+        comm = new fake_Comm(&ai);
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
     comm->send(pkt, sizeof(packet));
-    sleep(1);
-    ASSERT_NO_THROW(
-        {
-            comm->stop();
-        });
+    while (comm->send_queue.size() != 0)
+        ;
     delete comm;
 
-    ASSERT_THAT(new_clog.str(),
-                testing::HasSubstr("Error hton'ing packet"));
-    std::clog.rdbuf(old_clog_rdbuf);
+    isnt(new_clog.str().find("Error hton'ing packet"),
+         std::string::npos,
+         test + "expected log entry");
+    new_clog.str(std::string());
 }
 
 void test_send_bad_send(void)
@@ -780,15 +772,13 @@ void test_recv_unsupported(void)
     new_clog.str(std::string());
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(40);
+    plan(41);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
-    int gtests = RUN_ALL_TESTS();
-
+    test_send_bad_hton();
     test_send_bad_send();
     test_send_packet();
     test_send_login();
@@ -805,5 +795,5 @@ GTEST_API_ int main(int argc, char **argv)
     test_recv_pos_update();
     test_recv_server_notice();
     test_recv_unsupported();
-    return gtests & exit_status();
+    return exit_status();
 }
