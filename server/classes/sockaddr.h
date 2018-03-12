@@ -1,6 +1,6 @@
 /* sockaddr.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Mar 2018, 08:17:37 tquirk
+ *   last updated 12 Mar 2018, 09:14:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -329,6 +329,7 @@ class Sockaddr_un : public Sockaddr
 
     Sockaddr_un()
         {
+            memset((void *)&ss, 0, sizeof(struct sockaddr_storage));
             this->sun = (struct sockaddr_un *)&ss;
             this->sun->sun_family = AF_UNIX;
             memset(this->sun->sun_path, 0, sizeof(this->sun->sun_path));
@@ -336,6 +337,7 @@ class Sockaddr_un : public Sockaddr
     Sockaddr_un(const Sockaddr& s)
         {
             const Sockaddr_un& su = dynamic_cast<const Sockaddr_un&>(s);
+            memset((void *)&ss, 0, sizeof(struct sockaddr_storage));
             this->sun = (struct sockaddr_un *)&ss;
             this->sun->sun_family = su.sun->sun_family;
             memcpy(this->sun->sun_path,
@@ -346,6 +348,7 @@ class Sockaddr_un : public Sockaddr
         {
             const struct sockaddr_un& su
                 = reinterpret_cast<const struct sockaddr_un&>(s);
+            memset((void *)&ss, 0, sizeof(struct sockaddr_storage));
             this->sun = (struct sockaddr_un *)&ss;
             this->sun->sun_family = su.sun_family;
             memcpy(this->sun->sun_path,

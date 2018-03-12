@@ -11,8 +11,6 @@ using namespace TAP;
 #include <iostream>
 #include <typeinfo>
 
-#include <gtest/gtest.h>
-
 /* Test addresses */
 #define v4_ADDRESS  "192.168.252.16"
 #define v6_ADDRESS  "fd4b:5fd9:9623:5617:dead:beef:abcd:1234"
@@ -643,18 +641,20 @@ void test_sockaddr_in6_factory(void)
     delete sa;
 }
 
-TEST(SockaddrUnTest, BlankConstructor)
+void test_sockaddr_un_blank_constructor(void)
 {
+    std::string test = "sockaddr_un blank constructor: ";
     Sockaddr_un *su = new Sockaddr_un;
 
-    ASSERT_EQ(su->sun->sun_family, AF_UNIX);
-    ASSERT_STREQ(su->sun->sun_path, "");
+    is(su->sun->sun_family, AF_UNIX, test + "expected family");
+    is(strcmp(su->sun->sun_path, ""), 0, test + "expected path");
 
     delete su;
 }
 
-TEST(SockaddrUnTest, CopyConstructor)
+void test_sockaddr_un_copy_constructor(void)
 {
+    std::string test = "sockaddr_un copy constructor: ";
     char path[] = "/this/is/a/path";
 
     Sockaddr_un *su = new Sockaddr_un;
@@ -663,15 +663,16 @@ TEST(SockaddrUnTest, CopyConstructor)
 
     Sockaddr_un *su2 = new Sockaddr_un(*((const Sockaddr *)su));
 
-    ASSERT_EQ(su2->sun->sun_family, AF_UNIX);
-    ASSERT_STREQ(su2->sun->sun_path, path);
+    is(su2->sun->sun_family, AF_UNIX, test + "expected family");
+    is(strcmp(su2->sun->sun_path, path), 0, test + "expected path");
 
     delete su2;
     delete su;
 }
 
-TEST(SockaddrUnTest, StructConstructor)
+void test_sockaddr_un_struct_constructor(void)
 {
+    std::string test = "sockaddr_un struct constructor: ";
     char path[] = "/this/is/a/path";
 
     struct sockaddr_un sun;
@@ -680,14 +681,15 @@ TEST(SockaddrUnTest, StructConstructor)
 
     Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
 
-    ASSERT_EQ(su->sun->sun_family, AF_UNIX);
-    ASSERT_STREQ(su->sun->sun_path, path);
+    is(su->sun->sun_family, AF_UNIX, test + "expected family");
+    is(strcmp(su->sun->sun_path, path), 0, test + "expected path");
 
     delete su;
 }
 
-TEST(SockaddrUnTest, EqualComparison)
+void test_sockaddr_un_equal_comparison(void)
 {
+    std::string test = "sockaddr_un equal: ";
     char path[] = "/this/is/a/path";
 
     struct sockaddr_un sun;
@@ -698,22 +700,24 @@ TEST(SockaddrUnTest, EqualComparison)
     Sockaddr_un *su1 = new Sockaddr_un((const struct sockaddr&)sun);
     Sockaddr_un *su2 = new Sockaddr_un((const struct sockaddr&)sun);
 
-    ASSERT_TRUE(*su1 == *su2);
+    is(*su1 == *su2, true, test + "objects equal");
 
     su2->sun->sun_path[2] = 'q';
 
-    ASSERT_FALSE(*su1 == *su2);
+    is(*su1 == *su2, false, test + "objects not equal");
 
     Sockaddr_in6 sa6;
 
-    ASSERT_FALSE(*su1 == *((Sockaddr *)&sa6));
+    is(*su1 == *((Sockaddr *)&sa6), false,
+       test + "object not equal to different object");
 
     delete su2;
     delete su1;
 }
 
-TEST(SockaddrUnTest, LessComparison)
+void test_sockaddr_un_less_comparison(void)
 {
+    std::string test = "sockaddr_un less: ";
     char path[] = "/this/is/a/path";
 
     struct sockaddr_un sun;
@@ -724,27 +728,31 @@ TEST(SockaddrUnTest, LessComparison)
     Sockaddr_un *su1 = new Sockaddr_un((const struct sockaddr&)sun);
     Sockaddr_un *su2 = new Sockaddr_un((const struct sockaddr&)sun);
 
-    ASSERT_FALSE(*su1 < *su2);
+    is(*su1 < *su2, false, test + "object not less than object");
 
     su2->sun->sun_path[2] = 'q';
 
-    ASSERT_TRUE(*su1 < *su2);
+    is(*su1 < *su2, true, test + "object less than object");
 
     su2->sun->sun_path[2] = 'a';
 
-    ASSERT_FALSE(*su1 < *((const struct sockaddr *)&sun));
-    ASSERT_TRUE(*su2 < *((const struct sockaddr *)&sun));
+    is(*su1 < *((const struct sockaddr *)&sun), false,
+       test + "object not less than struct");
+    is(*su2 < *((const struct sockaddr *)&sun), true,
+       test + "object less than object");
 
     Sockaddr_in6 sa6;
 
-    ASSERT_FALSE(*su1 < *((Sockaddr *)&sa6));
+    is(*su1 < *((Sockaddr *)&sa6), false,
+       test + "object not less than different object");
 
     delete su2;
     delete su1;
 }
 
-TEST(SockaddrUnTest, Ntop)
+void test_sockaddr_un_ntop(void)
 {
+    std::string test = "sockaddr_un ntop: ";
     char path[] = "/this/is/a/path";
 
     struct sockaddr_un sun;
@@ -754,13 +762,14 @@ TEST(SockaddrUnTest, Ntop)
 
     Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
 
-    ASSERT_STREQ(su->ntop(), path);
+    is(strcmp(su->ntop(), path), 0, test + "expected path");
 
     delete su;
 }
 
-TEST(SockaddrUnTest, Hostname)
+void test_sockaddr_un_hostname(void)
 {
+    std::string test = "sockaddr_un hostname: ";
     char path[] = "/this/is/a/path";
 
     struct sockaddr_un sun;
@@ -770,13 +779,14 @@ TEST(SockaddrUnTest, Hostname)
 
     Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
 
-    ASSERT_STREQ(su->hostname(), "localhost");
+    is(strcmp(su->hostname(), "localhost"), 0, test + "expected hostname");
 
     delete su;
 }
 
-TEST(SockaddrUnTest, Port)
+void test_sockaddr_un_port(void)
 {
+    std::string test = "sockaddr_un port: ";
     char path[] = "/this/is/a/path";
 
     struct sockaddr_un sun;
@@ -786,13 +796,14 @@ TEST(SockaddrUnTest, Port)
 
     Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
 
-    ASSERT_EQ(su->port(), UINT16_MAX);
+    is(su->port(), UINT16_MAX, test + "ports equal");
 
     delete su;
 }
 
-TEST(SockaddrUnTest, Sockaddr)
+void test_sockaddr_un_sockaddr(void)
 {
+    std::string test = "sockaddr_un: ";
     char path[] = "/this/is/a/path";
 
     struct sockaddr_un sun;
@@ -803,14 +814,15 @@ TEST(SockaddrUnTest, Sockaddr)
     Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
 
     struct sockaddr_un *saddr = (struct sockaddr_un *)su->sockaddr();
-    ASSERT_EQ(saddr->sun_family, AF_UNIX);
-    ASSERT_STREQ(saddr->sun_path, path);
+    is(saddr->sun_family, AF_UNIX, test + "expected family");
+    is(strcmp(saddr->sun_path, path), 0, test + "expected path");
 
     delete su;
 }
 
-TEST(SockaddrUnTest, Factory)
+void test_sockaddr_un_factory(void)
 {
+    std::string test = "sockaddr_un factory: ";
     char path[] = "/this/is/a/path";
 
     struct sockaddr_un sun;
@@ -821,18 +833,15 @@ TEST(SockaddrUnTest, Factory)
     Sockaddr *sa = build_sockaddr((struct sockaddr&)sun);
     Sockaddr_un *su = new Sockaddr_un;
 
-    ASSERT_EQ(typeid(*sa), typeid(*su));
+    is(typeid(*sa) == typeid(*su), true, test + "expected type");
 
     delete su;
     delete sa;
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(84);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(104);
 
     test_sockaddr_blank_constructor();
     test_sockaddr_copy_constructor();
@@ -863,5 +872,16 @@ GTEST_API_ int main(int argc, char **argv)
     test_sockaddr_in6_port();
     test_sockaddr_in6_sockaddr();
     test_sockaddr_in6_factory();
-    return gtests & exit_status();
+
+    test_sockaddr_un_blank_constructor();
+    test_sockaddr_un_copy_constructor();
+    test_sockaddr_un_struct_constructor();
+    test_sockaddr_un_equal_comparison();
+    test_sockaddr_un_less_comparison();
+    test_sockaddr_un_ntop();
+    test_sockaddr_un_hostname();
+    test_sockaddr_un_port();
+    test_sockaddr_un_sockaddr();
+    test_sockaddr_un_factory();
+    return exit_status();
 }
