@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/sockaddr.h"
 
 #include <config.h>
@@ -41,56 +45,61 @@ class fake_Sockaddr : public Sockaddr
     virtual uint16_t port(void) {return 42;};
 };
 
-TEST(SockaddrTest, BlankConstructor)
+void test_sockaddr_blank_constructor(void)
 {
+    std::string test = "sockaddr blank constructor: ";
     fake_Sockaddr *fs = new fake_Sockaddr;
 
-    ASSERT_EQ(fs->ss.ss_family, AF_INET);
+    is(fs->ss.ss_family, AF_INET, test + "expected family");
 
     delete fs;
 }
 
-TEST(SockaddrTest, CopyConstructor)
+void test_sockaddr_copy_constructor(void)
 {
+    std::string test = "sockaddr copy constructor: ";
     fake_Sockaddr *fs = new fake_Sockaddr;
 
     fs->ss.ss_family = 42;
 
     fake_Sockaddr *fs2 = new fake_Sockaddr(*(Sockaddr *)fs);
 
-    ASSERT_EQ(fs2->ss.ss_family, 42);
+    is(fs2->ss.ss_family, 42, test + "expected family");
 
     delete fs2;
     delete fs;
 }
 
-TEST(SockaddrTest, StructConstructor)
+void test_sockaddr_struct_constructor(void)
 {
+    std::string test = "sockaddr struct constructor: ";
     struct sockaddr_in sa;
 
     sa.sin_family = 19;
 
     fake_Sockaddr *fs = new fake_Sockaddr((const struct sockaddr&)sa);
 
-    ASSERT_EQ(fs->ss.ss_family, 19);
+    is(fs->ss.ss_family, 19, test + "expected family");
 
     delete fs;
 }
 
-TEST(SockaddrTest, EqualComparison)
+void test_sockaddr_equal_comparison(void)
 {
+    std::string test = "sockaddr equal: ";
     fake_Sockaddr *fs = new fake_Sockaddr;
     memset(&(fs->ss), 4, sizeof(struct sockaddr_storage));
 
     fake_Sockaddr *fs2 = new fake_Sockaddr;
     memset(&(fs2->ss), 5, sizeof(struct sockaddr_storage));
 
-    ASSERT_FALSE(*fs == *fs2);
+    is(*fs == *fs2, false, test + "objects not equal");
 
     memset(&(fs2->ss), 4, sizeof(struct sockaddr_storage));
 
-    ASSERT_TRUE(*fs == *fs2);
-    ASSERT_TRUE(*fs == ((struct sockaddr *)&fs2->ss));
+    is(*fs == *fs2, true, test + "objects equal");
+    is(*fs == ((struct sockaddr *)&fs2->ss), true,
+       test + "object equal to struct");
 
     memset(&(fs2->ss), 0, sizeof(struct sockaddr_storage));
     memset(&(fs->ss), 0, sizeof(struct sockaddr_storage));
@@ -98,19 +107,20 @@ TEST(SockaddrTest, EqualComparison)
     delete fs;
 }
 
-TEST(SockaddrTest, Assignment)
+void test_sockaddr_assignment(void)
 {
+    std::string test = "sockaddr assignment: ";
     fake_Sockaddr *fs = new fake_Sockaddr;
     memset(&(fs->ss), 4, sizeof(struct sockaddr_storage));
 
     fake_Sockaddr *fs2 = new fake_Sockaddr;
     memset(&(fs2->ss), 5, sizeof(struct sockaddr_storage));
 
-    ASSERT_FALSE(*fs == *fs2);
+    is(*fs == *fs2, false, test + "objects not equal");
 
     *fs = *fs2;
 
-    ASSERT_TRUE(*fs == *fs2);
+    is(*fs == *fs2, true, test + "objects equal");
 
     memset(&(fs2->ss), 0, sizeof(struct sockaddr_storage));
     memset(&(fs->ss), 0, sizeof(struct sockaddr_storage));
@@ -118,8 +128,9 @@ TEST(SockaddrTest, Assignment)
     delete fs;
 }
 
-TEST(SockaddrTest, Sockaddr)
+void test_sockaddr_sockaddr(void)
 {
+    std::string test = "sockaddr: ";
     struct sockaddr_storage ss;
     memset(&ss, 0, sizeof(struct sockaddr_storage));
     ss.ss_family = 33;
@@ -127,13 +138,14 @@ TEST(SockaddrTest, Sockaddr)
     fake_Sockaddr *sa = new fake_Sockaddr((const struct sockaddr&)ss);
 
     struct sockaddr_storage *saddr = (struct sockaddr_storage *)sa->sockaddr();
-    ASSERT_EQ(saddr->ss_family, 33);
+    is(saddr->ss_family, 33, test + "expected family");
 
     delete sa;
 }
 
-TEST(SockaddrTest, Factory)
+void test_sockaddr_factory(void)
 {
+    std::string test = "sockaddr factory: ";
     struct sockaddr sa;
 
     sa.sa_family = 0;
@@ -141,11 +153,21 @@ TEST(SockaddrTest, Factory)
            || sa.sa_family == AF_UNIX)
         ++sa.sa_family;
 
-    ASSERT_THROW(
-        {
-            Sockaddr *s = build_sockaddr((struct sockaddr&)sa);
-        },
-        std::runtime_error);
+    try
+    {
+        Sockaddr *s = build_sockaddr((struct sockaddr&)sa);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("invalid address family"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
 }
 
 TEST(SockaddrInTest, BlankConstructor)
@@ -767,4 +789,21 @@ TEST(SockaddrUnTest, Factory)
 
     delete su;
     delete sa;
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(10);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_sockaddr_blank_constructor();
+    test_sockaddr_copy_constructor();
+    test_sockaddr_struct_constructor();
+    test_sockaddr_equal_comparison();
+    test_sockaddr_assignment();
+    test_sockaddr_sockaddr();
+    test_sockaddr_factory();
+    return gtests & exit_status();
 }
