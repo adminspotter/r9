@@ -6,6 +6,8 @@ using namespace TAP;
 
 #include <config.h>
 
+#include <string.h>
+
 #include <iostream>
 #include <typeinfo>
 
@@ -398,24 +400,27 @@ void test_sockaddr_in_factory(void)
     delete sa;
 }
 
-TEST(SockaddrIn6Test, BlankConstructor)
+void test_sockaddr_in6_blank_constructor(void)
 {
+    std::string test = "sockaddr_in6 blank constructor: ";
     Sockaddr_in6 *sa = new Sockaddr_in6;
 
-    ASSERT_EQ(sa->sin6->sin6_family, AF_INET6);
-    ASSERT_EQ(sa->sin6->sin6_port, htons(0));
-    ASSERT_EQ(sa->sin6->sin6_flowinfo, htonl(0L));
-    ASSERT_EQ(sa->sin6->sin6_scope_id, htonl(0L));
-    ASSERT_EQ(sa->sin6->sin6_addr, in6addr_any);
+    is(sa->sin6->sin6_family, AF_INET6, test + "expected family");
+    is(sa->sin6->sin6_port, htons(0), test + "expected port");
+    is(sa->sin6->sin6_flowinfo, htonl(0L), test + "expected flowinfo");
+    is(sa->sin6->sin6_scope_id, htonl(0L), test + "expected scope id");
+    is(memcmp(&sa->sin6->sin6_addr, &in6addr_any, sizeof(struct in6_addr)), 0,
+       test + "expected addr");
 
     delete sa;
 }
 
-TEST(SockaddrIn6Test, CopyConstructor)
+void test_sockaddr_in6_copy_constructor(void)
 {
+    std::string test = "sockaddr_in6 copy constructor: ";
     struct in6_addr ip_addr;
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     Sockaddr_in6 *sa = new Sockaddr_in6;
 
@@ -424,21 +429,23 @@ TEST(SockaddrIn6Test, CopyConstructor)
 
     Sockaddr_in6 *sa2 = new Sockaddr_in6(*((const Sockaddr *)sa));
 
-    ASSERT_EQ(sa2->sin6->sin6_family, AF_INET6);
-    ASSERT_EQ(sa2->sin6->sin6_port, htons(1234));
-    ASSERT_EQ(sa2->sin6->sin6_flowinfo, htonl(0L));
-    ASSERT_EQ(sa2->sin6->sin6_scope_id, htonl(0L));
-    ASSERT_EQ(sa2->sin6->sin6_addr, ip_addr);
+    is(sa2->sin6->sin6_family, AF_INET6, test + "expected family");
+    is(sa2->sin6->sin6_port, htons(1234), test + "expected port");
+    is(sa2->sin6->sin6_flowinfo, htonl(0L), test + "expected flowinfo");
+    is(sa2->sin6->sin6_scope_id, htonl(0L), test + "expected scope id");
+    is(memcmp(&sa2->sin6->sin6_addr, &ip_addr, sizeof(struct in6_addr)), 0,
+       test + "expected addr");
 
     delete sa2;
     delete sa;
 }
 
-TEST(SockaddrIn6Test, StructConstructor)
+void test_sockaddr_in6_struct_constructor(void)
 {
+    std::string test = "sockaddr_in6 struct constructor: ";
     struct in6_addr ip_addr;
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     struct sockaddr_in6 sin;
     sin.sin6_family = AF_INET6;
@@ -449,20 +456,22 @@ TEST(SockaddrIn6Test, StructConstructor)
 
     Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
 
-    ASSERT_EQ(sa->sin6->sin6_family, AF_INET6);
-    ASSERT_EQ(sa->sin6->sin6_port, htons(1234));
-    ASSERT_EQ(sa->sin6->sin6_flowinfo, htonl(0L));
-    ASSERT_EQ(sa->sin6->sin6_scope_id, htonl(0L));
-    ASSERT_EQ(sa->sin6->sin6_addr, ip_addr);
+    is(sa->sin6->sin6_family, AF_INET6, test + "expected family");
+    is(sa->sin6->sin6_port, htons(1234), test + "expected port");
+    is(sa->sin6->sin6_flowinfo, htonl(0L), test + "expected flowinfo");
+    is(sa->sin6->sin6_scope_id, htonl(0L), test + "expected scope id");
+    is(memcmp(&sa->sin6->sin6_addr, &ip_addr, sizeof(struct in6_addr)), 0,
+       test + "expected addr");
 
     delete sa;
 }
 
-TEST(SockaddrIn6Test, EqualComparison)
+void test_sockaddr_in6_equal_comparison(void)
 {
+    std::string test = "sockaddr_in6 equal: ";
     struct in6_addr ip_addr;
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     struct sockaddr_in6 sin;
     sin.sin6_family = AF_INET6;
@@ -474,25 +483,27 @@ TEST(SockaddrIn6Test, EqualComparison)
     Sockaddr_in6 *sa1 = new Sockaddr_in6((const struct sockaddr&)sin);
     Sockaddr_in6 *sa2 = new Sockaddr_in6((const struct sockaddr&)sin);
 
-    ASSERT_TRUE(*sa1 == *sa2);
+    is(*sa1 == *sa2, true, test + "objects equal");
 
     sa2->sin6->sin6_port = htons(2345);
 
-    ASSERT_FALSE(*sa1 == *sa2);
+    is(*sa1 == *sa2, false, test + "objects not equal");
 
     Sockaddr_in sain;
 
-    ASSERT_FALSE(*sa1 == *((Sockaddr *)&sain));
+    is(*sa1 == *((Sockaddr *)&sain), false,
+       test + "object not equal to different object");
 
     delete sa2;
     delete sa1;
 }
 
-TEST(SockaddrIn6Test, LessComparison)
+void test_sockaddr_in6_less_comparison(void)
 {
+    std::string test = "sockaddr_in6 less: ";
     struct in6_addr ip_addr;
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     struct sockaddr_in6 sin;
     sin.sin6_family = AF_INET6;
@@ -506,26 +517,29 @@ TEST(SockaddrIn6Test, LessComparison)
 
     ++(sa2->sin6->sin6_addr.s6_addr[15]);
 
-    ASSERT_TRUE(*sa1 < *sa2);
+    is(*sa1 < *sa2, true, test + "object less than object");
 
     ++(sa1->sin6->sin6_addr.s6_addr[14]);
 
-    ASSERT_FALSE(*sa1 < *sa2);
-    ASSERT_FALSE(*sa1 < *((const struct sockaddr *)&sin));
+    is(*sa1 < *sa2, false, test + "object not less than object");
+    is(*sa1 < *((const struct sockaddr *)&sin), false,
+       test + "object not less than struct");
 
     Sockaddr_in sain;
 
-    ASSERT_FALSE(*sa1 < *((Sockaddr *)&sain));
+    is(*sa1 < *((Sockaddr *)&sain), false,
+       test + "object not less than different object");
 
     delete sa2;
     delete sa1;
 }
 
-TEST(SockaddrIn6Test, Ntop)
+void test_sockaddr_in6_ntop(void)
 {
+    std::string test = "sockaddr_in6 ntop: ";
     struct in6_addr ip_addr;
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     struct sockaddr_in6 sin;
     sin.sin6_family = AF_INET6;
@@ -536,16 +550,18 @@ TEST(SockaddrIn6Test, Ntop)
 
     Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
 
-    ASSERT_STREQ(sa->ntop(), v6_ADDRESS);
+    is(strncmp(sa->ntop(), v6_ADDRESS, strlen(v6_ADDRESS)), 0,
+       test + "ntop equal to addr");
 
     delete sa;
 }
 
-TEST(SockaddrIn6Test, Hostname)
+void test_sockaddr_in6_hostname(void)
 {
+    std::string test = "sockaddr_in6 hostname: ";
     struct in6_addr ip_addr;
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     struct sockaddr_in6 sin;
     sin.sin6_family = AF_INET6;
@@ -556,16 +572,17 @@ TEST(SockaddrIn6Test, Hostname)
 
     Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
 
-    ASSERT_FALSE(strcmp(sa->hostname(), HOST_NAME));
+    is(strcmp(sa->hostname(), HOST_NAME), 0, test + "hostnames equal");
 
     delete sa;
 }
 
-TEST(SockaddrIn6Test, Port)
+void test_sockaddr_in6_port(void)
 {
+    std::string test = "sockaddr_in6 port: ";
     struct in6_addr ip_addr;
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     struct sockaddr_in6 sin;
     sin.sin6_family = AF_INET6;
@@ -576,16 +593,17 @@ TEST(SockaddrIn6Test, Port)
 
     Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
 
-    ASSERT_EQ(sa->port(), 1234);
+    is(sa->port(), 1234, test + "ports equal");
 
     delete sa;
 }
 
-TEST(SockaddrIn6Test, Sockaddr)
+void test_sockaddr_in6_sockaddr(void)
 {
+    std::string test = "sockaddr_in6: ";
     struct in6_addr ip_addr;
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     struct sockaddr_in6 sin;
     sin.sin6_family = AF_INET6;
@@ -597,27 +615,29 @@ TEST(SockaddrIn6Test, Sockaddr)
     Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
 
     struct sockaddr_in6 *saddr = (struct sockaddr_in6 *)sa->sockaddr();
-    ASSERT_EQ(sa->sin6->sin6_family, AF_INET6);
-    ASSERT_EQ(sa->sin6->sin6_port, htons(1234));
-    ASSERT_EQ(sa->sin6->sin6_flowinfo, htonl(0L));
-    ASSERT_EQ(sa->sin6->sin6_scope_id, htonl(0L));
-    ASSERT_EQ(sa->sin6->sin6_addr, ip_addr);
+    is(sa->sin6->sin6_family, AF_INET6, test + "expected family");
+    is(sa->sin6->sin6_port, htons(1234), test + "expected port");
+    is(sa->sin6->sin6_flowinfo, htonl(0L), test + "expected flowinfo");
+    is(sa->sin6->sin6_scope_id, htonl(0L), test + "expected scope id");
+    is(memcmp(&sa->sin6->sin6_addr, &ip_addr, sizeof(struct in6_addr)), 0,
+       test + "expected addr");
 
     delete sa;
 }
 
-TEST(SockaddrIn6Test, Factory)
+void test_sockaddr_in6_factory(void)
 {
+    std::string test = "sockaddr_in6 factory: ";
     struct sockaddr_in6 sin6;
     sin6.sin6_family = AF_INET6;
     sin6.sin6_port = htons(1234);
     int ret = inet_pton(AF_INET6, v6_ADDRESS, &sin6.sin6_addr);
-    ASSERT_EQ(ret, 1);
+    is(ret, 1, test + "pton successful");
 
     Sockaddr *sa = build_sockaddr((struct sockaddr &)sin6);
     Sockaddr_in6 *sa_in6 = new Sockaddr_in6;
 
-    ASSERT_EQ(typeid(*sa), typeid(*sa_in6));
+    is(typeid(*sa) == typeid(*sa_in6), true, test + "expected type");
 
     delete sa_in6;
     delete sa;
@@ -810,7 +830,7 @@ TEST(SockaddrUnTest, Factory)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(44);
+    plan(84);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -832,5 +852,16 @@ GTEST_API_ int main(int argc, char **argv)
     test_sockaddr_in_port();
     test_sockaddr_in_sockaddr();
     test_sockaddr_in_factory();
+
+    test_sockaddr_in6_blank_constructor();
+    test_sockaddr_in6_copy_constructor();
+    test_sockaddr_in6_struct_constructor();
+    test_sockaddr_in6_equal_comparison();
+    test_sockaddr_in6_less_comparison();
+    test_sockaddr_in6_ntop();
+    test_sockaddr_in6_hostname();
+    test_sockaddr_in6_port();
+    test_sockaddr_in6_sockaddr();
+    test_sockaddr_in6_factory();
     return gtests & exit_status();
 }

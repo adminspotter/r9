@@ -1,6 +1,6 @@
 /* sockaddr.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2016, 10:17:59 tquirk
+ *   last updated 12 Mar 2018, 08:17:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -227,6 +227,7 @@ class Sockaddr_in6 : public Sockaddr
 
     Sockaddr_in6()
         {
+            memset((void *)&ss, 0, sizeof(struct sockaddr_storage));
             this->sin6 = (struct sockaddr_in6 *)&ss;
             this->sin6->sin6_family = AF_INET6;
             this->sin6->sin6_port = htons(0);
@@ -240,6 +241,7 @@ class Sockaddr_in6 : public Sockaddr
     Sockaddr_in6(const Sockaddr& s)
         {
             const Sockaddr_in6& sin6 = dynamic_cast<const Sockaddr_in6&>(s);
+            memset((void *)&ss, 0, sizeof(struct sockaddr_storage));
             this->sin6 = (struct sockaddr_in6 *)&ss;
             this->sin6->sin6_family = sin6.sin6->sin6_family;
             this->sin6->sin6_port = sin6.sin6->sin6_port;
@@ -254,6 +256,7 @@ class Sockaddr_in6 : public Sockaddr
         {
             const struct sockaddr_in6& si
                 = reinterpret_cast<const struct sockaddr_in6&>(s);
+            memset((void *)&ss, 0, sizeof(struct sockaddr_storage));
             this->sin6 = (struct sockaddr_in6 *)&ss;
             this->sin6->sin6_family = si.sin6_family;
             this->sin6->sin6_port = si.sin6_port;
