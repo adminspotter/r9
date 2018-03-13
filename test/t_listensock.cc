@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/listensock.h"
 
 #include <gtest/gtest.h>
@@ -78,69 +82,80 @@ int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
     return 2;
 }
 
-TEST(BaseUserTest, CreateDelete)
+void test_base_user_create_delete(void)
 {
+    std::string test = "base_user create/delete: ";
     base_user *base = NULL;
 
-    ASSERT_NO_THROW(
-        {
-            base = new base_user(0LL, NULL, NULL);
-        });
-    ASSERT_EQ(base->userid, 0LL);
-    ASSERT_EQ(base->pending_logout, false);
+    try
+    {
+        base = new base_user(0LL, NULL, NULL);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(base->userid, 0LL, test + "expected userid");
+    is(base->pending_logout, false, test + "expected logout");
 
     delete base;
 }
 
-TEST(BaseUserTest, LessThan)
+void test_base_user_less_than(void)
 {
+    std::string test = "base_user less: ";
     base_user *base1 = new base_user(123LL, NULL, NULL);
     base_user *base2 = new base_user(124LL, NULL, NULL);
 
-    ASSERT_TRUE(*base1 < *base2);
+    is(*base1 < *base2, true, test + "object less than object");
 
     delete base2;
     delete base1;
 }
 
-TEST(BaseUserTest, EqualTo)
+void test_base_user_equal_to(void)
 {
+    std::string test = "base_user equal: ";
     base_user *base1 = new base_user(123LL, NULL, NULL);
     base_user *base2 = new base_user(124LL, NULL, NULL);
 
-    ASSERT_FALSE(*base1 == *base2);
+    is(*base1 == *base2, false, test + "objects not equal");
 
     delete base2;
     delete base1;
 }
 
-TEST(BaseUserTest, Assignment)
+void test_base_user_assignment(void)
 {
+    std::string test = "base_user assign: ";
     base_user *base1 = new base_user(123LL, NULL, NULL);
     base_user *base2 = new base_user(124LL, NULL, NULL);
 
-    ASSERT_FALSE(*base1 == *base2);
+    is(*base1 == *base2, false, test + "objects not equal");
 
     *base1 = *base2;
 
-    ASSERT_TRUE(*base1 == *base2);
+    is(*base1 == *base2, true, test + "objects equal");
 
     delete base2;
     delete base1;
 }
 
-TEST(BaseUserTest, DisconnectOnDestroy)
+void test_base_user_disconnect_on_destroy(void)
 {
+    std::string test = "base_user disconnect: ";
     base_user *base = NULL;
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
     base = new base_user(123LL, go, NULL);
-    ASSERT_TRUE(go->natures.size() == 0);
+    is(go->natures.size(), 0, test + "expected natures size");
 
     delete base;
-    ASSERT_TRUE(go->natures.size() == 2);
-    ASSERT_TRUE(go->natures.find("invisible") != go->natures.end());
-    ASSERT_TRUE(go->natures.find("non-interactive") != go->natures.end());
+    is(go->natures.size(), 2, test + "expected natures size");
+    isnt(go->natures.find("invisible"), go->natures.end(),
+         test + "added invisible nature");
+    isnt(go->natures.find("non-interactive"), go->natures.end(),
+         test + "added non-interactive nature");
     delete go;
 }
 
@@ -654,8 +669,14 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
+    plan(10);
 
     int gtests = RUN_ALL_TESTS();
 
-    return gtests;
+    test_base_user_create_delete();
+    test_base_user_less_than();
+    test_base_user_equal_to();
+    test_base_user_assignment();
+    test_base_user_disconnect_on_destroy();
+    return gtests & exit_status();
 }
