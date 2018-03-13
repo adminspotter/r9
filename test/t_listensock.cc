@@ -650,3 +650,12 @@ TEST(BaseUserTest, SendAck)
     delete listen;
     freeaddrinfo(addr);
 }
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+
+    int gtests = RUN_ALL_TESTS();
+
+    return gtests;
+}
