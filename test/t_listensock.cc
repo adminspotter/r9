@@ -193,8 +193,9 @@ void test_listen_socket_port_type(void)
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, StartStop)
+void test_listen_socket_start_stop(void)
 {
+    std::string test = "listen_socket start/stop: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen;
 
@@ -202,51 +203,79 @@ TEST(ListenSocketTest, StartStop)
     listen = new listen_socket(addr);
 
     create_error = true;
-    ASSERT_THROW(
-        {
-            listen->start();
-        },
-        std::runtime_error);
-    ASSERT_EQ(create_count, 1);
+    try
+    {
+        listen->start();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't create reaper"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+    is(create_count, 1, test + "expected creates");
 
     create_error = false;
     create_count = 0;
-    ASSERT_NO_THROW(
-        {
-            listen->start();
-        });
-    ASSERT_GT(create_count, 1);
+    try
+    {
+        listen->start();
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
+    is(create_count > 1, true, test + "expected creates");
 
     cancel_error = true;
-    ASSERT_THROW(
-        {
-            listen->stop();
-        },
-        std::runtime_error);
-    try { listen->stop(); }
+    try
+    {
+        listen->stop();
+    }
     catch (std::runtime_error& e)
     {
-        ASSERT_TRUE(strstr(e.what(), "couldn't cancel reaper") != NULL);
+        std::string err(e.what());
+
+        isnt(err.find("couldn't cancel reaper"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
     }
 
     cancel_error = false;
     join_error = true;
-    ASSERT_THROW(
-        {
-            listen->stop();
-        },
-        std::runtime_error);
-    try { listen->stop(); }
+    try
+    {
+        listen->stop();
+    }
     catch (std::runtime_error& e)
     {
-        ASSERT_TRUE(strstr(e.what(), "couldn't join reaper") != NULL);
+        std::string err(e.what());
+
+        isnt(err.find("couldn't join reaper"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
     }
 
     join_error = false;
-    ASSERT_NO_THROW(
-        {
-            listen->stop();
-        });
+    try
+    {
+        listen->stop();
+    }
+    catch (...)
+    {
+        fail(test + "stop exception");
+    }
 
     delete listen;
     freeaddrinfo(addr);
@@ -675,7 +704,7 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(13);
+    plan(18);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -687,5 +716,6 @@ GTEST_API_ int main(int argc, char **argv)
 
     test_listen_socket_create_delete();
     test_listen_socket_port_type();
+    test_listen_socket_start_stop();
     return gtests & exit_status();
 }
