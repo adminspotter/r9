@@ -159,31 +159,37 @@ void test_base_user_disconnect_on_destroy(void)
     delete go;
 }
 
-TEST(ListenSocketTest, CreateDelete)
+void test_listen_socket_create_delete(void)
 {
+    std::string test = "listen_socket create/delete: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen;
 
-    ASSERT_NO_THROW(
-        {
-            listen = new listen_socket(addr);
-        });
+    try
+    {
+        listen = new listen_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
     /* Thread pools should not be started */
-    ASSERT_TRUE(listen->send_pool->pool_size() == 0);
-    ASSERT_TRUE(listen->access_pool->pool_size() == 0);
+    is(listen->send_pool->pool_size(), 0, test + "expected send size");
+    is(listen->access_pool->pool_size(), 0, test + "expected access size");
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, PortType)
+void test_listen_socket_port_type(void)
 {
+    std::string test = "listen_socket port: ";
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *dgs = new listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
-    ASSERT_TRUE(dgs->port_type() == "listen");
+    is(listen->port_type() == "listen", true, test + "expected port type");
 
-    delete dgs;
+    delete listen;
     freeaddrinfo(addr);
 }
 
@@ -669,7 +675,7 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(10);
+    plan(13);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -678,5 +684,8 @@ GTEST_API_ int main(int argc, char **argv)
     test_base_user_equal_to();
     test_base_user_assignment();
     test_base_user_disconnect_on_destroy();
+
+    test_listen_socket_create_delete();
+    test_listen_socket_port_type();
     return gtests & exit_status();
 }
