@@ -31,7 +31,7 @@ class mock_DB : public DB
 
 int check_authentication_count = 0;
 uint64_t check_authentication_result = 12345LL;
-int check_authorization_result = 0;
+int check_authorization_count = 0, check_authorization_result = 0;
 uint64_t get_characterid_result = 0LL, get_character_objectid_result = 0LL;
 int open_new_login_result = 0, check_open_login_result = 0;
 int close_open_login_result = 0, get_player_server_skills_result = 0;
@@ -56,6 +56,7 @@ class fake_DB : public DB
         };
     virtual int check_authorization(uint64_t a, const std::string& b)
         {
+            ++check_authorization_count;
             return check_authorization_result;
         };
     virtual uint64_t get_characterid(uint64_t a, const std::string& b)

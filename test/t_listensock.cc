@@ -372,13 +372,13 @@ void test_listen_socket_handle_logout(void)
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, GetUserid)
+void test_listen_socket_get_userid(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket get_userid: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authentication(_, A<const std::string&>()))
-        .WillOnce(Return(0LL));
+    check_authentication_count = 0;
+    check_authentication_result = 12345LL;
 
     login_request log;
 
@@ -391,21 +391,23 @@ TEST(ListenSocketTest, GetUserid)
 
     uint64_t userid = listen->get_userid(log);
 
-    ASSERT_EQ(userid, 0LL);
-    ASSERT_FALSE(strncmp(log.password, "pass", sizeof(log.password)) == 0);
+    is(check_authentication_count, 1, test + "expected database call");
+    is(userid, 12345LL, test + "expected userid");
+    is(strncmp(log.password, "", sizeof(log.password)), 0,
+       test + "password is cleared");
 
     delete listen;
     freeaddrinfo(addr);
     delete database;
 }
 
-TEST(ListenSocketTest, CheckAccessNoAccess)
+void test_listen_socket_no_access(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket no access: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authorization(_, A<const std::string&>()))
-        .WillOnce(Return(ACCESS_NONE));
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_NONE;
 
     login_request log;
 
@@ -419,11 +421,12 @@ TEST(ListenSocketTest, CheckAccessNoAccess)
 
     base_user *bu = listen->check_access(123LL, log);
 
-    ASSERT_TRUE(bu == NULL);
+    is(check_authorization_count, 1, test + "expected database call");
+    is(bu == NULL, true, test + "expected result");
 
     delete listen;
     freeaddrinfo(addr);
-    delete database;
+    delete (fake_DB *)database;
 }
 
 TEST(ListenSocketTest, CheckAccess)
@@ -707,7 +710,7 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(27);
+    plan(32);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -723,5 +726,7 @@ GTEST_API_ int main(int argc, char **argv)
     test_listen_socket_handle_ack();
     test_listen_socket_handle_action();
     test_listen_socket_handle_logout();
+    test_listen_socket_get_userid();
+    test_listen_socket_no_access();
     return gtests & exit_status();
 }
