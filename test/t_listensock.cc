@@ -159,6 +159,26 @@ void test_base_user_disconnect_on_destroy(void)
     delete go;
 }
 
+void test_base_user_send_ping(void)
+{
+    std::string test = "base_user send_ping: ";
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new listen_socket(addr);
+
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[123LL] = bu;
+
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    bu->send_ping();
+
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    delete listen;
+    freeaddrinfo(addr);
+}
+
 void test_listen_socket_create_delete(void)
 {
     std::string test = "listen_socket create/delete: ";
@@ -695,25 +715,6 @@ void test_listen_socket_disconnect_user(void)
     freeaddrinfo(addr);
 }
 
-TEST(BaseUserTest, SendPing)
-{
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
-
-    base_user *bu = new base_user(123LL, NULL, listen);
-
-    listen->users[123LL] = bu;
-
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
-
-    bu->send_ping();
-
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
-
-    delete listen;
-    freeaddrinfo(addr);
-}
-
 TEST(BaseUserTest, SendAck)
 {
     struct addrinfo *addr = create_addrinfo();
@@ -736,7 +737,7 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(67);
+    plan(69);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -745,6 +746,7 @@ GTEST_API_ int main(int argc, char **argv)
     test_base_user_equal_to();
     test_base_user_assignment();
     test_base_user_disconnect_on_destroy();
+    test_base_user_send_ping();
 
     test_listen_socket_create_delete();
     test_listen_socket_port_type();
