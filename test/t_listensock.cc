@@ -281,8 +281,9 @@ void test_listen_socket_start_stop(void)
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, HandleAck)
+void test_listen_socket_handle_ack(void)
 {
+    std::string test = "listen_socket handle_ack: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
     base_user *bu = new base_user(123LL, NULL, listen);
@@ -297,15 +298,16 @@ TEST(ListenSocketTest, HandleAck)
 
     listen_socket::handle_ack(listen, p, bu, NULL);
 
-    ASSERT_NE(bu->timestamp, 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp");
 
     delete bu;
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, HandleAction)
+void test_listen_socket_handle_action(void)
 {
+    std::string test = "listen_socket handle_action: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
     base_user *bu = new base_user(123LL, NULL, listen);
@@ -325,12 +327,12 @@ TEST(ListenSocketTest, HandleAction)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACTREQ;
 
-    ASSERT_TRUE(action_pool->queue_size() == 0);
+    is(action_pool->queue_size(), 0, test + "expected queue size");
 
     listen_socket::handle_action(listen, p, bu, NULL);
 
-    ASSERT_NE(bu->timestamp, 0);
-    ASSERT_TRUE(action_pool->queue_size() != 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp");
+    isnt(action_pool->queue_size(), 0, test + "expected queue size");
 
     delete (ThreadPool<packet_list> *)action_pool;
     delete bu;
@@ -338,8 +340,9 @@ TEST(ListenSocketTest, HandleAction)
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, HandleLogout)
+void test_listen_socket_handle_logout(void)
 {
+    std::string test = "listen_socket handle_logout: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
     base_user *bu = new base_user(123LL, NULL, listen);
@@ -352,17 +355,17 @@ TEST(ListenSocketTest, HandleLogout)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_LGTREQ;
 
-    ASSERT_TRUE(listen->access_pool->queue_size() == 0);
+    is(listen->access_pool->queue_size(), 0, test + "expected queue size");
 
     listen_socket::handle_logout(listen, p, bu, NULL);
 
-    ASSERT_NE(bu->timestamp, 0);
-    ASSERT_TRUE(listen->access_pool->queue_size() != 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp");
+    isnt(listen->access_pool->queue_size(), 0, test + "expected queue size");
     access_list al;
     memset(&al, 0, sizeof(access_list));
     listen->access_pool->pop(&al);
-    ASSERT_EQ(al.buf.basic.type, TYPE_LGTREQ);
-    ASSERT_EQ(al.what.logout.who, 123LL);
+    is(al.buf.basic.type, TYPE_LGTREQ, test + "expected logout packet");
+    is(al.what.logout.who, 123LL, test + "expected userid");
 
     delete bu;
     delete listen;
@@ -704,7 +707,7 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(18);
+    plan(27);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -717,5 +720,8 @@ GTEST_API_ int main(int argc, char **argv)
     test_listen_socket_create_delete();
     test_listen_socket_port_type();
     test_listen_socket_start_stop();
+    test_listen_socket_handle_ack();
+    test_listen_socket_handle_action();
+    test_listen_socket_handle_logout();
     return gtests & exit_status();
 }
