@@ -4,16 +4,9 @@ using namespace TAP;
 
 #include "../server/classes/listensock.h"
 
-#include <gtest/gtest.h>
-
 #include "mock_db.h"
 #include "mock_server_globals.h"
 #include "mock_zone.h"
-
-using ::testing::_;
-using ::testing::A;
-using ::testing::Return;
-using ::testing::Invoke;
 
 bool create_error = false, cancel_error = false, join_error = false;
 int create_count, cancel_count, join_count;
@@ -172,6 +165,26 @@ void test_base_user_send_ping(void)
     is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
     bu->send_ping();
+
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    delete listen;
+    freeaddrinfo(addr);
+}
+
+void test_base_user_send_ack(void)
+{
+    std::string test = "base_user send_ack: ";
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new listen_socket(addr);
+
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[123LL] = bu;
+
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    bu->send_ack(1, 2);
 
     isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
@@ -715,31 +728,9 @@ void test_listen_socket_disconnect_user(void)
     freeaddrinfo(addr);
 }
 
-TEST(BaseUserTest, SendAck)
+int main(int argc, char **argv)
 {
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
-
-    base_user *bu = new base_user(123LL, NULL, listen);
-
-    listen->users[123LL] = bu;
-
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
-
-    bu->send_ack(1, 2);
-
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
-
-    delete listen;
-    freeaddrinfo(addr);
-}
-
-GTEST_API_ int main(int argc, char **argv)
-{
-    testing::InitGoogleTest(&argc, argv);
-    plan(69);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(71);
 
     test_base_user_create_delete();
     test_base_user_less_than();
@@ -747,6 +738,7 @@ GTEST_API_ int main(int argc, char **argv)
     test_base_user_assignment();
     test_base_user_disconnect_on_destroy();
     test_base_user_send_ping();
+    test_base_user_send_ack();
 
     test_listen_socket_create_delete();
     test_listen_socket_port_type();
@@ -764,5 +756,5 @@ GTEST_API_ int main(int argc, char **argv)
     test_listen_socket_logout();
     test_listen_socket_connect_user();
     test_listen_socket_disconnect_user();
-    return gtests & exit_status();
+    return exit_status();
 }
