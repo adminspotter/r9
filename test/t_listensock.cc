@@ -477,12 +477,13 @@ void test_listen_socket_check_access(void)
     delete (fake_DB *)database;
 }
 
-TEST(ListenSocketTest, LoginNoUser)
+void test_listen_socket_login_no_user(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket no user: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
-        .WillOnce(Return(0LL));
+    check_authentication_count = 0;
+    check_authentication_result = 0LL;
 
     access_list access;
 
@@ -494,26 +495,27 @@ TEST(ListenSocketTest, LoginNoUser)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->users.size(), 0, test + "expected user list size");
 
     listen->login_user(access);
 
-    ASSERT_TRUE(listen->users.size() == 0);
-    ASSERT_FALSE(strncmp(access.buf.log.password,
-                         "pass",
-                         sizeof(access.buf.log.password)) == 0);
+    is(check_authentication_count, 1, test + "expected authentication call");
+    is(listen->users.size(), 0, test + "expected user list size");
+    is(strncmp(access.buf.log.password, "", sizeof(access.buf.log.password)), 0,
+       test + "password is cleared");
 
     delete listen;
     freeaddrinfo(addr);
     delete database;
 }
 
-TEST(ListenSocketTest, LoginAlready)
+void test_listen_socket_login_already(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket already logged in: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
-        .WillOnce(Return(123LL));
+    check_authentication_count = 0;
+    check_authentication_result = 123LL;
 
     access_list access;
 
@@ -528,27 +530,29 @@ TEST(ListenSocketTest, LoginAlready)
     bu->pending_logout = true;
     listen->users[123LL] = bu;
 
-    ASSERT_TRUE(listen->users.size() == 1);
+    is(listen->users.size(), 1, test + "expected user list size");
 
     listen->login_user(access);
 
-    ASSERT_TRUE(listen->users.size() == 1);
-    ASSERT_EQ(bu->pending_logout, false);
+    is(check_authentication_count, 1, test + "expected authentication call");
+    is(listen->users.size(), 1, test + "expected user list size");
+    is(bu->pending_logout, false, test + "user not logging out");
 
     delete listen;
     freeaddrinfo(addr);
     delete database;
 }
 
-TEST(ListenSocketTest, LoginNoAccess)
+void test_listen_socket_login_no_access(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket no access: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
-        .WillOnce(Return(123LL));
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authorization(_, A<const std::string&>()))
-        .WillOnce(Return(ACCESS_NONE));
+    check_authentication_count = 0;
+    check_authentication_result = 123LL;
+
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_NONE;
 
     access_list access;
 
@@ -560,15 +564,17 @@ TEST(ListenSocketTest, LoginNoAccess)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->users.size(), 0, test + "expected user list size");
 
     listen->login_user(access);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(check_authentication_count, 1, test + "expected authentication call");
+    is(check_authorization_count, 1, test + "expected authorization call");
+    is(listen->users.size(), 0, test + "expected user list size");
 
     delete listen;
     freeaddrinfo(addr);
-    delete (mock_DB *)database;
+    delete (fake_DB *)database;
 }
 
 TEST(ListenSocketTest, Login)
@@ -715,7 +721,7 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(38);
+    plan(50);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -734,5 +740,8 @@ GTEST_API_ int main(int argc, char **argv)
     test_listen_socket_get_userid();
     test_listen_socket_no_access();
     test_listen_socket_check_access();
+    test_listen_socket_login_no_user();
+    test_listen_socket_login_already();
+    test_listen_socket_login_no_access();
     return gtests & exit_status();
 }
