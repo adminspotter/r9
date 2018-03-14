@@ -630,8 +630,9 @@ void test_listen_socket_login(void)
     delete (fake_DB *)database;
 }
 
-TEST(ListenSocketTest, Logout)
+void test_listen_socket_logout(void)
 {
+    std::string test = "listen_socket logout: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
@@ -639,19 +640,20 @@ TEST(ListenSocketTest, Logout)
 
     listen->users[123LL] = bu;
 
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
     listen->logout_user(123LL);
 
-    ASSERT_TRUE(bu->pending_logout == true);
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+    is(bu->pending_logout, true, test + "user set to logout");
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, ConnectUser)
+void test_listen_socket_connect_user(void)
 {
+    std::string test = "listen_socket connect_user: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
@@ -661,20 +663,21 @@ TEST(ListenSocketTest, ConnectUser)
 
     memset(&access.buf, 0, sizeof(packet));
 
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+    is(listen->users.size(), 0, test + "expected user list size");
 
     listen->connect_user(bu, access);
 
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
-    ASSERT_TRUE(listen->users.size() == 1);
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+    is(listen->users.size(), 1, test + "expected user list size");
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, DisconnectUser)
+void test_listen_socket_disconnect_user(void)
 {
+    std::string test = "listen_socket disconnect_user: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
@@ -682,11 +685,11 @@ TEST(ListenSocketTest, DisconnectUser)
 
     listen->users[123LL] = bu;
 
-    ASSERT_TRUE(listen->users.size() == 1);
+    is(listen->users.size(), 1, test + "expected user list size");
 
     listen->disconnect_user(bu);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->users.size(), 0, test + "expected user list size");
 
     delete listen;
     freeaddrinfo(addr);
@@ -733,7 +736,7 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(58);
+    plan(67);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -756,5 +759,8 @@ GTEST_API_ int main(int argc, char **argv)
     test_listen_socket_login_already();
     test_listen_socket_login_no_access();
     test_listen_socket_login();
+    test_listen_socket_logout();
+    test_listen_socket_connect_user();
+    test_listen_socket_disconnect_user();
     return gtests & exit_status();
 }
