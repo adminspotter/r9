@@ -32,9 +32,13 @@ class mock_DB : public DB
 int check_authentication_count = 0;
 uint64_t check_authentication_result = 12345LL;
 int check_authorization_count = 0, check_authorization_result = 0;
-uint64_t get_characterid_result = 0LL, get_character_objectid_result = 0LL;
+int get_characterid_count = 0;
+uint64_t get_characterid_result = 0LL;
+int get_character_objectid_count = 0;
+uint64_t get_character_objectid_result = 0LL;
 int open_new_login_result = 0, check_open_login_result = 0;
-int close_open_login_result = 0, get_player_server_skills_result = 0;
+int close_open_login_result = 0;
+int get_player_server_skills_count = 0, get_player_server_skills_result = 0;
 int get_server_skills_result = 0, get_server_objects_result = 0;
 
 class fake_DB : public DB
@@ -61,11 +65,13 @@ class fake_DB : public DB
         };
     virtual uint64_t get_characterid(uint64_t a, const std::string& b)
         {
+            ++get_characterid_count;
             return get_characterid_result;
         };
     virtual uint64_t get_character_objectid(uint64_t a,
                                             const std::string& b)
         {
+            ++get_character_objectid_count;
             return get_character_objectid_result;
         };
     virtual int open_new_login(uint64_t a, uint64_t b, Sockaddr *c)
@@ -83,6 +89,7 @@ class fake_DB : public DB
     virtual int get_player_server_skills(uint64_t a, uint64_t b,
                                          std::map<uint16_t, action_level>& c)
         {
+            ++get_player_server_skills_count;
             return get_player_server_skills_result;
         };
     virtual int get_server_skills(std::map<uint16_t, action_rec>& a)

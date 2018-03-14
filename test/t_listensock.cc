@@ -429,25 +429,25 @@ void test_listen_socket_no_access(void)
     delete (fake_DB *)database;
 }
 
-TEST(ListenSocketTest, CheckAccess)
+void test_listen_socket_check_access(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket check_access: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authorization(_, A<const std::string&>()))
-        .WillOnce(Return(ACCESS_MOVE));
-    EXPECT_CALL(*((mock_DB *)database),
-                get_characterid(_, _))
-        .WillOnce(Return(12345678LL));
-    EXPECT_CALL(*((mock_DB *)database),
-                get_player_server_skills(_, _, _));
-    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_MOVE;
 
-    zone = new mock_Zone(1000, 1, database);
+    get_character_objectid_count = 0;
+    get_character_objectid_result = 1234LL;
 
-    EXPECT_CALL(*((mock_Zone *)zone), send_nearby_objects(_));
+    get_characterid_count = 0;
+    get_characterid_result = 12345678LL;
+
+    get_player_server_skills_count = 0;
+
+    zone = new fake_Zone(1000, 1, database);
+
+    send_nearby_objects_count = 0;
 
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
@@ -463,13 +463,18 @@ TEST(ListenSocketTest, CheckAccess)
 
     base_user *bu = listen->check_access(123LL, log);
 
-    ASSERT_TRUE(bu != NULL);
+    is(check_authorization_count, 1, test + "expected authorization call");
+    is(get_character_objectid_count, 1, test + "expected objectid call");
+    is(get_characterid_count, 1, test + "expected characterid call");
+    is(get_player_server_skills_count, 1, test + "expected skills call");
+    is(send_nearby_objects_count, 1, test + "expected nearby objects call");
+    is(bu != NULL, true, test + "got a good base_user");
 
     delete bu;
     delete listen;
     freeaddrinfo(addr);
-    delete (mock_Zone *)zone;
-    delete (mock_DB *)database;
+    delete (fake_Zone *)zone;
+    delete (fake_DB *)database;
 }
 
 TEST(ListenSocketTest, LoginNoUser)
@@ -710,7 +715,7 @@ TEST(BaseUserTest, SendAck)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(32);
+    plan(38);
 
     int gtests = RUN_ALL_TESTS();
 
@@ -728,5 +733,6 @@ GTEST_API_ int main(int argc, char **argv)
     test_listen_socket_handle_logout();
     test_listen_socket_get_userid();
     test_listen_socket_no_access();
+    test_listen_socket_check_access();
     return gtests & exit_status();
 }
