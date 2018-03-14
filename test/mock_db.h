@@ -5,6 +5,23 @@
 
 #include "../server/classes/modules/db.h"
 
+const char address[] = "1.2.3.4";
+
+/* Some hosts perform these next two operations veeeeeery sloooooowly,
+ * so we'll include some VERY FAST versions.  The database object uses
+ * these in its startup method.
+ */
+int gethostname(char *a, size_t b)
+{
+    strncpy(a, "whut.foo.com", b);
+    return 0;
+}
+
+const char *inet_ntop(int a, const void *b, char *c, socklen_t d)
+{
+    return address;
+}
+
 class mock_DB : public DB
 {
   public:
