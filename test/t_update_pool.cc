@@ -1,49 +1,53 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/update_pool.h"
 #include "../server/classes/listensock.h"
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "mock_listensock.h"
 #include "mock_server_globals.h"
 
-using ::testing::_;
+int push_count = 0;
 
-class mock_SendPool : public ThreadPool<packet_list>
+class fake_SendPool : public ThreadPool<packet_list>
 {
   public:
-    mock_SendPool(const char *a, int b)
-        : ThreadPool<packet_list>(a, b)
-        {
-        };
-    ~mock_SendPool() {};
+    fake_SendPool(const char *a, int b) : ThreadPool<packet_list>(a, b) {};
+    virtual ~fake_SendPool() {};
 
-    MOCK_METHOD1(start, void(void *(*func)(void *)));
-    MOCK_METHOD1(push, void(packet_list& p));
+    virtual void start(void *(*func)(void *)) {};
+    virtual void push(packet_list& p)
+        {
+            ++push_count;
+        };
 };
 
-TEST(UpdatePoolTest, Operate)
+void test_operate(void)
 {
+    std::string test = "operate: ";
     struct addrinfo hints, *ai;
     int ret;
     listen_socket *sock;
     UpdatePool *pool;
-    mock_SendPool *send_pool = new mock_SendPool("t_send", 1);
+    fake_SendPool *send_pool = new fake_SendPool("t_send", 1);
     GameObject *go = new GameObject(NULL, NULL, 12345LL);
-
-    EXPECT_CALL(*send_pool, push(_)).Times(3);
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1238", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "getaddrinfo successful");
 
-    ASSERT_NO_THROW(
-        {
-            sock = new mock_listen_socket(ai);
-        });
+    try
+    {
+        sock = new mock_listen_socket(ai);
+    }
+    catch (...)
+    {
+        fail(test + "fake listen_socket exception");
+    }
     delete sock->send_pool;
     sock->send_pool = send_pool;
     sockets.push_back(sock);
@@ -51,18 +55,33 @@ TEST(UpdatePoolTest, Operate)
     sock->users[1LL] = new base_user(1LL, NULL, NULL);
     sock->users[2LL] = new base_user(2LL, NULL, NULL);
     sock->users[3LL] = new base_user(3LL, NULL, NULL);
-    ASSERT_EQ(sock->users.size(), 3);
+    is(sock->users.size(), 3, test + "expected user list size");
 
-    ASSERT_NO_THROW(
-        {
-            pool = new UpdatePool("t_update", 1);
-        });
+    try
+    {
+        pool = new UpdatePool("t_update", 1);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     pool->start();
     pool->push(go);
-    sleep(1);
+    while (push_count < 3)
+        ;
+
+    is(push_count, 3, test + "expected send push count");
 
     delete pool;
     delete sock;
     freeaddrinfo(ai);
+}
+
+int main(int argc, char **argv)
+{
+    plan(3);
+
+    test_operate();
+    return exit_status();
 }
