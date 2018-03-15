@@ -146,8 +146,8 @@ t_listensock_worker_SOURCES = t_listensock_worker.cc \
 	../server/classes/listensock.cc ../server/classes/listensock.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
 t_listensock_worker_CXXFLAGS = $(CONFIG_DEFS) \
-	$(GMOCK_INCLUDES) $(GTEST_INCLUDES)
-t_listensock_worker_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
+	$(GMOCK_INCLUDES) $(GTEST_INCLUDES) $(TAP_INCLUDES)
+t_listensock_worker_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
