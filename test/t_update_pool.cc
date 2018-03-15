@@ -1,17 +1,10 @@
 #include "../server/classes/update_pool.h"
 #include "../server/classes/listensock.h"
-#include "../server/classes/config_data.h"
-#include "../server/classes/modules/db.h"
-#include "../server/classes/zone.h"
-
-#include <iostream>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mock_db.h"
 #include "mock_listensock.h"
-#include "mock_zone.h"
 #include "mock_server_globals.h"
 
 using ::testing::_;
@@ -59,8 +52,6 @@ TEST(UpdatePoolTest, Operate)
     sock->users[2LL] = new base_user(2LL, NULL, NULL);
     sock->users[3LL] = new base_user(3LL, NULL, NULL);
     ASSERT_EQ(sock->users.size(), 3);
-
-    database = new mock_DB("a", "b", "c", "d");
 
     ASSERT_NO_THROW(
         {
