@@ -4,6 +4,8 @@ using namespace TAP;
 
 #include "../server/classes/thread_pool.h"
 
+#include <stdexcept>
+
 #include <gtest/gtest.h>
 
 bool pthread_mutex_init_error = false, pthread_cond_init_error = false;
@@ -115,29 +117,51 @@ void test_create_delete(void)
     is(cond_destroy_count, 1, test + "expected cond destroys");
 }
 
-TEST(ThreadPoolTest, MutexInitFailure)
+void test_mutex_init_failure(void)
 {
+    std::string test = "mutex init failure: ";
     ThreadPool<int> *pool = NULL;
 
     pthread_mutex_init_error = true;
-    ASSERT_THROW(
-        {
-            pool = new ThreadPool<int>("rut-roh", 1);
-        },
-        std::runtime_error);
+    try
+    {
+        pool = new ThreadPool<int>("rut-roh", 1);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("queue mutex"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     pthread_mutex_init_error = false;
 }
 
-TEST(ThreadPoolTest, CondInitFailure)
+void test_cond_init_failure(void)
 {
+    std::string test = "cond init failure: ";
     ThreadPool<int> *pool = NULL;
 
     pthread_cond_init_error = true;
-    ASSERT_THROW(
-        {
-            pool = new ThreadPool<int>("oh-noes", 1);
-        },
-        std::runtime_error);
+    try
+    {
+        pool = new ThreadPool<int>("oh-noes", 1);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("queue not-empty cond"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     pthread_cond_init_error = false;
 }
 
@@ -248,10 +272,12 @@ TEST(ThreadPoolTest, PushPop)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(6);
+    plan(8);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
+    test_mutex_init_failure();
+    test_cond_init_failure();
     return gtests & exit_status();
 }
