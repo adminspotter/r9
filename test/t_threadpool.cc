@@ -6,8 +6,6 @@ using namespace TAP;
 
 #include <stdexcept>
 
-#include <gtest/gtest.h>
-
 bool pthread_mutex_init_error = false, pthread_cond_init_error = false;
 bool pthread_create_error = false;
 int mutex_destroy_count, cond_broadcast_count, cond_destroy_count;
@@ -243,17 +241,18 @@ void test_start_failure(void)
     pthread_create_error = false;
 }
 
-TEST(ThreadPoolTest, Grow)
+void test_grow(void)
 {
+    std::string test = "grow: ";
     ThreadPool<int> *pool = new ThreadPool<int>("grow", 5);
 
     pthread_create_error = false;
     pool->startup_arg = (void *)pool;
     pool->start(thread_worker);
-    ASSERT_TRUE(pool->pool_size() == 5);
+    is(pool->pool_size(), 5, test + "expected pool size");
 
     pool->grow(8);
-    ASSERT_TRUE(pool->pool_size() == 8);
+    is(pool->pool_size(), 8, test + "expected pool size");
 
     delete pool;
 }
@@ -266,42 +265,44 @@ typedef struct
 }
 test_type;
 
-TEST(ThreadPoolTest, PushPop)
+void test_push_pop(void)
 {
+    std::string test = "push/pop: ", st;
     ThreadPool<test_type> *pool = new ThreadPool<test_type>("push-pop", 1);
     test_type req = {1, 'a', 1.234}, buf;
 
+    st = "push: ";
+
     lock_count = signal_count = unlock_count = 0;
     pool->push(req);
-    ASSERT_GT(lock_count, 0);
-    ASSERT_GT(unlock_count, 0);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_EQ(signal_count, 1);
+    is(lock_count > 0, true, test + st + "performed locks");
+    is(lock_count, unlock_count, test + st + "unlocked all locks");
+    is(signal_count, 1, test + st + "expected signal count");
+
+    st = "pop: ";
 
     lock_count = unlock_count = 0;
     pool->clean_on_pop = true;
     pool->pop(&buf);
-    ASSERT_GT(lock_count, 0);
-    ASSERT_GT(unlock_count, 0);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_EQ(buf.foo, 1);
-    ASSERT_EQ(buf.bar, 'a');
-    ASSERT_EQ(buf.baz, 1.234);
+    is(lock_count > 0, true, test + st + "performed locks");
+    is(lock_count, unlock_count, test + st + "unlocked all locks");
+    is(buf.foo, 1, test + st + "expected test foo");
+    is(buf.bar, 'a', test + st + "expected test bar");
+    is(buf.baz, 1.234, test + st + "expected test baz");
 
     delete pool;
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    plan(19);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(29);
 
     test_create_delete();
     test_mutex_init_failure();
     test_cond_init_failure();
     test_start_stop();
     test_start_failure();
-    return gtests & exit_status();
+    test_grow();
+    test_push_pop();
+    return exit_status();
 }
