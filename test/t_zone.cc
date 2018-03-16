@@ -4,13 +4,8 @@ using namespace TAP;
 
 #include "../server/classes/zone.h"
 
-#include <gtest/gtest.h>
-
 #include "mock_db.h"
 #include "mock_server_globals.h"
-
-using ::testing::_;
-using ::testing::Invoke;
 
 int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
 {
@@ -26,17 +21,19 @@ int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
     return 2;
 }
 
-class ZoneTest : public ::testing::Test
+class object_DB : public fake_DB
 {
-  protected:
-    void SetUp()
-        {
-            database = new mock_DB("a", "b", "c", "d");
-        };
+  public:
+    object_DB(const std::string& a, const std::string& b,
+              const std::string& c, const std::string& d)
+        : fake_DB(a, b, c, d)
+        {};
+    virtual ~object_DB() {};
 
-    void TearDown()
+    virtual int get_server_objects(std::map<uint64_t, GameObject *>& a)
         {
-            delete database;
+            ++get_server_objects_count;
+            return fake_server_objects(a);
         };
 };
 
@@ -63,23 +60,34 @@ void test_create_simple(void)
     delete (fake_DB *)database;
 }
 
-TEST_F(ZoneTest, CreateComplex)
+void test_create_complex(void)
 {
-    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_))
-        .WillOnce(Invoke(fake_server_objects));
+    std::string test = "create complex: ";
 
-    ASSERT_NO_THROW(
-        {
-            zone = new Zone(1000, 2000, 3000, 1, 2, 3, database);
-        });
-    ASSERT_TRUE(zone->game_objects.size() > 0);
+    database = new object_DB("a", "b", "c", "d");
+
+    get_server_objects_count = 0;
+
+    try
+    {
+        zone = new Zone(1000, 2000, 3000, 1, 2, 3, database);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(get_server_objects_count, 1, test + "expected objects call");
+    is(zone->game_objects.size(), 2, test + "expected objects size");
 
     delete zone;
+    delete (object_DB *)database;
 }
 
-TEST_F(ZoneTest, SectorMethods)
+void test_sector_methods(void)
 {
-    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+    std::string test = "sector methods: ";
+
+    database = new fake_DB("a", "b", "c", "d");
 
     zone = new Zone(1000, 1000, 1000, 1, 1, 3, database);
 
@@ -87,56 +95,60 @@ TEST_F(ZoneTest, SectorMethods)
     glm::dvec3 where2(500.0, 500.0, 1500.0);
     Octree *o1 = zone->sector_contains(where1);
     Octree *o2 = zone->sector_contains(where2);
-    ASSERT_FALSE(o1 == o2);
+    is(o1 == o2, false, test + "sectors not equal");
 
     glm::ivec3 which1 = zone->which_sector(where1);
     glm::ivec3 expected1(0, 0, 0);
-    ASSERT_TRUE(which1 == expected1);
+    is(which1 == expected1, true, test + "sectors equal");
 
     glm::ivec3 which2 = zone->which_sector(where2);
     glm::ivec3 expected2(0, 0, 1);
-    ASSERT_TRUE(which2 == expected2);
+    is(which2 == expected2, true, test + "sectors equal");
 
     delete zone;
+    delete (fake_DB *)database;
 }
 
-TEST_F(ZoneTest, SendObjects)
+void test_send_objects(void)
 {
+    std::string test = "send_objects: ";
     int obj_size, queue_size;
 
-    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_))
-        .WillOnce(Invoke(fake_server_objects));
+    database = new object_DB("a", "b", "c", "d");
 
     zone = new Zone(1000, 1, database);
     obj_size = zone->game_objects.size();
-    ASSERT_GT(obj_size, 0);
+    is(obj_size, 2, test + "expected objects size");
 
     update_pool = new UpdatePool("zonetest", 1);
 
     zone->send_nearby_objects(1234LL);
-    ASSERT_TRUE(zone->game_objects.size() == obj_size);
+    is(zone->game_objects.size(), obj_size, test + "no new objects");
 
     /* Update queue will have length of this object, plus all other
      * objects "within visual range".  In our case here, it will be 2.
      */
     queue_size = update_pool->queue_size();
-    ASSERT_GT(queue_size, 1);
+    is(queue_size, 2, test + "expected update size");
 
     zone->send_nearby_objects(9876LL);
-    ASSERT_TRUE(zone->game_objects.size() > obj_size);
-    ASSERT_TRUE(update_pool->queue_size() > queue_size);
+    is(zone->game_objects.size(), obj_size + 1, test + "new object");
+    is(update_pool->queue_size(), (queue_size * 2) + 1,
+       test + "expected update size");
 
     delete update_pool;
     delete zone;
+    delete (object_DB *)database;
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(2);
-
-    int gtests = RUN_ALL_TESTS();
+    plan(12);
 
     test_create_simple();
-    return gtests & exit_status();
+    test_create_complex();
+    test_sector_methods();
+    test_send_objects();
+    return exit_status();
 }
