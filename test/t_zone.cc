@@ -7,20 +7,6 @@ using namespace TAP;
 #include "mock_db.h"
 #include "mock_server_globals.h"
 
-int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
-{
-    glm::dvec3 pos(100.0, 100.0, 100.0);
-
-    gom[1234LL] = new GameObject(NULL, NULL, 1234LL);
-    gom[1234LL]->position = pos;
-
-    gom[1235LL] = new GameObject(NULL, NULL, 1235LL);
-    pos.x = 125.0;
-    gom[1235LL]->position = pos;
-
-    return 2;
-}
-
 class object_DB : public fake_DB
 {
   public:
@@ -32,8 +18,17 @@ class object_DB : public fake_DB
 
     virtual int get_server_objects(std::map<uint64_t, GameObject *>& a)
         {
+            glm::dvec3 pos(100.0, 100.0, 100.0);
+
+            a[1234LL] = new GameObject(NULL, NULL, 1234LL);
+            a[1234LL]->position = pos;
+
+            a[1235LL] = new GameObject(NULL, NULL, 1235LL);
+            pos.x = 125.0;
+            a[1235LL]->position = pos;
+
             ++get_server_objects_count;
-            return fake_server_objects(a);
+            return 2;
         };
 };
 
