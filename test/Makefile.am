@@ -166,8 +166,8 @@ t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
 
 t_octree_SOURCES = t_octree.cc \
 	../server/classes/octree.cc ../server/classes/octree.h
-t_octree_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_octree_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+t_octree_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_octree_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
