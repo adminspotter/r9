@@ -1,6 +1,8 @@
-#include "../server/classes/thread_pool.h"
+#include <tap++.h>
 
-#include <iostream>
+using namespace TAP;
+
+#include "../server/classes/thread_pool.h"
 
 #include <gtest/gtest.h>
 
@@ -89,23 +91,28 @@ void *thread_worker(void *arg)
     return NULL;
 }
 
-TEST(ThreadPoolTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     ThreadPool<int> *pool = NULL;
 
-    ASSERT_NO_THROW(
-        {
-            pool = new ThreadPool<int>("test", 1);
-        });
-    ASSERT_TRUE(pool->pool_size() == 0);
-    ASSERT_EQ(pool->clean_on_pop, false);
-    ASSERT_TRUE(pool->startup_arg == NULL);
+    try
+    {
+        pool = new ThreadPool<int>("test", 1);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(pool->pool_size(), 0, test + "expected pool size");
+    is(pool->clean_on_pop, false, test + "expected clean-on-pop");
+    is(pool->startup_arg == NULL, true, test + "expected startup arg");
 
     cond_broadcast_count = mutex_destroy_count = cond_destroy_count = 0;
     delete pool;
-    ASSERT_EQ(cond_broadcast_count, 1);
-    ASSERT_EQ(mutex_destroy_count, 1);
-    ASSERT_EQ(cond_destroy_count, 1);
+    is(cond_broadcast_count, 1, test + "expected cond broadcasts");
+    is(mutex_destroy_count, 1, test + "expected mutex destroys");
+    is(cond_destroy_count, 1, test + "expected cond destroys");
 }
 
 TEST(ThreadPoolTest, MutexInitFailure)
@@ -236,4 +243,15 @@ TEST(ThreadPoolTest, PushPop)
     ASSERT_EQ(buf.baz, 1.234);
 
     delete pool;
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(6);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    return gtests & exit_status();
 }

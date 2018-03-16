@@ -196,7 +196,7 @@ t_stream_worker_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
 	$(SERVER_LDLIBS)
 
 t_threadpool_SOURCES = t_threadpool.cc ../server/classes/thread_pool.h
-t_threadpool_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS)
+t_threadpool_LDADD = $(GTEST_LIBS) $(TAP_LDADD)
 
 t_update_pool_SOURCES = t_update_pool.cc \
 	../server/classes/update_pool.cc ../server/classes/update_pool.h
