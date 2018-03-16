@@ -165,57 +165,79 @@ void test_cond_init_failure(void)
     pthread_cond_init_error = false;
 }
 
-TEST(ThreadPoolTest, StartStop)
+void test_start_stop(void)
 {
+    std::string test = "start/stop: ";
     ThreadPool<int> *pool;
 
-    ASSERT_NO_THROW(
-        {
-            pool = new ThreadPool<int>("go_stop", 2);
-        });
-    ASSERT_TRUE(pool->pool_size() == 0);
+    try
+    {
+        pool = new ThreadPool<int>("go_stop", 2);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(pool->pool_size(), 0, test + "expected pool size");
 
     lock_count = unlock_count = 0;
     pool->startup_arg = (void *)pool;
-    ASSERT_NO_THROW(
-        {
-            pool->start(thread_worker);
-        });
-    ASSERT_TRUE(pool->pool_size() == 2);
-    ASSERT_GT(lock_count, 0);
-    ASSERT_GT(unlock_count, 0);
-    ASSERT_EQ(lock_count, unlock_count);
+    try
+    {
+        pool->start(thread_worker);
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
+    is(pool->pool_size(), 2, test + "expected pool size");
+    is(lock_count > 0, true, test + "performed locks");
+    is(lock_count, unlock_count, test + "unlocked all locks");
 
     join_count = 0;
     pool->stop();
-    ASSERT_TRUE(pool->pool_size() == 0);
-    ASSERT_EQ(join_count, 2);
+    is(pool->pool_size(), 0, test + "expected pool size");
+    is(join_count, 2, test + "expected join count");
 
     delete pool;
 }
 
-TEST(ThreadPoolTest, StartFailure)
+void test_start_failure(void)
 {
+    std::string test = "start failure: ";
     ThreadPool<int> *pool;
 
-    ASSERT_NO_THROW(
-        {
-            pool = new ThreadPool<int>("kaboom", 1);
-        });
-    ASSERT_TRUE(pool->pool_size() == 0);
+    try
+    {
+        pool = new ThreadPool<int>("kaboom", 1);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(pool->pool_size(), 0, test + "expected pool size");
 
     pthread_create_error = true;
     lock_count = unlock_count = 0;
     pool->startup_arg = (void *)pool;
-    ASSERT_THROW(
-        {
-            pool->start(thread_worker);
-        },
-        std::runtime_error);
-    ASSERT_TRUE(pool->pool_size() == 0);
-    ASSERT_GT(lock_count, 0);
-    ASSERT_GT(unlock_count, 0);
-    ASSERT_EQ(lock_count, unlock_count);
+    try
+    {
+        pool->start(thread_worker);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't start"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+    is(pool->pool_size(), 0, test + "expected pool size");
+    is(lock_count > 0, true, test + "performed locks");
+    is(lock_count, unlock_count, test + "unlocked all locks");
 
     delete pool;
     pthread_create_error = false;
@@ -272,12 +294,14 @@ TEST(ThreadPoolTest, PushPop)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(8);
+    plan(19);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_mutex_init_failure();
     test_cond_init_failure();
+    test_start_stop();
+    test_start_failure();
     return gtests & exit_status();
 }
