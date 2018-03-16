@@ -159,8 +159,9 @@ t_log_LDADD = $(TAP_LDADD)
 t_motion_pool_SOURCES = t_motion_pool.cc \
 	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
-t_motion_pool_LDADD = $(GMOCK_MAIN_OBJ) $(GMOCK_LIBS) $(GTEST_LIBS) \
+t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES) \
+	$(TAP_INCLUDES)
+t_motion_pool_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
