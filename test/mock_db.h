@@ -56,7 +56,8 @@ uint64_t get_character_objectid_result = 0LL;
 int open_new_login_result = 0, check_open_login_result = 0;
 int close_open_login_result = 0;
 int get_player_server_skills_count = 0, get_player_server_skills_result = 0;
-int get_server_skills_result = 0, get_server_objects_result = 0;
+int get_server_skills_result = 0;
+int get_server_objects_count = 0, get_server_objects_result = 0;
 
 class fake_DB : public DB
 {
@@ -115,6 +116,7 @@ class fake_DB : public DB
         };
     virtual int get_server_objects(std::map<uint64_t, GameObject *>& a)
         {
+            ++get_server_objects_count;
             return get_server_objects_result;
         };
 };

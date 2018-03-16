@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/zone.h"
 
 #include <gtest/gtest.h>
@@ -36,17 +40,27 @@ class ZoneTest : public ::testing::Test
         };
 };
 
-TEST_F(ZoneTest, CreateSimple)
+void test_create_simple(void)
 {
-    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+    std::string test = "create simple: ";
 
-    ASSERT_NO_THROW(
-        {
-            zone = new Zone(1000, 1, database);
-        });
-    ASSERT_TRUE(zone->game_objects.size() == 0);
+    database = new fake_DB("a", "b", "c", "d");
+
+    get_server_objects_count = 0;
+
+    try
+    {
+        zone = new Zone(1000, 1, database);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(get_server_objects_count, 1, test + "expected objects call");
+    is(zone->game_objects.size(), 0, test + "expected objects size");
 
     delete zone;
+    delete (fake_DB *)database;
 }
 
 TEST_F(ZoneTest, CreateComplex)
@@ -116,3 +130,13 @@ TEST_F(ZoneTest, SendObjects)
     delete zone;
 }
 
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(2);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_simple();
+    return gtests & exit_status();
+}
