@@ -9,14 +9,11 @@
 #include "mock_listensock.h"
 #include "mock_server_globals.h"
 
-using ::testing::_;
-using ::testing::Return;
-
 void register_actions(std::map<uint16_t, action_rec>&);
 void unregister_actions(std::map<uint16_t, action_rec>&);
 int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 
-Library *lib;
+fake_Library *lib;
 std::map<uint64_t, GameObject *> *game_objs;
 mock_listen_socket *listensock;
 int register_count, unregister_count, action_count;
@@ -76,7 +73,14 @@ class ActionPoolTest : public ::testing::Test
         {
             database = new fake_DB("a", "b", "c", "d");
 
-            lib = new mock_Library("doesn't matter");
+            /* The action pool takes control of this library, and
+             * deletes it when the pool is destroyed.  We don't need
+             * to delete it ourselves.
+             */
+            lib = new fake_Library("doesn't matter");
+
+            symbol_count = 0;
+            symbol_result = (void *)register_actions;
 
             game_objs = new std::map<uint64_t, GameObject *>();
             (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
@@ -102,10 +106,6 @@ class ActionPoolTest : public ::testing::Test
  */
 TEST_F(ActionPoolTest, CreateDelete)
 {
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
-
     get_server_skills_count = register_count = unregister_count = 0;
 
     ASSERT_NO_THROW(
@@ -115,32 +115,29 @@ TEST_F(ActionPoolTest, CreateDelete)
     ASSERT_EQ(get_server_skills_count, 1);
     ASSERT_EQ(register_count, 1);
 
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
     ASSERT_EQ(unregister_count, 1);
 }
 
 TEST_F(ActionPoolTest, StartStop)
 {
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
-
     action_pool = new ActionPool(1, *game_objs, lib, database);
     action_pool->start();
     ASSERT_TRUE(action_pool->startup_arg == action_pool);
     ASSERT_TRUE(action_pool->pool_size() == 1);
     action_pool->stop();
     ASSERT_TRUE(action_pool->pool_size() == 0);
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
 }
 
 TEST_F(ActionPoolTest, NoSkill)
 {
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
-
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -160,6 +157,9 @@ TEST_F(ActionPoolTest, NoSkill)
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
 }
 
@@ -167,10 +167,6 @@ TEST_F(ActionPoolTest, InvalidSkill)
 {
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[567] = {567, 5, 0, 0};
-
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -190,6 +186,9 @@ TEST_F(ActionPoolTest, InvalidSkill)
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
 }
 
@@ -197,10 +196,6 @@ TEST_F(ActionPoolTest, WrongObjectId)
 {
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
-
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -220,6 +215,9 @@ TEST_F(ActionPoolTest, WrongObjectId)
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
 }
 
@@ -227,10 +225,6 @@ TEST_F(ActionPoolTest, GoodObjectId)
 {
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
-
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -250,6 +244,9 @@ TEST_F(ActionPoolTest, GoodObjectId)
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
 }
 
@@ -257,10 +254,6 @@ TEST_F(ActionPoolTest, Worker)
 {
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
-
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -287,6 +280,9 @@ TEST_F(ActionPoolTest, Worker)
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
 }
 
