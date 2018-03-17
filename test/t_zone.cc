@@ -138,7 +138,6 @@ void test_send_objects(void)
 
 int main(int argc, char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
     plan(12);
 
     test_create_simple();
