@@ -2,7 +2,6 @@
 #include "../server/classes/game_obj.h"
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "mock_db.h"
 #include "mock_library.h"
@@ -15,7 +14,7 @@ int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 
 fake_Library *lib;
 std::map<uint64_t, GameObject *> *game_objs;
-mock_listen_socket *listensock;
+fake_listen_socket *listensock;
 int register_count, unregister_count, action_count;
 
 struct addrinfo *create_addrinfo(void)
@@ -86,7 +85,7 @@ class ActionPoolTest : public ::testing::Test
             (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
 
             struct addrinfo *addr = create_addrinfo();
-            listensock = new mock_listen_socket(addr);
+            listensock = new fake_listen_socket(addr);
             freeaddrinfo(addr);
         };
 

@@ -70,8 +70,8 @@ endif
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES)
-t_action_pool_LDADD = $(GMOCK_LIBS) $(GTEST_LIBS) \
+t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
+t_action_pool_LDADD = $(GTEST_LIBS) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
@@ -200,9 +200,8 @@ t_threadpool_LDADD = $(TAP_LDADD)
 
 t_update_pool_SOURCES = t_update_pool.cc \
 	../server/classes/update_pool.cc ../server/classes/update_pool.h
-t_update_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES) \
-	$(TAP_INCLUDES)
-t_update_pool_LDADD = $(GTEST_LIBS) $(GMOCK_LIBS) $(TAP_LDADD) \
+t_update_pool_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_update_pool_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 

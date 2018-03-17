@@ -42,7 +42,7 @@ void test_operate(void)
 
     try
     {
-        sock = new mock_listen_socket(ai);
+        sock = new fake_listen_socket(ai);
     }
     catch (...)
     {
