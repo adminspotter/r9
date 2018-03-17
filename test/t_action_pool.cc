@@ -65,37 +65,47 @@ int fake_action(GameObject *a, int b, GameObject *c, glm::dvec3& d)
     return 4;
 }
 
+void setup_fixture(void)
+{
+    database = new fake_DB("a", "b", "c", "d");
+
+    /* The action pool takes control of this library, and
+     * deletes it when the pool is destroyed.  We don't need
+     * to delete it ourselves.
+     */
+    lib = new fake_Library("doesn't matter");
+
+    symbol_count = 0;
+    symbol_result = (void *)register_actions;
+
+    game_objs = new std::map<uint64_t, GameObject *>();
+    (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
+
+    struct addrinfo *addr = create_addrinfo();
+    listensock = new fake_listen_socket(addr);
+    freeaddrinfo(addr);
+}
+
+void cleanup_fixture(void)
+{
+    close(listensock->sock.sock);
+    delete listensock;
+    delete (*game_objs)[9876LL];
+    delete game_objs;
+    delete (fake_DB *)database;
+}
+
 class ActionPoolTest : public ::testing::Test
 {
   protected:
     void SetUp()
         {
-            database = new fake_DB("a", "b", "c", "d");
-
-            /* The action pool takes control of this library, and
-             * deletes it when the pool is destroyed.  We don't need
-             * to delete it ourselves.
-             */
-            lib = new fake_Library("doesn't matter");
-
-            symbol_count = 0;
-            symbol_result = (void *)register_actions;
-
-            game_objs = new std::map<uint64_t, GameObject *>();
-            (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
-
-            struct addrinfo *addr = create_addrinfo();
-            listensock = new fake_listen_socket(addr);
-            freeaddrinfo(addr);
+            setup_fixture();
         };
 
     void TearDown()
         {
-            close(listensock->sock.sock);
-            delete listensock;
-            delete (*game_objs)[9876LL];
-            delete game_objs;
-            delete (fake_DB *)database;
+            cleanup_fixture();
         };
 };
 
