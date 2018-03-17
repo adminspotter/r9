@@ -1,9 +1,9 @@
 /* library.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2014, 14:21:56 trinityquirk
+ *   last updated 17 Mar 2018, 08:17:14 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,6 +32,11 @@
 #include <stdexcept>
 
 #include "library.h"
+
+Library::Library()
+    : libname("none")
+{
+}
 
 Library::Library(const std::string& name)
     : libname(name)

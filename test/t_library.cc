@@ -41,6 +41,45 @@ extern "C" {
     }
 }
 
+int open_count = 0, close_count = 0;
+
+class default_Library : public Library
+{
+  public:
+    default_Library() : Library() {};
+    virtual ~default_Library() {};
+
+    void open(void)
+        {
+            ++open_count;
+        };
+    void close(void)
+        {
+            ++close_count;
+        };
+};
+
+void test_default_constructor(void)
+{
+    std::string test = "default constructor: ";
+    default_Library *lib = NULL;
+
+    try
+    {
+        lib = new default_Library();
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+
+    is(open_count, 0, test + "expected open count");
+
+    delete lib;
+
+    is(close_count, 0, test + "expected close count");
+}
+
 void test_bad_constructor(void)
 {
     std::string test = "constructor failure: ";
@@ -189,8 +228,9 @@ void test_bad_close(void)
 
 int main(int argc, char **argv)
 {
-    plan(8);
+    plan(10);
 
+    test_default_constructor();
     test_bad_constructor();
     test_good_constructor();
     test_missing_symbol();

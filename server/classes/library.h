@@ -1,9 +1,9 @@
 /* library.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jun 2017, 08:05:47 tquirk
+ *   last updated 17 Mar 2018, 08:17:21 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -36,6 +36,9 @@ class Library
   private:
     void *lib;
     std::string libname;
+
+  protected:
+    Library();
 
   public:
     Library(const std::string&);
