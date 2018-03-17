@@ -74,7 +74,7 @@ class ActionPoolTest : public ::testing::Test
   protected:
     void SetUp()
         {
-            database = new mock_DB("a", "b", "c", "d");
+            database = new fake_DB("a", "b", "c", "d");
 
             lib = new mock_Library("doesn't matter");
 
@@ -92,7 +92,7 @@ class ActionPoolTest : public ::testing::Test
             delete listensock;
             delete (*game_objs)[9876LL];
             delete game_objs;
-            delete database;
+            delete (fake_DB *)database;
         };
 };
 
@@ -102,17 +102,17 @@ class ActionPoolTest : public ::testing::Test
  */
 TEST_F(ActionPoolTest, CreateDelete)
 {
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
 
-    register_count = unregister_count = 0;
+    get_server_skills_count = register_count = unregister_count = 0;
 
     ASSERT_NO_THROW(
         {
             action_pool = new ActionPool(1, *game_objs, lib, database);
         });
+    ASSERT_EQ(get_server_skills_count, 1);
     ASSERT_EQ(register_count, 1);
 
     delete action_pool;
@@ -121,7 +121,6 @@ TEST_F(ActionPoolTest, CreateDelete)
 
 TEST_F(ActionPoolTest, StartStop)
 {
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
@@ -139,7 +138,6 @@ TEST_F(ActionPoolTest, NoSkill)
 {
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
 
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
@@ -170,7 +168,6 @@ TEST_F(ActionPoolTest, InvalidSkill)
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[567] = {567, 5, 0, 0};
 
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
@@ -201,7 +198,6 @@ TEST_F(ActionPoolTest, WrongObjectId)
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
@@ -232,7 +228,6 @@ TEST_F(ActionPoolTest, GoodObjectId)
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
@@ -263,7 +258,6 @@ TEST_F(ActionPoolTest, Worker)
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
     EXPECT_CALL(*((mock_Library *)lib), symbol(_))
         .WillOnce(Return((void *)register_actions))
         .WillOnce(Return((void *)unregister_actions));
