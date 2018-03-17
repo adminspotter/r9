@@ -145,8 +145,7 @@ t_listensock_LDADD = $(TAP_LDADD) \
 t_listensock_worker_SOURCES = t_listensock_worker.cc \
 	../server/classes/listensock.cc ../server/classes/listensock.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_listensock_worker_CXXFLAGS = $(CONFIG_DEFS) \
-	$(GMOCK_INCLUDES) $(GTEST_INCLUDES) $(TAP_INCLUDES)
+t_listensock_worker_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
 t_listensock_worker_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
@@ -210,9 +209,8 @@ t_update_pool_LDADD = $(GTEST_LIBS) $(GMOCK_LIBS) $(TAP_LDADD) \
 t_zone_SOURCES = t_zone.cc \
 	../server/classes/zone.cc ../server/classes/zone.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_zone_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES) \
-	$(TAP_INCLUDES)
-t_zone_LDADD = $(GTEST_LIBS) $(GMOCK_LIBS) $(TAP_LDADD) \
+t_zone_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_zone_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 

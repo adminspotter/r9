@@ -1,6 +1,8 @@
 #ifndef __INC_MOCK_ZONE_H__
 #define __INC_MOCK_ZONE_H__
 
+#include <gmock/gmock.h>
+
 #include "../server/classes/zone.h"
 
 class mock_Zone : public Zone
