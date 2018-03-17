@@ -295,3 +295,10 @@ TEST_F(ActionPoolTest, Worker)
     delete bu;
     delete action_pool;
 }
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
+}
