@@ -70,8 +70,8 @@ endif
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_action_pool_LDADD = $(GTEST_LIBS) \
+t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES) $(TAP_INCLUDES)
+t_action_pool_LDADD = $(GTEST_LIBS) $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 

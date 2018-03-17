@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/action_pool.h"
 #include "../server/classes/game_obj.h"
 
@@ -113,21 +117,31 @@ class ActionPoolTest : public ::testing::Test
  * exception when it can't find a symbol, so that's not interesting to
  * test in context of the ActionPool constructor.
  */
-TEST_F(ActionPoolTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
+
+    setup_fixture();
+
     get_server_skills_count = register_count = unregister_count = 0;
 
-    ASSERT_NO_THROW(
-        {
-            action_pool = new ActionPool(1, *game_objs, lib, database);
-        });
-    ASSERT_EQ(get_server_skills_count, 1);
-    ASSERT_EQ(register_count, 1);
+    try
+    {
+        action_pool = new ActionPool(1, *game_objs, lib, database);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(get_server_skills_count, 1, test + "expected skills calls");
+    is(register_count, 1, test + "expected register calls");
 
     symbol_result = (void *)unregister_actions;
 
     delete action_pool;
-    ASSERT_EQ(unregister_count, 1);
+    is(unregister_count, 1, test + "expected unregister calls");
+
+    cleanup_fixture();
 }
 
 TEST_F(ActionPoolTest, StartStop)
@@ -298,6 +312,10 @@ TEST_F(ActionPoolTest, Worker)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
+    plan(3);
 
-    return RUN_ALL_TESTS();
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    return gtests & exit_status();
 }
