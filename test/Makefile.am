@@ -190,8 +190,8 @@ t_stream_LDADD = $(TAP_LDADD) \
 t_stream_worker_SOURCES = t_stream_worker.cc \
 	../server/classes/stream.cc ../server/classes/stream.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_stream_worker_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_stream_worker_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+t_stream_worker_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_stream_worker_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
