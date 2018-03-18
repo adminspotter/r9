@@ -150,41 +150,52 @@ void test_create_delete_stop_error(void)
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, PortType)
+void test_port_type(void)
 {
+    std::string test = "port type: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
 
-    ASSERT_TRUE(sts->port_type() == "stream");
+    is(sts->port_type(), "stream", test + "expected port type");
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, StartStop)
+void test_start_stop(void)
 {
+    std::string test = "start/stop: ";
     config.send_threads = 1;
     config.access_threads = 1;
 
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
 
-    ASSERT_NO_THROW(
-        {
-            sts->start();
-        });
+    try
+    {
+        sts->start();
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
 
-    ASSERT_NO_THROW(
-        {
-            sts->stop();
-        });
+    try
+    {
+        sts->stop();
+    }
+    catch (...)
+    {
+        fail(test + "stop exception");
+    }
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, HandlePacket)
+void test_handle_packet(void)
 {
+    std::string test = "handle_packet: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
     base_user *bu = new base_user(123LL, NULL, sts);
@@ -202,14 +213,15 @@ TEST(StreamSocketTest, HandlePacket)
 
     sts->handle_packet(p, fd);
 
-    ASSERT_NE(bu->timestamp, 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp update");
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, HandleLogin)
+void test_handle_login(void)
 {
+    std::string test = "handle_login: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
     int fd = 99;
@@ -218,29 +230,32 @@ TEST(StreamSocketTest, HandleLogin)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_LOGREQ;
 
-    ASSERT_TRUE(sts->access_pool->queue_size() == 0);
+    is(sts->access_pool->queue_size(), 0,
+       test + "expected access queue size");
 
     stream_socket::handle_login(sts, p, NULL, (void *)&fd);
 
-    ASSERT_TRUE(sts->access_pool->queue_size() != 0);
+    isnt(sts->access_pool->queue_size(), 0,
+         test + "expected access queue size");
     access_list al;
     memset(&al, 0, sizeof(access_list));
     sts->access_pool->pop(&al);
-    ASSERT_EQ(al.buf.basic.type, TYPE_LOGREQ);
-    ASSERT_EQ(al.what.login.who.stream, fd);
+    is(al.buf.basic.type, TYPE_LOGREQ, test + "expected packet type");
+    is(al.what.login.who.stream, fd, test + "expected file descriptor");
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, ConnectUser)
+void test_connect_user(void)
 {
+    std::string test = "connect_user: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
 
-    ASSERT_TRUE(sts->users.size() == 0);
-    ASSERT_TRUE(sts->fds.size() == 0);
-    ASSERT_TRUE(sts->user_fds.size() == 0);
+    is(sts->users.size(), 0, test + "expected user list size");
+    is(sts->fds.size(), 0, test + "expected fds size");
+    is(sts->user_fds.size(), 0, test + "expected user fds size");
 
     base_user *bu = new base_user(123LL, NULL, sts);
 
@@ -255,9 +270,9 @@ TEST(StreamSocketTest, ConnectUser)
 
     sts->connect_user(bu, al);
 
-    ASSERT_TRUE(sts->users.size() == 1);
-    ASSERT_TRUE(sts->fds.size() == 1);
-    ASSERT_TRUE(sts->user_fds.size() == 1);
+    is(sts->users.size(), 1, test + "expected user list size");
+    is(sts->fds.size(), 1, test + "expected fds size");
+    is(sts->user_fds.size(), 1, test + "expected user fds size");
 
     delete sts;
     freeaddrinfo(addr);
@@ -429,11 +444,16 @@ TEST(StreamSocketTest, HandleUsers)
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    plan(0);
+    plan(10);
 
     int gtests = RUN_ALL_TESTS();
 
     test_create_delete();
     test_create_delete_stop_error();
+    test_port_type();
+    test_start_stop();
+    test_handle_packet();
+    test_handle_login();
+    test_connect_user();
     return gtests & exit_status();
 }
