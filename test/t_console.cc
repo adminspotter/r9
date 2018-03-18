@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/modules/console.h"
 
 #include <string.h>
@@ -106,8 +110,9 @@ void send_data_to(short port)
     std::cerr << "freed the addrinfo" << std::endl;
 }
 
-TEST(ConsoleTest, CreateInet)
+void test_create_inet(void)
 {
+    std::string test = "create inet console: ";
     struct addrinfo hints, *ai;
     int ret;
     Console *con;
@@ -117,22 +122,27 @@ TEST(ConsoleTest, CreateInet)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
-    ASSERT_NO_THROW(
-        {
-            con = new Console(ai);
-        });
-    ASSERT_STREQ(con->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(con->sa->port(), 1235);
-    ASSERT_GE(con->sock, 0);
+    try
+    {
+        con = new Console(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(con->sa->ntop(), "127.0.0.1", 10), 0, test + "expected address");
+    is(con->sa->port(), 1235, test + "expected port");
+    is(con->sock >= 0, true, test + "expected socket descriptor");
 
     delete(con);
     freeaddrinfo(ai);
 }
 
-TEST(ConsoleTest, CreateFactory)
+void test_create_factory(void)
 {
+    std::string test = "create factory: ";
     struct addrinfo hints, *ai;
     int ret;
     Console *con;
@@ -143,13 +153,17 @@ TEST(ConsoleTest, CreateFactory)
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1234", &hints, &ai);
 
-    ASSERT_NO_THROW(
-        {
-            con = console_create(ai);
-        });
-    ASSERT_STREQ(con->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(con->sa->port(), 1234);
-    ASSERT_GE(con->sock, 0);
+    try
+    {
+        con = console_create(ai);
+    }
+    catch (...)
+    {
+        fail(test + "factory exception");
+    }
+    is(strncmp(con->sa->ntop(), "127.0.0.1", 10), 0, test + "expected address");
+    is(con->sa->port(), 1234, test + "expected port");
+    is(con->sock >= 0, true, test + "expected socket descriptor");
 
     console_destroy(con);
     freeaddrinfo(ai);
@@ -218,4 +232,16 @@ TEST(ConsoleTest, InetListener)
 
     delete(con);
     freeaddrinfo(ai);
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(7);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_inet();
+    test_create_factory();
+    return gtests & exit_status();
 }
