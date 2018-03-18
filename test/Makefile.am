@@ -118,8 +118,8 @@ t_dgram_LDADD = $(TAP_LDADD) \
 t_dgram_worker_SOURCES = t_dgram_worker.cc \
 	../server/classes/dgram.cc ../server/classes/dgram.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_dgram_worker_CXXFLAGS = $(CONFIG_DEFS) $(GTEST_INCLUDES)
-t_dgram_worker_LDADD = $(GTEST_MAIN_OBJ) $(GTEST_LIBS) \
+t_dgram_worker_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_dgram_worker_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
