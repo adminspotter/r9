@@ -1,13 +1,4 @@
-GMOCK_DIR = gmock-1.7.0
-
-SUBDIRS = tap++ $(GMOCK_DIR) .
-
-GTEST_INCLUDES = -I$(GMOCK_DIR)/gtest/include
-GMOCK_INCLUDES = -I$(GMOCK_DIR)/include
-GTEST_LIBS = $(GMOCK_DIR)/gtest/lib/libgtest.la
-GMOCK_LIBS = $(GMOCK_DIR)/lib/libgmock.la $(GTEST_LIBS)
-GTEST_MAIN_OBJ = $(GMOCK_DIR)/gtest/src/gtest_main.o
-GMOCK_MAIN_OBJ = $(GMOCK_DIR)/src/gmock_main.o
+SUBDIRS = tap++ .
 
 TAP_INCLUDES = -Itap++
 TAP_LDADD = tap++/libtap++.la
@@ -49,6 +40,8 @@ if WANT_CLIENT
 	t_configdata
 endif
 
+TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+	$(top_srcdir)/build-aux/tap-driver.sh
 TESTS = $(TC)
 
 check_PROGRAMS = $(TC)
@@ -60,7 +53,7 @@ install-exec-local:
 	@echo "Nothing to install"
 	false
 
-AM_CXXFLAGS = $(GMOCK_INCLUDES) $(GTEST_INCLUDES) $(TAP_INCLUDES)
+AM_CXXFLAGS = $(TAP_INCLUDES)
 
 CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
 if HAVE_LIBWRAP
@@ -136,8 +129,7 @@ t_library_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 t_listensock_SOURCES = t_listensock.cc \
 	../server/classes/listensock.cc ../server/classes/listensock.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_listensock_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES) \
-	$(TAP_INCLUDES)
+t_listensock_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
 t_listensock_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
@@ -158,8 +150,7 @@ t_log_LDADD = $(TAP_LDADD)
 t_motion_pool_SOURCES = t_motion_pool.cc \
 	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES) \
-	$(TAP_INCLUDES)
+t_motion_pool_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
 t_motion_pool_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
