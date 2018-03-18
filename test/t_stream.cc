@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/stream.h"
 #include "../server/classes/config_data.h"
 
@@ -99,35 +103,49 @@ ssize_t read(int a, void *b, size_t c)
     return sizeof(ack_packet);
 }
 
-TEST(StreamSocketTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts;
 
-    ASSERT_NO_THROW(
-        {
-            sts = new stream_socket(addr);
-        });
+    try
+    {
+        sts = new stream_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, CreateDeleteStopError)
+void test_create_delete_stop_error(void)
 {
+    std::string test = "create/delete w/stop error:";
     struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts;
 
-    ASSERT_NO_THROW(
-        {
-            sts = new test_stream_socket(addr);
-        });
+    try
+    {
+        sts = new test_stream_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     stop_error = true;
-    ASSERT_NO_THROW(
-        {
-            delete sts;
-        });
+    try
+    {
+        delete sts;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
     stop_error = false;
     freeaddrinfo(addr);
 }
@@ -406,4 +424,16 @@ TEST(StreamSocketTest, HandleUsers)
 
     delete sts;
     freeaddrinfo(addr);
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(0);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    test_create_delete_stop_error();
+    return gtests & exit_status();
 }
