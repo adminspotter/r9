@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/dgram.h"
 
 #include <gtest/gtest.h>
@@ -44,45 +48,60 @@ struct addrinfo *create_addrinfo(void)
     return addr;
 }
 
-TEST(DgramSocketTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs;
 
-    ASSERT_NO_THROW(
-        {
-            dgs = new dgram_socket(addr);
-        });
+    try
+    {
+        dgs = new dgram_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     delete dgs;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, CreateDeleteStopError)
+void test_create_delete_stop_error(void)
 {
+    std::string test = "create/delete w/stop error: ";
     struct addrinfo *addr = create_addrinfo();
     test_dgram_socket *dgs;
 
-    ASSERT_NO_THROW(
-        {
-            dgs = new test_dgram_socket(addr);
-        });
+    try
+    {
+        dgs = new test_dgram_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     stop_error = true;
-    ASSERT_NO_THROW(
-        {
-            delete dgs;
-        });
+    try
+    {
+        delete dgs;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
     stop_error = false;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, PortType)
+void test_port_type(void)
 {
+    std::string test = "port type: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
 
-    ASSERT_TRUE(dgs->port_type() == "datagram");
+    is(dgs->port_type(), "datagram", test + "expected port type");
 
     delete dgs;
     freeaddrinfo(addr);
@@ -230,4 +249,17 @@ TEST(DgramSocketTest, HandleLogin)
     delete sa;
     delete dgs;
     freeaddrinfo(addr);
+}
+
+GTEST_API_ int main(int argc, char **argv)
+{
+    testing::InitGoogleTest(&argc, argv);
+    plan(1);
+
+    int gtests = RUN_ALL_TESTS();
+
+    test_create_delete();
+    test_create_delete_stop_error();
+    test_port_type();
+    return gtests & exit_status();
 }
