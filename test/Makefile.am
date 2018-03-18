@@ -215,7 +215,7 @@ t_zone_LDADD = $(TAP_LDADD) \
 
 t_perl_SOURCES = t_perl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
-t_perl_LDADD = $(GTEST_LIBS) $(SERVER_LDLIBS)
+t_perl_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
