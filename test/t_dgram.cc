@@ -1,12 +1,10 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/dgram.h"
 
-#include <gtest/gtest.h>
-
-#include "mock_db.h"
 #include "mock_server_globals.h"
-
-using ::testing::_;
-using ::testing::Return;
 
 bool stop_error = false;
 
@@ -48,58 +46,74 @@ struct addrinfo *create_addrinfo(void)
     return addr;
 }
 
-TEST(DgramSocketTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs;
 
-    ASSERT_NO_THROW(
-        {
-            dgs = new dgram_socket(addr);
-        });
+    try
+    {
+        dgs = new dgram_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     delete dgs;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, CreateDeleteStopError)
+void test_create_delete_stop_error(void)
 {
+    std::string test = "create/delete w/stop error: ";
     struct addrinfo *addr = create_addrinfo();
     test_dgram_socket *dgs;
 
-    ASSERT_NO_THROW(
-        {
-            dgs = new test_dgram_socket(addr);
-        });
+    try
+    {
+        dgs = new test_dgram_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     stop_error = true;
-    ASSERT_NO_THROW(
-        {
-            delete dgs;
-        });
+    try
+    {
+        delete dgs;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
     stop_error = false;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, PortType)
+void test_port_type(void)
 {
+    std::string test = "port type: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
 
-    ASSERT_TRUE(dgs->port_type() == "datagram");
+    is(dgs->port_type(), "datagram", test + "expected port type");
 
     delete dgs;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, ConnectUser)
+void test_connect_user(void)
 {
+    std::string test = "connect_user: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
 
-    ASSERT_TRUE(dgs->users.size() == 0);
-    ASSERT_TRUE(dgs->socks.size() == 0);
-    ASSERT_TRUE(dgs->user_socks.size() == 0);
+    is(dgs->users.size(), 0, test + "expected user list size");
+    is(dgs->socks.size(), 0, test + "expected socks size");
+    is(dgs->user_socks.size(), 0, test + "expected user socks size");
 
     base_user *bu = new base_user(123LL, NULL, dgs);
 
@@ -114,16 +128,17 @@ TEST(DgramSocketTest, ConnectUser)
 
     dgs->connect_user(bu, al);
 
-    ASSERT_TRUE(dgs->users.size() == 1);
-    ASSERT_TRUE(dgs->socks.size() == 1);
-    ASSERT_TRUE(dgs->user_socks.size() == 1);
+    is(dgs->users.size(), 1, test + "expected user list size");
+    is(dgs->socks.size(), 1, test + "expected socks size");
+    is(dgs->user_socks.size(), 1, test + "expected user socks size");
 
     delete dgs;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, DisconnectUser)
+void test_disconnect_user(void)
 {
+    std::string test = "disconnect_user: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
     base_user *bu = new base_user(123LL, NULL, dgs);
@@ -137,23 +152,24 @@ TEST(DgramSocketTest, DisconnectUser)
     dgs->socks[sa] = bu;
     dgs->user_socks[bu->userid] = sa;
 
-    ASSERT_TRUE(dgs->users.size() == 1);
-    ASSERT_TRUE(dgs->socks.size() == 1);
-    ASSERT_TRUE(dgs->user_socks.size() == 1);
+    is(dgs->users.size(), 1, test + "expected user list size");
+    is(dgs->socks.size(), 1, test + "expected socks size");
+    is(dgs->user_socks.size(), 1, test + "expected user socks size");
 
     dgs->disconnect_user(bu);
 
-    ASSERT_TRUE(dgs->users.size() == 0);
-    ASSERT_TRUE(dgs->socks.size() == 0);
-    ASSERT_TRUE(dgs->user_socks.size() == 0);
+    is(dgs->users.size(), 0, test + "expected user list size");
+    is(dgs->socks.size(), 0, test + "expected socks size");
+    is(dgs->user_socks.size(), 0, test + "expected user socks size");
 
     delete bu;
     delete dgs;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, HandlePacketUnknown)
+void test_handle_packet_unknown(void)
 {
+    std::string test = "handle_packet w/unknown packet type: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
     struct sockaddr_in sin;
@@ -176,8 +192,9 @@ TEST(DgramSocketTest, HandlePacketUnknown)
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, HandlePacket)
+void test_handle_packet(void)
 {
+    std::string test = "handle_packet: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
     base_user *bu = new base_user(123LL, NULL, dgs);
@@ -199,14 +216,15 @@ TEST(DgramSocketTest, HandlePacket)
 
     dgs->handle_packet(p, sa);
 
-    ASSERT_NE(bu->timestamp, 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp");
 
     delete dgs;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, HandleLogin)
+void test_handle_login(void)
 {
+    std::string test = "handle_login: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
     struct sockaddr_in sin;
@@ -219,19 +237,37 @@ TEST(DgramSocketTest, HandleLogin)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_LOGREQ;
 
-    ASSERT_TRUE(dgs->access_pool->queue_size() == 0);
+    is(dgs->access_pool->queue_size(), 0,
+       test + "expected access queue size");
 
     dgram_socket::handle_login(dgs, p, NULL, sa);
 
-    ASSERT_TRUE(dgs->access_pool->queue_size() != 0);
+    isnt(dgs->access_pool->queue_size(), 0,
+         test + "expected access queue size");
     access_list al;
     memset(&al, 0, sizeof(access_list));
     dgs->access_pool->pop(&al);
-    ASSERT_EQ(al.buf.basic.type, TYPE_LOGREQ);
-    ASSERT_TRUE((void *)al.what.login.who.dgram != (void *)sa);
+    is(al.buf.basic.type, TYPE_LOGREQ, test + "expected packet type");
+    is((void *)al.what.login.who.dgram != (void *)sa, true,
+       test + "expected packet target");
 
     delete al.what.login.who.dgram;
     delete sa;
     delete dgs;
     freeaddrinfo(addr);
+}
+
+int main(int argc, char **argv)
+{
+    plan(18);
+
+    test_create_delete();
+    test_create_delete_stop_error();
+    test_port_type();
+    test_connect_user();
+    test_disconnect_user();
+    test_handle_packet_unknown();
+    test_handle_packet();
+    test_handle_login();
+    return exit_status();
 }

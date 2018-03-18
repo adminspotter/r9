@@ -1,12 +1,14 @@
-#include "../server/classes/listensock.h"
+#include <tap++.h>
+
+using namespace TAP;
+
+#include "../server/classes/socket.h"
 #include "../server/classes/dgram.h"
 #include "../server/classes/stream.h"
 
-#include <gtest/gtest.h>
+#include <stdexcept>
 
 #include "mock_server_globals.h"
-
-listen_socket *socket_create(struct addrinfo *);
 
 struct addrinfo *create_addrinfo(int type)
 {
@@ -33,8 +35,9 @@ struct addrinfo *create_addrinfo(int type)
     return addr;
 }
 
-TEST(SocketCreateTest, Unix)
+void test_unix(void)
 {
+    std::string test = "unix: ";
     struct sockaddr_un sun;
     struct addrinfo addr;
 
@@ -51,41 +54,73 @@ TEST(SocketCreateTest, Unix)
 
     listen_socket *listen = NULL;
 
-    ASSERT_THROW(
-        {
-            listen = socket_create(&addr);
-        },
-        std::runtime_error);
+    try
+    {
+        listen = socket_create(&addr);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("not supported"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
 }
 
-TEST(SocketCreateTest, Stream)
+void test_stream(void)
 {
+    std::string test = "stream: ";
     struct addrinfo *addr = create_addrinfo(SOCK_STREAM);
     listen_socket *listen = NULL;
 
-    ASSERT_NO_THROW(
-        {
-            listen = socket_create(addr);
-        });
+    try
+    {
+        listen = socket_create(addr);
+    }
+    catch (...)
+    {
+        fail(test + "create exception");
+    }
 
-    ASSERT_TRUE(dynamic_cast<stream_socket *>(listen) != NULL);
+    is(dynamic_cast<stream_socket *>(listen) != NULL, true,
+       test + "expected type");
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(SocketCreateTest, Dgram)
+void test_dgram(void)
 {
+    std::string test = "dgram: ";
     struct addrinfo *addr = create_addrinfo(SOCK_DGRAM);
     listen_socket *listen = NULL;
 
-    ASSERT_NO_THROW(
-        {
-            listen = socket_create(addr);
-        });
+    try
+    {
+        listen = socket_create(addr);
+    }
+    catch (...)
+    {
+        fail(test + "create exception");
+    }
 
-    ASSERT_TRUE(dynamic_cast<dgram_socket *>(listen) != NULL);
+    is(dynamic_cast<dgram_socket *>(listen) != NULL, true,
+       test + "expected type");
 
     delete listen;
     freeaddrinfo(addr);
+}
+
+int main(int argc, char **argv)
+{
+    plan(3);
+
+    test_unix();
+    test_stream();
+    test_dgram();
+    return exit_status();
 }

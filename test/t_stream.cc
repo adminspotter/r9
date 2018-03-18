@@ -1,7 +1,9 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/stream.h"
 #include "../server/classes/config_data.h"
-
-#include <gtest/gtest.h>
 
 #include "mock_server_globals.h"
 
@@ -99,74 +101,99 @@ ssize_t read(int a, void *b, size_t c)
     return sizeof(ack_packet);
 }
 
-TEST(StreamSocketTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts;
 
-    ASSERT_NO_THROW(
-        {
-            sts = new stream_socket(addr);
-        });
+    try
+    {
+        sts = new stream_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, CreateDeleteStopError)
+void test_create_delete_stop_error(void)
 {
+    std::string test = "create/delete w/stop error:";
     struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts;
 
-    ASSERT_NO_THROW(
-        {
-            sts = new test_stream_socket(addr);
-        });
+    try
+    {
+        sts = new test_stream_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     stop_error = true;
-    ASSERT_NO_THROW(
-        {
-            delete sts;
-        });
+    try
+    {
+        delete sts;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
     stop_error = false;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, PortType)
+void test_port_type(void)
 {
+    std::string test = "port type: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
 
-    ASSERT_TRUE(sts->port_type() == "stream");
+    is(sts->port_type(), "stream", test + "expected port type");
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, StartStop)
+void test_start_stop(void)
 {
+    std::string test = "start/stop: ";
     config.send_threads = 1;
     config.access_threads = 1;
 
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
 
-    ASSERT_NO_THROW(
-        {
-            sts->start();
-        });
+    try
+    {
+        sts->start();
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
 
-    ASSERT_NO_THROW(
-        {
-            sts->stop();
-        });
+    try
+    {
+        sts->stop();
+    }
+    catch (...)
+    {
+        fail(test + "stop exception");
+    }
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, HandlePacket)
+void test_handle_packet(void)
 {
+    std::string test = "handle_packet: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
     base_user *bu = new base_user(123LL, NULL, sts);
@@ -184,14 +211,15 @@ TEST(StreamSocketTest, HandlePacket)
 
     sts->handle_packet(p, fd);
 
-    ASSERT_NE(bu->timestamp, 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp update");
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, HandleLogin)
+void test_handle_login(void)
 {
+    std::string test = "handle_login: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
     int fd = 99;
@@ -200,29 +228,32 @@ TEST(StreamSocketTest, HandleLogin)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_LOGREQ;
 
-    ASSERT_TRUE(sts->access_pool->queue_size() == 0);
+    is(sts->access_pool->queue_size(), 0,
+       test + "expected access queue size");
 
     stream_socket::handle_login(sts, p, NULL, (void *)&fd);
 
-    ASSERT_TRUE(sts->access_pool->queue_size() != 0);
+    isnt(sts->access_pool->queue_size(), 0,
+         test + "expected access queue size");
     access_list al;
     memset(&al, 0, sizeof(access_list));
     sts->access_pool->pop(&al);
-    ASSERT_EQ(al.buf.basic.type, TYPE_LOGREQ);
-    ASSERT_EQ(al.what.login.who.stream, fd);
+    is(al.buf.basic.type, TYPE_LOGREQ, test + "expected packet type");
+    is(al.what.login.who.stream, fd, test + "expected file descriptor");
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, ConnectUser)
+void test_connect_user(void)
 {
+    std::string test = "connect_user: ";
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
 
-    ASSERT_TRUE(sts->users.size() == 0);
-    ASSERT_TRUE(sts->fds.size() == 0);
-    ASSERT_TRUE(sts->user_fds.size() == 0);
+    is(sts->users.size(), 0, test + "expected user list size");
+    is(sts->fds.size(), 0, test + "expected fds size");
+    is(sts->user_fds.size(), 0, test + "expected user fds size");
 
     base_user *bu = new base_user(123LL, NULL, sts);
 
@@ -237,16 +268,17 @@ TEST(StreamSocketTest, ConnectUser)
 
     sts->connect_user(bu, al);
 
-    ASSERT_TRUE(sts->users.size() == 1);
-    ASSERT_TRUE(sts->fds.size() == 1);
-    ASSERT_TRUE(sts->user_fds.size() == 1);
+    is(sts->users.size(), 1, test + "expected user list size");
+    is(sts->fds.size(), 1, test + "expected fds size");
+    is(sts->user_fds.size(), 1, test + "expected user fds size");
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, DisconnectUser)
+void test_disconnect_user(void)
 {
+    std::string test = "disconnect_user: ";
     struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts = new test_stream_socket(addr);
     base_user *bu = new base_user(123LL, NULL, sts);
@@ -258,53 +290,62 @@ TEST(StreamSocketTest, DisconnectUser)
     sts->max_fd = fd + 1;
     FD_SET(fd, &sts->master_readfs);
 
-    ASSERT_TRUE(sts->users.size() == 1);
-    ASSERT_TRUE(sts->fds.size() == 1);
-    ASSERT_TRUE(sts->user_fds.size() == 1);
+    is(sts->users.size(), 1, test + "expected user list size");
+    is(sts->fds.size(), 1, test + "expected fds size");
+    is(sts->user_fds.size(), 1, test + "expected user fds size");
 
     sts->disconnect_user(bu);
 
-    ASSERT_TRUE(sts->users.size() == 0);
-    ASSERT_TRUE(sts->fds.size() == 0);
-    ASSERT_TRUE(sts->user_fds.size() == 0);
-    ASSERT_EQ(sts->max_fd, fd);
-    ASSERT_TRUE(!FD_ISSET(fd, &sts->master_readfs));
+    is(sts->users.size(), 0, test + "expected user list size");
+    is(sts->fds.size(), 0, test + "expected fds size");
+    is(sts->user_fds.size(), 0, test + "expected user fds size");
+    is(sts->max_fd, fd, test + "expected max fd");
+    is(!FD_ISSET(fd, &sts->master_readfs), true,
+       test + "fd not in select set");
 
     delete bu;
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, SelectFdSet)
+void test_select_fd_set(void)
 {
+    std::string test = "select_fd_set: ", st;
     int retval;
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
+
+    st = "select EINTR failure: ";
 
     select_failure = true;
     select_eintr = true;
     retval = sts->select_fd_set();
 
-    ASSERT_EQ(retval, -1);
-    ASSERT_EQ(errno, EINTR);
+    is(retval, -1, test + st + "expected return value");
+    is(errno, EINTR, test + st + "expected errno");
+
+    st = "other select failure: ";
 
     select_eintr = false;
     retval = sts->select_fd_set();
 
-    ASSERT_EQ(retval, -1);
-    ASSERT_EQ(errno, EINVAL);
+    is(retval, -1, test + st + "expected return value");
+    is(errno, EINVAL, test + st + "expected errno");
+
+    st = "success: ";
 
     select_failure = false;
     retval = sts->select_fd_set();
 
-    ASSERT_EQ(retval, 0);
+    is(retval, 0, test + st + "expected return value");
 
     delete sts;
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, AcceptNewConnection)
+void test_accept_new_connection(void)
 {
+    std::string test = "accept_new_connection: ";
     config.use_linger = 123;
     config.use_keepalive = true;
 
@@ -316,13 +357,14 @@ TEST(StreamSocketTest, AcceptNewConnection)
     sts->accept_new_connection();
 
     /* Our fake accept() returns 99 */
-    ASSERT_TRUE(sts->fds.find(99) != sts->fds.end());
-    ASSERT_TRUE(sts->fds[99] == NULL);
-    ASSERT_TRUE(FD_ISSET(99, &sts->master_readfs));
-    ASSERT_EQ(sts->max_fd, 100);
+    isnt(sts->fds.find(99), sts->fds.end(), test + "found descriptor");
+    is(sts->fds[99] == NULL, true, test + "descriptor is not null");
+    isnt(FD_ISSET(99, &sts->master_readfs), 0,
+         test + "descriptor in select set");
+    is(sts->max_fd, 100, test + "expected max descriptor");
 
-    ASSERT_EQ(linger_valid, true);
-    ASSERT_EQ(keepalive_valid, true);
+    is(linger_valid, true, test + "expected linger setting");
+    is(keepalive_valid, true, test + "expected keeaplive setting");
 
     /* Attempts to mock out ioctl have failed, so we won't worry about
      * that setting, and will have no assertion for it.
@@ -332,8 +374,9 @@ TEST(StreamSocketTest, AcceptNewConnection)
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, HandleUsersBadPacket)
+void test_handle_users_bad_packet(void)
 {
+    std::string test = "handle_users w/bad packet: ";
     struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts = new test_stream_socket(addr);
     base_user *bu = new base_user(123LL, NULL, sts);
@@ -351,7 +394,7 @@ TEST(StreamSocketTest, HandleUsersBadPacket)
 
     sts->handle_users();
 
-    ASSERT_EQ(bu->timestamp, 0);
+    is(bu->timestamp, 0, test + "no timestamp update");
 
     read_bad_packet = false;
 
@@ -359,8 +402,9 @@ TEST(StreamSocketTest, HandleUsersBadPacket)
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, HandleUsersReadError)
+void test_handle_users_read_error(void)
 {
+    std::string test = "handle_users w/read error: ";
     struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts = new test_stream_socket(addr);
     base_user *bu = new base_user(123LL, NULL, sts);
@@ -376,8 +420,9 @@ TEST(StreamSocketTest, HandleUsersReadError)
 
     sts->handle_users();
 
-    ASSERT_EQ(bu->pending_logout, true);
-    ASSERT_TRUE(!FD_ISSET(fd, &sts->master_readfs));
+    is(bu->pending_logout, true, test + "user is logging out");
+    is(!FD_ISSET(fd, &sts->master_readfs), true,
+       test + "descriptor not in select set");
 
     read_nothing = false;
 
@@ -385,8 +430,9 @@ TEST(StreamSocketTest, HandleUsersReadError)
     freeaddrinfo(addr);
 }
 
-TEST(StreamSocketTest, HandleUsers)
+void test_handle_users(void)
 {
+    std::string test = "handle_users: ";
     struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts = new test_stream_socket(addr);
     base_user *bu = new base_user(123LL, NULL, sts);
@@ -402,8 +448,28 @@ TEST(StreamSocketTest, HandleUsers)
 
     sts->handle_users();
 
-    ASSERT_NE(bu->timestamp, 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp update");
 
     delete sts;
     freeaddrinfo(addr);
+}
+
+int main(int argc, char **argv)
+{
+    plan(35);
+
+    test_create_delete();
+    test_create_delete_stop_error();
+    test_port_type();
+    test_start_stop();
+    test_handle_packet();
+    test_handle_login();
+    test_connect_user();
+    test_disconnect_user();
+    test_select_fd_set();
+    test_accept_new_connection();
+    test_handle_users_bad_packet();
+    test_handle_users_read_error();
+    test_handle_users();
+    return exit_status();
 }

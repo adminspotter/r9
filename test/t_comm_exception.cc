@@ -1,7 +1,9 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../client/comm.h"
 #include "../client/object.h"
-
-#include <gtest/gtest.h>
 
 ObjectCache *obj;
 struct object *self_obj;
@@ -40,7 +42,7 @@ int socket(int a, int b, int c)
         errno = EINVAL;
         return -1;
     }
-    return 123;
+    return 0;
 }
 
 int pthread_mutex_init(pthread_mutex_t *a, const pthread_mutexattr_t *b)
@@ -97,90 +99,173 @@ int pthread_cond_broadcast(pthread_cond_t *a)
     return 0;
 }
 
-TEST(CommTest, SocketFailure)
+void test_socket_failure(void)
 {
+    std::string test = "socket failure: ";
     Comm *obj = NULL;
     struct addrinfo a;
 
     socket_error = true;
-    ASSERT_THROW(
-        {
-            obj = new Comm(&a);
-        },
-        std::runtime_error);
+    try
+    {
+        obj = new Comm(&a);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't open socket"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+
     socket_error = false;
 }
 
-TEST(CommTest, MutexFailure)
+void test_mutex_failure(void)
 {
+    std::string test = "mutex failure: ";
     Comm *obj = NULL;
     struct addrinfo a;
+    struct sockaddr_storage s;
+    a.ai_addr = (struct sockaddr *)&s;
 
     mutex_error = true;
-    ASSERT_THROW(
-        {
-            obj = new Comm(&a);
-        },
-        std::runtime_error);
+    try
+    {
+        obj = new Comm(&a);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't init queue mutex"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+
     mutex_error = false;
 }
 
-TEST(CommTest, CondFailure)
+void test_cond_failure(void)
 {
+    std::string test = "cond failure: ";
     Comm *obj = NULL;
     struct addrinfo a;
+    struct sockaddr_storage s;
+    a.ai_addr = (struct sockaddr *)&s;
 
     cond_error = true;
-    ASSERT_THROW(
-        {
-            obj = new Comm(&a);
-        },
-        std::runtime_error);
+    try
+    {
+        obj = new Comm(&a);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't init queue-not-empty cond"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     cond_error = false;
 }
 
-TEST(CommTest, StartFailure)
+void test_start_failure(void)
 {
+    std::string test = "start failure: ", st;
     Comm *obj = NULL;
     struct addrinfo a;
+    struct sockaddr_storage s;
+    a.ai_addr = (struct sockaddr *)&s;
 
+    st = "create send: ";
     create_send_error = true;
     cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
         = create_calls = 0;
-    ASSERT_NO_THROW(
-        {
-            obj = new Comm(&a);
-        });
-    ASSERT_THROW(
-        {
-            obj->start();
-        },
-        std::runtime_error);
-    ASSERT_EQ(cancel_calls, 0);
-    ASSERT_EQ(join_calls, 0);
-    ASSERT_EQ(cond_destroy_calls, 1);
-    ASSERT_EQ(mutex_destroy_calls, 1);
+    try
+    {
+        obj = new Comm(&a);
+    }
+    catch (...)
+    {
+        fail(test + st + "constructor exception");
+    }
+
+    try
+    {
+        obj->start();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't start send thread"), std::string::npos,
+             test + st + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + st + "wrong error type");
+    }
+    is(cancel_calls, 0, test + st + "expected cancels");
+    is(join_calls, 0, test + st + "expected joins");
+    is(cond_destroy_calls, 1, test + st + "expected cond destroys");
+    is(mutex_destroy_calls, 1, test + st + "expected mutex destroys");
+
+    st = "create recv: ";
     create_send_error = false;
     create_recv_error = true;
     cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
         = create_calls = 0;
-    ASSERT_THROW(
-        {
-            obj->start();
-        },
-        std::runtime_error);
-    ASSERT_EQ(cancel_calls, 1);
-    ASSERT_EQ(join_calls, 1);
-    ASSERT_EQ(cond_destroy_calls, 1);
-    ASSERT_EQ(mutex_destroy_calls, 1);
+    try
+    {
+        obj->start();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't start recv thread"), std::string::npos,
+             test + st + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + st + "wrong error type");
+    }
+    is(cancel_calls, 1, test + st + "expected cancels");
+    is(join_calls, 1, test + st + "expected joins");
+    is(cond_destroy_calls, 1, test + st + "expected cond destroys");
+    is(mutex_destroy_calls, 1, test + st + "expected mutex destroys");
+
+    st = "cleanup destruction: ";
     create_recv_error = false;
     cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
         = create_calls = 0;
     delete obj;
-    ASSERT_EQ(cancel_calls, 1);
-    ASSERT_EQ(join_calls, 2);
-    ASSERT_EQ(cond_destroy_calls, 1);
-    ASSERT_EQ(mutex_destroy_calls, 1);
+    is(cancel_calls, 1, test + st + "expected cancels");
+    is(join_calls, 2, test + st + "expected joins");
+    is(cond_destroy_calls, 1, test + st + "expected cond destroys");
+    is(mutex_destroy_calls, 1, test + st + "expected mutex destroys");
     cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
         = create_calls = 0;
+}
+
+int main(int argc, char **argv)
+{
+    plan(17);
+
+    test_socket_failure();
+    test_mutex_failure();
+    test_cond_failure();
+    test_start_failure();
+    return exit_status();
 }

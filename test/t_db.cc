@@ -1,6 +1,10 @@
-#include "../server/classes/modules/db.h"
+#include <tap++.h>
 
-#include <gtest/gtest.h>
+using namespace TAP;
+
+#include <stdexcept>
+
+#include "../server/classes/modules/db.h"
 
 bool gethostname_failure = false, getaddrinfo_failure = false;
 bool ntop_failure = false;
@@ -105,52 +109,101 @@ class fake_DB : public DB
         };
 };
 
-TEST(DBTest, BadGethostbyname)
+void test_bad_gethostbyname(void)
 {
+    std::string test = "bad gethostbyname: ";
     fake_DB *database;
 
     gethostname_failure = true;
-    ASSERT_THROW(
-        {
-            database = new fake_DB("a", "b", "c", "d");
-        },
-        std::runtime_error);
+    try
+    {
+        database = new fake_DB("a", "b", "c", "d");
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't get hostname"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     gethostname_failure = false;
 }
 
-TEST(DBTest, BadGetaddrinfo)
+void test_bad_getaddrinfo(void)
 {
+    std::string test = "bad getaddrinfo: ";
     fake_DB *database;
 
     getaddrinfo_failure = true;
-    ASSERT_THROW(
-        {
-            database = new fake_DB("a", "b", "c", "d");
-        },
-        std::runtime_error);
+    try
+    {
+        database = new fake_DB("a", "b", "c", "d");
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't get address"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     getaddrinfo_failure = false;
 }
 
-TEST(DBTest, BadNtop)
+void test_bad_ntop(void)
 {
+    std::string test = "bad ntop: ";
     fake_DB *database;
 
     ntop_failure = true;
-    ASSERT_THROW(
-        {
-            database = new fake_DB("a", "b", "c", "d");
-        },
-        std::runtime_error);
+    try
+    {
+        database = new fake_DB("a", "b", "c", "d");
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't convert IP"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     ntop_failure = false;
 }
 
-TEST(DBTest, Success)
+void test_success(void)
 {
+    std::string test = "success: ";
     fake_DB *database;
 
-    ASSERT_NO_THROW(
-        {
-            database = new fake_DB("a", "b", "c", "d");
-        });
+    try
+    {
+        database = new fake_DB("a", "b", "c", "d");
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
     delete database;
+}
+
+int main(int argc, char **argv)
+{
+    plan(3);
+
+    test_bad_gethostbyname();
+    test_bad_getaddrinfo();
+    test_bad_ntop();
+    test_success();
+    return exit_status();
 }

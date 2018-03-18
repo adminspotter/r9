@@ -1,24 +1,22 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/action_pool.h"
 #include "../server/classes/game_obj.h"
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "mock_db.h"
 #include "mock_library.h"
 #include "mock_listensock.h"
 #include "mock_server_globals.h"
 
-using ::testing::_;
-using ::testing::Return;
-
 void register_actions(std::map<uint16_t, action_rec>&);
 void unregister_actions(std::map<uint16_t, action_rec>&);
 int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 
-Library *lib;
+fake_Library *lib;
 std::map<uint64_t, GameObject *> *game_objs;
-mock_listen_socket *listensock;
+fake_listen_socket *listensock;
 int register_count, unregister_count, action_count;
 
 struct addrinfo *create_addrinfo(void)
@@ -69,80 +67,95 @@ int fake_action(GameObject *a, int b, GameObject *c, glm::dvec3& d)
     return 4;
 }
 
-class ActionPoolTest : public ::testing::Test
+void setup_fixture(void)
 {
-  protected:
-    void SetUp()
-        {
-            database = new mock_DB("a", "b", "c", "d");
+    database = new fake_DB("a", "b", "c", "d");
 
-            lib = new mock_Library("doesn't matter");
+    /* The action pool takes control of this library, and
+     * deletes it when the pool is destroyed.  We don't need
+     * to delete it ourselves.
+     */
+    lib = new fake_Library("doesn't matter");
 
-            game_objs = new std::map<uint64_t, GameObject *>();
-            (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
+    symbol_count = 0;
+    symbol_result = (void *)register_actions;
 
-            struct addrinfo *addr = create_addrinfo();
-            listensock = new mock_listen_socket(addr);
-            freeaddrinfo(addr);
-        };
+    game_objs = new std::map<uint64_t, GameObject *>();
+    (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
 
-    void TearDown()
-        {
-            close(listensock->sock.sock);
-            delete listensock;
-            delete (*game_objs)[9876LL];
-            delete game_objs;
-            delete database;
-        };
-};
+    struct addrinfo *addr = create_addrinfo();
+    listensock = new fake_listen_socket(addr);
+    freeaddrinfo(addr);
+}
+
+void cleanup_fixture(void)
+{
+    close(listensock->sock.sock);
+    delete listensock;
+    delete (*game_objs)[9876LL];
+    delete game_objs;
+    delete (fake_DB *)database;
+}
 
 /* In testing the library itself, we know that it will throw an
  * exception when it can't find a symbol, so that's not interesting to
  * test in context of the ActionPool constructor.
  */
-TEST_F(ActionPoolTest, CreateDelete)
+void test_create_delete(void)
 {
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
+    std::string test = "create/delete: ";
 
-    register_count = unregister_count = 0;
+    setup_fixture();
 
-    ASSERT_NO_THROW(
-        {
-            action_pool = new ActionPool(1, *game_objs, lib, database);
-        });
-    ASSERT_EQ(register_count, 1);
+    get_server_skills_count = register_count = unregister_count = 0;
+
+    try
+    {
+        action_pool = new ActionPool(1, *game_objs, lib, database);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(get_server_skills_count, 1, test + "expected skills calls");
+    is(register_count, 1, test + "expected register calls");
+
+    symbol_result = (void *)unregister_actions;
 
     delete action_pool;
-    ASSERT_EQ(unregister_count, 1);
+    is(unregister_count, 1, test + "expected unregister calls");
+
+    cleanup_fixture();
 }
 
-TEST_F(ActionPoolTest, StartStop)
+void test_start_stop(void)
 {
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
+    std::string test = "start/stop: ";
+
+    setup_fixture();
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
     action_pool->start();
-    ASSERT_TRUE(action_pool->startup_arg == action_pool);
-    ASSERT_TRUE(action_pool->pool_size() == 1);
+    is(action_pool->startup_arg == action_pool, true,
+       test + "expected startup arg");
+    is(action_pool->pool_size(), 1, test + "expected pool size");
     action_pool->stop();
-    ASSERT_TRUE(action_pool->pool_size() == 0);
+    is(action_pool->pool_size(), 0, test + "expected pool size");
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
+
+    cleanup_fixture();
 }
 
-TEST_F(ActionPoolTest, NoSkill)
+void test_no_skill(void)
 {
-    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    std::string test = "no skill: ";
 
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
+    setup_fixture();
+
+    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -158,22 +171,26 @@ TEST_F(ActionPoolTest, NoSkill)
     action_count = 0;
 
     action_pool->execute_action(bu, pkt);
-    ASSERT_EQ(action_count, 0);
+    is(action_count, 0, test + "expected action count");
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
+
+    cleanup_fixture();
 }
 
-TEST_F(ActionPoolTest, InvalidSkill)
+void test_invalid_skill(void)
 {
+    std::string test = "invalid skill: ";
+
+    setup_fixture();
+
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[567] = {567, 5, 0, 0};
-
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -189,22 +206,26 @@ TEST_F(ActionPoolTest, InvalidSkill)
     action_count = 0;
 
     action_pool->execute_action(bu, pkt);
-    ASSERT_EQ(action_count, 1);
+    is(action_count, 1, test + "expected action count");
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
+
+    cleanup_fixture();
 }
 
-TEST_F(ActionPoolTest, WrongObjectId)
+void test_wrong_object_id(void)
 {
+    std::string test = "wrong object id: ";
+
+    setup_fixture();
+
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
-
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -220,22 +241,26 @@ TEST_F(ActionPoolTest, WrongObjectId)
     action_count = 0;
 
     action_pool->execute_action(bu, pkt);
-    ASSERT_EQ(action_count, 0);
+    is(action_count, 0, test + "expected action count");
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
+
+    cleanup_fixture();
 }
 
-TEST_F(ActionPoolTest, GoodObjectId)
+void test_good_object_id(void)
 {
+    std::string test = "good object id: ";
+
+    setup_fixture();
+
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
-
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -251,22 +276,26 @@ TEST_F(ActionPoolTest, GoodObjectId)
     action_count = 0;
 
     action_pool->execute_action(bu, pkt);
-    ASSERT_EQ(action_count, 1);
+    is(action_count, 1, test + "expected action count");
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
+
+    cleanup_fixture();
 }
 
-TEST_F(ActionPoolTest, Worker)
+void test_worker(void)
 {
+    std::string test = "worker: ";
+
+    setup_fixture();
+
     base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
     bu->actions[789] = {789, 5, 0, 0};
-
-    EXPECT_CALL(*((mock_DB *)database), get_server_skills(_));
-    EXPECT_CALL(*((mock_Library *)lib), symbol(_))
-        .WillOnce(Return((void *)register_actions))
-        .WillOnce(Return((void *)unregister_actions));
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -289,9 +318,28 @@ TEST_F(ActionPoolTest, Worker)
         ;
 
     action_pool->stop();
-    ASSERT_EQ(action_count, 1);
+    is(action_count, 1, test + "expected action count");
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
     delete action_pool;
+
+    cleanup_fixture();
+}
+
+int main(int argc, char **argv)
+{
+    plan(11);
+
+    test_create_delete();
+    test_start_stop();
+    test_no_skill();
+    test_invalid_skill();
+    test_wrong_object_id();
+    test_good_object_id();
+    test_worker();
+    return exit_status();
 }

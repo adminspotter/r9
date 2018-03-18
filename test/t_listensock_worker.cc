@@ -1,15 +1,15 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/listensock.h"
 #include "../server/classes/config_data.h"
 
 #include <stdlib.h>
 #include <unistd.h>
-#include <gtest/gtest.h>
 
 #include "mock_db.h"
 #include "mock_server_globals.h"
-
-using ::testing::_;
-using ::testing::Return;
 
 int sleep_count;
 
@@ -56,8 +56,9 @@ class test_listen_socket : public listen_socket
         };
 };
 
-TEST(ListenSocketTest, ReaperWorker)
+void test_reaper_worker(void)
 {
+    std::string test = "reaper worker: ";
     config.send_threads = 1;
     config.access_threads = 1;
 
@@ -88,9 +89,10 @@ TEST(ListenSocketTest, ReaperWorker)
 
     listen->stop();
 
-    ASSERT_GE(sleep_count, 1);
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
-    ASSERT_TRUE(listen->users.size() == 1);
+    is(sleep_count >= 1, true, test + "expected sleep count");
+    is(listen->send_pool->queue_size() > 0, true,
+       test + "expected send queue size");
+    is(listen->users.size(), 1, test + "expected user list size");
 
     delete bu;
     delete gob;
@@ -98,15 +100,16 @@ TEST(ListenSocketTest, ReaperWorker)
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, AccessWorker)
+void test_access_worker(void)
 {
+    std::string test = "access worker: ";
     config.send_threads = 1;
     config.access_threads = 1;
 
-    database = new mock_DB("a", "b", "c", "d");
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
-        .WillOnce(Return(0LL));
+    check_authentication_count = 0;
+    check_authentication_result = 0LL;
 
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new test_listen_socket(addr);
@@ -121,7 +124,8 @@ TEST(ListenSocketTest, AccessWorker)
     req.what.logout.who = 123LL;
     listen->access_pool->push(req);
 
-    ASSERT_TRUE(listen->access_pool->queue_size() == 2);
+    is(listen->access_pool->queue_size(), 2,
+       test + "expected access queue size");
 
     listen->start();
 
@@ -130,9 +134,21 @@ TEST(ListenSocketTest, AccessWorker)
 
     listen->stop();
 
-    ASSERT_TRUE(listen->access_pool->queue_size() == 0);
+    is(check_authentication_count > 0, true,
+       test + "expected authentication count");
+    is(listen->access_pool->queue_size(), 0,
+       test + "expected access queue size");
 
     delete listen;
     freeaddrinfo(addr);
     delete database;
+}
+
+int main(int argc, char **argv)
+{
+    plan(6);
+
+    test_reaper_worker();
+    test_access_worker();
+    return exit_status();
 }

@@ -1,6 +1,10 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/modules/r9tcl.h"
 
-#include <gtest/gtest.h>
+#include <stdexcept>
 
 #include "mock_server_globals.h"
 
@@ -12,13 +16,32 @@ Tcl_Interp *Tcl_CreateInterp(void)
     return NULL;
 }
 
-TEST(TclTest, ConstructorFailure)
+void test_constructor_failure(void)
 {
+    std::string test = "constructor failure: ";
     TclLanguage *tcl;
 
-    ASSERT_THROW(
-        {
-            tcl = new TclLanguage();
-        },
-        std::runtime_error);
+    try
+    {
+        tcl = new TclLanguage();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't create tcl interpreter"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+}
+
+int main(int argc, char **argv)
+{
+    plan(1);
+
+    test_constructor_failure();
+    return exit_status();
 }

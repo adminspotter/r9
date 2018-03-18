@@ -1,7 +1,9 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/stream.h"
 #include "../server/classes/config_data.h"
-
-#include <gtest/gtest.h>
 
 #include "mock_server_globals.h"
 
@@ -84,8 +86,9 @@ int hton_packet(packet *p, size_t s)
     return 1;
 }
 
-TEST(StreamSocketTest, ListenWorker)
+void test_listen_worker(void)
 {
+    std::string test = "listen worker: ";
     config.send_threads = 1;
     config.access_threads = 1;
 
@@ -123,8 +126,9 @@ TEST(StreamSocketTest, ListenWorker)
  *   - one that fails to send
  *   - one that sends correctly
  */
-TEST(StreamSocketTest, SendWorker)
+void test_send_worker(void)
 {
+    std::string test = "send worker: ";
     config.send_threads = 1;
     config.access_threads = 1;
 
@@ -159,4 +163,13 @@ TEST(StreamSocketTest, SendWorker)
 
     delete sts;
     freeaddrinfo(addr);
+}
+
+int main(int argc, char **argv)
+{
+    plan(0);
+
+    test_listen_worker();
+    test_send_worker();
+    return exit_status();
 }

@@ -1,9 +1,9 @@
 /* configdata.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Sep 2016, 19:30:13 tquirk
+ *   last updated 03 Mar 2018, 17:57:22 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -54,11 +54,11 @@ class ConfigData
 
     void set_defaults(void);
 
-    void parse_command_line(int, char **);
+    void parse_command_line(int, const char **);
     void read_config_file(void);
     void write_config_file(void);
 
-  private:
+  protected:
     void make_config_dirs(void);
     void parse_config_line(std::string&);
 };

@@ -1,4 +1,6 @@
-#include <gtest/gtest.h>
+#include <tap++.h>
+
+using namespace TAP;
 
 #include <config.h>
 #include "../server/classes/library.h"
@@ -15,50 +17,70 @@ Language *(*create_language)(void);
 std::string (*execute_language)(Language *, const std::string&);
 void (*destroy_language)(Language *);
 
-TEST(PerlTest, GoodConstructor)
+void test_good_constructor(void)
 {
+    std::string test = "good constructor: ";
     Language *lang = NULL;
 
-    ASSERT_NO_THROW(
-        {
-            lang = create_language();
-        });
-    ASSERT_TRUE(lang != NULL);
+    try
+    {
+        lang = create_language();
+    }
+    catch (...)
+    {
+        fail(test + "create exception");
+    }
+    is(lang != NULL, true, test + "language object created");
 
-    ASSERT_NO_THROW(
-        {
-            destroy_language(lang);
-        });
+    try
+    {
+        destroy_language(lang);
+    }
+    catch (...)
+    {
+        fail(test + "destroy exception");
+    }
 }
 
-TEST(PerlTest, RunScript)
+void test_run_script(void)
 {
+    std::string test = "run script: ";
     Language *lang = NULL;
 
-    ASSERT_NO_THROW(
-        {
-            lang = create_language();
-        });
-    ASSERT_TRUE(lang != NULL);
+    try
+    {
+        lang = create_language();
+    }
+    catch (...)
+    {
+        fail(test + "create exception");
+    }
+    is(lang != NULL, true, test + "language object created");
 
     std::string str = "sub power { my ($base, $exp) = @_; $result = 1; while ($exp > 0) { $result *= $base; --$exp; } return $result; } print power(2, 8);";
-    ASSERT_NO_THROW(
-        {
-            str = execute_language(lang, str);
-        });
-    ASSERT_FALSE(strcmp(str.c_str(), "256"));
+    try
+    {
+        str = execute_language(lang, str);
+    }
+    catch (...)
+    {
+        fail(test + "execute exception");
+    }
+    is(strcmp(str.c_str(), "256"), 0, test + "expected result");
 
-    ASSERT_NO_THROW(
-        {
-            destroy_language(lang);
-        });
+    try
+    {
+        destroy_language(lang);
+    }
+    catch (...)
+    {
+        fail(test + "destroy exception");
+    }
 }
 
-GTEST_API_ int main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    int retval;
-
-    testing::InitGoogleTest(&argc, argv);
+    plan(3);
 
     /* Load up the perl lib and fetch the symbols */
     Library *lib = new Library(PERL_MOD);
@@ -66,8 +88,10 @@ GTEST_API_ int main(int argc, char **argv)
     execute_language = (std::string (*)(Language *, const std::string &))lib->symbol("lang_execute");
     destroy_language = (void (*)(Language *))lib->symbol("destroy_language");
 
-    retval = RUN_ALL_TESTS();
+    test_good_constructor();
+    test_run_script();
+
     delete lib;
 
-    return retval;
+    return exit_status();
 }

@@ -1,8 +1,10 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/thread_pool.h"
 
-#include <iostream>
-
-#include <gtest/gtest.h>
+#include <stdexcept>
 
 bool pthread_mutex_init_error = false, pthread_cond_init_error = false;
 bool pthread_create_error = false;
@@ -89,118 +91,168 @@ void *thread_worker(void *arg)
     return NULL;
 }
 
-TEST(ThreadPoolTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     ThreadPool<int> *pool = NULL;
 
-    ASSERT_NO_THROW(
-        {
-            pool = new ThreadPool<int>("test", 1);
-        });
-    ASSERT_TRUE(pool->pool_size() == 0);
-    ASSERT_EQ(pool->clean_on_pop, false);
-    ASSERT_TRUE(pool->startup_arg == NULL);
+    try
+    {
+        pool = new ThreadPool<int>("test", 1);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(pool->pool_size(), 0, test + "expected pool size");
+    is(pool->clean_on_pop, false, test + "expected clean-on-pop");
+    is(pool->startup_arg == NULL, true, test + "expected startup arg");
 
     cond_broadcast_count = mutex_destroy_count = cond_destroy_count = 0;
     delete pool;
-    ASSERT_EQ(cond_broadcast_count, 1);
-    ASSERT_EQ(mutex_destroy_count, 1);
-    ASSERT_EQ(cond_destroy_count, 1);
+    is(cond_broadcast_count, 1, test + "expected cond broadcasts");
+    is(mutex_destroy_count, 1, test + "expected mutex destroys");
+    is(cond_destroy_count, 1, test + "expected cond destroys");
 }
 
-TEST(ThreadPoolTest, MutexInitFailure)
+void test_mutex_init_failure(void)
 {
+    std::string test = "mutex init failure: ";
     ThreadPool<int> *pool = NULL;
 
     pthread_mutex_init_error = true;
-    ASSERT_THROW(
-        {
-            pool = new ThreadPool<int>("rut-roh", 1);
-        },
-        std::runtime_error);
+    try
+    {
+        pool = new ThreadPool<int>("rut-roh", 1);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("queue mutex"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     pthread_mutex_init_error = false;
 }
 
-TEST(ThreadPoolTest, CondInitFailure)
+void test_cond_init_failure(void)
 {
+    std::string test = "cond init failure: ";
     ThreadPool<int> *pool = NULL;
 
     pthread_cond_init_error = true;
-    ASSERT_THROW(
-        {
-            pool = new ThreadPool<int>("oh-noes", 1);
-        },
-        std::runtime_error);
+    try
+    {
+        pool = new ThreadPool<int>("oh-noes", 1);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("queue not-empty cond"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     pthread_cond_init_error = false;
 }
 
-TEST(ThreadPoolTest, StartStop)
+void test_start_stop(void)
 {
+    std::string test = "start/stop: ";
     ThreadPool<int> *pool;
 
-    ASSERT_NO_THROW(
-        {
-            pool = new ThreadPool<int>("go_stop", 2);
-        });
-    ASSERT_TRUE(pool->pool_size() == 0);
+    try
+    {
+        pool = new ThreadPool<int>("go_stop", 2);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(pool->pool_size(), 0, test + "expected pool size");
 
     lock_count = unlock_count = 0;
     pool->startup_arg = (void *)pool;
-    ASSERT_NO_THROW(
-        {
-            pool->start(thread_worker);
-        });
-    ASSERT_TRUE(pool->pool_size() == 2);
-    ASSERT_GT(lock_count, 0);
-    ASSERT_GT(unlock_count, 0);
-    ASSERT_EQ(lock_count, unlock_count);
+    try
+    {
+        pool->start(thread_worker);
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
+    is(pool->pool_size(), 2, test + "expected pool size");
+    is(lock_count > 0, true, test + "performed locks");
+    is(lock_count, unlock_count, test + "unlocked all locks");
 
     join_count = 0;
     pool->stop();
-    ASSERT_TRUE(pool->pool_size() == 0);
-    ASSERT_EQ(join_count, 2);
+    is(pool->pool_size(), 0, test + "expected pool size");
+    is(join_count, 2, test + "expected join count");
 
     delete pool;
 }
 
-TEST(ThreadPoolTest, StartFailure)
+void test_start_failure(void)
 {
+    std::string test = "start failure: ";
     ThreadPool<int> *pool;
 
-    ASSERT_NO_THROW(
-        {
-            pool = new ThreadPool<int>("kaboom", 1);
-        });
-    ASSERT_TRUE(pool->pool_size() == 0);
+    try
+    {
+        pool = new ThreadPool<int>("kaboom", 1);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(pool->pool_size(), 0, test + "expected pool size");
 
     pthread_create_error = true;
     lock_count = unlock_count = 0;
     pool->startup_arg = (void *)pool;
-    ASSERT_THROW(
-        {
-            pool->start(thread_worker);
-        },
-        std::runtime_error);
-    ASSERT_TRUE(pool->pool_size() == 0);
-    ASSERT_GT(lock_count, 0);
-    ASSERT_GT(unlock_count, 0);
-    ASSERT_EQ(lock_count, unlock_count);
+    try
+    {
+        pool->start(thread_worker);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't start"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+    is(pool->pool_size(), 0, test + "expected pool size");
+    is(lock_count > 0, true, test + "performed locks");
+    is(lock_count, unlock_count, test + "unlocked all locks");
 
     delete pool;
     pthread_create_error = false;
 }
 
-TEST(ThreadPoolTest, Grow)
+void test_grow(void)
 {
+    std::string test = "grow: ";
     ThreadPool<int> *pool = new ThreadPool<int>("grow", 5);
 
     pthread_create_error = false;
     pool->startup_arg = (void *)pool;
     pool->start(thread_worker);
-    ASSERT_TRUE(pool->pool_size() == 5);
+    is(pool->pool_size(), 5, test + "expected pool size");
 
     pool->grow(8);
-    ASSERT_TRUE(pool->pool_size() == 8);
+    is(pool->pool_size(), 8, test + "expected pool size");
 
     delete pool;
 }
@@ -213,27 +265,44 @@ typedef struct
 }
 test_type;
 
-TEST(ThreadPoolTest, PushPop)
+void test_push_pop(void)
 {
+    std::string test = "push/pop: ", st;
     ThreadPool<test_type> *pool = new ThreadPool<test_type>("push-pop", 1);
     test_type req = {1, 'a', 1.234}, buf;
 
+    st = "push: ";
+
     lock_count = signal_count = unlock_count = 0;
     pool->push(req);
-    ASSERT_GT(lock_count, 0);
-    ASSERT_GT(unlock_count, 0);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_EQ(signal_count, 1);
+    is(lock_count > 0, true, test + st + "performed locks");
+    is(lock_count, unlock_count, test + st + "unlocked all locks");
+    is(signal_count, 1, test + st + "expected signal count");
+
+    st = "pop: ";
 
     lock_count = unlock_count = 0;
     pool->clean_on_pop = true;
     pool->pop(&buf);
-    ASSERT_GT(lock_count, 0);
-    ASSERT_GT(unlock_count, 0);
-    ASSERT_EQ(lock_count, unlock_count);
-    ASSERT_EQ(buf.foo, 1);
-    ASSERT_EQ(buf.bar, 'a');
-    ASSERT_EQ(buf.baz, 1.234);
+    is(lock_count > 0, true, test + st + "performed locks");
+    is(lock_count, unlock_count, test + st + "unlocked all locks");
+    is(buf.foo, 1, test + st + "expected test foo");
+    is(buf.bar, 'a', test + st + "expected test bar");
+    is(buf.baz, 1.234, test + st + "expected test baz");
 
     delete pool;
+}
+
+int main(int argc, char **argv)
+{
+    plan(29);
+
+    test_create_delete();
+    test_mutex_init_failure();
+    test_cond_init_failure();
+    test_start_stop();
+    test_start_failure();
+    test_grow();
+    test_push_pop();
+    return exit_status();
 }

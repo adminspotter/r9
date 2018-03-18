@@ -10,3 +10,4 @@ exclude_paths:
 - test/
 - intl/
 - m4/
+- build-aux/

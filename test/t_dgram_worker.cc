@@ -1,7 +1,9 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/dgram.h"
 #include "../server/classes/config_data.h"
-
-#include <gtest/gtest.h>
 
 #include "mock_server_globals.h"
 
@@ -24,7 +26,6 @@ ssize_t recvfrom(int sockfd,
     packet *pkt = (packet *)buf;
     struct sockaddr_in *sin = (struct sockaddr_in *)src_addr;
 
-    std::cerr << stage << std::endl;
     switch (stage++)
     {
       case 0:
@@ -129,19 +130,24 @@ struct addrinfo *create_addrinfo(void)
     return addr;
 }
 
-TEST(DgramSocketTest, ListenWorker)
+void test_listen_worker(void)
 {
+    std::string test = "listen worker: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
     void *retval;
 
     main_loop_exit_flag = 0;
 
-    ASSERT_NO_THROW(
-        {
-            retval = dgram_socket::dgram_listen_worker((void *)dgs);
-        });
-    ASSERT_TRUE(retval == NULL);
+    try
+    {
+        retval = dgram_socket::dgram_listen_worker((void *)dgs);
+    }
+    catch (...)
+    {
+        fail(test + "worker exception");
+    }
+    is(retval == NULL, true, test + "expected return value");
 
     delete dgs;
     freeaddrinfo(addr);
@@ -154,8 +160,9 @@ TEST(DgramSocketTest, ListenWorker)
  *   - one that fails to send
  *   - one that sends correctly
  */
-TEST(DgramSocketTest, SendWorker)
+void test_send_worker(void)
 {
+    std::string test = "send worker: ";
     config.send_threads = 1;
     config.access_threads = 1;
 
@@ -181,13 +188,20 @@ TEST(DgramSocketTest, SendWorker)
     dgs->send_pool->push(pl);
     dgs->send_pool->push(pl);
     dgs->send_pool->push(pl);
-    std::cerr << "about to start" << std::endl;
     dgs->start();
 
     while (sendto_stage < 1)
         ;
 
-    std::cerr << "about to delete" << std::endl;
     delete dgs;
     freeaddrinfo(addr);
+}
+
+int main(int argc, char **argv)
+{
+    plan(1);
+
+    test_listen_worker();
+    test_send_worker();
+    return exit_status();
 }

@@ -5,6 +5,7 @@ AC_PREREQ([2.63])
 AC_INIT([Revision9], [0.1], [], [r9], [])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE([-Wall subdir-objects foreign])
 
@@ -360,7 +361,7 @@ CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
 LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
 LIBS="$LIBS $PROFILE_LDLIBS"
 
-AC_CONFIG_SUBDIRS([test/gmock-1.7.0 client/cuddly-gl])
+AC_CONFIG_SUBDIRS([client/cuddly-gl])
 
 # Checks for header files.
 AC_CHECK_HEADERS([architecture/byte_order.h arpa/inet.h byteswap.h endian.h execinfo.h fcntl.h grp.h inttypes.h limits.h netdb.h netinet/in.h pwd.h signal.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/resource.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
@@ -433,6 +434,8 @@ AC_CONFIG_FILES([Makefile
                  server/classes/Makefile
                  server/classes/actions/Makefile
                  server/classes/modules/Makefile
-                 test/Makefile])
+                 test/Makefile
+                 test/tap++/Makefile])
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AC_OUTPUT

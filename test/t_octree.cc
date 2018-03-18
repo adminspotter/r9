@@ -1,53 +1,70 @@
-#include "../server/classes/octree.h"
+#include <tap++.h>
 
-#include <gtest/gtest.h>
+using namespace TAP;
+
+#include "../server/classes/octree.h"
 
 #include "mock_server_globals.h"
 
-TEST(OctreeTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     Octree *tree = NULL;
     glm::dvec3 min = {0.0, 0.0, 0.0}, max = {100.0, 100.0, 100.0};
 
-    ASSERT_NO_THROW(
-        {
-            tree = new Octree(NULL, min, max, 0);
-        });
+    try
+    {
+        tree = new Octree(NULL, min, max, 0);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
-    ASSERT_EQ(tree->min_point, min);
-    ASSERT_EQ(tree->max_point, max);
+    is(tree->min_point == min, true, test + "expected min point");
+    is(tree->max_point == max, true, test + "expected max point");
 
-    ASSERT_NO_THROW(
-        {
-            delete tree;
-        });
+    try
+    {
+        delete tree;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
 }
 
-TEST(OctreeTest, BuildEmptyList)
+void test_build_empty_list(void)
 {
+    std::string test = "build w/empty list: ";
     std::list<GameObject *> objs;
     glm::dvec3 min = {0.0, 0.0, 0.0}, max = {100.0, 100.0, 100.0};
     Octree *tree = new Octree(NULL, min, max, 0);
 
-    ASSERT_NO_THROW(
-        {
-            tree->build(objs);
-        });
+    try
+    {
+        tree->build(objs);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
-    ASSERT_TRUE(tree->empty() == true);
+    is(tree->empty(), true, test + "expected empty");
 
     Octree *sub = tree->octants[0];
-    ASSERT_TRUE(sub != NULL);
+    is(sub != NULL, true, test + "expected subtree");
     while (sub->octants[0] != NULL)
         sub = sub->octants[0];
-    ASSERT_EQ(sub->parent_index, 0);
-    ASSERT_EQ(sub->depth, Octree::MIN_DEPTH);
+    is(sub->parent_index, 0, test + "expected parent index");
+    is(sub->depth, Octree::MIN_DEPTH, test + "expected depth");
 
     delete tree;
 }
 
-TEST(OctreeTest, Build)
+void test_build(void)
 {
+    std::string test = "build: ";
     glm::dvec3 obj_center = {0.01, 0.01, 0.01};
     std::list<GameObject *> objs;
 
@@ -87,24 +104,37 @@ TEST(OctreeTest, Build)
     glm::dvec3 min = {0.0, 0.0, 0.0}, max = {100.0, 100.0, 100.0};
     Octree *tree = new Octree(NULL, min, max, 0);
 
-    ASSERT_NO_THROW(
-        {
-            tree->build(objs);
-        });
+    try
+    {
+        tree->build(objs);
+    }
+    catch (...)
+    {
+        fail(test + "build exception");
+    }
 
-    ASSERT_TRUE(tree->empty() == false);
+    is(tree->empty(), false, test + "expected empty");
 
     Octree *sub = tree->octants[0];
-    ASSERT_TRUE(sub != NULL);
+    is(sub != NULL, true, test + "expected subtree");
     while (sub->octants[0] != NULL)
         sub = sub->octants[0];
-    ASSERT_EQ(sub->parent_index, 0);
-    std::cerr << "depth is " << sub->depth << std::endl;
-    ASSERT_EQ(sub->depth, Octree::MAX_DEPTH);
+    is(sub->parent_index, 0, test + "expected parent index");
+    is(sub->depth, Octree::MAX_DEPTH, test + "expected depth");
 
     delete tree;
     delete go4;
     delete go3;
     delete go2;
     delete go1;
+}
+
+int main(int argc, char **argv)
+{
+    plan(10);
+
+    test_create_delete();
+    test_build_empty_list();
+    test_build();
+    return exit_status();
 }

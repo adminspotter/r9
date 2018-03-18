@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Feb 2018, 07:28:26 tquirk
+ *   last updated 10 Mar 2018, 08:55:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -277,7 +277,7 @@ void Comm::handle_srvnot(packet& p)
 
 void Comm::handle_unsupported(packet& p)
 {
-    std::clog << "Got an unexpected packet type: " << p.basic.type
+    std::clog << "Got an unexpected packet type: " << (int)p.basic.type
               << std::endl;
 }
 

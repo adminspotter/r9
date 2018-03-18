@@ -1,15 +1,12 @@
-#include "../server/classes/listensock.h"
+#include <tap++.h>
 
-#include <gtest/gtest.h>
+using namespace TAP;
+
+#include "../server/classes/listensock.h"
 
 #include "mock_db.h"
 #include "mock_server_globals.h"
 #include "mock_zone.h"
-
-using ::testing::_;
-using ::testing::A;
-using ::testing::Return;
-using ::testing::Invoke;
 
 bool create_error = false, cancel_error = false, join_error = false;
 int create_count, cancel_count, join_count;
@@ -78,102 +75,160 @@ int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
     return 2;
 }
 
-TEST(BaseUserTest, CreateDelete)
+void test_base_user_create_delete(void)
 {
+    std::string test = "base_user create/delete: ";
     base_user *base = NULL;
 
-    ASSERT_NO_THROW(
-        {
-            base = new base_user(0LL, NULL, NULL);
-        });
-    ASSERT_EQ(base->userid, 0LL);
-    ASSERT_EQ(base->pending_logout, false);
+    try
+    {
+        base = new base_user(0LL, NULL, NULL);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(base->userid, 0LL, test + "expected userid");
+    is(base->pending_logout, false, test + "expected logout");
 
     delete base;
 }
 
-TEST(BaseUserTest, LessThan)
+void test_base_user_less_than(void)
 {
+    std::string test = "base_user less: ";
     base_user *base1 = new base_user(123LL, NULL, NULL);
     base_user *base2 = new base_user(124LL, NULL, NULL);
 
-    ASSERT_TRUE(*base1 < *base2);
+    is(*base1 < *base2, true, test + "object less than object");
 
     delete base2;
     delete base1;
 }
 
-TEST(BaseUserTest, EqualTo)
+void test_base_user_equal_to(void)
 {
+    std::string test = "base_user equal: ";
     base_user *base1 = new base_user(123LL, NULL, NULL);
     base_user *base2 = new base_user(124LL, NULL, NULL);
 
-    ASSERT_FALSE(*base1 == *base2);
+    is(*base1 == *base2, false, test + "objects not equal");
 
     delete base2;
     delete base1;
 }
 
-TEST(BaseUserTest, Assignment)
+void test_base_user_assignment(void)
 {
+    std::string test = "base_user assign: ";
     base_user *base1 = new base_user(123LL, NULL, NULL);
     base_user *base2 = new base_user(124LL, NULL, NULL);
 
-    ASSERT_FALSE(*base1 == *base2);
+    is(*base1 == *base2, false, test + "objects not equal");
 
     *base1 = *base2;
 
-    ASSERT_TRUE(*base1 == *base2);
+    is(*base1 == *base2, true, test + "objects equal");
 
     delete base2;
     delete base1;
 }
 
-TEST(BaseUserTest, DisconnectOnDestroy)
+void test_base_user_disconnect_on_destroy(void)
 {
+    std::string test = "base_user disconnect: ";
     base_user *base = NULL;
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
     base = new base_user(123LL, go, NULL);
-    ASSERT_TRUE(go->natures.size() == 0);
+    is(go->natures.size(), 0, test + "expected natures size");
 
     delete base;
-    ASSERT_TRUE(go->natures.size() == 2);
-    ASSERT_TRUE(go->natures.find("invisible") != go->natures.end());
-    ASSERT_TRUE(go->natures.find("non-interactive") != go->natures.end());
+    is(go->natures.size(), 2, test + "expected natures size");
+    isnt(go->natures.find("invisible"), go->natures.end(),
+         test + "added invisible nature");
+    isnt(go->natures.find("non-interactive"), go->natures.end(),
+         test + "added non-interactive nature");
     delete go;
 }
 
-TEST(ListenSocketTest, CreateDelete)
+void test_base_user_send_ping(void)
 {
+    std::string test = "base_user send_ping: ";
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen;
+    listen_socket *listen = new listen_socket(addr);
 
-    ASSERT_NO_THROW(
-        {
-            listen = new listen_socket(addr);
-        });
-    /* Thread pools should not be started */
-    ASSERT_TRUE(listen->send_pool->pool_size() == 0);
-    ASSERT_TRUE(listen->access_pool->pool_size() == 0);
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[123LL] = bu;
+
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    bu->send_ping();
+
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(DgramSocketTest, PortType)
+void test_base_user_send_ack(void)
 {
+    std::string test = "base_user send_ack: ";
     struct addrinfo *addr = create_addrinfo();
-    listen_socket *dgs = new listen_socket(addr);
+    listen_socket *listen = new listen_socket(addr);
 
-    ASSERT_TRUE(dgs->port_type() == "listen");
+    base_user *bu = new base_user(123LL, NULL, listen);
 
-    delete dgs;
+    listen->users[123LL] = bu;
+
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    bu->send_ack(1, 2);
+
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, StartStop)
+void test_listen_socket_create_delete(void)
 {
+    std::string test = "listen_socket create/delete: ";
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen;
+
+    try
+    {
+        listen = new listen_socket(addr);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    /* Thread pools should not be started */
+    is(listen->send_pool->pool_size(), 0, test + "expected send size");
+    is(listen->access_pool->pool_size(), 0, test + "expected access size");
+
+    delete listen;
+    freeaddrinfo(addr);
+}
+
+void test_listen_socket_port_type(void)
+{
+    std::string test = "listen_socket port: ";
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new listen_socket(addr);
+
+    is(listen->port_type() == "listen", true, test + "expected port type");
+
+    delete listen;
+    freeaddrinfo(addr);
+}
+
+void test_listen_socket_start_stop(void)
+{
+    std::string test = "listen_socket start/stop: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen;
 
@@ -181,58 +236,87 @@ TEST(ListenSocketTest, StartStop)
     listen = new listen_socket(addr);
 
     create_error = true;
-    ASSERT_THROW(
-        {
-            listen->start();
-        },
-        std::runtime_error);
-    ASSERT_EQ(create_count, 1);
+    try
+    {
+        listen->start();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't create reaper"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+    is(create_count, 1, test + "expected creates");
 
     create_error = false;
     create_count = 0;
-    ASSERT_NO_THROW(
-        {
-            listen->start();
-        });
-    ASSERT_GT(create_count, 1);
+    try
+    {
+        listen->start();
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
+    is(create_count > 1, true, test + "expected creates");
 
     cancel_error = true;
-    ASSERT_THROW(
-        {
-            listen->stop();
-        },
-        std::runtime_error);
-    try { listen->stop(); }
+    try
+    {
+        listen->stop();
+    }
     catch (std::runtime_error& e)
     {
-        ASSERT_TRUE(strstr(e.what(), "couldn't cancel reaper") != NULL);
+        std::string err(e.what());
+
+        isnt(err.find("couldn't cancel reaper"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
     }
 
     cancel_error = false;
     join_error = true;
-    ASSERT_THROW(
-        {
-            listen->stop();
-        },
-        std::runtime_error);
-    try { listen->stop(); }
+    try
+    {
+        listen->stop();
+    }
     catch (std::runtime_error& e)
     {
-        ASSERT_TRUE(strstr(e.what(), "couldn't join reaper") != NULL);
+        std::string err(e.what());
+
+        isnt(err.find("couldn't join reaper"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
     }
 
     join_error = false;
-    ASSERT_NO_THROW(
-        {
-            listen->stop();
-        });
+    try
+    {
+        listen->stop();
+    }
+    catch (...)
+    {
+        fail(test + "stop exception");
+    }
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, HandleAck)
+void test_listen_socket_handle_ack(void)
 {
+    std::string test = "listen_socket handle_ack: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
     base_user *bu = new base_user(123LL, NULL, listen);
@@ -247,15 +331,16 @@ TEST(ListenSocketTest, HandleAck)
 
     listen_socket::handle_ack(listen, p, bu, NULL);
 
-    ASSERT_NE(bu->timestamp, 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp");
 
     delete bu;
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, HandleAction)
+void test_listen_socket_handle_action(void)
 {
+    std::string test = "listen_socket handle_action: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
     base_user *bu = new base_user(123LL, NULL, listen);
@@ -275,12 +360,12 @@ TEST(ListenSocketTest, HandleAction)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACTREQ;
 
-    ASSERT_TRUE(action_pool->queue_size() == 0);
+    is(action_pool->queue_size(), 0, test + "expected queue size");
 
     listen_socket::handle_action(listen, p, bu, NULL);
 
-    ASSERT_NE(bu->timestamp, 0);
-    ASSERT_TRUE(action_pool->queue_size() != 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp");
+    isnt(action_pool->queue_size(), 0, test + "expected queue size");
 
     delete (ThreadPool<packet_list> *)action_pool;
     delete bu;
@@ -288,8 +373,9 @@ TEST(ListenSocketTest, HandleAction)
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, HandleLogout)
+void test_listen_socket_handle_logout(void)
 {
+    std::string test = "listen_socket handle_logout: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
     base_user *bu = new base_user(123LL, NULL, listen);
@@ -302,30 +388,30 @@ TEST(ListenSocketTest, HandleLogout)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_LGTREQ;
 
-    ASSERT_TRUE(listen->access_pool->queue_size() == 0);
+    is(listen->access_pool->queue_size(), 0, test + "expected queue size");
 
     listen_socket::handle_logout(listen, p, bu, NULL);
 
-    ASSERT_NE(bu->timestamp, 0);
-    ASSERT_TRUE(listen->access_pool->queue_size() != 0);
+    isnt(bu->timestamp, 0, test + "expected timestamp");
+    isnt(listen->access_pool->queue_size(), 0, test + "expected queue size");
     access_list al;
     memset(&al, 0, sizeof(access_list));
     listen->access_pool->pop(&al);
-    ASSERT_EQ(al.buf.basic.type, TYPE_LGTREQ);
-    ASSERT_EQ(al.what.logout.who, 123LL);
+    is(al.buf.basic.type, TYPE_LGTREQ, test + "expected logout packet");
+    is(al.what.logout.who, 123LL, test + "expected userid");
 
     delete bu;
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, GetUserid)
+void test_listen_socket_get_userid(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket get_userid: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authentication(_, A<const std::string&>()))
-        .WillOnce(Return(0LL));
+    check_authentication_count = 0;
+    check_authentication_result = 12345LL;
 
     login_request log;
 
@@ -338,21 +424,23 @@ TEST(ListenSocketTest, GetUserid)
 
     uint64_t userid = listen->get_userid(log);
 
-    ASSERT_EQ(userid, 0LL);
-    ASSERT_FALSE(strncmp(log.password, "pass", sizeof(log.password)) == 0);
+    is(check_authentication_count, 1, test + "expected database call");
+    is(userid, 12345LL, test + "expected userid");
+    is(strncmp(log.password, "", sizeof(log.password)), 0,
+       test + "password is cleared");
 
     delete listen;
     freeaddrinfo(addr);
     delete database;
 }
 
-TEST(ListenSocketTest, CheckAccessNoAccess)
+void test_listen_socket_no_access(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket no access: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authorization(_, A<const std::string&>()))
-        .WillOnce(Return(ACCESS_NONE));
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_NONE;
 
     login_request log;
 
@@ -366,32 +454,33 @@ TEST(ListenSocketTest, CheckAccessNoAccess)
 
     base_user *bu = listen->check_access(123LL, log);
 
-    ASSERT_TRUE(bu == NULL);
+    is(check_authorization_count, 1, test + "expected database call");
+    is(bu == NULL, true, test + "expected result");
 
     delete listen;
     freeaddrinfo(addr);
-    delete database;
+    delete (fake_DB *)database;
 }
 
-TEST(ListenSocketTest, CheckAccess)
+void test_listen_socket_check_access(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket check_access: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authorization(_, A<const std::string&>()))
-        .WillOnce(Return(ACCESS_MOVE));
-    EXPECT_CALL(*((mock_DB *)database),
-                get_characterid(_, _))
-        .WillOnce(Return(12345678LL));
-    EXPECT_CALL(*((mock_DB *)database),
-                get_player_server_skills(_, _, _));
-    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_MOVE;
 
-    zone = new mock_Zone(1000, 1, database);
+    get_character_objectid_count = 0;
+    get_character_objectid_result = 1234LL;
 
-    EXPECT_CALL(*((mock_Zone *)zone), send_nearby_objects(_));
+    get_characterid_count = 0;
+    get_characterid_result = 12345678LL;
+
+    get_player_server_skills_count = 0;
+
+    zone = new fake_Zone(1000, 1, database);
+
+    send_nearby_objects_count = 0;
 
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
@@ -407,21 +496,27 @@ TEST(ListenSocketTest, CheckAccess)
 
     base_user *bu = listen->check_access(123LL, log);
 
-    ASSERT_TRUE(bu != NULL);
+    is(check_authorization_count, 1, test + "expected authorization call");
+    is(get_character_objectid_count, 1, test + "expected objectid call");
+    is(get_characterid_count, 1, test + "expected characterid call");
+    is(get_player_server_skills_count, 1, test + "expected skills call");
+    is(send_nearby_objects_count, 1, test + "expected nearby objects call");
+    is(bu != NULL, true, test + "got a good base_user");
 
     delete bu;
     delete listen;
     freeaddrinfo(addr);
-    delete (mock_Zone *)zone;
-    delete (mock_DB *)database;
+    delete (fake_Zone *)zone;
+    delete (fake_DB *)database;
 }
 
-TEST(ListenSocketTest, LoginNoUser)
+void test_listen_socket_login_no_user(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket no user: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
-        .WillOnce(Return(0LL));
+    check_authentication_count = 0;
+    check_authentication_result = 0LL;
 
     access_list access;
 
@@ -433,26 +528,27 @@ TEST(ListenSocketTest, LoginNoUser)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->users.size(), 0, test + "expected user list size");
 
     listen->login_user(access);
 
-    ASSERT_TRUE(listen->users.size() == 0);
-    ASSERT_FALSE(strncmp(access.buf.log.password,
-                         "pass",
-                         sizeof(access.buf.log.password)) == 0);
+    is(check_authentication_count, 1, test + "expected authentication call");
+    is(listen->users.size(), 0, test + "expected user list size");
+    is(strncmp(access.buf.log.password, "", sizeof(access.buf.log.password)), 0,
+       test + "password is cleared");
 
     delete listen;
     freeaddrinfo(addr);
     delete database;
 }
 
-TEST(ListenSocketTest, LoginAlready)
+void test_listen_socket_login_already(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket already logged in: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
-        .WillOnce(Return(123LL));
+    check_authentication_count = 0;
+    check_authentication_result = 123LL;
 
     access_list access;
 
@@ -467,27 +563,29 @@ TEST(ListenSocketTest, LoginAlready)
     bu->pending_logout = true;
     listen->users[123LL] = bu;
 
-    ASSERT_TRUE(listen->users.size() == 1);
+    is(listen->users.size(), 1, test + "expected user list size");
 
     listen->login_user(access);
 
-    ASSERT_TRUE(listen->users.size() == 1);
-    ASSERT_EQ(bu->pending_logout, false);
+    is(check_authentication_count, 1, test + "expected authentication call");
+    is(listen->users.size(), 1, test + "expected user list size");
+    is(bu->pending_logout, false, test + "user not logging out");
 
     delete listen;
     freeaddrinfo(addr);
     delete database;
 }
 
-TEST(ListenSocketTest, LoginNoAccess)
+void test_listen_socket_login_no_access(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket no access: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
-        .WillOnce(Return(123LL));
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authorization(_, A<const std::string&>()))
-        .WillOnce(Return(ACCESS_NONE));
+    check_authentication_count = 0;
+    check_authentication_result = 123LL;
+
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_NONE;
 
     access_list access;
 
@@ -499,34 +597,42 @@ TEST(ListenSocketTest, LoginNoAccess)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->users.size(), 0, test + "expected user list size");
 
     listen->login_user(access);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(check_authentication_count, 1, test + "expected authentication call");
+    is(check_authorization_count, 1, test + "expected authorization call");
+    is(listen->users.size(), 0, test + "expected user list size");
 
     delete listen;
     freeaddrinfo(addr);
-    delete (mock_DB *)database;
+    delete (fake_DB *)database;
 }
 
-TEST(ListenSocketTest, Login)
+void test_listen_socket_login(void)
 {
-    database = new mock_DB("a", "b", "c", "d");
+    std::string test = "listen_socket login: ";
+    database = new fake_DB("a", "b", "c", "d");
 
-    EXPECT_CALL(*((mock_DB *)database), check_authentication(_, _))
-        .WillOnce(Return(123LL));
-    EXPECT_CALL(*((mock_DB *)database), get_character_objectid(_, _))
-        .WillOnce(Return(1234LL));
-    EXPECT_CALL(*((mock_DB *)database),
-                check_authorization(_, A<const std::string&>()))
-        .WillOnce(Return(ACCESS_MOVE));
-    EXPECT_CALL(*((mock_DB *)database), get_server_objects(_));
+    check_authentication_count = 0;
+    check_authentication_result = 123LL;
+
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_MOVE;
+
+    get_character_objectid_count = 0;
+    get_character_objectid_result = 1234LL;
+
+    get_characterid_count = 0;
+
+    get_player_server_skills_count = 0;
 
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
 
-    zone = new mock_Zone(1000, 1, database);
-    EXPECT_CALL(*((mock_Zone *)zone), send_nearby_objects(_));
+    zone = new fake_Zone(1000, 1, database);
+
+    send_nearby_objects_count = 0;
 
     access_list access;
 
@@ -538,21 +644,28 @@ TEST(ListenSocketTest, Login)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->users.size(), 0, test + "expected user list size");
 
     listen->login_user(access);
 
-    ASSERT_TRUE(listen->users.size() == 1);
-    ASSERT_EQ(listen->users[123LL]->auth_level, ACCESS_MOVE);
+    is(check_authorization_count, 1, test + "expected authorization call");
+    is(get_character_objectid_count, 1, test + "expected objectid call");
+    is(get_characterid_count, 1, test + "expected characterid call");
+    is(get_player_server_skills_count, 1, test + "expected skills call");
+    is(send_nearby_objects_count, 1, test + "expected nearby objects call");
+    is(listen->users.size(), 1, test + "expected user list size");
+    is(listen->users[123LL]->auth_level, ACCESS_MOVE,
+       test + "expected auth level");
 
-    delete (mock_Zone *)zone;
+    delete (fake_Zone *)zone;
     delete listen;
     freeaddrinfo(addr);
-    delete (mock_DB *)database;
+    delete (fake_DB *)database;
 }
 
-TEST(ListenSocketTest, Logout)
+void test_listen_socket_logout(void)
 {
+    std::string test = "listen_socket logout: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
@@ -560,19 +673,20 @@ TEST(ListenSocketTest, Logout)
 
     listen->users[123LL] = bu;
 
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
     listen->logout_user(123LL);
 
-    ASSERT_TRUE(bu->pending_logout == true);
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
+    is(bu->pending_logout, true, test + "user set to logout");
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, ConnectUser)
+void test_listen_socket_connect_user(void)
 {
+    std::string test = "listen_socket connect_user: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
@@ -582,20 +696,21 @@ TEST(ListenSocketTest, ConnectUser)
 
     memset(&access.buf, 0, sizeof(packet));
 
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+    is(listen->users.size(), 0, test + "expected user list size");
 
     listen->connect_user(bu, access);
 
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
-    ASSERT_TRUE(listen->users.size() == 1);
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+    is(listen->users.size(), 1, test + "expected user list size");
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(ListenSocketTest, DisconnectUser)
+void test_listen_socket_disconnect_user(void)
 {
+    std::string test = "listen_socket disconnect_user: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
@@ -603,50 +718,43 @@ TEST(ListenSocketTest, DisconnectUser)
 
     listen->users[123LL] = bu;
 
-    ASSERT_TRUE(listen->users.size() == 1);
+    is(listen->users.size(), 1, test + "expected user list size");
 
     listen->disconnect_user(bu);
 
-    ASSERT_TRUE(listen->users.size() == 0);
+    is(listen->users.size(), 0, test + "expected user list size");
 
     delete listen;
     freeaddrinfo(addr);
 }
 
-TEST(BaseUserTest, SendPing)
+int main(int argc, char **argv)
 {
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
+    plan(71);
 
-    base_user *bu = new base_user(123LL, NULL, listen);
+    test_base_user_create_delete();
+    test_base_user_less_than();
+    test_base_user_equal_to();
+    test_base_user_assignment();
+    test_base_user_disconnect_on_destroy();
+    test_base_user_send_ping();
+    test_base_user_send_ack();
 
-    listen->users[123LL] = bu;
-
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
-
-    bu->send_ping();
-
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
-
-    delete listen;
-    freeaddrinfo(addr);
-}
-
-TEST(BaseUserTest, SendAck)
-{
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
-
-    base_user *bu = new base_user(123LL, NULL, listen);
-
-    listen->users[123LL] = bu;
-
-    ASSERT_TRUE(listen->send_pool->queue_size() == 0);
-
-    bu->send_ack(1, 2);
-
-    ASSERT_TRUE(listen->send_pool->queue_size() > 0);
-
-    delete listen;
-    freeaddrinfo(addr);
+    test_listen_socket_create_delete();
+    test_listen_socket_port_type();
+    test_listen_socket_start_stop();
+    test_listen_socket_handle_ack();
+    test_listen_socket_handle_action();
+    test_listen_socket_handle_logout();
+    test_listen_socket_get_userid();
+    test_listen_socket_no_access();
+    test_listen_socket_check_access();
+    test_listen_socket_login_no_user();
+    test_listen_socket_login_already();
+    test_listen_socket_login_no_access();
+    test_listen_socket_login();
+    test_listen_socket_logout();
+    test_listen_socket_connect_user();
+    test_listen_socket_disconnect_user();
+    return exit_status();
 }

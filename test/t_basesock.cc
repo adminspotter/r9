@@ -1,12 +1,15 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/basesock.h"
 
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include <stdexcept>
 #include <typeinfo>
-
-#include <gtest/gtest.h>
 
 bool socket_error = false, socket_zero = false, bind_error = false;
 bool am_root = false, listen_error = false, pthread_create_error = false;
@@ -119,8 +122,9 @@ int unlink(const char *a)
     return 0;
 }
 
-TEST(BasesockTest, CreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -130,16 +134,21 @@ TEST(BasesockTest, CreateDelete)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "v4 addrinfo created successfully");
 
     socket_zero = true;
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_STREQ(base->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(base->sa->port(), 1235);
-    ASSERT_GE(base->sock, 0);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
+       test + "expected address");
+    is(base->sa->port(), 1235, test + "expected port");
+    ok(base->sock >= 0, test + "socket created");
 
     delete(base);
     freeaddrinfo(ai);
@@ -151,24 +160,31 @@ TEST(BasesockTest, CreateDelete)
         hints.ai_socktype = SOCK_DGRAM;
         hints.ai_flags = AI_PASSIVE;
         ret = getaddrinfo("localhost", "1235", &hints, &ai);
-        ASSERT_EQ(ret, 0);
+        is(ret, 0, test + "v6 addrinfo created successfully");
 
-        ASSERT_NO_THROW(
-            {
-                base = new basesock(ai);
-            });
-        ASSERT_STREQ(base->sa->ntop(), "::1");
-        ASSERT_EQ(base->sa->port(), 1235);
-        ASSERT_GE(base->sock, 0);
+        try
+        {
+            base = new basesock(ai);
+        }
+        catch (...)
+        {
+            fail(test + "constructor exception");
+        }
+        is(strncmp(base->sa->ntop(), "::1", 4), 0, test + "expected address");
+        is(base->sa->port(), 1235, test + "expected port");
+        ok(base->sock >= 0, test + "socket created");
 
         delete(base);
         freeaddrinfo(ai);
     }
+    else
+        skip(5, test + "no IPv6");
     socket_zero = false;
 }
 
-TEST(BasesockTest, DeleteUnix)
+void test_delete_unix(void)
 {
+    std::string test = "delete unix: ";
     std::stringstream *new_clog = new std::stringstream;
     auto old_clog_rdbuf = std::clog.rdbuf(new_clog->rdbuf());
 
@@ -186,10 +202,14 @@ TEST(BasesockTest, DeleteUnix)
     sun.sun_family = AF_UNIX;
     strncpy(sun.sun_path, "t_basesock.sock", 16);
 
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(&ai);
-        });
+    try
+    {
+        base = new basesock(&ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     unlink_error = true;
 
@@ -198,8 +218,8 @@ TEST(BasesockTest, DeleteUnix)
     unlink_error = false;
 
     std::clog.rdbuf(old_clog_rdbuf);
-    ASSERT_TRUE(new_clog->str().find("could not unlink path")
-                != std::string::npos);
+    isnt(new_clog->str().find("could not unlink path"), std::string::npos,
+         test + "expected unlink failure");
 
     /* We explicitly leak the new_clog object here because we're
      * seeing segfaults on Linux hosts when we try to delete it.  It's
@@ -211,8 +231,9 @@ TEST(BasesockTest, DeleteUnix)
      */
 }
 
-TEST(BasesockTest, BadSocket)
+void test_bad_socket(void)
 {
+    std::string test = "bad socket: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -222,20 +243,31 @@ TEST(BasesockTest, BadSocket)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     socket_error = true;
-    ASSERT_THROW(
-        {
-            base = new basesock(ai);
-        },
-        std::runtime_error);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("socket creation failed"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
     socket_error = false;
     freeaddrinfo(ai);
 }
 
-TEST(BasesockTest, SocketRoot)
+void test_privileged_socket(void)
 {
+    std::string test = "privileged socket creation: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -245,25 +277,39 @@ TEST(BasesockTest, SocketRoot)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "123", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     am_root = false;
     seteuid_count = setegid_count = 0;
-    ASSERT_THROW(
-        {
-            base = new basesock(ai);
-        },
-        std::runtime_error);
-    ASSERT_EQ(seteuid_count, 0);
-    ASSERT_EQ(setegid_count, 0);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("non-root user"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+    is(seteuid_count, 0, test + "expected seteuid count");
+    is(setegid_count, 0, test + "expected setegid count");
 
     am_root = true;
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_EQ(seteuid_count, 2);
-    ASSERT_EQ(setegid_count, 2);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "create_socket exception");
+    }
+    is(seteuid_count, 2, test + "expected seteuid count");
+    is(setegid_count, 2, test + "expected setegid count");
 
     delete base;
     freeaddrinfo(ai);
@@ -271,8 +317,9 @@ TEST(BasesockTest, SocketRoot)
     am_root = false;
 }
 
-TEST(BasesockTest, BadBind)
+void test_bad_bind(void)
 {
+    std::string test = "bad bind: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -282,21 +329,32 @@ TEST(BasesockTest, BadBind)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     bind_error = true;
-    ASSERT_THROW(
-        {
-            base = new basesock(ai);
-        },
-        std::runtime_error);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("bind failed for"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
 
     freeaddrinfo(ai);
     bind_error = false;
 }
 
-TEST(BasesockTest, BadListen)
+void test_bad_listen(void)
 {
+    std::string test = "bad listen: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -306,21 +364,32 @@ TEST(BasesockTest, BadListen)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     listen_error = true;
-    ASSERT_THROW(
-        {
-            base = new basesock(ai);
-        },
-        std::runtime_error);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("listen failed for"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
 
     freeaddrinfo(ai);
     listen_error = false;
 }
 
-TEST(BasesockTest, StartStop)
+void test_start_stop(void)
 {
+    std::string test = "start/stop: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -330,26 +399,31 @@ TEST(BasesockTest, StartStop)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "v4 addrinfo created successfully");
 
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_STREQ(base->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(base->sa->port(), 1235);
-    ASSERT_GE(base->sock, 0);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
+       test + "expected address");
+    is(base->sa->port(), 1235, test + "expected port");
+    ok(base->sock >= 0, test + "socket created");
 
     base->listen_arg = base;
-    ASSERT_NO_THROW(
-        {
-            base->start(test_thread_worker);
-        });
-
-    ASSERT_NO_THROW(
-        {
-            base->stop();
-        });
+    try
+    {
+        base->start(test_thread_worker);
+        base->stop();
+    }
+    catch (...)
+    {
+        fail(test + "start/stop exception");
+    }
 
     delete(base);
     freeaddrinfo(ai);
@@ -361,34 +435,41 @@ TEST(BasesockTest, StartStop)
         hints.ai_socktype = SOCK_DGRAM;
         hints.ai_flags = AI_PASSIVE;
         ret = getaddrinfo("localhost", "1235", &hints, &ai);
-        ASSERT_EQ(ret, 0);
+        is(ret, 0, test + "v6 addrinfo created successfully");
 
-        ASSERT_NO_THROW(
-            {
-                base = new basesock(ai);
-            });
-        ASSERT_STREQ(base->sa->ntop(), "::1");
-        ASSERT_EQ(base->sa->port(), 1235);
-        ASSERT_GE(base->sock, 0);
+        try
+        {
+            base = new basesock(ai);
+        }
+        catch (...)
+        {
+            fail(test + "constructor exception");
+        }
+        is(strncmp(base->sa->ntop(), "::1", 4), 0, test + "expected address");
+        is(base->sa->port(), 1235, test + "expected port");
+        ok(base->sock >= 0, test + "socket created");
 
         base->listen_arg = base;
-        ASSERT_NO_THROW(
-            {
-                base->start(test_thread_worker);
-            });
-
-        ASSERT_NO_THROW(
-            {
-                base->stop();
-            });
+        try
+        {
+            base->start(test_thread_worker);
+            base->stop();
+        }
+        catch (...)
+        {
+            fail(test + "start/stop exception");
+        }
 
         delete(base);
         freeaddrinfo(ai);
     }
+    else
+        skip(4, test + "no IPv6");
 }
 
-TEST(BasesockTest, StartBadSocket)
+void test_start_bad_socket(void)
 {
+    std::string test = "start w/bad socket: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -398,28 +479,43 @@ TEST(BasesockTest, StartBadSocket)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     socket_zero = true;
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     base->listen_arg = base;
-    ASSERT_THROW(
-        {
-            base->start(test_thread_worker);
-        },
-        std::runtime_error);
+    try
+    {
+        base->start(test_thread_worker);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("no socket available"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
 
     delete base;
     freeaddrinfo(ai);
     socket_zero = false;
 }
 
-TEST(BasesockTest, StartCreateThreadFail)
+void test_start_create_thread_fail(void)
 {
+    std::string test = "start w/bad pthread_create: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -429,28 +525,43 @@ TEST(BasesockTest, StartCreateThreadFail)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
     pthread_create_error = true;
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     base->listen_arg = base;
-    ASSERT_THROW(
-        {
-            base->start(test_thread_worker);
-        },
-        std::runtime_error);
+    try
+    {
+        base->start(test_thread_worker);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("couldn't start listen thread"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
 
     delete base;
     freeaddrinfo(ai);
     pthread_create_error = false;
 }
 
-TEST(BasesockTest, StopCancelFail)
+void test_stop_cancel_fail(void)
 {
+    std::string test = "stop w/bad pthread_cancel: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -460,39 +571,63 @@ TEST(BasesockTest, StopCancelFail)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_STREQ(base->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(base->sa->port(), 1235);
-    ASSERT_GE(base->sock, 0);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
+       test + "expected address");
+    is(base->sa->port(), 1235, test + "expected port");
+    ok(base->sock >= 0, test + "socket created");
 
     base->listen_arg = base;
-    ASSERT_NO_THROW(
-        {
-            base->start(test_thread_worker);
-        });
+    try
+    {
+        base->start(test_thread_worker);
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
 
     pthread_cancel_error = true;
-    ASSERT_THROW(
-        {
-            base->stop();
-        },
-        std::runtime_error);
+    try
+    {
+        base->stop();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
 
-    ASSERT_NO_THROW(
-        {
-            delete(base);
-        });
+        isnt(err.find("couldn't cancel listen thread"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+
+    try
+    {
+        delete(base);
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
     freeaddrinfo(ai);
     pthread_cancel_error = false;
 }
 
-TEST(BasesockTest, StopJoinFail)
+void test_stop_join_fail(void)
 {
+    std::string test = "stop w/bad pthread_join: ";
     struct addrinfo hints, *ai;
     int ret;
     basesock *base;
@@ -502,33 +637,74 @@ TEST(BasesockTest, StopJoinFail)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
-    ASSERT_NO_THROW(
-        {
-            base = new basesock(ai);
-        });
-    ASSERT_STREQ(base->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(base->sa->port(), 1235);
-    ASSERT_GE(base->sock, 0);
+    try
+    {
+        base = new basesock(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
+       test + "expected address");
+    is(base->sa->port(), 1235, test + "expected port");
+    ok(base->sock >= 0, test + "socket created");
 
     base->listen_arg = base;
-    ASSERT_NO_THROW(
-        {
-            base->start(test_thread_worker);
-        });
+    try
+    {
+        base->start(test_thread_worker);
+    }
+    catch (...)
+    {
+        fail(test + "start exception");
+    }
 
     pthread_join_error = true;
-    ASSERT_THROW(
-        {
-            base->stop();
-        },
-        std::runtime_error);
+    try
+    {
+        base->stop();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
 
-    ASSERT_NO_THROW(
-        {
-            delete(base);
-        });
+        isnt(err.find("couldn't join listen thread"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+
+    try
+    {
+        delete(base);
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
     freeaddrinfo(ai);
     pthread_join_error = false;
+}
+
+int main(int argc, char **argv)
+{
+    plan(44);
+
+    test_create_delete();
+    test_delete_unix();
+    test_bad_socket();
+    test_privileged_socket();
+    test_bad_bind();
+    test_bad_listen();
+    test_start_stop();
+    test_start_bad_socket();
+    test_start_create_thread_fail();
+    test_stop_cancel_fail();
+    test_stop_join_fail();
+    return exit_status();
 }

@@ -1,11 +1,11 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include "../server/classes/modules/console.h"
 
 #include <string.h>
 #include <unistd.h>
-
-#include <iostream>
-
-#include <gtest/gtest.h>
 
 #define TMP_PATH  "./consoletest"
 
@@ -22,7 +22,6 @@ int hosts_ctl(char *prefix, char *hostname, char *address, char *user)
 {
     int ret = 1;
 
-    std::clog << "into the hosts_ctl mock" << std::endl;
     if (strcmp(prefix, "prefix"))
         ret = 0;
     if (strcmp(hostname, "localhost"))
@@ -37,6 +36,7 @@ int hosts_ctl(char *prefix, char *hostname, char *address, char *user)
 
 void send_data_to(short port)
 {
+    std::string func = "send_data_to: ";
     struct addrinfo hints, *ai;
     int sock, len;
     char buf[1024];
@@ -57,7 +57,6 @@ void send_data_to(short port)
         s << "socket error: " << err << " (" << errno << ')';
         throw std::runtime_error(s.str());
     }
-    std::cerr << "sock opened" << std::endl;
 
     if (connect(sock, ai->ai_addr, ai->ai_addrlen) < 0)
     {
@@ -68,46 +67,39 @@ void send_data_to(short port)
         s << "connect error: " << err << " (" << errno << ')';
         throw std::runtime_error(s.str());
     }
-    std::cerr << "connected" << std::endl;
 
     /* First thing, we should get a prompt */
     len = recv(sock, buf, sizeof(buf), 0);
-    ASSERT_GT(len, 0);
-    std::cerr << "got the prompt" << std::endl;
+    is(len >= 0, true, func + "got the prompt");
 
     /* Send a fake command */
     len = snprintf(buf, sizeof(buf), "whoa\n");
     len = send(sock, buf, len, 0);
-    ASSERT_GT(len, 0);
-    std::cerr << "sent the fake command" << std::endl;
+    is(len >= 0, true, func + "sent the fake command");
 
     len = recv(sock, buf, sizeof(buf), 0);
-    ASSERT_GT(len, 0);
-    ASSERT_TRUE(strstr(buf, "not implemented") != NULL);
-    std::cerr << "got the message" << std::endl;
+    is(len >= 0, true, func + "got a response");
+    is(strstr(buf, "not implemented") != NULL, true, func + "got the message");
 
     /* Logout */
     len = snprintf(buf, sizeof(buf), "exit\n");
     len = send(sock, buf, len, 0);
-    ASSERT_GT(len, 0);
-    std::cerr << "sent the logout" << std::endl;
+    is(len >= 0, true, func + "sent the logout");
 
     /* We should get a message, then a closed connection */
     len = recv(sock, buf, sizeof(buf), 0);
-    ASSERT_GT(len, 0);
-    std::cerr << "got the message" << std::endl;
+    is(len >= 0, true, func + "got the message");
 
     while ((len = recv(sock, buf, sizeof(buf), 0)) != 0)
-        std::cerr << "read " << len << " bytes" << std::endl;
+        ;
 
     close(sock);
-    std::cerr << "closed the sock" << std::endl;
     freeaddrinfo(ai);
-    std::cerr << "freed the addrinfo" << std::endl;
 }
 
-TEST(ConsoleTest, CreateInet)
+void test_create_inet(void)
 {
+    std::string test = "create inet console: ";
     struct addrinfo hints, *ai;
     int ret;
     Console *con;
@@ -117,22 +109,27 @@ TEST(ConsoleTest, CreateInet)
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
-    ASSERT_NO_THROW(
-        {
-            con = new Console(ai);
-        });
-    ASSERT_STREQ(con->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(con->sa->port(), 1235);
-    ASSERT_GE(con->sock, 0);
+    try
+    {
+        con = new Console(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(con->sa->ntop(), "127.0.0.1", 10), 0, test + "expected address");
+    is(con->sa->port(), 1235, test + "expected port");
+    is(con->sock >= 0, true, test + "expected socket descriptor");
 
     delete(con);
     freeaddrinfo(ai);
 }
 
-TEST(ConsoleTest, CreateFactory)
+void test_create_factory(void)
 {
+    std::string test = "create factory: ";
     struct addrinfo hints, *ai;
     int ret;
     Console *con;
@@ -143,20 +140,25 @@ TEST(ConsoleTest, CreateFactory)
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1234", &hints, &ai);
 
-    ASSERT_NO_THROW(
-        {
-            con = console_create(ai);
-        });
-    ASSERT_STREQ(con->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(con->sa->port(), 1234);
-    ASSERT_GE(con->sock, 0);
+    try
+    {
+        con = console_create(ai);
+    }
+    catch (...)
+    {
+        fail(test + "factory exception");
+    }
+    is(strncmp(con->sa->ntop(), "127.0.0.1", 10), 0, test + "expected address");
+    is(con->sa->port(), 1234, test + "expected port");
+    is(con->sock >= 0, true, test + "expected socket descriptor");
 
     console_destroy(con);
     freeaddrinfo(ai);
 }
 
-TEST(ConsoleTest, WrapRequest)
+void test_wrap_request(void)
 {
+    std::string test = "wrap_request: ";
     struct addrinfo hints, *ai;
     int ret;
     Console *con;
@@ -182,14 +184,15 @@ TEST(ConsoleTest, WrapRequest)
      * any of them fails, the mock will return 0.  The non-libwrap
      * original function will always return 1.
      */
-    ASSERT_EQ(con->wrap_request(sa), 1);
+    is(con->wrap_request(sa), 1, test + "expected result");
 
     delete(con);
     freeaddrinfo(ai);
 }
 
-TEST(ConsoleTest, InetListener)
+void test_inet_listener(void)
 {
+    std::string test = "inet listener:";
     struct addrinfo hints, *ai;
     int ret;
     Console *con;
@@ -199,15 +202,19 @@ TEST(ConsoleTest, InetListener)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
     ret = getaddrinfo("localhost", "1237", &hints, &ai);
-    ASSERT_EQ(ret, 0);
+    is(ret, 0, test + "addrinfo created successfully");
 
-    ASSERT_NO_THROW(
-        {
-            con = new Console(ai);
-        });
-    ASSERT_STREQ(con->sa->ntop(), "127.0.0.1");
-    ASSERT_EQ(con->sa->port(), 1237);
-    ASSERT_GE(con->sock, 0);
+    try
+    {
+        con = new Console(ai);
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(con->sa->ntop(), "127.0.0.1", 10), 0, test + "expected address");
+    is(con->sa->port(), 1237, test + "expected port");
+    is(con->sock >= 0, true, test + "expected socket descriptor");
 
     con->listen_arg = (void *)con;
     con->start(Console::console_listener);
@@ -218,4 +225,15 @@ TEST(ConsoleTest, InetListener)
 
     delete(con);
     freeaddrinfo(ai);
+}
+
+int main(int argc, char **argv)
+{
+    plan(18);
+
+    test_create_inet();
+    test_create_factory();
+    test_wrap_request();
+    test_inet_listener();
+    return exit_status();
 }

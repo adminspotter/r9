@@ -1,3 +1,7 @@
+#include <tap++.h>
+
+using namespace TAP;
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,8 +14,8 @@
 
 #include <string>
 #include <fstream>
-
-#include <gtest/gtest.h>
+#include <sstream>
+#include <stdexcept>
 
 #define TMP_ROOT "/tmp"
 
@@ -95,142 +99,196 @@ void create_temp_config_file(std::string& fname)
  * create and remove a temporary directory tree that we can use for
  * our "home directory".
  */
-class ConfigdataTest : public ::testing::Test
+void setup_fixture(void)
 {
-  protected:
-    void SetUp()
-        {
-            char temp_name[1024], *ret;
+    char temp_name[1024], *ret;
 
-            strcpy(temp_name, TMP_ROOT "/configdata_testXXXXXX");
-            /* Create temp dir tree */
-            ret = mkdtemp(temp_name);
-            ASSERT_TRUE(ret != NULL);
+    strcpy(temp_name, TMP_ROOT "/configdata_testXXXXXX");
+    /* Create temp dir tree */
+    ret = mkdtemp(temp_name);
+    not_ok(ret == NULL, "fixture: created temp dir");
 
-            tmpdir = temp_name;
-        };
+    tmpdir = temp_name;
+}
 
-    void TearDown()
-        {
-            /* Remove temp dir tree */
-            int ret = clean_dir(tmpdir.c_str());
-            ASSERT_EQ(ret, 0);
-            tmpdir = "";
-        };
+void cleanup_fixture(void)
+{
+    /* Remove temp dir tree */
+    int ret = clean_dir(tmpdir.c_str());
+    is(ret, 0, "fixture: removed temp dir tree");
+    tmpdir = "";
+}
+
+class fake_ConfigData : public ConfigData
+{
+  public:
+    fake_ConfigData() : ConfigData() {};
+    virtual ~fake_ConfigData() {};
+
+    using ConfigData::make_config_dirs;
 };
 
-TEST_F(ConfigdataTest, BasicCreateDelete)
+void test_create_delete(void)
 {
+    std::string test = "create/delete: ";
     ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    setup_fixture();
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     /* Test what defaults have been set. */
     std::string expected = tmpdir + "/.r9";
-    ASSERT_EQ(conf->config_dir, expected);
+    is(conf->config_dir, expected, test + "expected config dir");
     expected += "/config";
-    ASSERT_EQ(conf->config_fname, expected);
-    ASSERT_EQ(conf->server_addr, ConfigData::SERVER_ADDR);
-    ASSERT_EQ(conf->server_port, ConfigData::SERVER_PORT);
-    ASSERT_TRUE(conf->font_paths.size() > 0);
+    is(conf->config_fname, expected, test + "expected config fname");
+    is(conf->server_addr, ConfigData::SERVER_ADDR, test + "expected addr");
+    is(conf->server_port, ConfigData::SERVER_PORT, test + "expected port");
+    ok(conf->font_paths.size() > 0, "contents in font path");
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
-TEST_F(ConfigdataTest, MakeConfigDirs)
+void test_make_config_dirs(void)
 {
+    std::string test = "make config dirs: ", st;
     int ret;
     char *args[] = {};
 
-    ConfigData *conf;
+    fake_ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    setup_fixture();
+    try
+    {
+        conf = new fake_ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
-    /* If there's nothing to parse, that won't get done, and if there
-     * is no config file, nothing will happen there either.
-     */
+    st = "success: ";
     mkdir_count = 0;
     mkdir_fail_index = 5;
-    conf->parse_command_line(0, args);
+    conf->make_config_dirs();
 
-    ASSERT_EQ(mkdir_count, 4);
+    is(mkdir_count, 4, test + st + "no failures");
+
+    st = "failures: ";
     for (mkdir_fail_index = 1; mkdir_fail_index <= 4; ++mkdir_fail_index)
     {
         mkdir_count = 0;
-        ASSERT_THROW(
-            {
-                conf->parse_command_line(0, args);
-            },
-            std::runtime_error);
+        try
+        {
+            conf->make_config_dirs();
+        }
+        catch (std::runtime_error& e)
+        {
+            std::string err(e.what());
+            isnt(err.find("directory"), std::string::npos,
+                 test + st + "failed with correct error");
+        }
+        catch (...)
+        {
+            fail(test + "wrong exception type");
+        }
     }
     mkdir_count = 0;
     mkdir_fail_index = 5;
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
-TEST_F(ConfigdataTest, ParseCommandLine)
+void test_parse_command_line(void)
 {
+    std::string test = "parse command line: ";
     int ret;
+
+    setup_fixture();
     std::string conf_dir = tmpdir + "/haha";
     std::string conf_file = tmpdir + "/fake.conf";
     std::streambuf *old_clog_rdbuf = std::clog.rdbuf();
     std::stringstream new_clog;
     std::clog.rdbuf(new_clog.rdbuf());
-    char *args[7] = { "r9client", "-c", (char *)conf_dir.c_str(),
-                      "-f", (char *)conf_file.c_str(), "-q", NULL};
+    const char *args[7] = { "r9client", "-c", (char *)conf_dir.c_str(),
+                            "-f", (char *)conf_file.c_str(), "-q", NULL};
     struct stat st;
 
     ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     mkdir_count = 0;
     mkdir_fail_index = 5;
     conf->parse_command_line(6, args);
 
-    ASSERT_EQ(conf->argv.size(), 6);
+    is(conf->argv.size(), 6, test + "expected arg count");
 
     std::string expected = tmpdir + "/haha";
-    ASSERT_EQ(conf->config_dir, expected);
-    ASSERT_EQ(mkdir_count, 4);
+    is(conf->config_dir, expected, test + "expected config dir");
+    is(mkdir_count, 4, test + "expected mkdir count");
 
     expected = tmpdir + "/fake.conf";
-    ASSERT_EQ(conf->config_fname, expected);
+    is(conf->config_fname, expected, test + "expected config fname");
 
-    ASSERT_EQ(new_clog.str(), "WARNING: Unknown option -q");
+    is(new_clog.str(), "WARNING: Unknown option -q", test + "expected warning");
     std::clog.rdbuf(old_clog_rdbuf);
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
-TEST_F(ConfigdataTest, ReadConfigFile)
+void test_read_config_file(void)
 {
+    std::string test = "read config file: ";
     int ret;
     ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    setup_fixture();
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
 
     conf->config_dir = tmpdir;
     conf->config_fname = tmpdir + "/config";
@@ -239,39 +297,51 @@ TEST_F(ConfigdataTest, ReadConfigFile)
     conf->read_config_file();
 
     std::string expected = "haha";
-    ASSERT_EQ(conf->server_addr, expected);
-    ASSERT_EQ(conf->server_port, 12345);
+    is(conf->server_addr, expected, test + "expected server addr");
+    is(conf->server_port, 12345, test + "expected server port");
     expected = "someuser";
-    ASSERT_EQ(conf->username, expected);
+    is(conf->username, expected, test + "expected username");
     expected = "worstcharnameintheworld";
-    ASSERT_EQ(conf->charname, expected);
-    ASSERT_TRUE(conf->font_paths.size() == 3);
+    is(conf->charname, expected, test + "expected charname");
+    is(conf->font_paths.size(), 3, test + "expected font path size");
     expected = "/a/b/c";
-    ASSERT_EQ(conf->font_paths[0], expected);
+    is(conf->font_paths[0], expected, test + "expected font path 1");
     expected = "~/d/e/f";
-    ASSERT_EQ(conf->font_paths[1], expected);
+    is(conf->font_paths[1], expected, test + "expected font path 2");
     expected = "/g/h/i";
-    ASSERT_EQ(conf->font_paths[2], expected);
+    is(conf->font_paths[2], expected, test + "expected font path 3");
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
 }
 
 /* Previous test proved that read_config_file works, so we'll use
  * write_config_file to write one out, and then read_config_file into
  * a new object to make sure the file was written as expected.
  */
-TEST_F(ConfigdataTest, WriteConfigFile)
+void test_write_config_file(void)
 {
+    std::string test = "write config file: ", st;
     int ret;
     ConfigData *conf;
 
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    setup_fixture();
+    st = "initial object: ";
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + st + "constructor exception");
+    }
 
     conf->server_addr = "whoa";
     conf->server_port = 9876;
@@ -286,16 +356,25 @@ TEST_F(ConfigdataTest, WriteConfigFile)
 
     conf->write_config_file();
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + st + "destructor exception");
+    }
 
     /* Now for the new object */
-    ASSERT_NO_THROW(
-        {
-            conf = new ConfigData;
-        });
+    st = "reloaded object: ";
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + st + "constructor exception");
+    }
 
     conf->config_dir = tmpdir;
     conf->config_fname = tmpdir + "/the_big_test.conf";
@@ -303,20 +382,37 @@ TEST_F(ConfigdataTest, WriteConfigFile)
     conf->read_config_file();
 
     std::string expected = "whoa";
-    ASSERT_EQ(conf->server_addr, expected);
-    ASSERT_EQ(conf->server_port, 9876);
+    is(conf->server_addr, expected, test + st + "expected server addr");
+    is(conf->server_port, 9876, test + st + "expected server port");
     expected = "howdy";
-    ASSERT_EQ(conf->username, expected);
+    is(conf->username, expected, test + st + "expected username");
     expected = "anotherreallybadcharname";
-    ASSERT_EQ(conf->charname, expected);
-    ASSERT_TRUE(conf->font_paths.size() == 2);
+    is(conf->charname, expected, test + st + "expected charname");
+    is(conf->font_paths.size(), 2, test + st + "expected font path size");
     expected = "/a/b/c";
-    ASSERT_EQ(conf->font_paths[0], expected);
+    is(conf->font_paths[0], expected, test + st + "expected font path 1");
     expected = "~/d/e/f";
-    ASSERT_EQ(conf->font_paths[1], expected);
+    is(conf->font_paths[1], expected, test + st + "expected font path 2");
 
-    ASSERT_NO_THROW(
-        {
-            delete conf;
-        });
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + st + "destructor exception");
+    }
+    cleanup_fixture();
+}
+
+int main(int argc, char **argv)
+{
+    plan(40);
+
+    test_create_delete();
+    test_make_config_dirs();
+    test_parse_command_line();
+    test_read_config_file();
+    test_write_config_file();
+    return exit_status();
 }
