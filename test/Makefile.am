@@ -100,9 +100,8 @@ t_console_SOURCES = t_console.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
 	../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
-t_console_CXXFLAGS = $(CONFIG_DEFS) $(GMOCK_INCLUDES) $(GTEST_INCLUDES) \
-	$(TAP_INCLUDES)
-t_console_LDADD = $(GTEST_LIBS) $(TAP_LDADD) $(WRAP_LDLIBS)
+t_console_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_console_LDADD = $(TAP_LDADD) $(WRAP_LDLIBS)
 
 t_db_SOURCES = t_db.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
