@@ -46,11 +46,33 @@ void test_ack_packet(void)
        test + "good size succeeds hton");
 }
 
+void test_login_request(void)
+{
+    std::string test = "login request: ";
+    packet p;
+
+    p.log.type = TYPE_LOGREQ;
+    p.log.version = 1;
+    p.log.sequence = 1234LL;
+
+    is(is_login_request(&p), 1, test + "is a logreq");
+
+    is(ntoh_packet(&p, sizeof(login_request) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(login_request)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(login_request) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(login_request)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(8);
+    plan(13);
 
     test_bad_type();
     test_ack_packet();
+    test_login_request();
     return exit_status();
 }
