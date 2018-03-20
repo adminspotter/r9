@@ -150,9 +150,33 @@ void test_position_update(void)
        test + "good size succeeds hton");
 }
 
+void test_server_notice(void)
+{
+    std::string test = "server notice: ";
+    packet p;
+
+    p.srv.type = TYPE_SRVNOT;
+    p.srv.version = 1;
+    p.srv.sequence = 1234LL;
+    p.srv.ipproto = 6;
+    p.srv.port = 123;
+    p.srv.direction = 5;
+
+    is(is_server_notice(&p), 1, test + "is a srvnot");
+
+    is(ntoh_packet(&p, sizeof(server_notice) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(server_notice)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(server_notice) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(server_notice)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(28);
+    plan(33);
 
     test_bad_type();
     test_ack_packet();
@@ -160,5 +184,6 @@ int main(int argc, char **argv)
     test_logout_request();
     test_action_request();
     test_position_update();
+    test_server_notice();
     return exit_status();
 }
