@@ -122,6 +122,7 @@ AC_ARG_WITH([glm-includes],
 if test "$enable_debug" == "yes"
 then
   AC_MSG_NOTICE([building with debug enabled])
+  DEBUG_CFLAGS="-g"
   DEBUG_CXXFLAGS="-g"
   DEBUG_LDFLAGS="-g"
 fi
@@ -138,12 +139,14 @@ then
           else
             PROFILE_LDLIBS="$ac_cv_search_llvm_start_basic_block_tracing"
           fi
+          PROFILE_CFLAGS="-fprofile-arcs -ftest-coverage"
           PROFILE_CXXFLAGS="-fprofile-arcs -ftest-coverage"
           PROFILE_LDFLAGS="--coverage"
           AC_MSG_NOTICE([building with profiling enabled])
         ],
         [AC_MSG_NOTICE([no libprofile_rt available, not enabling profiling])])
   else
+    PROFILE_CFLAGS="-fprofile-arcs -ftest-coverage"
     PROFILE_CXXFLAGS="-fprofile-arcs -ftest-coverage"
     PROFILE_LDFLAGS="--coverage"
     PROFILE_LDLIBS="-lgcov"
@@ -364,6 +367,7 @@ AC_SEARCH_LIBS([pthread_create], [pthread],
     [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],
     [AC_MSG_ERROR([can not build without pthreads.])])
 
+CFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CFLAGS"
 CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
 LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
 LIBS="$LIBS $PROFILE_LDLIBS"
