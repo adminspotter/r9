@@ -1,6 +1,6 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jan 2018, 08:42:57 tquirk
+ *   last updated 20 Mar 2018, 07:35:47 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -99,16 +99,22 @@ packet_handlers[] =
 
 int hton_packet(packet *p, size_t s)
 {
+    if (p->basic.type > TYPE_PNGPKT)
+        return 0;
     return (packet_handlers[p->basic.type].hton)(p, s);
 }
 
 int ntoh_packet(packet *p, size_t s)
 {
+    if (p->basic.type > TYPE_PNGPKT)
+        return 0;
     return (packet_handlers[p->basic.type].ntoh)(p, s);
 }
 
 size_t packet_size(packet *p)
 {
+    if (p->basic.type > TYPE_PNGPKT)
+        return 0;
     return (packet_handlers[p->basic.type].packetsize);
 }
 
