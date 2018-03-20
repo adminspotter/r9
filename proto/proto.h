@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jan 2018, 08:42:49 tquirk
+ *   last updated 20 Mar 2018, 07:12:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -22,10 +22,10 @@
  *
  * The basic structures which define the protocol for the game system.
  *
- * Current views are that servers can send all types of packets, but will
- * only respond to a certain subset of those packets.  Login/logout requests,
- * action requests, geometry updates, and possibly server notices (reporting
- * a new neighbor, for example).
+ * Current views are that servers can send all types of packets, but
+ * will only respond to a certain subset of those packets.
+ * Login/logout requests, action requests, and possibly server notices
+ * (reporting a new neighbor, for example).
  *
  * Types of packets:
  *   ACKPKT:  This packet is just for the server to respond to some type of
@@ -35,15 +35,6 @@
  *   LGTREQ:  This packet is a user request to logout.
  *   ACTREQ:  This packet is a user request to perform some action.
  *   POSUPD:  This packet is a server position update response.
- *   GEOUPD:  This packet is a general-purpose update packet for geometry
- *            changes.  It could be from a client to a server to change
- *            some of the client's avater.  It could also be from a server
- *            to a client to send new model information, so that clients
- *            can change their avatars, and that we can have any kind of
- *            objects we want, without having to release new sets of objects
- *            or some such confusion.
- *   TEXUPD:  This packet is a general-purpose update packet for texture
- *            changes.  Similar to the GEOUPD, it can go in either direction.
  *   SRVNOT:  This packet is from a server (could be to a server, could be
  *            to a client).  The basic use of this packet is to notify a
  *            client that s/he is coming to the edge of the geometry which
@@ -51,8 +42,6 @@
  *            second connection to the neighboring server, for position
  *            updates.  This will also be used to let servers know about
  *            new neighboring servers.
- *   GEOREQ:  This packet is a user request for a given geometry.
- *   TEXREQ:  This packet is a user request for a given texture.
  *
  * Things to do
  *   - We want to do some crypto on this protocol.
