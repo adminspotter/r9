@@ -118,14 +118,47 @@ void test_action_request(void)
        test + "good size succeeds hton");
 }
 
+void test_position_update(void)
+{
+    std::string test = "position update: ";
+    packet p;
+
+    p.pos.type = TYPE_POSUPD;
+    p.pos.version = 1;
+    p.pos.sequence = 1234LL;
+    p.pos.frame_number = 123;
+    p.pos.x_pos = 1LL;
+    p.pos.y_pos = 2LL;
+    p.pos.z_pos = 3LL;
+    p.pos.x_orient = 123L;
+    p.pos.y_orient = 234L;
+    p.pos.z_orient = 345L;
+    p.pos.w_orient = 456L;
+    p.pos.x_look = 4L;
+    p.pos.y_look = 5L;
+    p.pos.z_look = 6L;
+
+    is(is_position_update(&p), 1, test + "is a posupd");
+
+    is(ntoh_packet(&p, sizeof(position_update) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(position_update)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(position_update) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(position_update)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(23);
+    plan(28);
 
     test_bad_type();
     test_ack_packet();
     test_login_request();
     test_logout_request();
     test_action_request();
+    test_position_update();
     return exit_status();
 }
