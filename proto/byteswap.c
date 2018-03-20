@@ -121,14 +121,18 @@ size_t packet_size(packet *p)
 /* ARGSUSED */
 static int hton_basic_packet(packet *ap, size_t s)
 {
-    /* Everything in the basic packet is a byte */
+    if (s < sizeof(basic_packet))
+        return 0;
+    ap->basic.sequence = htonll(ap->basic.sequence);
     return 1;
 }
 
 /* ARGSUSED */
 static int ntoh_basic_packet(packet *ap, size_t s)
 {
-    /* Everything in the basic packet is a byte */
+    if (s < sizeof(basic_packet))
+        return 0;
+    ap->basic.sequence = ntohll(ap->basic.sequence);
     return 1;
 }
 

@@ -174,9 +174,30 @@ void test_server_notice(void)
        test + "good size succeeds hton");
 }
 
+void test_ping_packet(void)
+{
+    std::string test = "ping packet: ";
+    packet p;
+
+    p.basic.type = TYPE_PNGPKT;
+    p.basic.version = 1;
+    p.basic.sequence = 1234LL;
+
+    is(is_ping_packet(&p), 1, test + "is a pngpkt");
+
+    is(ntoh_packet(&p, sizeof(basic_packet) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(basic_packet)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(basic_packet) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(basic_packet)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(33);
+    plan(38);
 
     test_bad_type();
     test_ack_packet();
@@ -185,5 +206,6 @@ int main(int argc, char **argv)
     test_action_request();
     test_position_update();
     test_server_notice();
+    test_ping_packet();
     return exit_status();
 }
