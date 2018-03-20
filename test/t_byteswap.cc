@@ -20,10 +20,37 @@ void test_bad_type(void)
     is(packet_size(&p), 0, test + "size: expected result");
 }
 
+void test_ack_packet(void)
+{
+    std::string test = "ack packet: ";
+    packet p;
+
+    p.ack.type = TYPE_ACKPKT;
+    p.ack.version = 1;
+    p.ack.sequence = 1234LL;
+    p.ack.request = 42;
+    p.ack.misc[0] = 2345LL;
+    p.ack.misc[1] = 3456LL;
+    p.ack.misc[2] = 4567LL;
+    p.ack.misc[3] = 5678LL;
+
+    is(is_ack_packet(&p), 1, test + "is an ackpkt");
+
+    is(ntoh_packet(&p, sizeof(ack_packet) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(ack_packet)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(ack_packet) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(ack_packet)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(3);
+    plan(8);
 
     test_bad_type();
+    test_ack_packet();
     return exit_status();
 }
