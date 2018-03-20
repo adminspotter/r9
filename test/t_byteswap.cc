@@ -88,13 +88,44 @@ void test_logout_request(void)
        test + "good size succeeds hton");
 }
 
+void test_action_request(void)
+{
+    std::string test = "action request: ";
+    packet p;
+
+    p.act.type = TYPE_ACTREQ;
+    p.act.version = 1;
+    p.act.sequence = 1234LL;
+    p.act.object_id = 12345LL;
+    p.act.action_id = 123;
+    p.act.x_pos_source = 123LL;
+    p.act.y_pos_source = 234LL;
+    p.act.z_pos_source = 345LL;
+    p.act.dest_object_id = 12346LL;
+    p.act.x_pos_dest = 456LL;
+    p.act.y_pos_dest = 567LL;
+    p.act.z_pos_dest = 678LL;
+
+    is(is_action_request(&p), 1, test + "is an actreq");
+
+    is(ntoh_packet(&p, sizeof(action_request) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(action_request)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(action_request) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(action_request)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(18);
+    plan(23);
 
     test_bad_type();
     test_ack_packet();
     test_login_request();
     test_logout_request();
+    test_action_request();
     return exit_status();
 }
