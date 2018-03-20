@@ -115,6 +115,9 @@ AC_ARG_WITH([client],
             [],
             [with_client="no"])
 
+AC_ARG_WITH([glm-includes],
+            AS_HELP_STRING([--with-glm-includes=<path>], [GLM include path]))
+
 # Development flags (debugging, profiling)
 if test "$enable_debug" == "yes"
 then
@@ -346,11 +349,15 @@ AM_CONDITIONAL([WANT_PERL], [test "x$want_perl" == "xyes"])
 # We want GLM in either the client or the server
 if test "$with_client" = "yes" -o "$with_server" = "yes"
 then
+  # We use the GLM for our vector-related mathematics
   GLM_CPPFLAGS_SAVE="$CPPFLAGS"
+  GLM_INCLUDES="-DGLM_FORCE_RADIANS"
+  AS_IF([test "x$with_glm_includes" != "xno" && test "x$with_glm_includes" != "x"],
+        [GLM_INCLUDES="-I$with_glm_includes $GLM_INCLUDES"])
+  CXXFLAGS="$CXXFLAGS $GLM_INCLUDES"
   CPPFLAGS="$CXXFLAGS"
   AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_ERROR([no valid GLM installation found, can not continue])])
   CPPFLAGS="$GLM_CPPFLAGS_SAVE"
-  CXXFLAGS="$CXXFLAGS -DGLM_FORCE_RADIANS"
 fi
 
 AC_SEARCH_LIBS([pthread_create], [pthread],
