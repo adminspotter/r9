@@ -363,6 +363,15 @@ then
   CPPFLAGS="$GLM_CPPFLAGS_SAVE"
 fi
 
+# Make sure we have a new enough version of OpenSSL
+AC_SEARCH_LIBS([EVP_PKEY_derive], [openssl ssl crypto],
+    [test "$ac_cv_search_EVP_PKEY_derive" = "none required" || LIBS="$ac_cv_search_EVP_PKEY_derive $LIBS"],
+    [AC_MSG_ERROR([can not build without OpenSSL >= 1.0.0])])
+OPENSSL_CPPFLAGS_SAVE="$CPPFLAGS"
+CPPFLAGS="$CXXFLAGS"
+AC_CHECK_HEADERS([openssl/evp.h openssl/ec.h], [], [AC_MSG_ERROR([no valid OpenSSL installation found, can not continue])])
+CPPFLAGS="$OPENSSL_CPPFLAGS_SAVE"
+
 AC_SEARCH_LIBS([pthread_create], [pthread],
     [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],
     [AC_MSG_ERROR([can not build without pthreads.])])

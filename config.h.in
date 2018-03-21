@@ -143,6 +143,12 @@
 /* Define to 1 if you have the `ntohll' function. */
 #undef HAVE_NTOHLL
 
+/* Define to 1 if you have the <openssl/ec.h> header file. */
+#undef HAVE_OPENSSL_EC_H
+
+/* Define to 1 if you have the <openssl/evp.h> header file. */
+#undef HAVE_OPENSSL_EVP_H
+
 /* Define to 1 if you have the <postgresql/libpq-fe.h> header file. */
 #undef HAVE_POSTGRESQL_LIBPQ_FE_H
 
