@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 {
     plan(3);
 
-    /* Load up the perl lib and fetch the symbols */
+    /* Load up the tcl lib and fetch the symbols */
     Library *lib = new Library(TCL_MOD);
     create_language = (Language *(*)(void))lib->symbol("create_language");
     execute_language = (std::string (*)(Language *, const std::string &))lib->symbol("lang_execute");

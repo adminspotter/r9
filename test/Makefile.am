@@ -28,9 +28,6 @@ if WANT_SERVER
 	t_update_pool \
 	t_zone
 endif
-if WANT_PERL
-  TC += t_perl
-endif
 if WANT_TCL
   TC += t_tcl t_tcl_exception
 endif
@@ -206,10 +203,6 @@ t_zone_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
 t_zone_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
-
-t_perl_SOURCES = t_perl.cc ../server/classes/modules/language.h \
-	../server/classes/library.h ../server/classes/library.cc
-t_perl_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
