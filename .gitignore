@@ -16,10 +16,6 @@ TAGS
 old/
 server/r9d
 client/r9client
-client/ui/uitest
-client/ui/fonttest
-
-server/classes/modules/perlxsi.c
 
 # Automake
 Makefile

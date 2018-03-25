@@ -97,10 +97,6 @@ AC_ARG_WITH([tcl],
             AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
             [],
             [with_tcl="no"])
-AC_ARG_WITH([perl],
-            AS_HELP_STRING([--with-perl], [Build the Perl server module.  NOTE: the Perl interpreter can not currently run a simple script, so it may cause crashing in the server.]),
-            [],
-            [with_perl="no"])
 AC_ARG_WITH([mysql],
             AS_HELP_STRING([--with-mysql], [Build the MySQL server module]),
             [],
@@ -303,20 +299,6 @@ then
     LIBS="$TCL_LIBS_SAVE"
   fi
 
-  # Perl server module
-  if test "$with_perl" == "yes"
-  then
-    AX_PROG_PERL_MODULES([ExtUtils::Embed],
-        [
-            PERL_CFLAGS=$(perl -MExtUtils::Embed -e ccopts)
-	    PERL_LDFLAGS=$(perl -MExtUtils::Embed -e ldopts)
-            AC_SUBST(PERL_CFLAGS)
-            AC_SUBST(PERL_LDFLAGS)
-            want_perl="yes"
-        ],
-        [AC_MSG_ERROR([perl does not have ExtUtils::Embed available.  Can not embed it.])])
-  fi
-
   AC_SEARCH_LIBS([dlopen], [dl],
       [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen $LIBS"],
       [AC_MSG_ERROR([can not build without dlopen.])])
@@ -334,7 +316,6 @@ AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
 AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
 AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
 AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
-AM_CONDITIONAL([WANT_PERL], [test "x$want_perl" == "xyes"])
 
 # We want GLM in either the client or the server
 if test "$with_client" = "yes" -o "$with_server" = "yes"
