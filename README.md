@@ -37,7 +37,7 @@ while missiles would be pretty simple.
 * Network agnosticism (IPv4, IPv6, datagram, stream, whatever!)
 * Pluggable server modules for client actions
 * Support for backend MySQL and PostgreSQL databases
-* Pluggable embedded language support (Tcl, and sort-of Perl)
+* Pluggable embedded language support (just Tcl for the moment)
 
 ### Under active development ###
 

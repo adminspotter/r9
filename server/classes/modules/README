@@ -42,6 +42,6 @@ which will allow multiple console sessions to be active and not stomp
 all over each other.
 
 We may want to embed languages in the server by some means, possibly
-for writing control logic for automated objects.  There are perl.c and
-tcl.c files which contain stubs for their respective languages; these
-are by no means the only languages that should be embedded.
+for writing control logic for automated objects.  There is a tcl.c
+file which contains a stub for the respective language; this is by no
+means the only language that should be embedded.
