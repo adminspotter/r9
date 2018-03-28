@@ -1,6 +1,6 @@
 /* r9python.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Mar 2018, 07:42:03 tquirk
+ *   last updated 28 Mar 2018, 09:35:49 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -46,28 +46,32 @@ int count = 0;
 
 PythonLanguage::PythonLanguage()
 {
+    PyGILState_STATE lock = PyGILState_Ensure();
     PyThreadState *tmp = PyThreadState_Get();
     this->sub_interp = Py_NewInterpreter();
     PyThreadState_Swap(tmp);
+    PyGILState_Release(lock);
 }
 
 PythonLanguage::~PythonLanguage()
 {
+    PyGILState_STATE lock = PyGILState_Ensure();
     PyThreadState *tmp = PyThreadState_Swap(this->sub_interp);
     Py_EndInterpreter(this->sub_interp);
     PyThreadState_Swap(tmp);
+    PyGILState_Release(lock);
 }
 
 std::string PythonLanguage::execute(const std::string &s)
 {
-    PyEval_AcquireLock();
     PyThreadState *thread = PyThreadState_New(this->sub_interp->interp);
-    PyThreadState *tmp = PyThreadState_Swap(thread);
+    if (!PyGILState_Check())
+        PyGILState_Ensure();
+    PyThreadState_Swap(thread);
     PyRun_SimpleString(s.c_str());
-    PyThreadState_Swap(tmp);
     PyThreadState_Clear(thread);
+    PyEval_ReleaseThread(thread);
     PyThreadState_Delete(thread);
-    PyEval_ReleaseLock();
     return "";
 }
 
@@ -77,6 +81,11 @@ extern "C" Language *create_language(void)
     {
         Py_InitializeEx(0);
         PyEval_InitThreads();
+
+        /* The GIL is held at this point.  Not sure how to release it
+         * without having previously gotten a PyGILState_STATE
+         * object.
+         */
     }
     ++count;
     return new PythonLanguage();
@@ -86,5 +95,8 @@ extern "C" void destroy_language(Language *lang)
 {
     delete lang;
     if (--count == 0)
+    {
+        PyGILState_Ensure();
         Py_Finalize();
+    }
 }
