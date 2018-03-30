@@ -73,7 +73,7 @@ void test_run_script(void)
     }
     is(lang != NULL, true, test + "language object created");
 
-    std::string str = "def power(base, p):\n  result = 1\n  while (p > 0):\n    result = result * base\n    p = p - 1\n  return result\n\npower(2, 8)";
+    std::string str = "def power(base, p):\n  result = 1\n  while (p > 0):\n    result = result * base\n    p = p - 1\n  return result\n\nretval = power(2, 8)";
     try
     {
         str = execute_language(lang, str);
@@ -82,7 +82,7 @@ void test_run_script(void)
     {
         fail(test + "execute exception");
     }
-    is(strcmp(str.c_str(), ""), 0, test + "expected result");
+    is(strcmp(str.c_str(), "256"), 0, test + "expected result");
 
     try
     {

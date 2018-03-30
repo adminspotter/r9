@@ -1,6 +1,6 @@
 /* r9python.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Mar 2018, 09:35:49 tquirk
+ *   last updated 29 Mar 2018, 23:38:01 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -68,11 +68,23 @@ std::string PythonLanguage::execute(const std::string &s)
     if (!PyGILState_Check())
         PyGILState_Ensure();
     PyThreadState_Swap(thread);
-    PyRun_SimpleString(s.c_str());
+
+    PyObject *globals = PyModule_GetDict(PyImport_AddModule("__main__"));
+    PyObject *result = PyRun_StringFlags(s.c_str(),
+                                         Py_file_input,
+                                         globals, globals, NULL);
+    PyObject *retval = PyDict_GetItemString(globals, "retval");
+    PyObject *repr = PyObject_Repr(retval);
+    PyObject *str = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
+    std::string response(PyBytes_AS_STRING(str));
+    Py_XDECREF(str);
+    Py_XDECREF(repr);
+    Py_XDECREF(result);
+
     PyThreadState_Clear(thread);
     PyEval_ReleaseThread(thread);
     PyThreadState_Delete(thread);
-    return "";
+    return response;
 }
 
 extern "C" Language *create_language(void)
