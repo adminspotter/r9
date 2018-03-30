@@ -37,7 +37,9 @@ while missiles would be pretty simple.
 * Network agnosticism (IPv4, IPv6, datagram, stream, whatever!)
 * Pluggable server modules for client actions
 * Support for backend MySQL and PostgreSQL databases
-* Pluggable embedded language support (just Tcl for the moment)
+* Pluggable embedded language support
+  * Python
+  * Tcl
 
 ### Under active development ###
 
@@ -54,7 +56,7 @@ love to collaborate on.
 * Fully encrypted wire protocol
 * Server consoles to allow on-the-fly configuration changes
 * Support for more embedded languages
-  * Python
+  * Lua
   * Ruby
   * Common Lisp
   * ???
@@ -66,7 +68,7 @@ r9 has been built and tested on:
 
 * CentOS Linux 6/7
 * Ubuntu GNU/Linux Trusty (via [Travis CI](https://travis-ci.org))
-* MacOS X Mavericks - ElCapitan
+* MacOS X Mavericks - High Sierra
 
 As long as your platform contains the typical POSIX libraries, you
 should at least be in the ballpark.  Most other Linuxes should be

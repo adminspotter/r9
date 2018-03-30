@@ -1,6 +1,6 @@
 /* r9python.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Mar 2018, 23:38:01 tquirk
+ *   last updated 29 Mar 2018, 23:48:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -25,16 +25,9 @@
  * We'll have a single global interpreter, and each instance of our
  * class will be a sub-interpreter under that instance.
  *
- * Python uses the standard file descriptors for I/O, but of course
- * those will be unavailable in our context.  We'll have to have a
- * mechanism to grab hold of the output, so we can return it in our
- * execute method.  We'll want to completely turn off standard input,
- * since there will be no available source to get any.
- *
- * We'll embed the interpreters in such a way that we will remap the
- * stdin/stdout file descriptors to something that we control, based
- * on the work in:
- * https://github.com/mloskot/workshop/blob/master/python/emb/emb.cpp
+ * There is no simple way to get a return value from a plain evaluated
+ * string, so we need to set the 'retval' variable within the Python
+ * code, which we'll dig out after the execution is complete.
  *
  * Things to do
  *
