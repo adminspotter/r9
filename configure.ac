@@ -302,7 +302,7 @@ then
         [AC_MSG_ERROR([no valid Lua headers found, can not continue])])
     LUA_LIBS_SAVE="$LIBS"
     LIBS=""
-    AC_SEARCH_LIBS([luaL_newstate], [lua],
+    AC_SEARCH_LIBS([luaL_newstate], [lua lua5.2 lua5.3],
         [
             LUA_LDLIBS="$ac_cv_search_luaL_newstate"
             AC_SUBST(LUA_LDLIBS)
