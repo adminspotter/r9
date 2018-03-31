@@ -1,6 +1,6 @@
 /* r9lua.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Mar 2018, 22:45:02 tquirk
+ *   last updated 31 Mar 2018, 08:54:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -66,7 +66,7 @@ std::string LuaLanguage::execute(const std::string &s)
             break;
 
           default:
-            result = lua_typename(this->state, top);
+            result = lua_typename(this->state, lua_type(this->state, top));
             break;
         }
         lua_pop(this->state, 1);
