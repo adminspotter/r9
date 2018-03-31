@@ -63,7 +63,29 @@ void test_run_script(void)
     {
         fail(test + "execute exception");
     }
-    is(strcmp(str.c_str(), "256"), 0, test + "expected result");
+    is(strcmp(str.c_str(), "256"), 0, test + "expected number");
+
+    str = "return \"howdy\"";
+    try
+    {
+        str = execute_language(lang, str);
+    }
+    catch (...)
+    {
+        fail(test + "execute exception");
+    }
+    is(strcmp(str.c_str(), "howdy"), 0, test + "expected string");
+
+    str = "return true";
+    try
+    {
+        str = execute_language(lang, str);
+    }
+    catch (...)
+    {
+        fail(test + "execute exception");
+    }
+    is(strcmp(str.c_str(), "true"), 0, test + "expected string");
 
     try
     {
@@ -77,7 +99,7 @@ void test_run_script(void)
 
 int main(int argc, char **argv)
 {
-    plan(3);
+    plan(5);
 
     /* Load up the lua lib and fetch the symbols */
     Library *lib = new Library(LUA_MOD);
