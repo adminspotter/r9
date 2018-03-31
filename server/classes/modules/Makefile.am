@@ -5,6 +5,9 @@ endif
 if WANT_PGSQL
 modules_libs += libr9_pgsql.la
 endif
+if WANT_LUA
+modules_libs += libr9_lua.la
+endif
 if WANT_PYTHON
 modules_libs += libr9_python.la
 endif
@@ -24,6 +27,9 @@ libr9_MySQL_la_LIBADD = $(MYSQL_LDLIBS)
 
 libr9_pgsql_la_SOURCES = db.cc pgsql.cc db.h
 libr9_pgsql_la_LIBADD = $(PGSQL_LDLIBS)
+
+libr9_lua_la_SOURCES = r9lua.cc r9lua.h language.cc language.h
+libr9_lua_la_LIBADD = $(LUA_LDLIBS)
 
 libr9_python_la_SOURCES = r9python.cc r9python.h language.cc language.h
 libr9_python_la_CFLAGS = $(PYTHON_CFLAGS)

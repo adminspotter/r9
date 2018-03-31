@@ -17,6 +17,7 @@ addons:
     - tcl8.6-dev
     - libboost-dev
     - libgl1-mesa-dev
+    - liblua5.2-dev
     - libmysqlclient-dev
     - libpq-dev
     - libglm-dev
@@ -31,7 +32,7 @@ before_script:
 - sudo pip3 install --allow-external codecov --allow-external coverage --allow-external chardet --allow-external urllib3 --allow-external idna --allow-external certifi --allow-external requests codecov
 script:
 - ./autogen.sh
-- CXXFLAGS='-I/usr/include/mysql -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-python --with-tcl --with-mysql --with-pgsql --with-client --enable-profile
+- CXXFLAGS='-I/usr/include/mysql -I/usr/include/lua5.2 -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-lua --with-python --with-tcl --with-mysql --with-pgsql --with-client --enable-profile
 - make
 - make check
 after_script:

@@ -103,6 +103,9 @@
 /* Define to 1 if you have the `kill' function. */
 #undef HAVE_KILL
 
+/* Define to 1 if you have the <lauxlib.h> header file. */
+#undef HAVE_LAUXLIB_H
+
 /* Define to 1 if you have the <libintl.h> header file. */
 #undef HAVE_LIBINTL_H
 
@@ -111,6 +114,15 @@
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
+
+/* Define to 1 if you have the <lualib.h> header file. */
+#undef HAVE_LUALIB_H
+
+/* Define to 1 if you have the <lua.h> header file. */
+#undef HAVE_LUA_H
+
+/* Define to 1 if you have the <lua.hpp> header file. */
+#undef HAVE_LUA_HPP
 
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
