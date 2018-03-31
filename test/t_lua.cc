@@ -14,9 +14,34 @@ Language *(*create_language)(void);
 std::string (*execute_language)(Language *, const std::string&);
 void (*destroy_language)(Language *);
 
+void test_create_delete(void)
+{
+    std::string test = "create/delete: ";
+    Language *lang = NULL;
+
+    try
+    {
+        lang = create_language();
+    }
+    catch (...)
+    {
+        fail(test + "create exception");
+    }
+    is(lang != NULL, true, test + "language object created");
+
+    try
+    {
+        destroy_language(lang);
+    }
+    catch (...)
+    {
+        fail(test + "destroy exception");
+    }
+}
+
 int main(int argc, char **argv)
 {
-    plan(0);
+    plan(1);
 
     /* Load up the lua lib and fetch the symbols */
     Library *lib = new Library(LUA_MOD);
@@ -24,7 +49,7 @@ int main(int argc, char **argv)
     execute_language = (std::string (*)(Language *, const std::string &))lib->symbol("lang_execute");
     destroy_language = (void (*)(Language *))lib->symbol("destroy_language");
 
-    /* Tests here */
+    test_create_delete();
 
     delete lib;
 
