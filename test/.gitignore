@@ -21,6 +21,7 @@ t_listensock
 t_listensock_worker
 t_log
 t_logbuf
+t_lua
 t_motion_pool
 t_octree
 t_python
