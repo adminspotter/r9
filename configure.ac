@@ -106,6 +106,10 @@ AC_ARG_WITH([pgsql],
             [],
             [with_pgsql="no"])
 
+AC_ARG_WITH([lua],
+            AS_HELP_STRING([--with-lua], [Build the Lua server module]),
+            [],
+            [with_lua="no"])
 AC_ARG_WITH([python],
             AS_HELP_STRING([--with-python], [Build the Python server module]),
             [],
@@ -291,6 +295,23 @@ then
     LIBS="$PGSQL_LIBS_SAVE"
   fi
 
+  # Lua server module
+  if test "$with_lua" == "yes"
+  then
+    AC_CHECK_HEADERS([lua.h lauxlib.h lualib.h lua.hpp], [],
+        [AC_MSG_ERROR([no valid Lua headers found, can not continue])])
+    LUA_LIBS_SAVE="$LIBS"
+    LIBS=""
+    AC_SEARCH_LIBS([luaL_newstate], [lua],
+        [
+            LUA_LDLIBS="$ac_cv_search_luaL_newstate"
+            AC_SUBST(LUA_LDLIBS)
+            want_lua="yes"
+        ],
+        [AC_MSG_ERROR([liblua not valid, can not enable Lua module.])])
+    LIBS="$LUA_LIBS_SAVE"
+  fi
+
   # Python server module
   if test "$with_python" == "yes"
   then
@@ -339,6 +360,7 @@ AM_CONDITIONAL([WANT_SERVER], [test "x$with_server" == "xyes"])
 AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
 AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
 AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
+AM_CONDITIONAL([WANT_LUA], [test "x$want_lua" == "xyes"])
 AM_CONDITIONAL([WANT_PYTHON], [test "x$want_python" == "xyes"])
 AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
 
