@@ -98,6 +98,17 @@ void test_run_script(void)
     }
     is(strcmp(str.c_str(), "table"), 0, test + "expected typename");
 
+    str = "";
+    try
+    {
+        str = execute_language(lang, str);
+    }
+    catch (...)
+    {
+        fail(test + "execute_exception");
+    }
+    is(strcmp(str.c_str(), ""), 0, test + "expected typename");
+
     try
     {
         destroy_language(lang);
@@ -110,7 +121,7 @@ void test_run_script(void)
 
 int main(int argc, char **argv)
 {
-    plan(6);
+    plan(7);
 
     /* Load up the lua lib and fetch the symbols */
     Library *lib = new Library(LUA_MOD);
