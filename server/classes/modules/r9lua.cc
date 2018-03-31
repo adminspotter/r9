@@ -41,6 +41,37 @@ LuaLanguage::~LuaLanguage()
 
 std::string LuaLanguage::execute(const std::string &s)
 {
+    luaL_dostring(this->state, s.c_str());
+
+    int top = lua_gettop(this->state);
+    if (top > 0)
+    {
+        std::string result;
+
+        switch (lua_type(this->state, top))
+        {
+          case LUA_TSTRING:
+            result = lua_tostring(this->state, top);
+            break;
+
+          case LUA_TBOOLEAN:
+            result = (lua_toboolean(this->state, top) ? "true" : "false");
+            break;
+
+          case LUA_TNUMBER:
+            char tmp_str[32];
+            snprintf(tmp_str, sizeof(tmp_str),
+                     "%g", lua_tonumber(this->state, top));
+            result = tmp_str;
+            break;
+
+          default:
+            result = lua_typename(this->state, top);
+            break;
+        }
+        lua_pop(this->state, 1);
+        return result;
+    }
     return "";
 }
 
