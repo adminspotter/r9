@@ -30,10 +30,13 @@
 
 LuaLanguage::LuaLanguage()
 {
+    this->state = luaL_newstate();
+    luaL_openlibs(this->state);
 }
 
 LuaLanguage::~LuaLanguage()
 {
+    lua_close(this->state);
 }
 
 std::string LuaLanguage::execute(const std::string &s)
