@@ -1,6 +1,6 @@
-/* mysql_db.cc
+/* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jan 2018, 09:22:26 tquirk
+ *   last updated 01 Apr 2018, 09:41:14 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -45,7 +45,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "mysql_db.h"
+#include "r9mysql.h"
 #include "../game_obj.h"
 #include "../../../proto/proto.h"
 

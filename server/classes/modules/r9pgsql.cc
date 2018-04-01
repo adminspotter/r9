@@ -1,6 +1,6 @@
-/* pgsql.cc
+/* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jan 2018, 07:21:48 tquirk
+ *   last updated 01 Apr 2018, 09:44:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -43,7 +43,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "pgsql.h"
+#include "r9pgsql.h"
 #include "../game_obj.h"
 
 PgSQL::PgSQL(const std::string& host, const std::string& user,

@@ -223,7 +223,7 @@ t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 t_tcl_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_tcl_exception_SOURCES = t_tcl_exception.cc \
-	../server/classes/modules/tcl.cc ../server/classes/modules/r9tcl.h
+	../server/classes/modules/r9tcl.cc ../server/classes/modules/r9tcl.h
 t_tcl_exception_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS) \
 	$(TCL_LDLIBS)
 
