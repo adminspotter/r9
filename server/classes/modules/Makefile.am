@@ -22,7 +22,7 @@ libr9_console_la_SOURCES = console.cc console.h ../basesock.cc ../basesock.h \
 	fdstreambuf.h
 libr9_console_la_LIBADD = $(WRAP_LDLIBS)
 
-libr9_MySQL_la_SOURCES = db.cc mysql_db.cc db.h
+libr9_MySQL_la_SOURCES = db.cc r9mysql.cc db.h
 libr9_MySQL_la_LIBADD = $(MYSQL_LDLIBS)
 
 libr9_pgsql_la_SOURCES = db.cc pgsql.cc db.h
