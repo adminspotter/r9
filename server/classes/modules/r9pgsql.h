@@ -1,6 +1,6 @@
-/* pgsql.h                                                 -*- C++ -*-
+/* r9pgsql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jan 2018, 07:19:16 tquirk
+ *   last updated 01 Apr 2018, 09:44:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -26,8 +26,8 @@
  *
  */
 
-#ifndef __INC_PGSQL_H__
-#define __INC_PGSQL_H__
+#ifndef __INC_R9PGSQL_H__
+#define __INC_R9PGSQL_H__
 
 #include <postgresql/libpq-fe.h>
 
@@ -68,4 +68,4 @@ class PgSQL : public DB
     void db_close(void);
 };
 
-#endif /* __INC_PGSQL_H__ */
+#endif /* __INC_R9PGSQL_H__ */
