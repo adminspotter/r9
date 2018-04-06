@@ -13,6 +13,7 @@ t_control
 t_db
 t_dgram
 t_dgram_worker
+t_dh
 t_font
 t_game_obj
 t_image

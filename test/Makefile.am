@@ -3,7 +3,7 @@ SUBDIRS = tap++ .
 TAP_INCLUDES = -Itap++
 TAP_LDADD = tap++/libtap++.la
 
-TC = t_byteswap
+TC = t_byteswap t_dh
 if WANT_SERVER
   TC += t_action_pool \
 	t_basesock \
@@ -62,6 +62,9 @@ endif
 
 t_byteswap_SOURCES = t_byteswap.cc ../proto/byteswap.c ../proto/proto.h
 t_byteswap_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
+
+t_dh_SOURCES = t_dh.cc ../proto/dh.c
+t_dh_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
