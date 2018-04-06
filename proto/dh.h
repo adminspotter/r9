@@ -29,10 +29,23 @@
 #ifndef __INC_R9_PROTO_DH_H__
 #define __INC_R9_PROTO_DH_H__
 
+#include <openssl/evp.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 struct dh_message
 {
     unsigned char *message;
     size_t message_len;
 };
+
+struct dh_message *digest_message(const struct dh_message *);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __INC_R9_PROTO_DH_H__ */
