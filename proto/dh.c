@@ -29,6 +29,52 @@
 
 #include "dh.h"
 
+struct dh_message *dh_shared_secret(EVP_PKEY *priv_key, EVP_PKEY *peer_key)
+{
+    EVP_PKEY_CTX *derive_ctx;
+    struct dh_message *msg = NULL, *digest = NULL;
+
+    if ((msg = OPENSSL_malloc(sizeof(struct dh_message))) == NULL)
+        return NULL;
+
+    if ((derive_ctx = EVP_PKEY_CTX_new(priv_key, NULL)) == NULL)
+    {
+        OPENSSL_free(msg);
+        return NULL;
+    }
+
+    if (EVP_PKEY_derive_init(derive_ctx) != 1
+        || EVP_PKEY_derive_set_peer(derive_ctx, peer_key) != 1
+        || EVP_PKEY_derive(derive_ctx, NULL, &msg->message_len) != 1)
+    {
+        OPENSSL_free(msg);
+        EVP_PKEY_CTX_free(derive_ctx);
+        return NULL;
+    }
+
+    if ((msg->message = OPENSSL_malloc(msg->message_len)) == NULL)
+    {
+        OPENSSL_free(msg);
+        msg = NULL;
+    }
+    else if (EVP_PKEY_derive(derive_ctx, msg->message, &msg->message_len) != 1)
+    {
+        OPENSSL_free(msg->message);
+        OPENSSL_free(msg);
+        msg = NULL;
+    }
+
+    EVP_PKEY_CTX_free(derive_ctx);
+
+    if (msg != NULL)
+    {
+        digest = digest_message(msg);
+        OPENSSL_free(msg->message);
+        OPENSSL_free(msg);
+    }
+    return digest;
+}
+
 struct dh_message *digest_message(const struct dh_message *msg)
 {
     EVP_MD_CTX *digest_ctx;

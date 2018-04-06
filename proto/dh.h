@@ -42,6 +42,7 @@ struct dh_message
     size_t message_len;
 };
 
+struct dh_message *dh_shared_secret(EVP_PKEY *, EVP_PKEY *);
 struct dh_message *digest_message(const struct dh_message *);
 
 #ifdef __cplusplus
