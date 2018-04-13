@@ -1,6 +1,6 @@
 /* key.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Apr 2018, 08:12:18 tquirk
+ *   last updated 13 Apr 2018, 09:48:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -39,7 +39,7 @@ EVP_PKEY *string_to_pkey(const unsigned char *string, size_t len)
         return NULL;
 
     if (BIO_write(bo, string, len) == len)
-        PEM_read_bio_PUBKEY(bo, &pub_key, NULL, NULL);
+        PEM_read_bio_PrivateKey(bo, &pub_key, NULL, NULL);
 
     BIO_free(bo);
     return pub_key;
@@ -53,7 +53,10 @@ size_t pkey_to_string(EVP_PKEY *key, unsigned char **string, size_t len)
     if ((bo = BIO_new(BIO_s_mem())) == NULL)
         return 0;
 
-    if (PEM_write_bio_PUBKEY(bo, key) == 1)
+    if (PEM_write_bio_PrivateKey(bo, key,
+                                 NULL,
+                                 NULL, 0,
+                                 NULL, NULL) == 1)
         actual_len = BIO_read(bo, string, len);
 
     BIO_free(bo);
