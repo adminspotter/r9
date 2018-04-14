@@ -59,12 +59,35 @@ void test_pkey_to_file(void)
     unlink(fname);
 }
 
+void test_file_to_pkey(void)
+{
+    std::string test = "pkey_to_file: ";
+
+    EVP_PKEY *key = generate_ecdh_key();
+    const char *fname = "t_pkey_to_file.pem";
+    unsigned char pass[] = "abc123";
+
+    int result = pkey_to_file(key, fname, pass);
+
+    EVP_PKEY *loaded_key = file_to_pkey(fname, pass);
+
+    is(loaded_key != NULL, true, test + "loaded a key");
+
+    unlink(fname);
+}
+
 int main(int argc, char **argv)
 {
-    plan(5);
+    plan(6);
 
+#if OPENSSL_API_COMPAT < 0x10100000
+    OpenSSL_add_all_algorithms();
+    OpenSSL_add_all_ciphers();
+    OpenSSL_add_all_digests();
+#endif /* OPENSSL_API_COMPAT */
     test_pkey_to_string();
     test_string_to_pkey();
     test_pkey_to_file();
+    test_file_to_pkey();
     return exit_status();
 }

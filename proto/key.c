@@ -1,6 +1,6 @@
 /* key.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2018, 19:26:52 tquirk
+ *   last updated 14 Apr 2018, 08:01:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -63,6 +63,19 @@ size_t pkey_to_string(EVP_PKEY *key, unsigned char **string, size_t len)
 
     BIO_free(bo);
     return actual_len;
+}
+
+EVP_PKEY *file_to_pkey(const char *fname, unsigned char *passphrase)
+{
+    EVP_PKEY *key = NULL;
+    FILE *fp = fopen(fname, "r");
+
+    if (fp != NULL)
+    {
+        key = PEM_read_PrivateKey(fp, &key, NULL, passphrase);
+        fclose(fp);
+    }
+    return key;
 }
 
 int pkey_to_file(EVP_PKEY *key,
