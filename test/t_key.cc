@@ -5,6 +5,11 @@ using namespace TAP;
 #include "../proto/key.h"
 #include "../proto/ec.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 void test_pkey_to_string(void)
 {
     std::string test = "pkey_to_string: ";
@@ -36,11 +41,30 @@ void test_string_to_pkey(void)
     OPENSSL_free(key);
 }
 
+void test_pkey_to_file(void)
+{
+    std::string test = "pkey_to_file: ";
+
+    EVP_PKEY *key = generate_ecdh_key();
+    const char *fname = "t_pkey_to_file.pem";
+    unsigned char pass[] = "abc123";
+
+    int result = pkey_to_file(key, fname, pass);
+
+    is(result, 1, test + "expected result");
+
+    struct stat stat_struct;
+    int stat_result = stat(fname, &stat_struct);
+    is(stat_result, 0, test + "key file exists");
+    unlink(fname);
+}
+
 int main(int argc, char **argv)
 {
-    plan(3);
+    plan(5);
 
     test_pkey_to_string();
     test_string_to_pkey();
+    test_pkey_to_file();
     return exit_status();
 }

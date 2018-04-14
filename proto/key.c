@@ -1,6 +1,6 @@
 /* key.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2018, 09:48:02 tquirk
+ *   last updated 13 Apr 2018, 19:26:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -28,6 +28,8 @@
 
 #include "key.h"
 
+#include <stdio.h>
+#include <string.h>
 #include <openssl/pem.h>
 
 EVP_PKEY *string_to_pkey(const unsigned char *string, size_t len)
@@ -61,4 +63,23 @@ size_t pkey_to_string(EVP_PKEY *key, unsigned char **string, size_t len)
 
     BIO_free(bo);
     return actual_len;
+}
+
+int pkey_to_file(EVP_PKEY *key,
+                 const char *fname,
+                 unsigned char *passphrase)
+{
+    FILE *fp = fopen(fname, "w");
+    int result = 0;
+
+    if (fp != NULL)
+    {
+        result = PEM_write_PrivateKey(fp, key,
+                                      EVP_aes_192_cbc(),
+                                      passphrase,
+                                      strlen((const char *)passphrase),
+                                      NULL, NULL);
+        fclose(fp);
+    }
+    return result;
 }
