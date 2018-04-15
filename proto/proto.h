@@ -112,15 +112,6 @@ typedef struct login_request_tag
 } __attribute__ ((__packed__))
 login_request;
 
-typedef struct logout_request_tag
-{
-    uint8_t type;
-    uint8_t version;        /* protocol version number */
-    uint64_t sequence;      /* timestamp / sequence number */
-    /* Does this really need anything else? */
-} __attribute__ ((__packed__))
-logout_request;
-
 typedef struct action_request_tag
 {
     uint8_t type;

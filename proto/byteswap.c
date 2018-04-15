@@ -68,8 +68,6 @@ static int hton_ack_packet(packet *, size_t);
 static int ntoh_ack_packet(packet *, size_t);
 static int hton_login_request(packet *, size_t);
 static int ntoh_login_request(packet *, size_t);
-static int hton_logout_request(packet *, size_t);
-static int ntoh_logout_request(packet *, size_t);
 static int hton_action_request(packet *, size_t);
 static int ntoh_action_request(packet *, size_t);
 static int hton_position_update(packet *, size_t);
@@ -177,24 +175,6 @@ static int ntoh_login_request(packet *lr, size_t s)
     if (s < sizeof(login_request))
         return 0;
     lr->log.sequence = ntohll(lr->log.sequence);
-    return 1;
-}
-
-/* ARGSUSED */
-static int hton_logout_request(packet *lr, size_t s)
-{
-    if (s < sizeof(logout_request))
-        return 0;
-    lr->lgt.sequence = htonll(lr->lgt.sequence);
-     return 1;
-}
-
-/* ARGSUSED */
-static int ntoh_logout_request(packet *lr, size_t s)
-{
-    if (s < sizeof(logout_request))
-        return 0;
-    lr->lgt.sequence = ntohll(lr->lgt.sequence);
     return 1;
 }
 
