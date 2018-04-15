@@ -1,6 +1,6 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Mar 2018, 08:33:37 tquirk
+ *   last updated 14 Apr 2018, 21:21:22 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -68,8 +68,6 @@ static int hton_ack_packet(packet *, size_t);
 static int ntoh_ack_packet(packet *, size_t);
 static int hton_login_request(packet *, size_t);
 static int ntoh_login_request(packet *, size_t);
-static int hton_logout_request(packet *, size_t);
-static int ntoh_logout_request(packet *, size_t);
 static int hton_action_request(packet *, size_t);
 static int ntoh_action_request(packet *, size_t);
 static int hton_position_update(packet *, size_t);
@@ -90,10 +88,10 @@ packet_handlers[] =
 {
     { hton_ack_packet,       ntoh_ack_packet,       sizeof(ack_packet)       },
     { hton_login_request,    ntoh_login_request,    sizeof(login_request)    },
-    { hton_logout_request,   ntoh_logout_request,   sizeof(logout_request)   },
     { hton_action_request,   ntoh_action_request,   sizeof(action_request)   },
     { hton_position_update,  ntoh_position_update,  sizeof(position_update)  },
     { hton_server_notice,    ntoh_server_notice,    sizeof(server_notice)    },
+    { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     },
     { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     }
 };
 
@@ -177,24 +175,6 @@ static int ntoh_login_request(packet *lr, size_t s)
     if (s < sizeof(login_request))
         return 0;
     lr->log.sequence = ntohll(lr->log.sequence);
-    return 1;
-}
-
-/* ARGSUSED */
-static int hton_logout_request(packet *lr, size_t s)
-{
-    if (s < sizeof(logout_request))
-        return 0;
-    lr->lgt.sequence = htonll(lr->lgt.sequence);
-     return 1;
-}
-
-/* ARGSUSED */
-static int ntoh_logout_request(packet *lr, size_t s)
-{
-    if (s < sizeof(logout_request))
-        return 0;
-    lr->lgt.sequence = ntohll(lr->lgt.sequence);
     return 1;
 }
 

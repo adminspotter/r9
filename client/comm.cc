@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Mar 2018, 08:55:51 tquirk
+ *   last updated 14 Apr 2018, 21:29:41 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -74,11 +74,11 @@ Comm::pkt_handler Comm::pkt_type[] =
 {
     &Comm::handle_ackpkt,       /* Ack             */
     &Comm::handle_unsupported,  /* Login req       */
-    &Comm::handle_unsupported,  /* Logout req      */
     &Comm::handle_unsupported,  /* Action req      */
     &Comm::handle_posupd,       /* Position update */
     &Comm::handle_srvnot,       /* Server notice   */
-    &Comm::handle_pngpkt        /* Ping            */
+    &Comm::handle_pngpkt,       /* Ping            */
+    &Comm::handle_unsupported   /* Logout req      */
 };
 
 #define COMM_MEMBER(a, b) ((a).*(b))
@@ -445,10 +445,10 @@ void Comm::send_logout(void)
     packet *req = new packet;
 
     memset(req, 0, sizeof(packet));
-    req->lgt.type = TYPE_LGTREQ;
-    req->lgt.version = 1;
-    req->lgt.sequence = sequence++;
-    this->send(req, sizeof(logout_request));
+    req->basic.type = TYPE_LGTREQ;
+    req->basic.version = 1;
+    req->basic.sequence = sequence++;
+    this->send(req, sizeof(basic_packet));
 }
 
 void Comm::send_ack(uint8_t type)
