@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Mar 2018, 07:12:46 tquirk
+ *   last updated 14 Apr 2018, 21:21:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -32,7 +32,6 @@
  *            request that the user has made.  Currently, we've only defined
  *            login responses.
  *   LOGREQ:  This packet is a user request to login.
- *   LGTREQ:  This packet is a user request to logout.
  *   ACTREQ:  This packet is a user request to perform some action.
  *   POSUPD:  This packet is a server position update response.
  *   SRVNOT:  This packet is from a server (could be to a server, could be
@@ -66,11 +65,11 @@
 /* Some defines for packet types. */
 #define TYPE_ACKPKT 0        /* Acknowledgement packet */
 #define TYPE_LOGREQ 1        /* Login request */
-#define TYPE_LGTREQ 2        /* Logout request */
-#define TYPE_ACTREQ 3        /* Action request */
-#define TYPE_POSUPD 4        /* Position update */
-#define TYPE_SRVNOT 5        /* Server notice */
-#define TYPE_PNGPKT 6        /* Ping packet */
+#define TYPE_ACTREQ 2        /* Action request */
+#define TYPE_POSUPD 3        /* Position update */
+#define TYPE_SRVNOT 4        /* Server notice */
+#define TYPE_PNGPKT 5        /* Ping packet */
+#define TYPE_LGTREQ 6        /* Logout request */
 
 /* Access types for the login ACK's misc field.  Are there more types? */
 #define ACCESS_NONE 1        /* No access allowed */
@@ -182,7 +181,6 @@ typedef union packet_tag
     basic_packet     basic;
     ack_packet       ack;
     login_request    log;
-    logout_request   lgt;
     action_request   act;
     position_update  pos;
     server_notice    srv;

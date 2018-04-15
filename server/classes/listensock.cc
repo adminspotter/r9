@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Mar 2018, 09:17:19 tquirk
+ *   last updated 14 Apr 2018, 21:25:05 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -280,7 +280,7 @@ void listen_socket::handle_logout(listen_socket *s, packet& p,
     if (u != NULL)
     {
         u->timestamp = time(NULL);
-        memcpy(&al.buf, &p, sizeof(logout_request));
+        memcpy(&al.buf, &p, sizeof(basic_packet));
         al.what.logout.who = u->userid;
         s->access_pool->push(al);
     }

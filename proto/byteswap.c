@@ -1,6 +1,6 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Mar 2018, 08:33:37 tquirk
+ *   last updated 14 Apr 2018, 21:21:22 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -90,10 +90,10 @@ packet_handlers[] =
 {
     { hton_ack_packet,       ntoh_ack_packet,       sizeof(ack_packet)       },
     { hton_login_request,    ntoh_login_request,    sizeof(login_request)    },
-    { hton_logout_request,   ntoh_logout_request,   sizeof(logout_request)   },
     { hton_action_request,   ntoh_action_request,   sizeof(action_request)   },
     { hton_position_update,  ntoh_position_update,  sizeof(position_update)  },
     { hton_server_notice,    ntoh_server_notice,    sizeof(server_notice)    },
+    { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     },
     { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     }
 };
 
