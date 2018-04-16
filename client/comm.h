@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Mar 2018, 08:57:35 tquirk
+ *   last updated 16 Apr 2018, 07:33:49 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -65,7 +65,7 @@ class Comm
     pthread_cond_t send_queue_not_empty;
     std::queue<packet *> send_queue;
 
-    static uint64_t sequence;
+    static uint32_t sequence;
     uint64_t src_object_id;
     volatile bool thread_exit_flag;
 

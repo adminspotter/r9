@@ -163,7 +163,6 @@ void test_no_skill(void)
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
     pkt.version = 1;
-    pkt.sequence = 1LL;
     pkt.object_id = 9876LL;
     pkt.action_id = 12345;
     pkt.power_level = 5;
@@ -198,7 +197,6 @@ void test_invalid_skill(void)
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
     pkt.version = 1;
-    pkt.sequence = 1LL;
     pkt.object_id = 9876LL;
     pkt.action_id = 567;
     pkt.power_level = 5;
@@ -233,7 +231,6 @@ void test_wrong_object_id(void)
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
     pkt.version = 1;
-    pkt.sequence = 1LL;
     pkt.object_id = 123LL;
     pkt.action_id = 789;
     pkt.power_level = 5;
@@ -268,7 +265,6 @@ void test_good_object_id(void)
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
     pkt.version = 1;
-    pkt.sequence = 1LL;
     pkt.object_id = 9876LL;
     pkt.action_id = 789;
     pkt.power_level = 5;
@@ -303,7 +299,6 @@ void test_worker(void)
     memset(&pl.buf, 0, sizeof(action_request));
     pl.buf.act.type = TYPE_ACTREQ;
     pl.buf.act.version = 1;
-    pl.buf.act.sequence = 1LL;
     pl.buf.act.object_id = 9876LL;
     pl.buf.act.action_id = 789;
     pl.buf.act.power_level = 5;

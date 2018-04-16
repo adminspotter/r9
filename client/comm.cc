@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Apr 2018, 21:29:41 tquirk
+ *   last updated 16 Apr 2018, 07:42:05 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -67,7 +67,7 @@
 #include "client_core.h"
 #include "comm.h"
 
-uint64_t Comm::sequence = 0LL;
+uint32_t Comm::sequence = 0L;
 
 /* Jump table for protocol handling */
 Comm::pkt_handler Comm::pkt_type[] =

@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Apr 2018, 21:25:05 tquirk
+ *   last updated 16 Apr 2018, 07:37:14 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -46,7 +46,7 @@ base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
-    this->sequence = 0LL;
+    this->sequence = 0L;
     this->characterid = 0LL;
 }
 
