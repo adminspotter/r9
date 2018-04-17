@@ -6,7 +6,7 @@
 class fake_listen_socket : public listen_socket
 {
   public:
-    fake_listen_socket(struct addrinfo *a) : listen_socket(a) {};
+    fake_listen_socket(struct addrinfo *a) : listen_socket() {};
     virtual ~fake_listen_socket() {};
 
     std::string port_type(void) { return "fake"; };
