@@ -98,6 +98,12 @@ void base_user::send_ack(uint8_t req,
     this->parent->send_pool->push(pkt);
 }
 
+listen_socket::listen_socket()
+    : users(), sock()
+{
+    this->init();
+}
+
 void listen_socket::init(void)
 {
     this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);

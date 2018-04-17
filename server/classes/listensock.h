@@ -86,6 +86,7 @@ class listen_socket {
     basesock sock;
 
   protected:
+    listen_socket();
     void init(void);
 
   public:
