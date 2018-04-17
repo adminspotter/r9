@@ -5,6 +5,7 @@
 
 int symbol_count = 0;
 void *symbol_result = NULL;
+bool symbol_error = false;
 
 class fake_Library : public Library
 {
@@ -16,6 +17,8 @@ class fake_Library : public Library
     virtual void *symbol(const char *a)
         {
             ++symbol_count;
+            if (symbol_error)
+                throw std::runtime_error("oh noes!");
             return symbol_result;
         };
     virtual void close(void) {};

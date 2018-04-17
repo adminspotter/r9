@@ -289,13 +289,19 @@ void test_worker(void)
 
     action_pool->stop();
     is(action_count, 1, test + "expected action count");
+    symbol_error = true;
+    try
+    {
+        delete action_pool;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    symbol_error = false;
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
-
-    symbol_result = (void *)unregister_actions;
-
-    delete action_pool;
 
     cleanup_fixture();
 }
