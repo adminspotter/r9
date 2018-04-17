@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Apr 2018, 07:37:14 tquirk
+ *   last updated 17 Apr 2018, 07:49:27 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -98,8 +98,7 @@ void base_user::send_ack(uint8_t req,
     this->parent->send_pool->push(pkt);
 }
 
-listen_socket::listen_socket(struct addrinfo *ai)
-    : users(), sock(ai)
+void listen_socket::init(void)
 {
     this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);
     this->access_pool = new ThreadPool<access_list>("access",
@@ -107,6 +106,12 @@ listen_socket::listen_socket(struct addrinfo *ai)
     this->access_pool->clean_on_pop = true;
 
     this->reaper_running = false;
+}
+
+listen_socket::listen_socket(struct addrinfo *ai)
+    : users(), sock(ai)
+{
+    this->init();
 }
 
 listen_socket::~listen_socket()
