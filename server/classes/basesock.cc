@@ -1,6 +1,6 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Feb 2018, 07:25:08 tquirk
+ *   last updated 17 Apr 2018, 07:46:36 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -41,6 +41,19 @@
 
 #include "basesock.h"
 #include "log.h"
+
+/* This default constructor is here solely for ease of mocking other
+ * classes which depend on the basesock.  It should not be used in
+ * production code, thus the log warning.
+ */
+basesock::basesock()
+{
+    std::clog << syslogWarn << "default basesock constructor" << std::endl;
+    this->sa = NULL;
+    this->listen_arg = NULL;
+    this->thread_started = false;
+    this->sock = 0;
+}
 
 basesock::basesock(struct addrinfo *ai)
 {
@@ -182,18 +195,8 @@ void basesock::start(void *(*func)(void *))
 {
     int ret;
 
-    if (!this->thread_started)
+    if (!this->thread_started && this->sock > 0)
     {
-        if (this->sock == 0)
-        {
-            std::ostringstream s;
-            char err[128];
-
-            strerror_r(ENOTSOCK, err, sizeof(err));
-            s << "no socket available to listen for " << this->get_port_string()
-              << ": " << err << " (" << ENOTSOCK << ")";
-            throw std::runtime_error(s.str());
-        }
         if ((ret = pthread_create(&(this->listen_thread),
                                   NULL,
                                   func,
