@@ -1,6 +1,6 @@
 /* library.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Mar 2018, 08:17:14 tquirk
+ *   last updated 18 Apr 2018, 16:25:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -36,6 +36,7 @@
 Library::Library()
     : libname("none")
 {
+    this->lib = NULL;
 }
 
 Library::Library(const std::string& name)

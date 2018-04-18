@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Apr 2018, 07:36:57 tquirk
+ *   last updated 17 Apr 2018, 07:49:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -84,6 +84,10 @@ class listen_socket {
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
     basesock sock;
+
+  protected:
+    listen_socket();
+    void init(void);
 
   public:
     listen_socket(struct addrinfo *);

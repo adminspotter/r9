@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Feb 2018, 11:48:34 tquirk
+ *   last updated 17 Apr 2018, 05:41:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -72,6 +72,8 @@ ActionPool::ActionPool(unsigned int pool_size,
 
 ActionPool::~ActionPool()
 {
+    this->stop();
+
     if (this->action_lib != NULL)
     {
         std::clog << "cleaning up action routines" << std::endl;

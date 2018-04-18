@@ -1,9 +1,9 @@
 /* basesock.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Nov 2015, 06:48:30 tquirk
+ *   last updated 17 Apr 2018, 07:39:27 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -61,6 +61,7 @@ class basesock
     virtual std::string get_port_string(void);
 
   public:
+    basesock();
     basesock(struct addrinfo *);
     virtual ~basesock();
 
