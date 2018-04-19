@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Feb 2018, 07:39:20 tquirk
+ *   last updated 19 Apr 2018, 07:34:46 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -54,7 +54,7 @@
 #include "config_data.h"
 #include "log.h"
 
-extern volatile int main_loop_exit_flag;
+#include "../server.h"
 
 static std::map<int, listen_socket::packet_handler> packet_handlers =
 {

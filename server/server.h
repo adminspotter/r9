@@ -1,9 +1,9 @@
 /* server.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jun 2017, 19:56:48 tquirk
+ *   last updated 19 Apr 2018, 07:33:27 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,6 +29,8 @@
 #ifndef __INC_SERVER_H__
 #define __INC_SERVER_H__
 
+#include <atomic>
+
 #include "classes/zone.h"
 #include "classes/action_pool.h"
 #include "classes/motion_pool.h"
@@ -40,6 +42,7 @@ extern DB *database;
 extern ActionPool *action_pool;
 extern MotionPool *motion_pool;
 extern UpdatePool *update_pool;
+extern std::atomic<int> main_loop_exit_flag;
 
 void set_exit_flag(void);
 void complete_startup(void);
