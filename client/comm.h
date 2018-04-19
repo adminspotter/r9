@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Apr 2018, 07:33:49 tquirk
+ *   last updated 19 Apr 2018, 07:44:02 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -48,6 +48,7 @@
 #include <cstdint>
 #include <string>
 #include <queue>
+#include <atomic>
 
 #include <glm/vec3.hpp>
 
@@ -67,7 +68,7 @@ class Comm
 
     static uint32_t sequence;
     uint64_t src_object_id;
-    volatile bool thread_exit_flag;
+    std::atomic<bool> thread_exit_flag;
 
     typedef void (Comm::*pkt_handler)(packet&);
     static pkt_handler pkt_type[7];

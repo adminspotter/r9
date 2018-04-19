@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Apr 2018, 07:42:05 tquirk
+ *   last updated 19 Apr 2018, 07:45:37 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -282,7 +282,7 @@ void Comm::handle_unsupported(packet& p)
 }
 
 Comm::Comm(struct addrinfo *ai)
-    : send_queue()
+    : send_queue(), thread_exit_flag(false)
 {
     int ret;
 
