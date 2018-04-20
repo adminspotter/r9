@@ -175,6 +175,9 @@ void test_start_stop(void)
         fail(test + "start exception");
     }
 
+    std::cerr << "this I/O gives threads a chance to start"
+              << " and helps prevent hangs" << std::endl;
+
     try
     {
         sts->stop();
