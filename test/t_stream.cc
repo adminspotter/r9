@@ -22,7 +22,7 @@ class test_stream_socket : public stream_socket
     using stream_socket::readfs;
     using stream_socket::master_readfs;
 
-    test_stream_socket(struct addrinfo *a) : stream_socket(a) {};
+    test_stream_socket() : stream_socket() {};
     ~test_stream_socket() {};
 
     void stop(void) override
@@ -123,12 +123,11 @@ void test_create_delete(void)
 void test_create_delete_stop_error(void)
 {
     std::string test = "create/delete w/stop error:";
-    struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts;
 
     try
     {
-        sts = new test_stream_socket(addr);
+        sts = new test_stream_socket();
     }
     catch (...)
     {
@@ -145,19 +144,16 @@ void test_create_delete_stop_error(void)
         fail(test + "destructor exception");
     }
     stop_error = false;
-    freeaddrinfo(addr);
 }
 
 void test_port_type(void)
 {
     std::string test = "port type: ";
-    struct addrinfo *addr = create_addrinfo();
-    stream_socket *sts = new stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
 
     is(sts->port_type(), "stream", test + "expected port type");
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_start_stop(void)
@@ -168,6 +164,7 @@ void test_start_stop(void)
 
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
+    freeaddrinfo(addr);
 
     try
     {
@@ -177,6 +174,9 @@ void test_start_stop(void)
     {
         fail(test + "start exception");
     }
+
+    std::cerr << "this I/O gives threads a chance to start"
+              << " and helps prevent hangs" << std::endl;
 
     try
     {
@@ -188,14 +188,12 @@ void test_start_stop(void)
     }
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_handle_packet(void)
 {
     std::string test = "handle_packet: ";
-    struct addrinfo *addr = create_addrinfo();
-    stream_socket *sts = new stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
     base_user *bu = new base_user(123LL, NULL, sts);
     int fd = 99;
 
@@ -214,14 +212,12 @@ void test_handle_packet(void)
     isnt(bu->timestamp, 0, test + "expected timestamp update");
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_handle_login(void)
 {
     std::string test = "handle_login: ";
-    struct addrinfo *addr = create_addrinfo();
-    stream_socket *sts = new stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
     int fd = 99;
 
     packet p;
@@ -242,14 +238,12 @@ void test_handle_login(void)
     is(al.what.login.who.stream, fd, test + "expected file descriptor");
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_connect_user(void)
 {
     std::string test = "connect_user: ";
-    struct addrinfo *addr = create_addrinfo();
-    stream_socket *sts = new stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
 
     is(sts->users.size(), 0, test + "expected user list size");
     is(sts->fds.size(), 0, test + "expected fds size");
@@ -273,14 +267,12 @@ void test_connect_user(void)
     is(sts->user_fds.size(), 1, test + "expected user fds size");
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_disconnect_user(void)
 {
     std::string test = "disconnect_user: ";
-    struct addrinfo *addr = create_addrinfo();
-    test_stream_socket *sts = new test_stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
     base_user *bu = new base_user(123LL, NULL, sts);
     int fd = 99;
 
@@ -305,7 +297,6 @@ void test_disconnect_user(void)
 
     delete bu;
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_select_fd_set(void)
@@ -314,6 +305,7 @@ void test_select_fd_set(void)
     int retval;
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
+    freeaddrinfo(addr);
 
     st = "select EINTR failure: ";
 
@@ -340,7 +332,6 @@ void test_select_fd_set(void)
     is(retval, 0, test + st + "expected return value");
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_accept_new_connection(void)
@@ -349,8 +340,7 @@ void test_accept_new_connection(void)
     config.use_linger = 123;
     config.use_keepalive = true;
 
-    struct addrinfo *addr = create_addrinfo();
-    test_stream_socket *sts = new test_stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
 
     FD_SET(sts->sock.sock, &sts->readfs);
 
@@ -371,14 +361,12 @@ void test_accept_new_connection(void)
      */
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_handle_users_bad_packet(void)
 {
     std::string test = "handle_users w/bad packet: ";
-    struct addrinfo *addr = create_addrinfo();
-    test_stream_socket *sts = new test_stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
     base_user *bu = new base_user(123LL, NULL, sts);
     int fd = 99;
 
@@ -399,14 +387,12 @@ void test_handle_users_bad_packet(void)
     read_bad_packet = false;
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_handle_users_read_error(void)
 {
     std::string test = "handle_users w/read error: ";
-    struct addrinfo *addr = create_addrinfo();
-    test_stream_socket *sts = new test_stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
     base_user *bu = new base_user(123LL, NULL, sts);
     int fd = 99;
 
@@ -427,14 +413,12 @@ void test_handle_users_read_error(void)
     read_nothing = false;
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_handle_users(void)
 {
     std::string test = "handle_users: ";
-    struct addrinfo *addr = create_addrinfo();
-    test_stream_socket *sts = new test_stream_socket(addr);
+    test_stream_socket *sts = new test_stream_socket();
     base_user *bu = new base_user(123LL, NULL, sts);
     int fd = 99;
 
@@ -451,7 +435,6 @@ void test_handle_users(void)
     isnt(bu->timestamp, 0, test + "expected timestamp update");
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 int main(int argc, char **argv)

@@ -1,6 +1,6 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Aug 2017, 08:27:43 tquirk
+ *   last updated 20 Apr 2018, 05:34:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -47,6 +47,9 @@ class stream_socket : public listen_socket
     int max_fd;
 
     fd_set readfs, master_readfs;
+
+    stream_socket();
+    void init(void);
 
   public:
     stream_socket(struct addrinfo *);
