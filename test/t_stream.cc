@@ -164,6 +164,7 @@ void test_start_stop(void)
 
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
+    freeaddrinfo(addr);
 
     try
     {
@@ -184,7 +185,6 @@ void test_start_stop(void)
     }
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_handle_packet(void)
@@ -302,6 +302,7 @@ void test_select_fd_set(void)
     int retval;
     struct addrinfo *addr = create_addrinfo();
     stream_socket *sts = new stream_socket(addr);
+    freeaddrinfo(addr);
 
     st = "select EINTR failure: ";
 
@@ -328,7 +329,6 @@ void test_select_fd_set(void)
     is(retval, 0, test + st + "expected return value");
 
     delete sts;
-    freeaddrinfo(addr);
 }
 
 void test_accept_new_connection(void)
