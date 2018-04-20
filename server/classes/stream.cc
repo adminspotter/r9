@@ -64,6 +64,12 @@ static std::map<int, listen_socket::packet_handler> packet_handlers =
     { TYPE_LGTREQ, listen_socket::handle_logout }
 };
 
+stream_socket::stream_socket()
+    : listen_socket(), fds()
+{
+    this->init();
+}
+
 void stream_socket::init(void)
 {
     FD_ZERO(&this->master_readfs);

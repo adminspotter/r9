@@ -48,6 +48,7 @@ class stream_socket : public listen_socket
 
     fd_set readfs, master_readfs;
 
+    stream_socket();
     void init(void);
 
   public:
