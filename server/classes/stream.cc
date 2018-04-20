@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Apr 2018, 07:34:46 tquirk
+ *   last updated 20 Apr 2018, 05:34:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -64,12 +64,17 @@ static std::map<int, listen_socket::packet_handler> packet_handlers =
     { TYPE_LGTREQ, listen_socket::handle_logout }
 };
 
-stream_socket::stream_socket(struct addrinfo *ai)
-    : listen_socket(ai), fds()
+void stream_socket::init(void)
 {
     FD_ZERO(&this->master_readfs);
     FD_SET(this->sock.sock, &this->master_readfs);
     this->max_fd = this->sock.sock + 1;
+}
+
+stream_socket::stream_socket(struct addrinfo *ai)
+    : listen_socket(ai), fds()
+{
+    this->init();
 }
 
 stream_socket::~stream_socket()
