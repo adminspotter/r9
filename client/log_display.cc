@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Feb 2018, 07:40:44 tquirk
+ *   last updated 23 May 2018, 18:39:04 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -45,7 +45,7 @@
 
 #include "cuddly-gl/ui_defs.h"
 #include "log_display.h"
-#include "cuddly-gl/multi_label.h"
+#include "cuddly-gl/label.h"
 
 #define DISTANCE_FROM_BOTTOM 10
 #define LABEL_WIDTH 225
@@ -99,7 +99,7 @@ void log_display::create_log_labels(void)
             ++this->created;
 
         int border = 1, orig_pos = this->pos.y, orig_height = this->dim.y;
-        this->created->label = new ui::multi_label(this, LABEL_WIDTH, 0);
+        this->created->label = new ui::label(this, LABEL_WIDTH, 0);
         this->created->label->set_va(
             ui::element::font, ui::ownership::shared, this->log_font,
             ui::element::string, 0, &this->created->log_entry,
