@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 May 2018, 18:39:04 tquirk
+ *   last updated 28 May 2018, 10:39:44 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -187,7 +187,8 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
 
     this->background = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
-    this->add_callback(ui::callback::resize, resize_pos_callback, NULL);
+    this->add_callback(ui::callback::resize,
+                       log_display::resize_pos_callback, NULL);
     this->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 
     if ((ret = pthread_create(&(this->cleanup_thread), NULL,
@@ -286,18 +287,20 @@ int log_display::overflow(int c)
 }
 
 /* ARGSUSED */
-void resize_pos_callback(ui::active *a, void *call, void *client)
+void log_display::resize_pos_callback(ui::active *a, void *call, void *client)
 {
     ui::resize_call_data *call_data = (ui::resize_call_data *)call;
     log_display *ld = dynamic_cast<log_display *>(a);
 
     if (ld != NULL)
     {
-        int log_height;
+        int log_pos;
 
-        ld->get(ui::element::size, ui::size::height, &log_height);
-        log_height = call_data->new_size.y - log_height - DISTANCE_FROM_BOTTOM;
-        ld->set(ui::element::position, ui::position::y, &log_height);
+        ld->composite::parent->get(ui::element::size,
+                                   ui::size::height,
+                                   &log_pos);
+        log_pos -= call_data->new_size.y + DISTANCE_FROM_BOTTOM;
+        ld->set(ui::element::position, ui::position::y, &log_pos);
     }
 }
 

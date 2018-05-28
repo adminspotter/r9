@@ -1,6 +1,6 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Nov 2017, 08:04:00 tquirk
+ *   last updated 24 May 2018, 23:03:10 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -92,6 +92,8 @@ class log_display : public ui::row_column,
   protected:
     int sync(void) override;
     int overflow(int) override;
+
+    static void resize_pos_callback(ui::active *, void *, void *);
 };
 
 #endif /* __INC_R9CLIENT_LOG_DISPLAY_H__ */
