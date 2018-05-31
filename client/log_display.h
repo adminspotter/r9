@@ -1,6 +1,6 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 May 2018, 23:03:10 tquirk
+ *   last updated 28 May 2018, 10:44:23 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -35,7 +35,7 @@
 
 #include <iostream>
 #include <chrono>
-#include <list>
+#include <deque>
 #include <string>
 
 #include "cuddly-gl/row_column.h"
@@ -66,11 +66,11 @@ class log_display : public ui::row_column,
             };
     }
     entry;
-    typedef std::list<entry>::iterator ld_iter;
+    typedef std::deque<entry>::iterator ld_iter;
 
   protected:
-    std::list<entry> entries;
-    std::list<entry>::iterator created;
+    std::deque<entry> entries;
+    std::deque<entry>::iterator created;
     pthread_t cleanup_thread;
     pthread_mutex_t queue_mutex;
     std::chrono::seconds entry_lifetime;

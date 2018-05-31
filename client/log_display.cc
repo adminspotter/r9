@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 May 2018, 10:39:44 tquirk
+ *   last updated 28 May 2018, 10:47:06 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -52,7 +52,6 @@
 #define ENTRY_LIFETIME 10
 
 static void resize_pos_callback(ui::active *, void *, void *);
-static log_display::ld_iter operator+(log_display::ld_iter, int);
 
 void log_display::sync_to_file(void)
 {
@@ -302,18 +301,4 @@ void log_display::resize_pos_callback(ui::active *a, void *call, void *client)
         log_pos -= call_data->new_size.y + DISTANCE_FROM_BOTTOM;
         ld->set(ui::element::position, ui::position::y, &log_pos);
     }
-}
-
-/* We want to be able to say "hey, what's the next element in the
- * list?", but there's no general-purpose "add X to our iterator"
- * function.
- */
-static log_display::ld_iter operator+(log_display::ld_iter iter, int interval)
-{
-    log_display::ld_iter tmp_iter = iter;
-
-    for (int i = 0; i < interval; ++i)
-        ++tmp_iter;
-
-    return tmp_iter;
 }
