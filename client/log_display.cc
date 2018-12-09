@@ -48,7 +48,6 @@
 #include "cuddly-gl/label.h"
 
 #define DISTANCE_FROM_BOTTOM 10
-#define LABEL_WIDTH 225
 #define ENTRY_LIFETIME 10
 
 static void resize_pos_callback(ui::active *, void *, void *);
@@ -98,7 +97,7 @@ void log_display::create_log_labels(void)
             ++this->created;
 
         int orig_pos = this->pos.y, orig_height = this->dim.y;
-        this->created->label = new ui::label(this, LABEL_WIDTH, 0);
+        this->created->label = new ui::label(this, 0, 0);
         this->created->label->set(
             ui::element::font, ui::ownership::shared, this->log_font,
             ui::element::string, 0, this->created->log_entry,
