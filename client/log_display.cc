@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 May 2018, 10:47:06 tquirk
+ *   last updated 09 Dec 2018, 08:34:27 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -97,15 +97,15 @@ void log_display::create_log_labels(void)
         else
             ++this->created;
 
-        int border = 1, orig_pos = this->pos.y, orig_height = this->dim.y;
+        int orig_pos = this->pos.y, orig_height = this->dim.y;
         this->created->label = new ui::label(this, LABEL_WIDTH, 0);
-        this->created->label->set_va(
+        this->created->label->set(
             ui::element::font, ui::ownership::shared, this->log_font,
-            ui::element::string, 0, &this->created->log_entry,
-            ui::element::border, ui::side::all, &border, 0);
+            ui::element::string, 0, this->created->log_entry,
+            ui::element::border, ui::side::all, 1);
         this->manage_children();
         orig_pos -= this->dim.y - orig_height;
-        this->set_position(ui::position::y, &orig_pos);
+        this->set_position(ui::position::y, orig_pos);
     }
 }
 
@@ -299,6 +299,6 @@ void log_display::resize_pos_callback(ui::active *a, void *call, void *client)
                                    ui::size::height,
                                    &log_pos);
         log_pos -= call_data->new_size.y + DISTANCE_FROM_BOTTOM;
-        ld->set(ui::element::position, ui::position::y, &log_pos);
+        ld->set(ui::element::position, ui::position::y, log_pos);
     }
 }

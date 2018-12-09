@@ -1,6 +1,6 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 May 2018, 10:44:23 tquirk
+ *   last updated 11 Nov 2018, 10:24:29 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -38,6 +38,7 @@
 #include <deque>
 #include <string>
 
+#include "cuddly-gl/label.h"
 #include "cuddly-gl/row_column.h"
 #include "cuddly-gl/font.h"
 
@@ -54,7 +55,7 @@ class log_display : public ui::row_column,
         ld_ts_point timestamp;
         ld_wc_point display_time;
         std::string log_entry;
-        ui::widget *label;
+        ui::label *label;
 
         const struct entry_tag& operator=(const struct entry_tag& et)
             {
