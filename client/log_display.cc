@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Dec 2018, 08:34:27 tquirk
+ *   last updated 13 Dec 2018, 07:48:08 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -124,7 +124,10 @@ void *log_display::cleanup_entries(void *arg)
         if (ld->entries.empty()
             || (last_closed != ld->entries.end()
                 && (next_closed = last_closed + 1) == ld->entries.end()))
+        {
             sleep(ENTRY_LIFETIME);
+            continue;
+        }
         else
         {
             if (last_closed == ld->entries.end())
@@ -145,10 +148,6 @@ void *log_display::cleanup_entries(void *arg)
                 }
             }
         }
-
-        /* See if anything needs closing */
-        if (next_closed == ld->entries.end())
-            continue;
 
         now = log_display::ld_ts_time::now();
         while (next_closed != ld->entries.end()
