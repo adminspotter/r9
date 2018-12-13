@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Dec 2018, 07:48:08 tquirk
+ *   last updated 13 Dec 2018, 08:07:14 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -84,19 +84,10 @@ void log_display::sync_to_file(void)
 
 void log_display::create_log_labels(void)
 {
-    if (this->entries.size() == 0
-        || (this->created != this->entries.end()
-            && this->created == --this->entries.end()))
-        return;
-
-    while (this->created != --this->entries.end())
+    while (this->created != this->entries.end() - 1)
     {
-        if (this->created == this->entries.end())
-            this->created = this->entries.begin();
-        else
-            ++this->created;
-
-        int orig_pos = this->pos.y, orig_height = this->dim.y;
+        ++this->created;
+        GLuint orig_pos = this->pos.y, orig_height = this->dim.y;
         this->created->label = new ui::label(this, 0, 0);
         this->created->label->set(
             ui::element::font, ui::ownership::shared, this->log_font,
@@ -117,13 +108,13 @@ void *log_display::cleanup_entries(void *arg)
     float ftime_val;
     struct timespec ts;
 
-    last_closed = next_closed = ld->entries.end();
+    last_closed = ld->entries.begin();
 
     for (;;)
     {
-        if (ld->entries.empty()
-            || (last_closed != ld->entries.end()
-                && (next_closed = last_closed + 1) == ld->entries.end()))
+        next_closed = last_closed + 1;
+        if (last_closed != ld->entries.end()
+            && next_closed == ld->entries.end())
         {
             sleep(ENTRY_LIFETIME);
             continue;
@@ -170,8 +161,15 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
       buf(), fname(), entries(), entry_lifetime(ENTRY_LIFETIME)
 {
     int border = 1, ret;
+    entry e;
 
-    this->created = this->entries.end();
+    e.timestamp = log_display::ld_ts_time::now();
+    e.display_time = log_display::ld_wc_time::now();
+    e.log_entry = "program start";
+    e.label = NULL;
+
+    this->entries.push_back(e);
+    this->created = this->entries.begin();
     this->grid_sz = glm::ivec2(1, 0);
     this->child_spacing = glm::ivec2(5, 5);
     this->pack_order = ui::order::column;
@@ -268,6 +266,8 @@ int log_display::sync(void)
 
         /* Strip trailing whitespace */
         e.log_entry.erase(e.log_entry.find_last_not_of(" \n\r\t") + 1);
+        if (e.log_entry.length() == 0)
+            return 0;
         pthread_mutex_lock(&this->queue_mutex);
         this->entries.push_back(std::move(e));
         pthread_mutex_unlock(&this->queue_mutex);
