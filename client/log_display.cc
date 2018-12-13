@@ -47,7 +47,7 @@
 #include "log_display.h"
 #include "cuddly-gl/label.h"
 
-#define DISTANCE_FROM_BOTTOM 10
+#define DISTANCE_FROM_EDGE 10
 #define ENTRY_LIFETIME 10
 
 static void resize_pos_callback(ui::active *, void *, void *);
@@ -174,16 +174,15 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
     this->created = this->entries.end();
     this->grid_sz = glm::ivec2(1, 0);
     this->child_spacing = glm::ivec2(5, 5);
-    this->pos = glm::ivec2(10, 0);
-
     this->pack_order = ui::order::column;
 
     this->log_font = new ui::font(config.font_name, 13, config.font_paths);
 
+    this->pos.x = DISTANCE_FROM_EDGE;
     this->composite::parent->get(ui::element::size,
                                  ui::size::height,
                                  &this->pos.y);
-    this->pos.y -= DISTANCE_FROM_BOTTOM;
+    this->pos.y -= DISTANCE_FROM_EDGE;
 
     this->background = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
@@ -294,12 +293,12 @@ void log_display::resize_pos_callback(ui::active *a, void *call, void *client)
 
     if (ld != NULL)
     {
-        int log_pos;
+        GLuint log_pos;
 
         ld->composite::parent->get(ui::element::size,
                                    ui::size::height,
                                    &log_pos);
-        log_pos -= call_data->new_size.y + DISTANCE_FROM_BOTTOM;
-        ld->set(ui::element::position, ui::position::y, log_pos);
+        ld->set(ui::element::position, ui::position::y,
+                log_pos - DISTANCE_FROM_EDGE);
     }
 }
