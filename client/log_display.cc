@@ -153,10 +153,13 @@ void *log_display::cleanup_entries(void *arg)
         while (next_closed != ld->entries.end()
                && now >= (next_closed->timestamp + ld->entry_lifetime))
         {
-            pthread_mutex_lock(&ld->queue_mutex);
-            next_closed->label->close();
-            next_closed->label = NULL;
-            pthread_mutex_unlock(&ld->queue_mutex);
+            if (next_closed->label != NULL)
+            {
+                pthread_mutex_lock(&ld->queue_mutex);
+                next_closed->label->close();
+                next_closed->label = NULL;
+                pthread_mutex_unlock(&ld->queue_mutex);
+            }
             last_closed = next_closed++;
         }
     }
