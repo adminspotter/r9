@@ -1,6 +1,6 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Nov 2017, 08:04:00 tquirk
+ *   last updated 11 Nov 2018, 10:24:29 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -35,9 +35,10 @@
 
 #include <iostream>
 #include <chrono>
-#include <list>
+#include <deque>
 #include <string>
 
+#include "cuddly-gl/label.h"
 #include "cuddly-gl/row_column.h"
 #include "cuddly-gl/font.h"
 
@@ -54,7 +55,7 @@ class log_display : public ui::row_column,
         ld_ts_point timestamp;
         ld_wc_point display_time;
         std::string log_entry;
-        ui::widget *label;
+        ui::label *label;
 
         const struct entry_tag& operator=(const struct entry_tag& et)
             {
@@ -66,11 +67,11 @@ class log_display : public ui::row_column,
             };
     }
     entry;
-    typedef std::list<entry>::iterator ld_iter;
+    typedef std::deque<entry>::iterator ld_iter;
 
   protected:
-    std::list<entry> entries;
-    std::list<entry>::iterator created;
+    std::deque<entry> entries;
+    std::deque<entry>::iterator created;
     pthread_t cleanup_thread;
     pthread_mutex_t queue_mutex;
     std::chrono::seconds entry_lifetime;
@@ -92,6 +93,8 @@ class log_display : public ui::row_column,
   protected:
     int sync(void) override;
     int overflow(int) override;
+
+    static void resize_pos_callback(ui::active *, void *, void *);
 };
 
 #endif /* __INC_R9CLIENT_LOG_DISPLAY_H__ */

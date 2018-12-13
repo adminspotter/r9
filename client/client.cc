@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Mar 2018, 17:56:11 tquirk
+ *   last updated 10 Nov 2018, 08:08:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -144,7 +144,7 @@ void resize_callback(GLFWwindow *w, int width, int height)
 {
     glm::ivec2 sz(width, height);
 
-    ctx->set(ui::element::size, ui::size::all, &sz);
+    ctx->set(ui::element::size, ui::size::all, sz);
     resize_window(width, height);
 }
 
