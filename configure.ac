@@ -268,13 +268,13 @@ then
         [AC_MSG_ERROR([no valid MySQL headers found, can not continue])])
     MYSQL_LIBS_SAVE="$LIBS"
     LIBS=""
-    AC_SEARCH_LIBS([mysql_init], [mysqlclient_r],
+    AC_SEARCH_LIBS([mysql_init], [mysqlclient_r mysqlclient],
         [
             MYSQL_LDLIBS="$ac_cv_search_mysql_init"
             AC_SUBST(MYSQL_LDLIBS)
             want_mysql="yes"
         ],
-        [AC_MSG_ERROR([libmysqlclient_r not valid, can not enable MySQL module.])])
+        [AC_MSG_ERROR([MySQL client lib not valid, can not enable MySQL module.])])
     LIBS="$MYSQL_LIBS_SAVE"
   fi
 
