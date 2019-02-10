@@ -1,9 +1,9 @@
-/* server.h
+/* r9python.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Apr 2018, 07:33:27 tquirk
+ *   last updated 28 Mar 2018, 07:31:29 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,32 +20,29 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains some prototypes for the server program.
+ * This file contains the class for embedding python.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_SERVER_H__
-#define __INC_SERVER_H__
+#ifndef __INC_R9PYTHON_H__
+#define __INC_R9PYTHON_H__
 
-#include <atomic>
+#include <Python.h>
 
-#include "classes/zone.h"
-#include "classes/action_pool.h"
-#include "classes/motion_pool.h"
-#include "classes/update_pool.h"
-#include "classes/modules/db.h"
+#include "language.h"
 
-extern Zone *zone;
-extern DB *database;
-extern ActionPool *action_pool;
-extern MotionPool *motion_pool;
-extern UpdatePool *update_pool;
-extern std::atomic<int> main_loop_exit_flag;
+class PythonLanguage : public Language
+{
+  private:
+    PyThreadState *sub_interp;
 
-void set_exit_flag(void);
-void complete_startup(void);
-void complete_cleanup(void);
+  public:
+    PythonLanguage();
+    ~PythonLanguage();
 
-#endif /* __INC_SERVER_H__ */
+    std::string execute(const std::string &);
+};
+
+#endif /* __INC_R9PYTHON_H__ */

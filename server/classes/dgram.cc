@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Feb 2018, 07:40:14 tquirk
+ *   last updated 19 Apr 2018, 07:38:14 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -43,8 +43,6 @@
 #include "log.h"
 
 #include "../server.h"
-
-extern volatile int main_loop_exit_flag;
 
 static std::map<int, listen_socket::packet_handler> packet_handlers =
 {

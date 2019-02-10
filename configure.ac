@@ -97,10 +97,6 @@ AC_ARG_WITH([tcl],
             AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
             [],
             [with_tcl="no"])
-AC_ARG_WITH([perl],
-            AS_HELP_STRING([--with-perl], [Build the Perl server module.  NOTE: the Perl interpreter can not currently run a simple script, so it may cause crashing in the server.]),
-            [],
-            [with_perl="no"])
 AC_ARG_WITH([mysql],
             AS_HELP_STRING([--with-mysql], [Build the MySQL server module]),
             [],
@@ -109,6 +105,19 @@ AC_ARG_WITH([pgsql],
             AS_HELP_STRING([--with-pgsql], [Build the PostgreSQL server module]),
             [],
             [with_pgsql="no"])
+
+AC_ARG_WITH([lua],
+            AS_HELP_STRING([--with-lua], [Build the Lua server module]),
+            [],
+            [with_lua="no"])
+AC_ARG_WITH([python],
+            AS_HELP_STRING([--with-python], [Build the Python server module]),
+            [],
+            [with_python="no"])
+AC_ARG_WITH([tcl],
+            AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
+            [],
+            [with_tcl="no"])
 
 AC_ARG_WITH([client],
             AS_HELP_STRING([--with-client], [Build the client program]),
@@ -210,19 +219,6 @@ then
       [AC_MSG_ERROR([ not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
-  # Check for Freetype2
-  FREETYPE_CPPFLAGS_SAVE="$CPPFLAGS"
-  CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([ft2build.h], [], [AC_MSG_ERROR([no valid Freetype2 headers found, can not continue])])
-  CPPFLAGS="$FREETYPE_CPPFLAGS_SAVE"
-  AC_SEARCH_LIBS([FT_Init_FreeType], [freetype],
-      [
-          FREETYPE_LDLIBS="$ac_cv_search_FT_Init_FreeType"
-          CLIENT_LDLIBS="$FREETYPE_LDLIBS $CLIENT_LDLIBS"
-      ],
-      [AC_MSG_ERROR([ not valid, can not build client program.])],
-      [$CLIENT_LDFLAGS])
-
   CLIENT_CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CLIENT_CXXFLAGS"
   CLIENT_LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $CLIENT_LDFLAGS"
   CLIENT_LDLIBS="$CLIENT_LDLIBS $PROFILE_LDLIBS"
@@ -272,13 +268,13 @@ then
         [AC_MSG_ERROR([no valid MySQL headers found, can not continue])])
     MYSQL_LIBS_SAVE="$LIBS"
     LIBS=""
-    AC_SEARCH_LIBS([mysql_init], [mysqlclient_r],
+    AC_SEARCH_LIBS([mysql_init], [mysqlclient_r mysqlclient],
         [
             MYSQL_LDLIBS="$ac_cv_search_mysql_init"
             AC_SUBST(MYSQL_LDLIBS)
             want_mysql="yes"
         ],
-        [AC_MSG_ERROR([libmysqlclient_r not valid, can not enable MySQL module.])])
+        [AC_MSG_ERROR([MySQL client lib not valid, can not enable MySQL module.])])
     LIBS="$MYSQL_LIBS_SAVE"
   fi
 
@@ -299,6 +295,38 @@ then
     LIBS="$PGSQL_LIBS_SAVE"
   fi
 
+  # Lua server module
+  if test "$with_lua" == "yes"
+  then
+    AC_CHECK_HEADERS([lua.h lauxlib.h lualib.h lua.hpp], [],
+        [AC_MSG_ERROR([no valid Lua headers found, can not continue])])
+    LUA_LIBS_SAVE="$LIBS"
+    LIBS=""
+    AC_SEARCH_LIBS([luaL_newstate], [lua lua5.2 lua5.3],
+        [
+            LUA_LDLIBS="$ac_cv_search_luaL_newstate"
+            AC_SUBST(LUA_LDLIBS)
+            want_lua="yes"
+        ],
+        [AC_MSG_ERROR([liblua not valid, can not enable Lua module.])])
+    LIBS="$LUA_LIBS_SAVE"
+  fi
+
+  # Python server module
+  if test "$with_python" == "yes"
+  then
+    AC_CHECK_PROG(PYTHON3_CONFIG_CHECK, [python3-config], [yes])
+    if test "x$PYTHON3_CONFIG_CHECK" != "xyes"
+    then
+      AC_MSG_ERROR([No python3-config script found, can not continue])
+    fi
+    PYTHON_CFLAGS=$(python3-config --cflags)
+    PYTHON_LDFLAGS=$(python3-config --ldflags)
+    AC_SUBST(PYTHON_CFLAGS)
+    AC_SUBST(PYTHON_LDFLAGS)
+    want_python="yes"
+  fi
+
   # Tcl server module
   if test "$with_tcl" == "yes"
   then
@@ -314,20 +342,6 @@ then
         ],
         [AC_MSG_ERROR([libtcl not valid, can not enable Tcl module.])])
     LIBS="$TCL_LIBS_SAVE"
-  fi
-
-  # Perl server module
-  if test "$with_perl" == "yes"
-  then
-    AX_PROG_PERL_MODULES([ExtUtils::Embed],
-        [
-            PERL_CFLAGS=$(perl -MExtUtils::Embed -e ccopts)
-	    PERL_LDFLAGS=$(perl -MExtUtils::Embed -e ldopts)
-            AC_SUBST(PERL_CFLAGS)
-            AC_SUBST(PERL_LDFLAGS)
-            want_perl="yes"
-        ],
-        [AC_MSG_ERROR([perl does not have ExtUtils::Embed available.  Can not embed it.])])
   fi
 
   AC_SEARCH_LIBS([dlopen], [dl],
@@ -346,8 +360,9 @@ AM_CONDITIONAL([WANT_SERVER], [test "x$with_server" == "xyes"])
 AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
 AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
 AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
+AM_CONDITIONAL([WANT_LUA], [test "x$want_lua" == "xyes"])
+AM_CONDITIONAL([WANT_PYTHON], [test "x$want_python" == "xyes"])
 AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
-AM_CONDITIONAL([WANT_PERL], [test "x$want_perl" == "xyes"])
 
 # We want GLM in either the client or the server
 if test "$with_client" = "yes" -o "$with_server" = "yes"
@@ -376,7 +391,7 @@ AC_SEARCH_LIBS([pthread_create], [pthread],
     [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],
     [AC_MSG_ERROR([can not build without pthreads.])])
 
-CFLAGS="$DEBUG_CFLAGS $PROFILE_CFLAGS $CFLAGS"
+CFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CFLAGS"
 CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
 LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
 LIBS="$LIBS $PROFILE_LDLIBS"

@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Mar 2018, 07:12:46 tquirk
+ *   last updated 16 Apr 2018, 07:33:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -32,7 +32,6 @@
  *            request that the user has made.  Currently, we've only defined
  *            login responses.
  *   LOGREQ:  This packet is a user request to login.
- *   LGTREQ:  This packet is a user request to logout.
  *   ACTREQ:  This packet is a user request to perform some action.
  *   POSUPD:  This packet is a server position update response.
  *   SRVNOT:  This packet is from a server (could be to a server, could be
@@ -66,11 +65,11 @@
 /* Some defines for packet types. */
 #define TYPE_ACKPKT 0        /* Acknowledgement packet */
 #define TYPE_LOGREQ 1        /* Login request */
-#define TYPE_LGTREQ 2        /* Logout request */
-#define TYPE_ACTREQ 3        /* Action request */
-#define TYPE_POSUPD 4        /* Position update */
-#define TYPE_SRVNOT 5        /* Server notice */
-#define TYPE_PNGPKT 6        /* Ping packet */
+#define TYPE_ACTREQ 2        /* Action request */
+#define TYPE_POSUPD 3        /* Position update */
+#define TYPE_SRVNOT 4        /* Server notice */
+#define TYPE_PNGPKT 5        /* Ping packet */
+#define TYPE_LGTREQ 6        /* Logout request */
 
 /* Access types for the login ACK's misc field.  Are there more types? */
 #define ACCESS_NONE 1        /* No access allowed */
@@ -85,7 +84,7 @@ typedef struct basic_packet_tag
 {
     uint8_t type;
     uint8_t version;
-    uint64_t sequence;
+    uint32_t sequence;
 } __attribute__ ((__packed__))
 basic_packet;
 
@@ -96,7 +95,7 @@ typedef struct ack_packet_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint64_t sequence;      /* timestamp / sequence number */
+    uint32_t sequence;      /* timestamp / sequence number */
     uint8_t request;        /* packet type of original request */
     uint64_t misc[4];       /* miscellaneous data */
 } __attribute__ ((__packed__))
@@ -106,27 +105,18 @@ typedef struct login_request_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint64_t sequence;      /* timestamp / sequence number */
+    uint32_t sequence;      /* timestamp / sequence number */
     char username[64];
     char password[64];
     char charname[64];
 } __attribute__ ((__packed__))
 login_request;
 
-typedef struct logout_request_tag
-{
-    uint8_t type;
-    uint8_t version;        /* protocol version number */
-    uint64_t sequence;      /* timestamp / sequence number */
-    /* Does this really need anything else? */
-} __attribute__ ((__packed__))
-logout_request;
-
 typedef struct action_request_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint64_t sequence;      /* timestamp / sequence number */
+    uint32_t sequence;      /* timestamp / sequence number */
     uint64_t object_id;
     uint16_t action_id;
     uint8_t power_level;
@@ -149,7 +139,7 @@ typedef struct position_update_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint64_t sequence;      /* timestamp / sequence number */
+    uint32_t sequence;      /* timestamp / sequence number */
     uint64_t object_id;
     uint16_t frame_number;
     /* We may consider adding the sector vector back in here */
@@ -164,7 +154,7 @@ typedef struct server_notice_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint64_t sequence;      /* timestamp / sequence number */
+    uint32_t sequence;      /* timestamp / sequence number */
     uint8_t ipproto;        /* 4 or 6 */
     char addr[INET6_ADDRSTRLEN];
     in_port_t port;
@@ -182,7 +172,6 @@ typedef union packet_tag
     basic_packet     basic;
     ack_packet       ack;
     login_request    log;
-    logout_request   lgt;
     action_request   act;
     position_update  pos;
     server_notice    srv;

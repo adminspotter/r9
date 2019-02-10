@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Mar 2018, 09:17:19 tquirk
+ *   last updated 17 Apr 2018, 07:49:27 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -46,7 +46,7 @@ base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
-    this->sequence = 0LL;
+    this->sequence = 0L;
     this->characterid = 0LL;
 }
 
@@ -98,8 +98,13 @@ void base_user::send_ack(uint8_t req,
     this->parent->send_pool->push(pkt);
 }
 
-listen_socket::listen_socket(struct addrinfo *ai)
-    : users(), sock(ai)
+listen_socket::listen_socket()
+    : users(), sock()
+{
+    this->init();
+}
+
+void listen_socket::init(void)
 {
     this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);
     this->access_pool = new ThreadPool<access_list>("access",
@@ -107,6 +112,12 @@ listen_socket::listen_socket(struct addrinfo *ai)
     this->access_pool->clean_on_pop = true;
 
     this->reaper_running = false;
+}
+
+listen_socket::listen_socket(struct addrinfo *ai)
+    : users(), sock(ai)
+{
+    this->init();
 }
 
 listen_socket::~listen_socket()
@@ -280,7 +291,7 @@ void listen_socket::handle_logout(listen_socket *s, packet& p,
     if (u != NULL)
     {
         u->timestamp = time(NULL);
-        memcpy(&al.buf, &p, sizeof(logout_request));
+        memcpy(&al.buf, &p, sizeof(basic_packet));
         al.what.logout.who = u->userid;
         s->access_pool->push(al);
     }

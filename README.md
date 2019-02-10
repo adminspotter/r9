@@ -30,18 +30,23 @@ servers may not want to support those abilities.
 
 We wanted to be able to script logic for autonomous objects in an
 embedded scripting language.  NPCs could have sophisticated logic,
-while missiles would be pretty simple.
+while missiles would be pretty simple.  We also have plans to be able
+to script game behaviour (like how does a given action work on the
+server-side) in those other embedded languages.
 
 ## Features ##
 
 * Network agnosticism (IPv4, IPv6, datagram, stream, whatever!)
 * Pluggable server modules for client actions
 * Support for backend MySQL and PostgreSQL databases
-* Pluggable embedded language support (Tcl, and sort-of Perl)
+* Pluggable embedded language support
+  * Lua
+  * Python
+  * Tcl
 
 ### Under active development ###
 
-* Platform- and toolkit-agnostic UI library.  All it needs is OpenGL.
+* Encryption of the wire protocol
 
 ### To come ###
 
@@ -49,24 +54,22 @@ We've got a bunch of issues on our
 [backlog](https://github.com/adminspotter/r9/issues) that we would
 love to collaborate on.
 
-* Seamless handoff of clients between neighboring servers
 * Pluggable physics libraries (change the gravitational constant!)
-* Fully encrypted wire protocol
-* Server consoles to allow on-the-fly configuration changes
 * Support for more embedded languages
-  * Python
   * Ruby
   * Common Lisp
   * ???
 * Beautiful, full-motion, customizable character and vehicle models
+* Seamless handoff of clients between neighboring servers
+* Server consoles to allow on-the-fly configuration changes
 
 ## Platforms ##
 
 r9 has been built and tested on:
 
 * CentOS Linux 6/7
-* Ubuntu GNU/Linux Trusty (via [Travis CI](https://travis-ci.org))
-* MacOS X Mavericks - ElCapitan
+* Ubuntu GNU/Linux Trusty Tahr (via [Travis CI](https://travis-ci.org))
+* MacOS X Mavericks - High Sierra
 
 As long as your platform contains the typical POSIX libraries, you
 should at least be in the ballpark.  Most other Linuxes should be

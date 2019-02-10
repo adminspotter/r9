@@ -1,9 +1,9 @@
-/* r9perl.h                                                -*- C++ -*-
+/* r9lua.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Oct 2015, 11:40:39 tquirk
+ *   last updated 30 Mar 2018, 18:13:52 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,33 +20,29 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the class for embedding perl.  Pretty simple, really.
+ * This file contains the class for embedding lua.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_R9PERL_H__
-#define __INC_R9PERL_H__
+#ifndef __INC_R9LUA_H__
+#define __INC_R9LUA_H__
 
-#include <EXTERN.h>
-#include <perl.h>
+#include <lua.hpp>
 
 #include "language.h"
 
-class PerlLanguage : public Language
+class LuaLanguage : public Language
 {
-  public:
-    static bool INITIALIZED;
-
   private:
-    PerlInterpreter *interp;
+    lua_State *state;
 
   public:
-    PerlLanguage();
-    ~PerlLanguage();
+    LuaLanguage();
+    ~LuaLanguage();
 
-    std::string execute(const std::string&);
+    std::string execute(const std::string &);
 };
 
-#endif /* __INC_R9PERL_H__ */
+#endif /* __INC_R9LUA_H__ */

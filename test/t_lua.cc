@@ -6,20 +6,17 @@ using namespace TAP;
 #include "../server/classes/library.h"
 #include "../server/classes/modules/language.h"
 
-#define PERL_MOD "../server/classes/modules/.libs/libr9_perl" LT_MODULE_EXT
+#include <string.h>
 
-/* There was so much to mock to not have to deal with an actual perl
- * interpreter, it just made more sense to turn this into an
- * integration test.
- */
+#define LUA_MOD "../server/classes/modules/.libs/libr9_lua" LT_MODULE_EXT
 
 Language *(*create_language)(void);
 std::string (*execute_language)(Language *, const std::string&);
 void (*destroy_language)(Language *);
 
-void test_good_constructor(void)
+void test_create_delete(void)
 {
-    std::string test = "good constructor: ";
+    std::string test = "create/delete: ";
     Language *lang = NULL;
 
     try
@@ -57,7 +54,7 @@ void test_run_script(void)
     }
     is(lang != NULL, true, test + "language object created");
 
-    std::string str = "sub power { my ($base, $exp) = @_; $result = 1; while ($exp > 0) { $result *= $base; --$exp; } return $result; } print power(2, 8);";
+    std::string str = "function power (base, p)\n  local result = 1\n  while (p > 0) do\n    result = result * base\n    p = p - 1\n  end\n  return result\nend\nreturn power(2, 8)";
     try
     {
         str = execute_language(lang, str);
@@ -66,7 +63,51 @@ void test_run_script(void)
     {
         fail(test + "execute exception");
     }
-    is(strcmp(str.c_str(), "256"), 0, test + "expected result");
+    is(strcmp(str.c_str(), "256"), 0, test + "expected number");
+
+    str = "return \"howdy\"";
+    try
+    {
+        str = execute_language(lang, str);
+    }
+    catch (...)
+    {
+        fail(test + "execute exception");
+    }
+    is(strcmp(str.c_str(), "howdy"), 0, test + "expected string");
+
+    str = "return true";
+    try
+    {
+        str = execute_language(lang, str);
+    }
+    catch (...)
+    {
+        fail(test + "execute exception");
+    }
+    is(strcmp(str.c_str(), "true"), 0, test + "expected string");
+
+    str = "return {[\"123\"] = 58}";
+    try
+    {
+        str = execute_language(lang, str);
+    }
+    catch (...)
+    {
+        fail(test + "execute_exception");
+    }
+    is(strcmp(str.c_str(), "table"), 0, test + "expected typename");
+
+    str = "";
+    try
+    {
+        str = execute_language(lang, str);
+    }
+    catch (...)
+    {
+        fail(test + "execute_exception");
+    }
+    is(strcmp(str.c_str(), ""), 0, test + "expected typename");
 
     try
     {
@@ -80,15 +121,15 @@ void test_run_script(void)
 
 int main(int argc, char **argv)
 {
-    plan(3);
+    plan(7);
 
-    /* Load up the perl lib and fetch the symbols */
-    Library *lib = new Library(PERL_MOD);
+    /* Load up the lua lib and fetch the symbols */
+    Library *lib = new Library(LUA_MOD);
     create_language = (Language *(*)(void))lib->symbol("create_language");
     execute_language = (std::string (*)(Language *, const std::string &))lib->symbol("lang_execute");
     destroy_language = (void (*)(Language *))lib->symbol("destroy_language");
 
-    test_good_constructor();
+    test_create_delete();
     test_run_script();
 
     delete lib;

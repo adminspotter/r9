@@ -1,9 +1,9 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jan 2018, 09:10:50 tquirk
+ *   last updated 17 Apr 2018, 07:49:18 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2018  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,7 +42,8 @@ class listen_socket;
 
 class base_user : public Control {
   public:
-    uint64_t sequence, characterid;
+    uint32_t sequence;
+    uint64_t characterid;
     time_t timestamp;
     bool pending_logout;
     uint8_t auth_level;
@@ -83,6 +84,10 @@ class listen_socket {
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
     basesock sock;
+
+  protected:
+    listen_socket();
+    void init(void);
 
   public:
     listen_socket(struct addrinfo *);

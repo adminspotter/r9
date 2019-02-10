@@ -496,16 +496,9 @@ void test_start_bad_socket(void)
     {
         base->start(test_thread_worker);
     }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("no socket available"), std::string::npos,
-             test + "correct error contents");
-    }
     catch (...)
     {
-        fail(test + "wrong error type");
+        fail(test + "start exception");
     }
 
     delete base;
@@ -693,7 +686,7 @@ void test_stop_join_fail(void)
 
 int main(int argc, char **argv)
 {
-    plan(44);
+    plan(43);
 
     test_create_delete();
     test_delete_unix();

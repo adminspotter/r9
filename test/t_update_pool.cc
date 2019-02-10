@@ -26,23 +26,14 @@ class fake_SendPool : public ThreadPool<packet_list>
 void test_operate(void)
 {
     std::string test = "operate: ";
-    struct addrinfo hints, *ai;
-    int ret;
     listen_socket *sock;
     UpdatePool *pool;
     fake_SendPool *send_pool = new fake_SendPool("t_send", 1);
     GameObject *go = new GameObject(NULL, NULL, 12345LL);
 
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1238", &hints, &ai);
-    is(ret, 0, test + "getaddrinfo successful");
-
     try
     {
-        sock = new fake_listen_socket(ai);
+        sock = new fake_listen_socket(NULL);
     }
     catch (...)
     {
@@ -75,12 +66,11 @@ void test_operate(void)
 
     delete pool;
     delete sock;
-    freeaddrinfo(ai);
 }
 
 int main(int argc, char **argv)
 {
-    plan(3);
+    plan(2);
 
     test_operate();
     return exit_status();

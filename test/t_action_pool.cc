@@ -19,28 +19,6 @@ std::map<uint64_t, GameObject *> *game_objs;
 fake_listen_socket *listensock;
 int register_count, unregister_count, action_count;
 
-struct addrinfo *create_addrinfo(void)
-{
-    struct addrinfo hints, *addr = NULL;
-    int ret;
-
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_NUMERICSERV;
-    hints.ai_protocol = 0;
-    hints.ai_canonname = NULL;
-    hints.ai_addr = NULL;
-    hints.ai_next = NULL;
-
-    if ((ret = getaddrinfo(NULL, "9876", &hints, &addr)) != 0)
-    {
-        std::cerr << gai_strerror(ret) << std::endl;
-        throw std::runtime_error("getaddrinfo broke");
-    }
-
-    return addr;
-}
-
 void register_actions(std::map<uint16_t, action_rec>& a)
 {
     ++register_count;
@@ -83,14 +61,11 @@ void setup_fixture(void)
     game_objs = new std::map<uint64_t, GameObject *>();
     (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
 
-    struct addrinfo *addr = create_addrinfo();
-    listensock = new fake_listen_socket(addr);
-    freeaddrinfo(addr);
+    listensock = new fake_listen_socket(NULL);
 }
 
 void cleanup_fixture(void)
 {
-    close(listensock->sock.sock);
     delete listensock;
     delete (*game_objs)[9876LL];
     delete game_objs;
@@ -163,7 +138,6 @@ void test_no_skill(void)
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
     pkt.version = 1;
-    pkt.sequence = 1LL;
     pkt.object_id = 9876LL;
     pkt.action_id = 12345;
     pkt.power_level = 5;
@@ -198,7 +172,6 @@ void test_invalid_skill(void)
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
     pkt.version = 1;
-    pkt.sequence = 1LL;
     pkt.object_id = 9876LL;
     pkt.action_id = 567;
     pkt.power_level = 5;
@@ -233,7 +206,6 @@ void test_wrong_object_id(void)
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
     pkt.version = 1;
-    pkt.sequence = 1LL;
     pkt.object_id = 123LL;
     pkt.action_id = 789;
     pkt.power_level = 5;
@@ -268,7 +240,6 @@ void test_good_object_id(void)
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
     pkt.version = 1;
-    pkt.sequence = 1LL;
     pkt.object_id = 9876LL;
     pkt.action_id = 789;
     pkt.power_level = 5;
@@ -303,7 +274,6 @@ void test_worker(void)
     memset(&pl.buf, 0, sizeof(action_request));
     pl.buf.act.type = TYPE_ACTREQ;
     pl.buf.act.version = 1;
-    pl.buf.act.sequence = 1LL;
     pl.buf.act.object_id = 9876LL;
     pl.buf.act.action_id = 789;
     pl.buf.act.power_level = 5;
@@ -319,13 +289,19 @@ void test_worker(void)
 
     action_pool->stop();
     is(action_count, 1, test + "expected action count");
+    symbol_error = true;
+    try
+    {
+        delete action_pool;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    symbol_error = false;
 
     (*game_objs)[9876LL]->disconnect(bu);
     delete bu;
-
-    symbol_result = (void *)unregister_actions;
-
-    delete action_pool;
 
     cleanup_fixture();
 }

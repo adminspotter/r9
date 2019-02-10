@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Feb 2018, 07:40:44 tquirk
+ *   last updated 13 Dec 2018, 08:07:14 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -45,14 +45,12 @@
 
 #include "cuddly-gl/ui_defs.h"
 #include "log_display.h"
-#include "cuddly-gl/multi_label.h"
+#include "cuddly-gl/label.h"
 
-#define DISTANCE_FROM_BOTTOM 10
-#define LABEL_WIDTH 225
+#define DISTANCE_FROM_EDGE 10
 #define ENTRY_LIFETIME 10
 
 static void resize_pos_callback(ui::active *, void *, void *);
-static log_display::ld_iter operator+(log_display::ld_iter, int);
 
 void log_display::sync_to_file(void)
 {
@@ -86,27 +84,18 @@ void log_display::sync_to_file(void)
 
 void log_display::create_log_labels(void)
 {
-    if (this->entries.size() == 0
-        || (this->created != this->entries.end()
-            && this->created == --this->entries.end()))
-        return;
-
-    while (this->created != --this->entries.end())
+    while (this->created != this->entries.end() - 1)
     {
-        if (this->created == this->entries.end())
-            this->created = this->entries.begin();
-        else
-            ++this->created;
-
-        int border = 1, orig_pos = this->pos.y, orig_height = this->dim.y;
-        this->created->label = new ui::multi_label(this, LABEL_WIDTH, 0);
-        this->created->label->set_va(
+        ++this->created;
+        GLuint orig_pos = this->pos.y, orig_height = this->dim.y;
+        this->created->label = new ui::label(this, 0, 0);
+        this->created->label->set(
             ui::element::font, ui::ownership::shared, this->log_font,
-            ui::element::string, 0, &this->created->log_entry,
-            ui::element::border, ui::side::all, &border, 0);
+            ui::element::string, 0, this->created->log_entry,
+            ui::element::border, ui::side::all, 1);
         this->manage_children();
         orig_pos -= this->dim.y - orig_height;
-        this->set_position(ui::position::y, &orig_pos);
+        this->set_position(ui::position::y, orig_pos);
     }
 }
 
@@ -119,14 +108,17 @@ void *log_display::cleanup_entries(void *arg)
     float ftime_val;
     struct timespec ts;
 
-    last_closed = next_closed = ld->entries.end();
+    last_closed = ld->entries.begin();
 
     for (;;)
     {
-        if (ld->entries.empty()
-            || (last_closed != ld->entries.end()
-                && (next_closed = last_closed + 1) == ld->entries.end()))
+        next_closed = last_closed + 1;
+        if (last_closed != ld->entries.end()
+            && next_closed == ld->entries.end())
+        {
             sleep(ENTRY_LIFETIME);
+            continue;
+        }
         else
         {
             if (last_closed == ld->entries.end())
@@ -148,18 +140,17 @@ void *log_display::cleanup_entries(void *arg)
             }
         }
 
-        /* See if anything needs closing */
-        if (next_closed == ld->entries.end())
-            continue;
-
         now = log_display::ld_ts_time::now();
         while (next_closed != ld->entries.end()
                && now >= (next_closed->timestamp + ld->entry_lifetime))
         {
-            pthread_mutex_lock(&ld->queue_mutex);
-            next_closed->label->close();
-            next_closed->label = NULL;
-            pthread_mutex_unlock(&ld->queue_mutex);
+            if (next_closed->label != NULL)
+            {
+                pthread_mutex_lock(&ld->queue_mutex);
+                next_closed->label->close();
+                next_closed->label = NULL;
+                pthread_mutex_unlock(&ld->queue_mutex);
+            }
             last_closed = next_closed++;
         }
     }
@@ -170,24 +161,31 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
       buf(), fname(), entries(), entry_lifetime(ENTRY_LIFETIME)
 {
     int border = 1, ret;
+    entry e;
 
-    this->created = this->entries.end();
+    e.timestamp = log_display::ld_ts_time::now();
+    e.display_time = log_display::ld_wc_time::now();
+    e.log_entry = "program start";
+    e.label = NULL;
+
+    this->entries.push_back(e);
+    this->created = this->entries.begin();
     this->grid_sz = glm::ivec2(1, 0);
     this->child_spacing = glm::ivec2(5, 5);
-    this->pos = glm::ivec2(10, 0);
-
     this->pack_order = ui::order::column;
 
     this->log_font = new ui::font(config.font_name, 13, config.font_paths);
 
+    this->pos.x = DISTANCE_FROM_EDGE;
     this->composite::parent->get(ui::element::size,
                                  ui::size::height,
                                  &this->pos.y);
-    this->pos.y -= DISTANCE_FROM_BOTTOM;
+    this->pos.y -= DISTANCE_FROM_EDGE;
 
     this->background = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
-    this->add_callback(ui::callback::resize, resize_pos_callback, NULL);
+    this->add_callback(ui::callback::resize,
+                       log_display::resize_pos_callback, NULL);
     this->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 
     if ((ret = pthread_create(&(this->cleanup_thread), NULL,
@@ -268,6 +266,8 @@ int log_display::sync(void)
 
         /* Strip trailing whitespace */
         e.log_entry.erase(e.log_entry.find_last_not_of(" \n\r\t") + 1);
+        if (e.log_entry.length() == 0)
+            return 0;
         pthread_mutex_lock(&this->queue_mutex);
         this->entries.push_back(std::move(e));
         pthread_mutex_unlock(&this->queue_mutex);
@@ -286,31 +286,19 @@ int log_display::overflow(int c)
 }
 
 /* ARGSUSED */
-void resize_pos_callback(ui::active *a, void *call, void *client)
+void log_display::resize_pos_callback(ui::active *a, void *call, void *client)
 {
     ui::resize_call_data *call_data = (ui::resize_call_data *)call;
     log_display *ld = dynamic_cast<log_display *>(a);
 
     if (ld != NULL)
     {
-        int log_height;
+        GLuint log_pos;
 
-        ld->get(ui::element::size, ui::size::height, &log_height);
-        log_height = call_data->new_size.y - log_height - DISTANCE_FROM_BOTTOM;
-        ld->set(ui::element::position, ui::position::y, &log_height);
+        ld->composite::parent->get(ui::element::size,
+                                   ui::size::height,
+                                   &log_pos);
+        ld->set(ui::element::position, ui::position::y,
+                log_pos - DISTANCE_FROM_EDGE);
     }
-}
-
-/* We want to be able to say "hey, what's the next element in the
- * list?", but there's no general-purpose "add X to our iterator"
- * function.
- */
-static log_display::ld_iter operator+(log_display::ld_iter iter, int interval)
-{
-    log_display::ld_iter tmp_iter = iter;
-
-    for (int i = 0; i < interval; ++i)
-        ++tmp_iter;
-
-    return tmp_iter;
 }

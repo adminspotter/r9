@@ -28,8 +28,11 @@ if WANT_SERVER
 	t_update_pool \
 	t_zone
 endif
-if WANT_PERL
-  TC += t_perl
+if WANT_LUA
+  TC += t_lua
+endif
+if WANT_PYTHON
+  TC += t_python
 endif
 if WANT_TCL
   TC += t_tcl t_tcl_exception
@@ -216,16 +219,20 @@ t_zone_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
-t_perl_SOURCES = t_perl.cc ../server/classes/modules/language.h \
+t_lua_SOURCES = t_lua.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
-t_perl_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
+t_lua_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
+
+t_python_SOURCES = t_python.cc ../server/classes/modules/language.h \
+	../server/classes/library.h ../server/classes/library.cc
+t_python_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
 t_tcl_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_tcl_exception_SOURCES = t_tcl_exception.cc \
-	../server/classes/modules/tcl.cc ../server/classes/modules/r9tcl.h
+	../server/classes/modules/r9tcl.cc ../server/classes/modules/r9tcl.h
 t_tcl_exception_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS) \
 	$(TCL_LDLIBS)
 

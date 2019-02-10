@@ -1,11 +1,22 @@
 language: cpp
-os:
-- linux
-sudo: required
-dist: trusty
-compiler:
-- clang
-- gcc
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: trusty
+      compiler: clang
+    - os: linux
+      sudo: required
+      dist: trusty
+      compiler: gcc
+    - os: linux
+      sudo: required
+      dist: xenial
+      compiler: clang
+    - os: linux
+      sudo: required
+      dist: xenial
+      compiler: gcc
 addons:
   code_climate:
     repo_token: a9c9c35be3c4efac3ab63a3c4927af7c079ec3b8e8fd9addba101f9c932272d9
@@ -17,12 +28,15 @@ addons:
     - tcl8.6-dev
     - libboost-dev
     - libgl1-mesa-dev
+    - libglu1-mesa-dev
+    - liblua5.2-dev
     - libmysqlclient-dev
     - libpq-dev
     - libglm-dev
     - libfreetype6-dev
     - libwrap0-dev
     - python3-pip
+    - x11proto-randr-dev
     - xorg-dev
 before_script:
 - wget https://github.com/glfw/glfw/releases/download/3.2/glfw-3.2.zip -O /tmp/glfw-3.2.zip
@@ -31,7 +45,7 @@ before_script:
 - sudo pip3 install --allow-external codecov --allow-external coverage --allow-external chardet --allow-external urllib3 --allow-external idna --allow-external certifi --allow-external requests codecov
 script:
 - ./autogen.sh
-- CXXFLAGS='-I/usr/include/mysql -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-tcl --with-mysql --with-pgsql --with-client --enable-profile
+- CXXFLAGS='-I/usr/include/mysql -I/usr/include/lua5.2 -I/usr/include/tcl8.6 -I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-lua --with-python --with-tcl --with-mysql --with-pgsql --with-client --enable-profile
 - make
 - make check
 after_script:
