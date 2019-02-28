@@ -1,9 +1,9 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Apr 2018, 07:33:13 tquirk
+ *   last updated 28 Feb 2019, 08:53:22 tquirk
  *
- * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Revision IX game protocol
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
