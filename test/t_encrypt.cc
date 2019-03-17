@@ -34,10 +34,32 @@ void test_encrypt(void)
          test + "ciphertext is not plaintext");
 }
 
+void test_decrypt(void)
+{
+    std::string test = "r9_decrypt: ";
+
+    const unsigned char plaintext[16] = "test text";
+    const unsigned char key[33] = "abcd1234efgh5678ijkl9012mnop3456";
+    const unsigned char iv[33] = "12345678123456781234567812345678";
+    unsigned char ciphertext[16], cleartext[16];
+
+    memset(ciphertext, 0, sizeof(ciphertext));
+    memset(cleartext, 0, sizeof(cleartext));
+    int cipherlen = r9_encrypt(plaintext, strlen((const char *)plaintext),
+                               key, iv, ciphertext);
+    int result = r9_decrypt(ciphertext, cipherlen, key, iv, cleartext);
+
+    is(result, 9, test + "expected result");
+    is(memcmp(plaintext, cleartext, sizeof(cleartext)),
+       0,
+       test + "expected cleartext");
+}
+
 int main(int argc, char **argv)
 {
-    plan(3);
+    plan(5);
 
     test_encrypt();
+    test_decrypt();
     return exit_status();
 }
