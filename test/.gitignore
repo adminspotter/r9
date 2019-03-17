@@ -15,6 +15,7 @@ t_dgram
 t_dgram_worker
 t_dh
 t_ec
+t_encrypt
 t_font
 t_game_obj
 t_image
