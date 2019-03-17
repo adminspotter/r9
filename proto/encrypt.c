@@ -26,11 +26,10 @@
  *
  */
 
-#include <openssl/evp.h>
 #include <openssl/conf.h>
 #include <openssl/err.h>
 
-#define R9_SYMMETRIC_ALGO  EVP_aes_256_ctr()
+#include "encrypt.h"
 
 int r9_encrypt(const unsigned char *plaintext, int plaintext_len,
                const unsigned char *key, const unsigned char *iv,
