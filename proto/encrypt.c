@@ -60,3 +60,32 @@ int r9_encrypt(const unsigned char *plaintext, int plaintext_len,
   BAILOUT1:
     return ciphertext_len;
 }
+
+int r9_decrypt(const unsigned char *ciphertext, int ciphertext_len,
+               const unsigned char *key, const unsigned char *iv,
+               unsigned char *plaintext)
+{
+    EVP_CIPHER_CTX *ctx;
+    int len, plaintext_len = 0;
+
+    if ((ctx = EVP_CIPHER_CTX_new()) == NULL)
+        goto BAILOUT1;
+
+    if (EVP_DecryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv) != 1
+        || EVP_DecryptUpdate(ctx,
+                             plaintext, &len,
+                             ciphertext, ciphertext_len) != 1)
+        goto BAILOUT2;
+    plaintext_len = len;
+
+    if (EVP_DecryptFinal_ex(ctx, plaintext + len, &len) == 1)
+        plaintext_len += len;
+    else
+        /* We'll return length 0 on any error. */
+        plaintext_len = 0;
+
+  BAILOUT2:
+    EVP_CIPHER_CTX_free(ctx);
+  BAILOUT1:
+    return plaintext_len;
+}
