@@ -2,6 +2,9 @@
 
 #include <string.h>
 
+#include <iostream>
+#include <iomanip>
+
 using namespace TAP;
 
 #include "../proto/encrypt.h"
@@ -26,9 +29,23 @@ void test_encrypt(void)
             0x18, 0xf0, 0x15, 0xd0, 0x81, 0x08, 0xb6, 0xca,
             0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         };
-    is(memcmp(ciphertext, expected, sizeof(expected)),
-       0,
-       test + "expected ciphertext");
+    if (!is(memcmp(ciphertext, expected, sizeof(expected)),
+            0,
+            test + "expected ciphertext"))
+    {
+        std::cerr << "# expected:" << std::endl << "# {" << std::endl
+                  << "#     ";
+        for (unsigned char i : expected)
+            std::cerr << std::hex << std::setfill('0') << std::setw(2)
+                      << (unsigned int)i << ' ';
+        std::cerr << std::endl << "# }" << std::endl
+                  << "# ciphertext:" << std::endl << "# {" << std::endl
+                  << "#     ";
+        for (unsigned char i : ciphertext)
+            std::cerr << std::hex << std::setfill('0') << std::setw(2)
+                      << (unsigned int)i << ' ';
+        std::cerr << std::dec << std::endl << "# }" << std::endl;
+    }
     isnt(memcmp(ciphertext, plaintext, sizeof(plaintext)),
          0,
          test + "ciphertext is not plaintext");
