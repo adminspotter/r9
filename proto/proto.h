@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Feb 2019, 08:53:22 tquirk
+ *   last updated 05 Apr 2019, 08:22:42 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -41,6 +41,8 @@
  *            second connection to the neighboring server, for position
  *            updates.  This will also be used to let servers know about
  *            new neighboring servers.
+ *   SRVKEY:  This packet is a server login response which includes
+ *            the server key.
  *
  * Things to do
  *   - We want to do some crypto on this protocol.
@@ -70,6 +72,7 @@
 #define TYPE_SRVNOT 4        /* Server notice */
 #define TYPE_PNGPKT 5        /* Ping packet */
 #define TYPE_LGTREQ 6        /* Logout request */
+#define TYPE_SRVKEY 7        /* Server key request */
 
 /* Access types for the login ACK's misc field.  Are there more types? */
 #define ACCESS_NONE 1        /* No access allowed */
@@ -162,6 +165,15 @@ typedef struct server_notice_tag
 } __attribute__ ((__packed__))
 server_notice;
 
+typedef struct server_key_tag
+{
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint32_t sequence;      /* timestamp / sequence number */
+    uint8_t pubkey[128];
+} __attribute__ ((__packed__))
+server_key;
+
 /* We can cast unknown packets to this and read basic.type to determine
  * the type, then use the corresponding element of the union to process it.
  * We don't need to convert byte order on a single byte, so this trick will
@@ -175,6 +187,7 @@ typedef union packet_tag
     action_request   act;
     position_update  pos;
     server_notice    srv;
+    server_key       key;
 }
 packet;
 
@@ -188,6 +201,7 @@ packet;
 #define is_position_update(x)  (((packet *)(x))->basic.type == TYPE_POSUPD)
 #define is_server_notice(x)    (((packet *)(x))->basic.type == TYPE_SRVNOT)
 #define is_ping_packet(x)      (((packet *)(x))->basic.type == TYPE_PNGPKT)
+#define is_server_key(x)       (((packet *)(x))->basic.type == TYPE_SRVKEY)
 
 #ifdef __cplusplus
 extern "C"
