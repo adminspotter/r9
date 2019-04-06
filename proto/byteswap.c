@@ -1,6 +1,6 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Apr 2018, 07:35:55 tquirk
+ *   last updated 06 Apr 2019, 08:12:03 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -74,6 +74,8 @@ static int hton_position_update(packet *, size_t);
 static int ntoh_position_update(packet *, size_t);
 static int hton_server_notice(packet *, size_t);
 static int ntoh_server_notice(packet *, size_t);
+static int hton_server_key(packet *, size_t);
+static int ntoh_server_key(packet *, size_t);
 
 /* Using a lookup table for these saves us what could be quite a large
  * amount of compares per invocation.
@@ -92,19 +94,20 @@ packet_handlers[] =
     { hton_position_update,  ntoh_position_update,  sizeof(position_update)  },
     { hton_server_notice,    ntoh_server_notice,    sizeof(server_notice)    },
     { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     },
-    { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     }
+    { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     },
+    { hton_server_key,       ntoh_server_key,       sizeof(server_key)       }
 };
 
 int hton_packet(packet *p, size_t s)
 {
-    if (p->basic.type > TYPE_PNGPKT)
+    if (p->basic.type > TYPE_SRVKEY)
         return 0;
     return (packet_handlers[p->basic.type].hton)(p, s);
 }
 
 int ntoh_packet(packet *p, size_t s)
 {
-    if (p->basic.type > TYPE_PNGPKT)
+    if (p->basic.type > TYPE_SRVKEY)
         return 0;
     return (packet_handlers[p->basic.type].ntoh)(p, s);
 }
@@ -271,5 +274,23 @@ static int ntoh_server_notice(packet *sn, size_t s)
     if (s < sizeof(server_notice))
         return 0;
     sn->srv.port = ntohs(sn->srv.port);
+    return 1;
+}
+
+/* ARGSUSED */
+static int hton_server_key(packet *sk, size_t s)
+{
+    if (s < sizeof(server_key))
+        return 0;
+    sk->key.sequence = htonl(sk->key.sequence);
+    return 1;
+}
+
+/* ARGSUSED */
+static int ntoh_server_key(packet *sk, size_t s)
+{
+    if (s < sizeof(server_key))
+        return 0;
+    sk->key.sequence = ntohl(sk->key.sequence);
     return 1;
 }
