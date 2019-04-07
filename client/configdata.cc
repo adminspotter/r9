@@ -1,9 +1,9 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Mar 2018, 17:55:42 tquirk
+ *   last updated 07 Apr 2019, 08:58:15 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -56,6 +56,8 @@
 #include "configdata.h"
 #include "l10n.h"
 
+#include <proto/key.h>
+
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 
 const int ConfigData::SERVER_PORT    = 8500;
@@ -96,18 +98,18 @@ const struct config_handlers
 handlers[] =
 {
 #define off(x)  offsetof(ConfigData, x)
-    /* Rememeber:  floats are * 100 */
     { "ServerAddr", off(server_addr), &read_string,  &write_string  },
     { "ServerPort", off(server_port), &read_integer, &write_integer },
     { "Username",   off(username),    &read_string,  &write_string  },
     { "Charname",   off(charname),    &read_string,  &write_string  },
     { "FontName",   off(font_name),   &read_string,  &write_string  },
-    { "FontPaths",  off(font_paths),  &read_paths,   &write_paths   }
+    { "FontPaths",  off(font_paths),  &read_paths,   &write_paths   },
+    { "KeyFile",    off(key_fname),   &read_string,  &write_string  }
 #undef off
 };
 
 ConfigData::ConfigData()
-    : argv(), config_dir(), config_fname(),
+    : argv(), config_dir(), config_fname(), key_fname(),
       server_addr(ConfigData::SERVER_ADDR), username(), charname()
 {
     this->set_defaults();
@@ -115,6 +117,8 @@ ConfigData::ConfigData()
 
 ConfigData::~ConfigData()
 {
+    if (this->priv_key != NULL)
+        EVP_PKEY_free(this->priv_key);
     this->argv.clear();
 }
 
@@ -139,6 +143,10 @@ void ConfigData::set_defaults(void)
         this->font_paths.push_back(str);
         ++ptr;
     }
+
+    this->key_fname = this->config_dir + "/key";
+    this->priv_key = NULL;
+    memset(this->pub_key, 0, sizeof(this->pub_key));
 }
 
 void ConfigData::parse_command_line(int count, const char **args)
@@ -227,6 +235,21 @@ void ConfigData::write_config_file(void)
         ofs << std::endl;
     }
     ofs.close();
+}
+
+bool ConfigData::read_crypto_key(const std::string& passphrase)
+{
+    if (this->key_fname.size())
+    {
+        int i = 0;
+        unsigned char pp[passphrase.size() + 1];
+
+        for (char c : passphrase)
+            pp[i++] = (unsigned char)c;
+        pp[i] = 0;
+        this->priv_key = file_to_pkey(this->key_fname.c_str(), pp);
+    }
+    return this->priv_key != NULL;
 }
 
 void ConfigData::make_config_dirs(void)
