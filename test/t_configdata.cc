@@ -17,6 +17,9 @@ using namespace TAP;
 #include <sstream>
 #include <stdexcept>
 
+#include "../proto/ec.h"
+#include "../proto/key.h"
+
 #define TMP_ROOT "/tmp"
 
 std::string tmpdir;
@@ -92,6 +95,7 @@ void create_temp_config_file(std::string& fname)
     ofs << "Username  		someuser" << std::endl;
     ofs << "   Charname    worstcharnameintheworld   " << std::endl;
     ofs << "FontPaths /a/b/c:~/d/e/f:/g/h/i" << std::endl;
+    ofs << "KeyFile " << fname << ".key" << std::endl;
     ofs.close();
 }
 
@@ -151,6 +155,7 @@ void test_create_delete(void)
     is(conf->server_addr, ConfigData::SERVER_ADDR, test + "expected addr");
     is(conf->server_port, ConfigData::SERVER_PORT, test + "expected port");
     ok(conf->font_paths.size() > 0, "contents in font path");
+    ok(conf->priv_key == NULL, "expected key");
 
     try
     {
@@ -293,6 +298,7 @@ void test_read_config_file(void)
     conf->config_dir = tmpdir;
     conf->config_fname = tmpdir + "/config";
     create_temp_config_file(conf->config_fname);
+    std::string key_fname = conf->config_fname + ".key";
 
     conf->read_config_file();
 
@@ -310,6 +316,19 @@ void test_read_config_file(void)
     is(conf->font_paths[1], expected, test + "expected font path 2");
     expected = "/g/h/i";
     is(conf->font_paths[2], expected, test + "expected font path 3");
+    is(conf->key_fname, key_fname, test + "expected key filename");
+
+    test = "read crypto key: ";
+    unsigned char passphrase[4] = { 'a', 'b', 'c', 0 };
+    EVP_PKEY *key = generate_ecdh_key();
+    pkey_to_file(key, key_fname.c_str(), passphrase);
+
+    bool result = conf->read_crypto_key("abc");
+
+    is(result, true, test + "expected key result");
+    ok(conf->priv_key != NULL, test + "expected private key");
+
+    unlink(key_fname.c_str());
 
     try
     {
@@ -350,6 +369,7 @@ void test_write_config_file(void)
     conf->font_paths.clear();
     conf->font_paths.push_back("/a/b/c");
     conf->font_paths.push_back("~/d/e/f");
+    conf->key_fname = "somefileorother";
 
     conf->config_dir = tmpdir;
     conf->config_fname = tmpdir + "/the_big_test.conf";
@@ -393,6 +413,8 @@ void test_write_config_file(void)
     is(conf->font_paths[0], expected, test + st + "expected font path 1");
     expected = "~/d/e/f";
     is(conf->font_paths[1], expected, test + st + "expected font path 2");
+    expected = "somefileorother";
+    is(conf->key_fname, expected, test + st + "expected key filename");
 
     try
     {
@@ -407,8 +429,13 @@ void test_write_config_file(void)
 
 int main(int argc, char **argv)
 {
-    plan(40);
+    plan(45);
 
+#if OPENSSL_API_COMPAT < 0x10100000
+    OpenSSL_add_all_algorithms();
+    OpenSSL_add_all_ciphers();
+    OpenSSL_add_all_digests();
+#endif /* OPENSSL_API_COMPAT */
     test_create_delete();
     test_make_config_dirs();
     test_parse_command_line();

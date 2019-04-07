@@ -248,7 +248,7 @@ t_comm_exception_LDADD = $(TAP_LDADD)
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
-t_configdata_LDADD = $(TAP_LDADD)
+t_configdata_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov
