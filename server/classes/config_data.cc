@@ -1,9 +1,9 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Sep 2017, 13:12:21 tquirk
+ *   last updated 07 Apr 2019, 08:58:21 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,6 +33,7 @@
  *   DBPassword <password>  the unencrypted password to get into the database
  *   DBType <type>          which database to use - mysql, pgsql, etc.
  *   DBUser <username>      the database username
+ *   KeyFile <fname>        the file that contains the server crypto key
  *   LogFacility <string>   the facility that the program will use for syslog
  *   LogPrefix <string>     the prefix that the program will use in syslog
  *   MotionThreads <num>    number of motion threads to start
@@ -116,6 +117,8 @@
 
 #include "../server.h"
 
+#include <proto/key.h>
+
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 
 const int config_data::LINGER_LEN     = 0;
@@ -141,6 +144,7 @@ static void config_group_element(const std::string&, const std::string&, void *)
 static void config_logfac_element(const std::string&, const std::string&, void *);
 static void config_port_element(const std::string&, const std::string&, void *);
 static void config_location_element(const std::string&, const std::string&, void *);
+static void config_key_element(const std::string&, const std::string&, void *);
 
 /* Global variables */
 config_data config;
@@ -164,6 +168,7 @@ handlers[] =
     { "DBPassword",    off(db_pass),        &config_string_element   },
     { "DBType",        off(db_type),        &config_string_element   },
     { "DBUser",        off(db_user),        &config_string_element   },
+    { "KeyFile",       off(priv_key),       &config_key_element      },
     { "LogFacility",   off(log_facility),   &config_logfac_element   },
     { "LogPrefix",     off(log_prefix),     &config_string_element   },
     { "MotionThreads", off(motion_threads), &config_integer_element  },
@@ -207,6 +212,8 @@ config_data::config_data()
 
 config_data::~config_data()
 {
+    if (this->priv_key != NULL)
+        EVP_PKEY_free(this->priv_key);
     this->argv.clear();
     this->listen_ports.clear();
     this->consoles.clear();
@@ -245,6 +252,9 @@ void config_data::set_defaults(void)
     this->size.steps[0]  = config_data::ZONE_STEPS;
     this->size.steps[1]  = config_data::ZONE_STEPS;
     this->size.steps[2]  = config_data::ZONE_STEPS;
+
+    this->priv_key = NULL;
+    memset(this->pub_key, 0, sizeof(this->pub_key));
 }
 
 void setup_configuration(int count, char **args)
@@ -256,6 +266,12 @@ void setup_configuration(int count, char **args)
 
 void cleanup_configuration(void)
 {
+    if (config.priv_key != NULL)
+    {
+        EVP_PKEY_free(config.priv_key);
+        config.priv_key = NULL;
+    }
+
     /* We'll leave argv alone because this may be a reinit */
     config.listen_ports.clear();
     config.consoles.clear();
@@ -488,4 +504,15 @@ static void config_location_element(const std::string& key,
     iss >> element->steps[0];
     iss >> element->steps[1];
     iss >> element->steps[2];
+}
+
+/* ARGSUSED */
+static void config_key_element(const std::string& key,
+                               const std::string& value,
+                               void *ptr)
+{
+    EVP_PKEY **pkey = (EVP_PKEY **)ptr;
+
+    *pkey = file_to_pkey(value.c_str(), NULL);
+    /* Calculate the public key and store it in pub_key */
 }

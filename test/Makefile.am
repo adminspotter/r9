@@ -91,18 +91,18 @@ t_basesock_SOURCES = t_basesock.cc \
 	../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_basesock_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_basesock_LDADD = $(TAP_LDADD)
+t_basesock_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 t_config_data_SOURCES = t_config_data.cc \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_config_data_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_config_data_LDADD = $(TAP_LDADD)
+t_config_data_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 t_control_SOURCES = t_control.cc \
 	../server/classes/control.cc ../server/classes/control.h
 t_control_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
 t_control_LDADD = $(TAP_LDADD) \
-	../server/classes/libr9_classes.la \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
 t_console_SOURCES = t_console.cc \
@@ -112,7 +112,7 @@ t_console_SOURCES = t_console.cc \
 	../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_console_LDADD = $(TAP_LDADD) $(WRAP_LDLIBS)
+t_console_LDADD = $(TAP_LDADD) $(WRAP_LDLIBS) ../proto/libr9_proto.la
 
 t_db_SOURCES = t_db.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
@@ -163,7 +163,7 @@ t_listensock_worker_LDADD = $(TAP_LDADD) \
 t_log_SOURCES = t_log.cc ../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_log_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_log_LDADD = $(TAP_LDADD)
+t_log_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 t_motion_pool_SOURCES = t_motion_pool.cc \
 	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
