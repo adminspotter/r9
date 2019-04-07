@@ -56,6 +56,9 @@ void test_pkey_to_file(void)
     struct stat stat_struct;
     int stat_result = stat(fname, &stat_struct);
     is(stat_result, 0, test + "key file exists");
+    is(stat_struct.st_mode,
+       S_IFREG | S_IRUSR | S_IWUSR,
+       test + "expected file permissions");
     unlink(fname);
 }
 
@@ -78,7 +81,7 @@ void test_file_to_pkey(void)
 
 int main(int argc, char **argv)
 {
-    plan(6);
+    plan(7);
 
 #if OPENSSL_API_COMPAT < 0x10100000
     OpenSSL_add_all_algorithms();
