@@ -64,15 +64,14 @@ void test_pkey_to_file(void)
 
 void test_file_to_pkey(void)
 {
-    std::string test = "pkey_to_file: ";
+    std::string test = "file_to_pkey: ";
 
     EVP_PKEY *key = generate_ecdh_key();
-    const char *fname = "t_pkey_to_file.pem";
-    unsigned char pass[] = "abc123";
+    const char *fname = "t_file_to_pkey.pem";
 
-    int result = pkey_to_file(key, fname, pass);
+    int result = pkey_to_file(key, fname, NULL);
 
-    EVP_PKEY *loaded_key = file_to_pkey(fname, pass);
+    EVP_PKEY *loaded_key = file_to_pkey(fname, NULL);
 
     is(loaded_key != NULL, true, test + "loaded a key");
 

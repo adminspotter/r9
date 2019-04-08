@@ -1,6 +1,6 @@
 /* key.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Apr 2019, 16:16:50 tquirk
+ *   last updated 07 Apr 2019, 18:00:12 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -92,10 +92,13 @@ int pkey_to_file(EVP_PKEY *key,
     if ((fd = creat(fname, S_IRUSR | S_IWUSR)) != 0
         && (fp = fdopen(fd, "w")) != NULL)
     {
-        result = PEM_write_PrivateKey(fp, key,
-                                      EVP_aes_192_cbc(),
-                                      passphrase,
-                                      strlen((const char *)passphrase),
+        EVP_CIPHER *cipher = NULL;
+        int pp_len = 0;
+
+        if (passphrase != NULL && (pp_len = strlen((char *)passphrase)) != 0)
+            cipher = (EVP_CIPHER *)EVP_aes_192_cbc();
+        result = PEM_write_PrivateKey(fp, key, cipher,
+                                      passphrase, pp_len,
                                       NULL, NULL);
         fclose(fp);
     }
