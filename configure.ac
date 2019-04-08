@@ -469,6 +469,7 @@ AC_CONFIG_FILES([Makefile
                  server/classes/Makefile
                  server/classes/actions/Makefile
                  server/classes/modules/Makefile
+                 util/Makefile
                  test/Makefile
                  test/tap++/Makefile])
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])

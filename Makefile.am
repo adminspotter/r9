@@ -1,5 +1,5 @@
-SD = proto
-SD_NO_TEST = proto
+SD = proto util
+SD_NO_TEST = proto util
 if WANT_SERVER
 SD += server
 SD_NO_TEST += server
