@@ -68,8 +68,8 @@ love to collaborate on.
 r9 has been built and tested on:
 
 * CentOS Linux 6/7
-* Ubuntu GNU/Linux Trusty Tahr (via [Travis CI](https://travis-ci.org))
-* MacOS X Mavericks - High Sierra
+* Ubuntu GNU/Linux Trusty Tahr and Xenial Xerus (via [Travis CI](https://travis-ci.org))
+* MacOS X Mavericks - Mojave
 
 As long as your platform contains the typical POSIX libraries, you
 should at least be in the ballpark.  Most other Linuxes should be
