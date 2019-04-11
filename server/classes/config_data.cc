@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Apr 2019, 08:58:21 tquirk
+ *   last updated 11 Apr 2019, 16:42:05 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -261,7 +261,19 @@ void setup_configuration(int count, char **args)
 {
     /* We only want a total init when we pass an actual argv/argc in. */
     if (count && args)
+    {
+#if OPENSSL_API_COMPAT < 0x10100000
+        /* If our OpenSSL is old enough, it does not automatically
+         * load all of the stuff we might need.  Since this is the
+         * first we'll be interacting with anything relating to
+         * crypto, we'll do it here.
+         */
+        OpenSSL_add_all_algorithms();
+        OpenSSL_add_all_ciphers();
+        OpenSSL_add_all_digests();
+#endif /* OPENSSL_API_COMPAT */
         config.parse_command_line(count, args);
+    }
 }
 
 void cleanup_configuration(void)
