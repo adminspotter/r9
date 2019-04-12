@@ -43,6 +43,10 @@
 
 #define ARGPARSE_RETURN 2
 
+#ifndef SYSCONFDIR
+#define SYSCONFDIR "/etc"
+#endif /* SYSCONFDIR */
+
 bool do_client_key = false, do_server_key = false;
 std::string key_path;
 
@@ -110,9 +114,27 @@ void process_command_line(int argc, char **argv)
     }
 }
 
+void generate_key_path(void)
+{
+    if (key_path.size() == 0)
+    {
+        if (do_server_key == true)
+            key_path = SYSCONFDIR "/r9dkey";
+        else if (do_client_key == true)
+        {
+            key_path = getenv("HOME");
+            key_path += "/.r9/key";
+        }
+        else
+            key_path = "./key";
+    }
+    std::cout << "Writing to " << key_path << std::endl;
+}
+
 int main(int argc, char **argv)
 {
     show_banner();
     process_command_line(argc, argv);
+    generate_key_path();
     return 0;
 }
