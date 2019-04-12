@@ -16,6 +16,7 @@ TAGS
 old/
 server/r9d
 client/r9client
+util/r9_keygen
 
 # Automake
 Makefile

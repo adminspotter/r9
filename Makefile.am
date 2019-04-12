@@ -1,5 +1,5 @@
-SD = proto
-SD_NO_TEST = proto
+SD = proto util
+SD_NO_TEST = proto util
 if WANT_SERVER
 SD += server
 SD_NO_TEST += server
@@ -17,5 +17,10 @@ SD += test
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = $(SD)
 EXTRA_DIST = autogen.sh
+
+if WANT_LOCALES
+all-local:
+	$(MAKE) -C po update-po
+endif
 
 install-recursive: SUBDIRS = $(SD_NO_TEST)
