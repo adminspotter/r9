@@ -1,6 +1,6 @@
 /* r9_keygen.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Apr 2019, 09:34:07 tquirk
+ *   last updated 12 Apr 2019, 09:43:32 tquirk
  *
  * Revision IX game utility
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -32,15 +32,24 @@
 
 #include <config.h>
 
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif /* HAVE_STDIO_H */
 #if HAVE_STRING_H
 #include <string.h>
 #endif /* HAVE_STRING_H */
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif /* HAVE_STDLIB_H */
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
+#if HAVE_TERMIOS_H
+#include <termios.h>
+#endif /* HAVE_TERMIOS_H */
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif /* HAVE_ERRNO_H */
@@ -141,14 +150,48 @@ void generate_key_path(void)
     std::cout << "Writing to " << key_path << std::endl;
 }
 
+std::string ask_for_passphrase(void)
+{
+    std::string passphrase, passphrase2;
+
+    do
+    {
+        struct termios t_old, t_new;
+
+        if (passphrase.size() != 0 && passphrase != passphrase2)
+            std::cout << "Passphrases do not match!" << std::endl;
+        std::cout << "Enter passphrase: ";
+        std::cout.flush();
+        tcgetattr(STDIN_FILENO, &t_old);
+        t_new = t_old;
+        t_new.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr(STDIN_FILENO, TCSANOW, &t_new);
+        std::cin >> passphrase;
+        std::cout << std::endl << "Repeat passphrase: ";
+        std::cout.flush();
+        std::cin >> passphrase2;
+        tcsetattr(STDIN_FILENO, TCSANOW, &t_old);
+        std::cout << std::endl;
+    }
+    while (passphrase != passphrase2);
+    return passphrase;
+}
+
 EVP_PKEY *generate_key(void)
 {
     return generate_ecdh_key();
 }
 
-void write_key(EVP_PKEY *key, std::string& key_fname)
+void write_key(EVP_PKEY *key, std::string& key_fname, std::string& passphrase)
 {
-    if (pkey_to_file(key, key_fname.c_str(), NULL) == 0)
+    unsigned char pp[passphrase.size() + 1];
+    int i = 0;
+
+    for (char c : passphrase)
+        pp[i++] = (unsigned char)c;
+    pp[i] = 0;
+
+    if (pkey_to_file(key, key_fname.c_str(), pp) == 0)
     {
         std::cerr << "Could not write private key file: "
                   << strerror(errno) << "(" << errno << ")" << std::endl;
@@ -158,9 +201,13 @@ void write_key(EVP_PKEY *key, std::string& key_fname)
 
 int main(int argc, char **argv)
 {
+    std::string passphrase;
+
     show_banner();
     process_command_line(argc, argv);
     generate_key_path();
+    if (do_client_key == true)
+        passphrase = ask_for_passphrase();
 
 #if OPENSSL_API_COMPAT < 0x10100000
     OpenSSL_add_all_algorithms();
@@ -168,7 +215,7 @@ int main(int argc, char **argv)
     OpenSSL_add_all_digests();
 #endif /* OPENSSL_API_COMPAT */
     EVP_PKEY *new_key = generate_key();
-    write_key(new_key, key_path);
+    write_key(new_key, key_path, passphrase);
 
     return 0;
 }
