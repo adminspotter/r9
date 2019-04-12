@@ -1,6 +1,6 @@
 /* r9_keygen.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Apr 2019, 09:43:32 tquirk
+ *   last updated 12 Apr 2019, 09:49:59 tquirk
  *
  * Revision IX game utility
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -54,6 +54,13 @@
 #include <errno.h>
 #endif /* HAVE_ERRNO_H */
 
+#if WANT_LOCALES && HAVE_LIBINTL_H
+#include <libintl.h>
+#define _(x)  maketext(x)
+#else
+#define _(x)  x
+#endif /* WANT_LOCALES && HAVE_LIBINTL_H */
+
 #include <iostream>
 
 #include <proto/key.h>
@@ -103,7 +110,7 @@ void process_command_line(int argc, char **argv)
                 do_client_key = true;
             else
             {
-                std::cerr << "Can't do both server and client keys."
+                std::cerr << _("Can't do both server and client keys.")
                           << std::endl;
                 exit(ARGPARSE_RETURN);
             }
@@ -113,7 +120,7 @@ void process_command_line(int argc, char **argv)
                 do_server_key = true;
             else
             {
-                std::cerr << "Can't do both server and client keys."
+                std::cerr << _("Can't do both server and client keys.")
                           << std::endl;
                 exit(ARGPARSE_RETURN);
             }
@@ -123,11 +130,11 @@ void process_command_line(int argc, char **argv)
             break;
           case '?':
 #if !HAVE_GETOPT_LONG
-            std::cerr << "Unknown option " << (char)opt << std::endl;
+            std::cerr << _("Unknown option ") << (char)opt << std::endl;
 #endif /* !HAVE_GETOPT_LONG */
             exit(ARGPARSE_RETURN);
           default:
-            std::cerr << "Error in argument parsing" << std::endl;
+            std::cerr << _("Error in argument parsing") << std::endl;
             exit(ARGPARSE_RETURN);
         }
     }
@@ -147,7 +154,7 @@ void generate_key_path(void)
         else
             key_path = "./key";
     }
-    std::cout << "Writing to " << key_path << std::endl;
+    std::cout << _("Writing to ") << key_path << std::endl;
 }
 
 std::string ask_for_passphrase(void)
@@ -159,15 +166,15 @@ std::string ask_for_passphrase(void)
         struct termios t_old, t_new;
 
         if (passphrase.size() != 0 && passphrase != passphrase2)
-            std::cout << "Passphrases do not match!" << std::endl;
-        std::cout << "Enter passphrase: ";
+            std::cout << _("Passphrases do not match!") << std::endl;
+        std::cout << _("Enter passphrase: ");
         std::cout.flush();
         tcgetattr(STDIN_FILENO, &t_old);
         t_new = t_old;
         t_new.c_lflag &= ~(ICANON | ECHO);
         tcsetattr(STDIN_FILENO, TCSANOW, &t_new);
         std::cin >> passphrase;
-        std::cout << std::endl << "Repeat passphrase: ";
+        std::cout << std::endl << _("Repeat passphrase: ");
         std::cout.flush();
         std::cin >> passphrase2;
         tcsetattr(STDIN_FILENO, TCSANOW, &t_old);
@@ -193,7 +200,7 @@ void write_key(EVP_PKEY *key, std::string& key_fname, std::string& passphrase)
 
     if (pkey_to_file(key, key_fname.c_str(), pp) == 0)
     {
-        std::cerr << "Could not write private key file: "
+        std::cerr << _("Could not write private key file: ")
                   << strerror(errno) << "(" << errno << ")" << std::endl;
         exit(KEYGEN_RETURN);
     }

@@ -9,3 +9,4 @@ client/comm_dialog.cc
 client/configdata.cc
 client/configdata.h
 client/object.h
+util/r9_keygen.cc
