@@ -1,6 +1,6 @@
 /* r9_keygen.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Apr 2019, 17:23:37 tquirk
+ *   last updated 12 Apr 2019, 09:34:07 tquirk
  *
  * Revision IX game utility
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -32,16 +32,26 @@
 
 #include <config.h>
 
+#if HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif /* HAVE_STDLIB_H */
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif /* HAVE_ERRNO_H */
 
 #include <iostream>
 
+#include <proto/key.h>
+#include <proto/ec.h>
+
 #define ARGPARSE_RETURN 2
+#define KEYGEN_RETURN 3
 
 #ifndef SYSCONFDIR
 #define SYSCONFDIR "/etc"
@@ -131,10 +141,34 @@ void generate_key_path(void)
     std::cout << "Writing to " << key_path << std::endl;
 }
 
+EVP_PKEY *generate_key(void)
+{
+    return generate_ecdh_key();
+}
+
+void write_key(EVP_PKEY *key, std::string& key_fname)
+{
+    if (pkey_to_file(key, key_fname.c_str(), NULL) == 0)
+    {
+        std::cerr << "Could not write private key file: "
+                  << strerror(errno) << "(" << errno << ")" << std::endl;
+        exit(KEYGEN_RETURN);
+    }
+}
+
 int main(int argc, char **argv)
 {
     show_banner();
     process_command_line(argc, argv);
     generate_key_path();
+
+#if OPENSSL_API_COMPAT < 0x10100000
+    OpenSSL_add_all_algorithms();
+    OpenSSL_add_all_ciphers();
+    OpenSSL_add_all_digests();
+#endif /* OPENSSL_API_COMPAT */
+    EVP_PKEY *new_key = generate_key();
+    write_key(new_key, key_path);
+
     return 0;
 }
