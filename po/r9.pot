@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2019-04-12 09:55-0700\n"
+"POT-Creation-Date: 2019-04-12 10:25-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: client/client.cc:72
+#: client/client.cc:81
 msgid "failed to initialize GLFW"
 msgstr ""
 
@@ -45,34 +45,34 @@ msgstr ""
 msgid "Skipping bad config line: "
 msgstr ""
 
-#: util/r9_keygen.cc:115 util/r9_keygen.cc:125
+#: util/r9_keygen.cc:113 util/r9_keygen.cc:123
 msgid "Can't do both server and client keys."
 msgstr ""
 
-#: util/r9_keygen.cc:135
+#: util/r9_keygen.cc:133
 msgid "Unknown option "
 msgstr ""
 
-#: util/r9_keygen.cc:139
+#: util/r9_keygen.cc:137
 msgid "Error in argument parsing"
 msgstr ""
 
-#: util/r9_keygen.cc:159
+#: util/r9_keygen.cc:157
 msgid "Writing to "
 msgstr ""
 
-#: util/r9_keygen.cc:171
+#: util/r9_keygen.cc:169
 msgid "Passphrases do not match!"
 msgstr ""
 
-#: util/r9_keygen.cc:172
+#: util/r9_keygen.cc:170
 msgid "Enter passphrase: "
 msgstr ""
 
-#: util/r9_keygen.cc:179
+#: util/r9_keygen.cc:177
 msgid "Repeat passphrase: "
 msgstr ""
 
-#: util/r9_keygen.cc:205
+#: util/r9_keygen.cc:203
 msgid "Could not write private key file: "
 msgstr ""
