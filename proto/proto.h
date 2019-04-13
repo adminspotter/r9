@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Apr 2019, 08:22:42 tquirk
+ *   last updated 13 Apr 2019, 15:59:05 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -45,7 +45,6 @@
  *            the server key.
  *
  * Things to do
- *   - We want to do some crypto on this protocol.
  *   - Rethink the removal of in-band geometry and texture fetching.
  *
  */
@@ -112,6 +111,7 @@ typedef struct login_request_tag
     char username[64];
     char password[64];
     char charname[64];
+    uint8_t pubkey[256];    /* in DER format */
 } __attribute__ ((__packed__))
 login_request;
 
@@ -170,7 +170,7 @@ typedef struct server_key_tag
     uint8_t type;
     uint8_t version;        /* protocol version number */
     uint32_t sequence;      /* timestamp / sequence number */
-    uint8_t pubkey[128];
+    uint8_t pubkey[256];    /* in DER format */
 } __attribute__ ((__packed__))
 server_key;
 
