@@ -19,6 +19,7 @@ void test_pkey_to_string(void)
     unsigned char str[1024];
     size_t str_size = pkey_to_string(key, (unsigned char **)&str, sizeof(str));
     isnt(str_size, 0, test + "string conversion correct");
+    diag(str_size);
 
     OPENSSL_free(key);
 }
@@ -32,6 +33,7 @@ void test_string_to_pkey(void)
     unsigned char str[1024];
     size_t str_size = pkey_to_string(key, (unsigned char **)&str, sizeof(str));
     isnt(str_size, 0, test + "string conversion correct");
+    diag(str_size);
 
     EVP_PKEY *converted = string_to_pkey(str, str_size);
 
@@ -52,6 +54,7 @@ void test_pkey_to_pub_string(void)
                                          (unsigned char **)&str,
                                          sizeof(str));
     isnt(str_size, 0, test + "string conversion correct");
+    diag(str_size);
 
     OPENSSL_free(key);
 }
@@ -67,6 +70,7 @@ void test_pub_string_to_pkey(void)
                                          (unsigned char **)&str,
                                          sizeof(str));
     isnt(str_size, 0, test + "string conversion correct");
+    diag(str_size);
 
     EVP_PKEY *converted = pub_string_to_pkey(str, str_size);
 
@@ -87,6 +91,7 @@ void test_pkey_to_pub_der(void)
                                       (unsigned char **)&str,
                                       sizeof(str));
     isnt(str_size, 0, test + "string conversion correct");
+    diag(str_size);
 
     OPENSSL_free(key);
 }
@@ -102,6 +107,7 @@ void test_pub_der_to_pkey(void)
                                       (unsigned char **)&str,
                                       sizeof(str));
     isnt(str_size, 0, test + "string conversion correct");
+    diag(str_size);
 
     EVP_PKEY *converted = pub_der_to_pkey(str, str_size);
 
@@ -129,6 +135,7 @@ void test_pkey_to_file(void)
     is(stat_struct.st_mode,
        S_IFREG | S_IRUSR | S_IWUSR,
        test + "expected file permissions");
+    diag(stat_struct.st_size);
     unlink(fname);
     OPENSSL_free(key);
 }
