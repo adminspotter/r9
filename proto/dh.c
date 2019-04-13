@@ -1,6 +1,6 @@
 /* dh.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2019, 15:15:00 tquirk
+ *   last updated 13 Apr 2019, 15:22:02 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -38,41 +38,32 @@ struct dh_message *dh_shared_secret(EVP_PKEY *priv_key, EVP_PKEY *peer_key)
         return NULL;
 
     if ((derive_ctx = EVP_PKEY_CTX_new(priv_key, NULL)) == NULL)
-    {
-        OPENSSL_free(msg);
-        return NULL;
-    }
+        goto BAILOUT1;
 
     if (EVP_PKEY_derive_init(derive_ctx) != 1
         || EVP_PKEY_derive_set_peer(derive_ctx, peer_key) != 1
         || EVP_PKEY_derive(derive_ctx, NULL, &msg->message_len) != 1)
-    {
-        OPENSSL_free(msg);
-        EVP_PKEY_CTX_free(derive_ctx);
-        return NULL;
-    }
+        goto BAILOUT2;
 
     if ((msg->message = OPENSSL_malloc(msg->message_len)) == NULL)
-    {
-        OPENSSL_free(msg);
-        msg = NULL;
-    }
-    else if (EVP_PKEY_derive(derive_ctx, msg->message, &msg->message_len) != 1)
-    {
-        OPENSSL_free(msg->message);
-        OPENSSL_free(msg);
-        msg = NULL;
-    }
+        goto BAILOUT2;
+    else if (EVP_PKEY_derive(derive_ctx, msg->message, &msg->message_len) != 1
+        || msg == NULL)
+        goto BAILOUT3;
 
     EVP_PKEY_CTX_free(derive_ctx);
-
-    if (msg != NULL)
-    {
-        digest = digest_message(msg);
-        OPENSSL_free(msg->message);
-        OPENSSL_free(msg);
-    }
+    digest = digest_message(msg);
+    OPENSSL_free(msg->message);
+    OPENSSL_free(msg);
     return digest;
+
+  BAILOUT3:
+    OPENSSL_free(msg->message);
+  BAILOUT2:
+    EVP_PKEY_CTX_free(derive_ctx);
+  BAILOUT1:
+    OPENSSL_free(msg);
+    return NULL;
 }
 
 struct dh_message *digest_message(const struct dh_message *msg)
