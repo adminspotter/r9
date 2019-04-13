@@ -130,6 +130,7 @@ void test_pkey_to_file(void)
        S_IFREG | S_IRUSR | S_IWUSR,
        test + "expected file permissions");
     unlink(fname);
+    OPENSSL_free(key);
 }
 
 void test_file_to_pkey(void)
@@ -146,6 +147,8 @@ void test_file_to_pkey(void)
     is(loaded_key != NULL, true, test + "loaded a key");
 
     unlink(fname);
+    OPENSSL_free(key);
+    OPENSSL_free(loaded_key);
 }
 
 int main(int argc, char **argv)
