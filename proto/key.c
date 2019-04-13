@@ -1,6 +1,6 @@
 /* key.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Apr 2019, 18:00:12 tquirk
+ *   last updated 13 Apr 2019, 14:28:25 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -62,6 +62,21 @@ size_t pkey_to_string(EVP_PKEY *key, unsigned char **string, size_t len)
                                  NULL,
                                  NULL, 0,
                                  NULL, NULL) == 1)
+        actual_len = BIO_read(bo, string, len);
+
+    BIO_free(bo);
+    return actual_len;
+}
+
+size_t pkey_to_pub_string(EVP_PKEY *key, unsigned char **string, size_t len)
+{
+    BIO *bo = NULL;
+    size_t actual_len = 0;
+
+    if ((bo = BIO_new(BIO_s_mem())) == NULL)
+        return 0;
+
+    if (PEM_write_bio_PUBKEY(bo, key) == 1)
         actual_len = BIO_read(bo, string, len);
 
     BIO_free(bo);

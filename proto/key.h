@@ -1,6 +1,6 @@
 /* key.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Feb 2019, 08:53:11 tquirk
+ *   last updated 13 Apr 2019, 14:32:58 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -38,6 +38,8 @@ extern "C"
 
 EVP_PKEY *string_to_pkey(const unsigned char *, size_t);
 size_t pkey_to_string(EVP_PKEY *, unsigned char **, size_t);
+
+size_t pkey_to_pub_string(EVP_PKEY *, unsigned char **, size_t);
 
 EVP_PKEY *file_to_pkey(const char *, unsigned char *);
 int pkey_to_file(EVP_PKEY *, const char *, unsigned char *);
