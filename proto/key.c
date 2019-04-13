@@ -98,6 +98,34 @@ size_t pkey_to_pub_string(EVP_PKEY *key, unsigned char **string, size_t len)
     return actual_len;
 }
 
+EVP_PKEY *pub_der_to_pkey(const unsigned char *string, size_t len)
+{
+    EVP_PKEY *pub_key = EVP_PKEY_new();
+    EC_KEY *ec_key = NULL;
+    BIO *bo = NULL;
+
+    if ((pub_key = EVP_PKEY_new()) == NULL)
+        return NULL;
+
+    if ((bo = BIO_new(BIO_s_mem())) == NULL)
+        goto BAILOUT1;
+
+    if (BIO_write(bo, string, len) == len
+        && d2i_EC_PUBKEY_bio(bo, &ec_key))
+        EVP_PKEY_assign_EC_KEY(pub_key, ec_key);
+    else
+        goto BAILOUT2;
+
+    BIO_free(bo);
+    return pub_key;
+
+  BAILOUT2:
+    BIO_free(bo);
+  BAILOUT1:
+    EVP_PKEY_free(pub_key);
+    return NULL;
+}
+
 size_t pkey_to_pub_der(EVP_PKEY *key, unsigned char **string, size_t len)
 {
     BIO *bo = NULL;
