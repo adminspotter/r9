@@ -76,6 +76,21 @@ void test_pub_string_to_pkey(void)
     OPENSSL_free(key);
 }
 
+void test_pkey_to_pub_der(void)
+{
+    std::string test = "pkey_to_pub_der: ";
+
+    EVP_PKEY *key = generate_ecdh_key();
+
+    unsigned char str[1024];
+    size_t str_size = pkey_to_pub_der(key,
+                                      (unsigned char **)&str,
+                                      sizeof(str));
+    isnt(str_size, 0, test + "string conversion correct");
+
+    OPENSSL_free(key);
+}
+
 void test_pkey_to_file(void)
 {
     std::string test = "pkey_to_file: ";
@@ -115,7 +130,7 @@ void test_file_to_pkey(void)
 
 int main(int argc, char **argv)
 {
-    plan(10);
+    plan(11);
 
 #if OPENSSL_API_COMPAT < 0x10100000
     OpenSSL_add_all_algorithms();
@@ -126,6 +141,7 @@ int main(int argc, char **argv)
     test_string_to_pkey();
     test_pkey_to_pub_string();
     test_pub_string_to_pkey();
+    test_pkey_to_pub_der();
     test_pkey_to_file();
     test_file_to_pkey();
     return exit_status();

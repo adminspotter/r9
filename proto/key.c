@@ -98,6 +98,21 @@ size_t pkey_to_pub_string(EVP_PKEY *key, unsigned char **string, size_t len)
     return actual_len;
 }
 
+size_t pkey_to_pub_der(EVP_PKEY *key, unsigned char **string, size_t len)
+{
+    BIO *bo = NULL;
+    size_t actual_len = 0;
+
+    if ((bo = BIO_new(BIO_s_mem())) == NULL)
+        return 0;
+
+    if (i2d_EC_PUBKEY_bio(bo, EVP_PKEY_get1_EC_KEY(key)) == 1)
+        actual_len = BIO_read(bo, string, len);
+
+    BIO_free(bo);
+    return actual_len;
+}
+
 EVP_PKEY *file_to_pkey(const char *fname, unsigned char *passphrase)
 {
     EVP_PKEY *key = NULL;

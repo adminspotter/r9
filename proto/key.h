@@ -42,6 +42,8 @@ size_t pkey_to_string(EVP_PKEY *, unsigned char **, size_t);
 EVP_PKEY *pub_string_to_pkey(const unsigned char *, size_t);
 size_t pkey_to_pub_string(EVP_PKEY *, unsigned char **, size_t);
 
+size_t pkey_to_pub_der(EVP_PKEY *, unsigned char **, size_t);
+
 EVP_PKEY *file_to_pkey(const char *, unsigned char *);
 int pkey_to_file(EVP_PKEY *, const char *, unsigned char *);
 
