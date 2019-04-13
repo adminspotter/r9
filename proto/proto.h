@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2019, 15:59:05 tquirk
+ *   last updated 13 Apr 2019, 16:18:18 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -41,6 +41,7 @@
  *            second connection to the neighboring server, for position
  *            updates.  This will also be used to let servers know about
  *            new neighboring servers.
+ *   LGTREQ:  This packet is a user request to logout.
  *   SRVKEY:  This packet is a server login response which includes
  *            the server key.
  *
@@ -108,9 +109,9 @@ typedef struct login_request_tag
     uint8_t type;
     uint8_t version;        /* protocol version number */
     uint32_t sequence;      /* timestamp / sequence number */
-    char username[64];
+    char username[64];      /* in UTF-8 */
     char password[64];
-    char charname[64];
+    char charname[64];      /* in UTF-8 */
     uint8_t pubkey[256];    /* in DER format */
 } __attribute__ ((__packed__))
 login_request;
