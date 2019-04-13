@@ -68,6 +68,21 @@ size_t pkey_to_string(EVP_PKEY *key, unsigned char **string, size_t len)
     return actual_len;
 }
 
+EVP_PKEY *pub_string_to_pkey(const unsigned char *string, size_t len)
+{
+    EVP_PKEY *pub_key = NULL;
+    BIO *bo = NULL;
+
+    if ((bo = BIO_new(BIO_s_mem())) == NULL)
+        return NULL;
+
+    if (BIO_write(bo, string, len) == len)
+        PEM_read_bio_PUBKEY(bo, &pub_key, NULL, NULL);
+
+    BIO_free(bo);
+    return pub_key;
+}
+
 size_t pkey_to_pub_string(EVP_PKEY *key, unsigned char **string, size_t len)
 {
     BIO *bo = NULL;
