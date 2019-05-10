@@ -1,9 +1,9 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Apr 2018, 07:45:37 tquirk
+ *   last updated 09 May 2019, 22:04:32 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -316,6 +316,8 @@ Comm::Comm(struct addrinfo *ai)
 Comm::~Comm()
 {
     this->stop();
+    if (this->sock)
+        close(this->sock);
     pthread_cond_destroy(&(this->send_queue_not_empty));
     pthread_mutex_destroy(&(this->send_lock));
 }

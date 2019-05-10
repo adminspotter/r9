@@ -72,6 +72,11 @@ int socket(int a, int b, int c)
     return 123;
 }
 
+int close(int a)
+{
+    return 0;
+}
+
 int ntoh_packet(packet *a, size_t b)
 {
     if (bad_ntoh == true)
