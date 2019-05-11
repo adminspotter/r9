@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 May 2019, 12:45:53 tquirk
+ *   last updated 11 May 2019, 13:11:52 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -326,7 +326,8 @@ Comm::Comm(struct addrinfo *ai)
 
 Comm::~Comm()
 {
-    this->stop();
+    try { this->stop(); }
+    catch (std::exception e) { std::clog << e.what() << std::endl; }
     if (this->sock)
         close(this->sock);
     pthread_cond_destroy(&(this->send_queue_not_empty));
@@ -378,17 +379,52 @@ void Comm::start(void)
 
 void Comm::stop(void)
 {
+    int ret;
+
     if (this->threads_started)
     {
         if (this->sock)
             this->send_logout();
+        sleep(0);
         this->thread_exit_flag = true;
-        pthread_cond_broadcast(&(this->send_queue_not_empty));
+        if ((ret = pthread_cond_broadcast(&(this->send_queue_not_empty))) != 0)
+        {
+            std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
+            s << "Couldn't wake send thread: " << err << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
         sleep(0);
-        pthread_join(this->send_thread, NULL);
-        pthread_cancel(this->recv_thread);
+        if ((ret = pthread_join(this->send_thread, NULL)) != 0)
+        {
+            std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
+            s << "Couldn't join send thread: " << err << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        if ((ret = pthread_cancel(this->recv_thread)) != 0)
+        {
+            std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
+            s << "Couldn't cancel recv thread: " << err << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
         sleep(0);
-        pthread_join(this->recv_thread, NULL);
+        if ((ret = pthread_join(this->recv_thread, NULL)) != 0)
+        {
+            std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
+            s << "Couldn't join recv thread: " << err << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
         this->threads_started = false;
     }
 }
