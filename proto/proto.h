@@ -87,7 +87,7 @@ typedef struct basic_packet_tag
 {
     uint8_t type;
     uint8_t version;
-    uint32_t sequence;
+    uint64_t sequence;
 } __attribute__ ((__packed__))
 basic_packet;
 
@@ -98,7 +98,7 @@ typedef struct ack_packet_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint8_t request;        /* packet type of original request */
     uint64_t misc[4];       /* miscellaneous data */
 } __attribute__ ((__packed__))
@@ -108,7 +108,7 @@ typedef struct login_request_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     char username[64];      /* in UTF-8 */
     char password[64];
     char charname[64];      /* in UTF-8 */
@@ -120,7 +120,7 @@ typedef struct action_request_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint64_t object_id;
     uint16_t action_id;
     uint8_t power_level;
@@ -143,7 +143,7 @@ typedef struct position_update_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint64_t object_id;
     uint16_t frame_number;
     /* We may consider adding the sector vector back in here */
@@ -158,7 +158,7 @@ typedef struct server_notice_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint8_t ipproto;        /* 4 or 6 */
     char addr[INET6_ADDRSTRLEN];
     in_port_t port;

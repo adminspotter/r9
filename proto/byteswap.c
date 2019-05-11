@@ -124,7 +124,7 @@ static int hton_basic_packet(packet *ap, size_t s)
 {
     if (s < sizeof(basic_packet))
         return 0;
-    ap->basic.sequence = htonl(ap->basic.sequence);
+    ap->basic.sequence = htonll(ap->basic.sequence);
     return 1;
 }
 
@@ -133,7 +133,7 @@ static int ntoh_basic_packet(packet *ap, size_t s)
 {
     if (s < sizeof(basic_packet))
         return 0;
-    ap->basic.sequence = ntohl(ap->basic.sequence);
+    ap->basic.sequence = ntohll(ap->basic.sequence);
     return 1;
 }
 
@@ -142,7 +142,7 @@ static int hton_ack_packet(packet *ap, size_t s)
 {
     if (s < sizeof(ack_packet))
         return 0;
-    ap->ack.sequence = htonl(ap->ack.sequence);
+    ap->ack.sequence = htonll(ap->ack.sequence);
     ap->ack.misc[0] = htonll(ap->ack.misc[0]);
     ap->ack.misc[1] = htonll(ap->ack.misc[1]);
     ap->ack.misc[2] = htonll(ap->ack.misc[2]);
@@ -155,7 +155,7 @@ static int ntoh_ack_packet(packet *ap, size_t s)
 {
     if (s < sizeof(ack_packet))
         return 0;
-    ap->ack.sequence = ntohl(ap->ack.sequence);
+    ap->ack.sequence = ntohll(ap->ack.sequence);
     ap->ack.misc[0] = ntohll(ap->ack.misc[0]);
     ap->ack.misc[1] = ntohll(ap->ack.misc[1]);
     ap->ack.misc[2] = ntohll(ap->ack.misc[2]);
@@ -168,7 +168,7 @@ static int hton_login_request(packet *lr, size_t s)
 {
     if (s < sizeof(login_request))
         return 0;
-    lr->log.sequence = htonl(lr->log.sequence);
+    lr->log.sequence = htonll(lr->log.sequence);
     return 1;
 }
 
@@ -177,7 +177,7 @@ static int ntoh_login_request(packet *lr, size_t s)
 {
     if (s < sizeof(login_request))
         return 0;
-    lr->log.sequence = ntohl(lr->log.sequence);
+    lr->log.sequence = ntohll(lr->log.sequence);
     return 1;
 }
 
@@ -186,7 +186,7 @@ static int hton_action_request(packet *ar, size_t s)
 {
     if (s < sizeof(action_request))
         return 0;
-    ar->act.sequence = htonl(ar->act.sequence);
+    ar->act.sequence = htonll(ar->act.sequence);
     ar->act.object_id = htonll(ar->act.object_id);
     ar->act.action_id = htons(ar->act.action_id);
     ar->act.x_pos_source = htonll(ar->act.x_pos_source);
@@ -204,7 +204,7 @@ static int ntoh_action_request(packet *ar, size_t s)
 {
     if (s < sizeof(action_request))
         return 0;
-    ar->act.sequence = ntohl(ar->act.sequence);
+    ar->act.sequence = ntohll(ar->act.sequence);
     ar->act.object_id = ntohll(ar->act.object_id);
     ar->act.action_id = ntohs(ar->act.action_id);
     ar->act.x_pos_source = ntohll(ar->act.x_pos_source);
@@ -222,7 +222,7 @@ static int hton_position_update(packet *pu, size_t s)
 {
     if (s < sizeof(position_update))
         return 0;
-    pu->pos.sequence = htonl(pu->pos.sequence);
+    pu->pos.sequence = htonll(pu->pos.sequence);
     pu->pos.object_id = htonll(pu->pos.object_id);
     pu->pos.frame_number = htons(pu->pos.frame_number);
     pu->pos.x_pos = htonll(pu->pos.x_pos);
@@ -243,7 +243,7 @@ static int ntoh_position_update(packet *pu, size_t s)
 {
     if (s < sizeof(position_update))
         return 0;
-    pu->pos.sequence = ntohl(pu->pos.sequence);
+    pu->pos.sequence = ntohll(pu->pos.sequence);
     pu->pos.object_id = ntohll(pu->pos.object_id);
     pu->pos.frame_number = ntohs(pu->pos.frame_number);
     pu->pos.x_pos = ntohll(pu->pos.x_pos);

@@ -46,7 +46,7 @@ base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
-    this->sequence = 0L;
+    this->sequence = 0LL;
     this->characterid = 0LL;
 }
 

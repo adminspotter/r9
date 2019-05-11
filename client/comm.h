@@ -69,7 +69,7 @@ class Comm
     pthread_cond_t send_queue_not_empty;
     std::queue<packet *> send_queue;
 
-    static uint32_t sequence;
+    static uint64_t sequence;
     uint64_t src_object_id;
     std::atomic<bool> thread_exit_flag;
 

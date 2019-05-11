@@ -67,7 +67,7 @@
 #include "client_core.h"
 #include "comm.h"
 
-uint32_t Comm::sequence = 0L;
+uint64_t Comm::sequence = 0LL;
 
 /* Jump table for protocol handling */
 Comm::pkt_handler Comm::pkt_type[] =

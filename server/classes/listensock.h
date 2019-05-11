@@ -42,8 +42,7 @@ class listen_socket;
 
 class base_user : public Control {
   public:
-    uint32_t sequence;
-    uint64_t characterid;
+    uint64_t sequence, characterid;
     time_t timestamp;
     bool pending_logout;
     uint8_t auth_level;
