@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 May 2019, 09:02:00 tquirk
+ *   last updated 11 May 2019, 12:45:53 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -314,6 +314,7 @@ void Comm::init(void)
     }
 
     this->src_object_id = 0LL;
+    this->threads_started = false;
 }
 
 Comm::Comm(struct addrinfo *ai)
@@ -335,6 +336,9 @@ Comm::~Comm()
 void Comm::start(void)
 {
     int ret;
+
+    if (this->threads_started)
+        return;
 
     /* Now start up the actual threads */
     this->thread_exit_flag = false;
@@ -369,19 +373,24 @@ void Comm::start(void)
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
+    this->threads_started = true;
 }
 
 void Comm::stop(void)
 {
-    if (this->sock)
-        this->send_logout();
-    this->thread_exit_flag = true;
-    pthread_cond_broadcast(&(this->send_queue_not_empty));
-    sleep(0);
-    pthread_join(this->send_thread, NULL);
-    pthread_cancel(this->recv_thread);
-    sleep(0);
-    pthread_join(this->recv_thread, NULL);
+    if (this->threads_started)
+    {
+        if (this->sock)
+            this->send_logout();
+        this->thread_exit_flag = true;
+        pthread_cond_broadcast(&(this->send_queue_not_empty));
+        sleep(0);
+        pthread_join(this->send_thread, NULL);
+        pthread_cancel(this->recv_thread);
+        sleep(0);
+        pthread_join(this->recv_thread, NULL);
+        this->threads_started = false;
+    }
 }
 
 void Comm::send(packet *p, size_t len)

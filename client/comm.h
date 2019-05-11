@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 May 2019, 23:47:24 tquirk
+ *   last updated 11 May 2019, 12:43:12 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -56,6 +56,9 @@
 
 class Comm
 {
+  private:
+    bool threads_started;
+
   protected:
     int sock;
     struct sockaddr_storage remote;

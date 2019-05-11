@@ -250,6 +250,7 @@ void test_start_failure(void)
     create_recv_error = false;
     cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
         = create_calls = 0;
+    obj->start();
     delete obj;
     is(cancel_calls, 1, test + st + "expected cancels");
     is(join_calls, 2, test + st + "expected joins");
