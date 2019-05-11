@@ -94,6 +94,7 @@ int hton_packet(packet *a, size_t b)
 class fake_Comm : public Comm
 {
   public:
+    fake_Comm(void) : Comm() {};
     fake_Comm(struct addrinfo *ai) : Comm(ai) {};
     virtual ~fake_Comm() {};
 
@@ -111,17 +112,8 @@ void test_send_bad_hton(void)
 {
     std::string test = "hton failure: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
 
     packet *pkt = new packet;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)pkt, 0, sizeof(packet));
     pkt->basic.type = TYPE_PNGPKT;
@@ -134,7 +126,7 @@ void test_send_bad_hton(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
         comm->start();
     }
     catch (...)
@@ -156,17 +148,8 @@ void test_send_bad_send(void)
 {
     std::string test = "sendto failure: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
 
     packet *pkt = new packet;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)pkt, 0, sizeof(packet));
     pkt->basic.type = TYPE_PNGPKT;
@@ -179,7 +162,7 @@ void test_send_bad_send(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
         comm->start();
     }
     catch (...)
@@ -201,17 +184,8 @@ void test_send_packet(void)
 {
     std::string test = "send: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
 
     packet *pkt = new packet;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)pkt, 0, sizeof(packet));
     pkt->basic.type = TYPE_PNGPKT;
@@ -219,7 +193,7 @@ void test_send_packet(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -237,20 +211,11 @@ void test_send_login(void)
 {
     std::string test = "send_login: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
     std::string a("hi"), b("howdy"), c("hello");
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -268,19 +233,10 @@ void test_send_ack(void)
 {
     std::string test = "send_ack: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET6;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -298,19 +254,10 @@ void test_send_action_req_obj(void)
 {
     std::string test = "send_action_request (objid): ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -328,22 +275,13 @@ void test_send_action_req_vec(void)
 {
     std::string test = "send_action_request (vector): ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
 
     /* send_worker will delete this */
     packet *pkt = new packet;
 
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
-
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -362,19 +300,10 @@ void test_send_logout(void)
 {
     std::string test = "send_logout: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -392,15 +321,6 @@ void test_recv_bad_result(void)
 {
     std::string test = "recvfrom failure: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
@@ -414,7 +334,7 @@ void test_recv_bad_result(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
         comm->start();
     }
     catch (...)
@@ -435,15 +355,6 @@ void test_recv_bad_sender(void)
 {
     std::string test = "unknown sender: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
@@ -457,7 +368,7 @@ void test_recv_bad_sender(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
         comm->start();
     }
     catch (...)
@@ -606,15 +517,6 @@ void test_recv_ping(void)
 {
     std::string test = "handle_pngpkt: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
@@ -622,7 +524,7 @@ void test_recv_ping(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -639,15 +541,6 @@ void test_recv_ack(void)
 {
     std::string test = "handle_ackpkt: ", st;
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_ACKPKT;
@@ -655,7 +548,7 @@ void test_recv_ack(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -715,15 +608,6 @@ void test_recv_pos_update(void)
 {
     std::string test = "handle_posupd: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_POSUPD;
@@ -738,7 +622,7 @@ void test_recv_pos_update(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -754,15 +638,6 @@ void test_recv_server_notice(void)
 {
     std::string test = "handle_srvnot: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_SRVNOT;
@@ -770,7 +645,7 @@ void test_recv_server_notice(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
@@ -789,15 +664,6 @@ void test_recv_unsupported(void)
 {
     std::string test = "handle_unsupported: ";
     fake_Comm *comm = NULL;
-    struct addrinfo ai;
-
-    memset((void *)&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_INET;
-    ai.ai_socktype = SOCK_DGRAM;
-    ai.ai_protocol = 17;
-    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
-    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
-    expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = 123;
@@ -805,7 +671,7 @@ void test_recv_unsupported(void)
 
     try
     {
-        comm = new fake_Comm(&ai);
+        comm = new fake_Comm();
     }
     catch (...)
     {
