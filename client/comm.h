@@ -1,9 +1,9 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Apr 2018, 07:44:02 tquirk
+ *   last updated 09 May 2019, 23:47:24 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -83,6 +83,10 @@ class Comm
     void handle_posupd(packet&);
     void handle_srvnot(packet&);
     void handle_unsupported(packet&);
+
+  protected:
+    Comm(void);
+    void init(void);
 
   public:
     Comm(struct addrinfo *);

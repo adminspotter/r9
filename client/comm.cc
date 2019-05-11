@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 May 2019, 22:04:32 tquirk
+ *   last updated 09 May 2019, 23:47:28 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -281,12 +281,15 @@ void Comm::handle_unsupported(packet& p)
               << std::endl;
 }
 
-Comm::Comm(struct addrinfo *ai)
+Comm::Comm(void)
     : send_queue(), thread_exit_flag(false)
 {
-    int ret;
+    this->init();
+}
 
-    this->create_socket(ai);
+void Comm::init(void)
+{
+    int ret;
 
     /* Init the mutex and cond variables */
     if ((ret = pthread_mutex_init(&(this->send_lock), NULL)) != 0)
@@ -311,6 +314,13 @@ Comm::Comm(struct addrinfo *ai)
     }
 
     this->src_object_id = 0LL;
+}
+
+Comm::Comm(struct addrinfo *ai)
+    : send_queue(), thread_exit_flag(false)
+{
+    this->create_socket(ai);
+    this->init();
 }
 
 Comm::~Comm()
