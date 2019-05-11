@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 May 2019, 23:47:28 tquirk
+ *   last updated 11 May 2019, 09:02:00 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -139,7 +139,6 @@ void *Comm::send_worker(void *arg)
         }
 
         pkt = comm->send_queue.front();
-        comm->send_queue.pop();
 
         if (sendto(comm->sock,
                    (void *)pkt, packet_size(pkt),
@@ -153,6 +152,7 @@ void *Comm::send_worker(void *arg)
             std::clog << "got a send error: "
                       << err << " (" << errno << ')' << std::endl;
         }
+        comm->send_queue.pop();
         pthread_mutex_unlock(&(comm->send_lock));
         memset(pkt, 0, sizeof(packet));
         delete pkt;
