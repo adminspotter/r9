@@ -14,7 +14,7 @@ EVP_PKEY_CTX ctx;
 bool malloc_error = false, pkey_new_error = false;
 bool pkey_derive_init_error = false, pkey_derive_peer_error = false;
 bool pkey_derive_error = false;
-int free_count = 0, pkey_ctx_free_count = 0;
+int malloc_count = 0, derive_count = 0, free_count = 0, pkey_ctx_free_count = 0;
 
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
 void *CRYPTO_malloc(size_t a, const char *b, int c)
@@ -22,6 +22,9 @@ void *CRYPTO_malloc(size_t a, const char *b, int c)
 void *CRYPTO_malloc(int a, const char *b, int c)
 #endif
 {
+    malloc_count += 1;
+    if (malloc_count == 2)
+        return &msg;
     if (malloc_error)
         return NULL;
     return &msg;
@@ -66,6 +69,9 @@ int EVP_PKEY_derive_set_peer(EVP_PKEY_CTX *a, EVP_PKEY *b)
 
 int EVP_PKEY_derive(EVP_PKEY_CTX *a, unsigned char *b, size_t *c)
 {
+    derive_count += 1;
+    if (derive_count == 2)
+        return 1;
     if (pkey_derive_error)
         return 0;
     return 1;
@@ -84,7 +90,7 @@ void test_dh_shared_secret(void)
     st = "pkey new error: ";
     malloc_error = false;
     pkey_new_error = true;
-    free_count = 0;
+    malloc_count = free_count = 0;
     is(dh_shared_secret(NULL, NULL) == NULL,
        true,
        test + st + "expected result");
@@ -93,7 +99,7 @@ void test_dh_shared_secret(void)
     st = "derive_init error: ";
     pkey_new_error = false;
     pkey_derive_init_error = true;
-    pkey_ctx_free_count = free_count = 0;
+    malloc_count = pkey_ctx_free_count = free_count = 0;
     is(dh_shared_secret(NULL, NULL) == NULL,
        true,
        test + st + "expected result");
@@ -103,7 +109,7 @@ void test_dh_shared_secret(void)
     st = "derive_set_peer error: ";
     pkey_derive_init_error = false;
     pkey_derive_peer_error = true;
-    pkey_ctx_free_count = free_count = 0;
+    malloc_count = pkey_ctx_free_count = free_count = 0;
     is(dh_shared_secret(NULL, NULL) == NULL,
        true,
        test + st + "expected result");
@@ -113,13 +119,34 @@ void test_dh_shared_secret(void)
     st = "derive error: ";
     pkey_derive_peer_error = false;
     pkey_derive_error = true;
-    pkey_ctx_free_count = free_count = 0;
+    malloc_count = derive_count = pkey_ctx_free_count = free_count = 0;
     is(dh_shared_secret(NULL, NULL) == NULL,
        true,
        test + st + "expected result");
     is(free_count, 1, test + st + "expected free calls");
     is(pkey_ctx_free_count, 1, test + st + "expected ctx free calls");
 
+    st = "second malloc error: ";
+    pkey_derive_error = false;
+    malloc_error = true;
+    malloc_count = 1;
+    derive_count = pkey_ctx_free_count = free_count = 0;
+    is(dh_shared_secret(NULL, NULL) == NULL,
+       true,
+       test + st + "expected result");
+    is(free_count, 1, test + st + "expected free calls");
+    is(pkey_ctx_free_count, 1, test + st + "expected ctx free calls");
+
+    st = "second derive error: ";
+    malloc_error = false;
+    pkey_derive_error = true;
+    derive_count = 1;
+    malloc_count = pkey_ctx_free_count = free_count = 0;
+    is(dh_shared_secret(NULL, NULL) == NULL,
+       true,
+       test + st + "expected result");
+    is(free_count, 2, test + st + "expected free calls");
+    is(pkey_ctx_free_count, 1, test + st + "expected ctx free calls");
 }
 
 void test_digest_message(void)
@@ -128,7 +155,7 @@ void test_digest_message(void)
 
 int main(int argc, char **argv)
 {
-    plan(12);
+    plan(18);
 
     test_dh_shared_secret();
     test_digest_message();
