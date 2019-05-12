@@ -14,6 +14,7 @@ t_db
 t_dgram
 t_dgram_worker
 t_dh
+t_dh_exception
 t_ec
 t_encrypt
 t_font
