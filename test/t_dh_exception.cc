@@ -151,11 +151,22 @@ void test_dh_shared_secret(void)
 
 void test_digest_message(void)
 {
+    std::string test = "digest_message: ", st;
+
+    st = "malloc error: ";
+    malloc_error = true;
+    is(digest_message(NULL) == NULL, true, test + st + "expected result");
+
+    st = "second malloc error: ";
+    malloc_count = 1;
+    free_count = 0;
+    is(digest_message(NULL) == NULL, true, test + st + "expected result");
+    is(free_count, 1, test + st + "expected free calls");
 }
 
 int main(int argc, char **argv)
 {
-    plan(18);
+    plan(21);
 
     test_dh_shared_secret();
     test_digest_message();
