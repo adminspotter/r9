@@ -1,6 +1,6 @@
 /* dh.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2019, 15:22:02 tquirk
+ *   last updated 12 May 2019, 20:33:00 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -47,8 +47,7 @@ struct dh_message *dh_shared_secret(EVP_PKEY *priv_key, EVP_PKEY *peer_key)
 
     if ((msg->message = OPENSSL_malloc(msg->message_len)) == NULL)
         goto BAILOUT2;
-    else if (EVP_PKEY_derive(derive_ctx, msg->message, &msg->message_len) != 1
-        || msg == NULL)
+    else if (EVP_PKEY_derive(derive_ctx, msg->message, &msg->message_len) != 1)
         goto BAILOUT3;
 
     EVP_PKEY_CTX_free(derive_ctx);
