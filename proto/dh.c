@@ -1,6 +1,6 @@
 /* dh.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 May 2019, 20:33:00 tquirk
+ *   last updated 18 May 2019, 10:33:14 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -67,7 +67,6 @@ struct dh_message *dh_shared_secret(EVP_PKEY *priv_key, EVP_PKEY *peer_key)
 
 struct dh_message *digest_message(const struct dh_message *msg)
 {
-    EVP_MD_CTX *digest_ctx;
     struct dh_message *digest = NULL;
 
     if ((digest = OPENSSL_malloc(sizeof(struct dh_message))) == NULL)
@@ -76,23 +75,13 @@ struct dh_message *digest_message(const struct dh_message *msg)
     if ((digest->message = OPENSSL_malloc(digest->message_len)) == NULL)
         goto BAILOUT1;
 
-    if ((digest_ctx = EVP_MD_CTX_create()) == NULL)
+    if (EVP_Digest(msg->message, msg->message_len,
+                   digest->message, (unsigned int *)&digest->message_len,
+                   EVP_sha256(), NULL) != 1)
         goto BAILOUT2;
 
-    if (EVP_DigestInit_ex(digest_ctx, EVP_sha256(), NULL) != 1
-        || EVP_DigestUpdate(digest_ctx, msg->message, msg->message_len) != 1)
-        goto BAILOUT3;
-
-    if (EVP_DigestFinal_ex(digest_ctx,
-                           digest->message,
-                           (unsigned int *)&digest->message_len) != 1)
-        goto BAILOUT3;
-
-    EVP_MD_CTX_destroy(digest_ctx);
     return digest;
 
-  BAILOUT3:
-    EVP_MD_CTX_destroy(digest_ctx);
   BAILOUT2:
     OPENSSL_free(digest->message);
   BAILOUT1:
