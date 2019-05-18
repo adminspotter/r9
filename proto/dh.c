@@ -42,12 +42,11 @@ struct dh_message *dh_shared_secret(EVP_PKEY *priv_key, EVP_PKEY *peer_key)
 
     if (EVP_PKEY_derive_init(derive_ctx) != 1
         || EVP_PKEY_derive_set_peer(derive_ctx, peer_key) != 1
-        || EVP_PKEY_derive(derive_ctx, NULL, &msg->message_len) != 1)
+        || EVP_PKEY_derive(derive_ctx, NULL, &msg->message_len) != 1
+        || (msg->message = OPENSSL_malloc(msg->message_len)) == NULL)
         goto BAILOUT2;
 
-    if ((msg->message = OPENSSL_malloc(msg->message_len)) == NULL)
-        goto BAILOUT2;
-    else if (EVP_PKEY_derive(derive_ctx, msg->message, &msg->message_len) != 1)
+    if (EVP_PKEY_derive(derive_ctx, msg->message, &msg->message_len) != 1)
         goto BAILOUT3;
 
     EVP_PKEY_CTX_free(derive_ctx);
