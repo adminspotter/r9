@@ -1,6 +1,6 @@
 /* dh.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Feb 2019, 08:52:08 tquirk
+ *   last updated 18 May 2019, 11:16:49 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -44,6 +44,8 @@ struct dh_message
 
 struct dh_message *dh_shared_secret(EVP_PKEY *, EVP_PKEY *);
 struct dh_message *digest_message(const struct dh_message *);
+
+void free_dh_message(struct dh_message *);
 
 #ifdef __cplusplus
 }

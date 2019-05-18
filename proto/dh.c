@@ -1,6 +1,6 @@
 /* dh.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 May 2019, 10:33:14 tquirk
+ *   last updated 18 May 2019, 12:09:35 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -51,8 +51,7 @@ struct dh_message *dh_shared_secret(EVP_PKEY *priv_key, EVP_PKEY *peer_key)
 
     EVP_PKEY_CTX_free(derive_ctx);
     digest = digest_message(msg);
-    OPENSSL_free(msg->message);
-    OPENSSL_free(msg);
+    free_dh_message(msg);
     return digest;
 
   BAILOUT3:
@@ -86,4 +85,14 @@ struct dh_message *digest_message(const struct dh_message *msg)
   BAILOUT1:
     OPENSSL_free(digest);
     return NULL;
+}
+
+void free_dh_message(struct dh_message *msg)
+{
+    if (msg != NULL)
+    {
+        if (msg->message != NULL)
+            OPENSSL_free(msg->message);
+        OPENSSL_free(msg);
+    }
 }
