@@ -9,7 +9,7 @@ void test_bad_type(void)
     std::string test = "bad type: ";
     packet p;
 
-    p.basic.type = TYPE_PNGPKT + 1;
+    p.basic.type = 99;
     p.basic.version = 1;
     p.basic.sequence = 1234LL;
 
@@ -174,9 +174,30 @@ void test_ping_packet(void)
        test + "good size succeeds hton");
 }
 
+void test_server_key(void)
+{
+    std::string test = "server key: ";
+    packet p;
+
+    p.key.type = TYPE_SRVKEY;
+    p.key.version = 1;
+    p.key.sequence = 1234LL;
+
+    is(is_server_key(&p), 1, test + "is a srvkey");
+
+    is(ntoh_packet(&p, sizeof(server_key) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(server_key)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(server_key) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(server_key)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(33);
+    plan(38);
 
     test_bad_type();
     test_ack_packet();
@@ -185,5 +206,6 @@ int main(int argc, char **argv)
     test_position_update();
     test_server_notice();
     test_ping_packet();
+    test_server_key();
     return exit_status();
 }

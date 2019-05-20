@@ -3,7 +3,7 @@ SUBDIRS = tap++ .
 TAP_INCLUDES = -Itap++
 TAP_LDADD = tap++/libtap++.la
 
-TC = t_byteswap
+TC = t_byteswap t_dh t_dh_exception t_ec t_encrypt t_key
 if WANT_SERVER
   TC += t_action_pool \
 	t_basesock \
@@ -66,6 +66,21 @@ endif
 t_byteswap_SOURCES = t_byteswap.cc ../proto/byteswap.c ../proto/proto.h
 t_byteswap_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
+t_dh_SOURCES = t_dh.cc ../proto/dh.c
+t_dh_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
+
+t_dh_exception_SOURCES = t_dh_exception.cc ../proto/dh.c
+t_dh_exception_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
+
+t_ec_SOURCES = t_ec.cc ../proto/ec.c
+t_ec_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
+
+t_encrypt_SOURCES = t_encrypt.cc ../proto/encrypt.c
+t_encrypt_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
+
+t_key_SOURCES = t_key.cc ../proto/key.c
+t_key_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
+
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
@@ -79,18 +94,18 @@ t_basesock_SOURCES = t_basesock.cc \
 	../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_basesock_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_basesock_LDADD = $(TAP_LDADD)
+t_basesock_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 t_config_data_SOURCES = t_config_data.cc \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_config_data_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_config_data_LDADD = $(TAP_LDADD)
+t_config_data_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 t_control_SOURCES = t_control.cc \
 	../server/classes/control.cc ../server/classes/control.h
 t_control_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
 t_control_LDADD = $(TAP_LDADD) \
-	../server/classes/libr9_classes.la \
+	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
 t_console_SOURCES = t_console.cc \
@@ -100,7 +115,7 @@ t_console_SOURCES = t_console.cc \
 	../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_console_LDADD = $(TAP_LDADD) $(WRAP_LDLIBS)
+t_console_LDADD = $(TAP_LDADD) $(WRAP_LDLIBS) ../proto/libr9_proto.la
 
 t_db_SOURCES = t_db.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
@@ -151,7 +166,7 @@ t_listensock_worker_LDADD = $(TAP_LDADD) \
 t_log_SOURCES = t_log.cc ../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_log_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_log_LDADD = $(TAP_LDADD)
+t_log_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 t_motion_pool_SOURCES = t_motion_pool.cc \
 	../server/classes/motion_pool.cc ../server/classes/motion_pool.h \
@@ -236,7 +251,7 @@ t_comm_exception_LDADD = $(TAP_LDADD)
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
-t_configdata_LDADD = $(TAP_LDADD)
+t_configdata_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov

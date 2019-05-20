@@ -378,6 +378,15 @@ then
   CPPFLAGS="$GLM_CPPFLAGS_SAVE"
 fi
 
+# Make sure we have a new enough version of OpenSSL
+AC_SEARCH_LIBS([EVP_PKEY_derive], [openssl ssl crypto],
+    [test "$ac_cv_search_EVP_PKEY_derive" = "none required" || LIBS="$ac_cv_search_EVP_PKEY_derive $LIBS"],
+    [AC_MSG_ERROR([can not build without OpenSSL >= 1.0.0])])
+OPENSSL_CPPFLAGS_SAVE="$CPPFLAGS"
+CPPFLAGS="$CXXFLAGS"
+AC_CHECK_HEADERS([openssl/evp.h openssl/ec.h], [], [AC_MSG_ERROR([no valid OpenSSL installation found, can not continue])])
+CPPFLAGS="$OPENSSL_CPPFLAGS_SAVE"
+
 AC_SEARCH_LIBS([pthread_create], [pthread],
     [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],
     [AC_MSG_ERROR([can not build without pthreads.])])
@@ -390,7 +399,7 @@ LIBS="$LIBS $PROFILE_LDLIBS"
 AC_CONFIG_SUBDIRS([client/cuddly-gl])
 
 # Checks for header files.
-AC_CHECK_HEADERS([architecture/byte_order.h arpa/inet.h byteswap.h endian.h execinfo.h fcntl.h grp.h inttypes.h limits.h netdb.h netinet/in.h pwd.h signal.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/resource.h sys/socket.h sys/syslimits.h sys/time.h syslog.h unistd.h])
+AC_CHECK_HEADERS([architecture/byte_order.h arpa/inet.h byteswap.h endian.h execinfo.h fcntl.h getopt.h grp.h inttypes.h limits.h netdb.h netinet/in.h pwd.h signal.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/resource.h sys/socket.h sys/syslimits.h sys/time.h syslog.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -408,7 +417,7 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 AC_FUNC_FORK
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname gettimeofday getrlimit htonll kill memset mkdir nanosleep ntohll select socket strdup strerror_r strtoull])
+AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname getopt_long gettimeofday getrlimit htonll kill memset mkdir nanosleep ntohll select socket strdup strerror_r strtoull])
 
 # One of the mocks in our test suite needs a possibly-different
 # prototype, depending on the system we're building on.
@@ -460,6 +469,7 @@ AC_CONFIG_FILES([Makefile
                  server/classes/Makefile
                  server/classes/actions/Makefile
                  server/classes/modules/Makefile
+                 util/Makefile
                  test/Makefile
                  test/tap++/Makefile])
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])

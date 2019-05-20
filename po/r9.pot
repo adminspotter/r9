@@ -1,6 +1,6 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR Trinity Annabelle Quirk
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the r9 package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2016-09-09 08:26-0500\n"
+"POT-Creation-Date: 2019-04-12 10:25-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,62 +17,62 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: client/client.cc:69
+#: client/client.cc:81
 msgid "failed to initialize GLFW"
 msgstr ""
 
-#: client/comm_dialog.cc:66
+#: client/comm_dialog.cc:72
 msgid "Username"
 msgstr ""
 
-#: client/comm_dialog.cc:77
+#: client/comm_dialog.cc:83
 msgid "Password"
 msgstr ""
 
-#: client/comm_dialog.cc:86
+#: client/comm_dialog.cc:92
 msgid "Server"
 msgstr ""
 
-#: client/comm_dialog.cc:97
+#: client/comm_dialog.cc:103
 msgid "OK"
 msgstr ""
 
-#: client/comm_dialog.cc:105
+#: client/comm_dialog.cc:111
 msgid "Cancel"
 msgstr ""
 
-#: client/configdata.cc:202
+#: client/configdata.cc:210
 msgid "Skipping bad config line: "
 msgstr ""
 
-#: client/ui/font.cc:149
-msgid "Could not find home directory"
+#: util/r9_keygen.cc:113 util/r9_keygen.cc:123
+msgid "Can't do both server and client keys."
 msgstr ""
 
-#: client/ui/font.cc:156
-msgid "Could not find font "
+#: util/r9_keygen.cc:133
+msgid "Unknown option "
 msgstr ""
 
-#: client/ui/font.cc:223
-msgid "Could not load font "
+#: util/r9_keygen.cc:137
+msgid "Error in argument parsing"
 msgstr ""
 
-#: client/ui/font.cc:277
-msgid "This font is not supported."
+#: util/r9_keygen.cc:157
+msgid "Writing to "
 msgstr ""
 
-#: client/ui/shader.cc:54
-msgid "could not open file "
+#: util/r9_keygen.cc:169
+msgid "Passphrases do not match!"
 msgstr ""
 
-#: client/ui/shader.cc:77
-msgid "could not create shader: "
+#: util/r9_keygen.cc:170
+msgid "Enter passphrase: "
 msgstr ""
 
-#: client/ui/shader.cc:120
-msgid "could not create GL program: "
+#: util/r9_keygen.cc:177
+msgid "Repeat passphrase: "
 msgstr ""
 
-#: client/ui/shader.cc:134
-msgid "Could not attach shaders to the shader program: "
+#: util/r9_keygen.cc:203
+msgid "Could not write private key file: "
 msgstr ""

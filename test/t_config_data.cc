@@ -13,6 +13,9 @@ using namespace TAP;
 
 #include <fstream>
 
+#include "../proto/ec.h"
+#include "../proto/key.h"
+
 extern void setup_configuration(int, char **);
 extern void cleanup_configuration(void);
 
@@ -120,6 +123,13 @@ void test_create_delete(void)
     is(conf->size.steps[2], config_data::ZONE_STEPS,
        test + "expected zone z steps");
 
+    ok(conf->priv_key == NULL, test + "expected private key");
+    uint8_t expected_pub_key[128];
+    memset(expected_pub_key, 0, sizeof(expected_pub_key));
+    is(memcmp(conf->pub_key, expected_pub_key, sizeof(conf->pub_key)),
+       0,
+       test + "expected public key");
+
     delete conf;
 }
 
@@ -127,6 +137,7 @@ void test_setup_cleanup(void)
 {
     std::string test = "setup/cleanup: ", st;
     std::string fname = "./t_config_data.fake";
+    std::string key_fname = "./t_config_data.key";
     char prog[] = "r9d", f_arg[] = "-f";
     char *args[3] = { prog, f_arg, (char *)fname.c_str() };
 
@@ -134,7 +145,11 @@ void test_setup_cleanup(void)
     ofs << "Port dgram:0.0.0.0:9870" << std::endl;
     ofs << "Console unix:./t_config_data.test.sock" << std::endl;
     ofs << "ZoneSize 3000 4000 5000 3 4 5" << std::endl;
+    ofs << "KeyFile " << key_fname << std::endl;
     ofs.close();
+
+    EVP_PKEY *key = generate_ecdh_key();
+    pkey_to_file(key, key_fname.c_str(), NULL);
 
     st = "default values: ";
     is(config.size.dim[0], config_data::ZONE_SIZE,
@@ -156,6 +171,7 @@ void test_setup_cleanup(void)
 
     setup_configuration(3, args);
     unlink(fname.c_str());
+    unlink(key_fname.c_str());
 
     st = "setup values: ";
     is(config.size.dim[0], 3000, test + st + "expected zone x size");
@@ -169,6 +185,7 @@ void test_setup_cleanup(void)
     is(seteuid_count, 0, test + st + "expected seteuids");
     is(setegid_count, 0, test + st + "expected setegids");
     is(chdir_count, 0, test + st + "expected chdirs");
+    ok(config.priv_key != NULL, test + st + "expected key");
 
     cleanup_configuration();
 
@@ -190,6 +207,7 @@ void test_setup_cleanup(void)
     is(seteuid_count, 1, test + st + "expected seteuids");
     is(setegid_count, 1, test + st + "expected setegids");
     is(chdir_count, 1, test + st + "expected chdirs");
+    ok(config.priv_key == NULL, test + st + "expected key");
 }
 
 void test_parse_command_line(void)
@@ -326,7 +344,7 @@ void test_parse_config_file(void)
 
 int main(int argc, char **argv)
 {
-    plan(81);
+    plan(85);
 
     test_create_delete();
     test_setup_cleanup();

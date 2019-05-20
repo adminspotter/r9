@@ -1,9 +1,9 @@
 /* configdata.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Mar 2018, 17:57:22 tquirk
+ *   last updated 07 Apr 2019, 08:58:03 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,6 +33,8 @@
 #include <vector>
 #include <string>
 
+#include <openssl/evp.h>
+
 class ConfigData
 {
   public:
@@ -49,6 +51,10 @@ class ConfigData
     std::string font_name;
     std::vector<std::string> font_paths;
 
+    std::string key_fname;
+    EVP_PKEY *priv_key;
+    uint8_t pub_key[128];
+
     ConfigData();
     ~ConfigData();
 
@@ -57,6 +63,8 @@ class ConfigData
     void parse_command_line(int, const char **);
     void read_config_file(void);
     void write_config_file(void);
+
+    bool read_crypto_key(const std::string&);
 
   protected:
     void make_config_dirs(void);

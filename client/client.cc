@@ -1,9 +1,9 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Nov 2018, 08:08:51 tquirk
+ *   last updated 11 Apr 2019, 16:44:57 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -64,6 +64,15 @@ int main(int argc, char **argv)
     bindtextdomain(PACKAGE, LOCALE_DIR);
     textdomain(PACKAGE);
 #endif /* WANT_LOCALES && HAVE_LIBINTL_H */
+
+#if OPENSSL_API_COMPAT < 0x10100000
+    /* If our OpenSSL is old enough, it does not automatically
+     * load all of the stuff we might need.
+     */
+    OpenSSL_add_all_algorithms();
+    OpenSSL_add_all_ciphers();
+    OpenSSL_add_all_digests();
+#endif /* OPENSSL_API_COMPAT */
 
     config.parse_command_line(argc, (const char **)argv);
 

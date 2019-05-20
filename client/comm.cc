@@ -1,9 +1,9 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Apr 2018, 07:45:37 tquirk
+ *   last updated 11 May 2019, 13:11:52 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -67,7 +67,7 @@
 #include "client_core.h"
 #include "comm.h"
 
-uint32_t Comm::sequence = 0L;
+uint64_t Comm::sequence = 0LL;
 
 /* Jump table for protocol handling */
 Comm::pkt_handler Comm::pkt_type[] =
@@ -139,7 +139,6 @@ void *Comm::send_worker(void *arg)
         }
 
         pkt = comm->send_queue.front();
-        comm->send_queue.pop();
 
         if (sendto(comm->sock,
                    (void *)pkt, packet_size(pkt),
@@ -153,6 +152,7 @@ void *Comm::send_worker(void *arg)
             std::clog << "got a send error: "
                       << err << " (" << errno << ')' << std::endl;
         }
+        comm->send_queue.pop();
         pthread_mutex_unlock(&(comm->send_lock));
         memset(pkt, 0, sizeof(packet));
         delete pkt;
@@ -281,12 +281,15 @@ void Comm::handle_unsupported(packet& p)
               << std::endl;
 }
 
-Comm::Comm(struct addrinfo *ai)
+Comm::Comm(void)
     : send_queue(), thread_exit_flag(false)
 {
-    int ret;
+    this->init();
+}
 
-    this->create_socket(ai);
+void Comm::init(void)
+{
+    int ret;
 
     /* Init the mutex and cond variables */
     if ((ret = pthread_mutex_init(&(this->send_lock), NULL)) != 0)
@@ -311,11 +314,22 @@ Comm::Comm(struct addrinfo *ai)
     }
 
     this->src_object_id = 0LL;
+    this->threads_started = false;
+}
+
+Comm::Comm(struct addrinfo *ai)
+    : send_queue(), thread_exit_flag(false)
+{
+    this->create_socket(ai);
+    this->init();
 }
 
 Comm::~Comm()
 {
-    this->stop();
+    try { this->stop(); }
+    catch (std::exception e) { std::clog << e.what() << std::endl; }
+    if (this->sock)
+        close(this->sock);
     pthread_cond_destroy(&(this->send_queue_not_empty));
     pthread_mutex_destroy(&(this->send_lock));
 }
@@ -323,6 +337,9 @@ Comm::~Comm()
 void Comm::start(void)
 {
     int ret;
+
+    if (this->threads_started)
+        return;
 
     /* Now start up the actual threads */
     this->thread_exit_flag = false;
@@ -357,19 +374,59 @@ void Comm::start(void)
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
+    this->threads_started = true;
 }
 
 void Comm::stop(void)
 {
-    if (this->sock)
-        this->send_logout();
-    this->thread_exit_flag = true;
-    pthread_cond_broadcast(&(this->send_queue_not_empty));
-    sleep(0);
-    pthread_join(this->send_thread, NULL);
-    pthread_cancel(this->recv_thread);
-    sleep(0);
-    pthread_join(this->recv_thread, NULL);
+    int ret;
+
+    if (this->threads_started)
+    {
+        if (this->sock)
+            this->send_logout();
+        sleep(0);
+        this->thread_exit_flag = true;
+        if ((ret = pthread_cond_broadcast(&(this->send_queue_not_empty))) != 0)
+        {
+            std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
+            s << "Couldn't wake send thread: " << err << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        sleep(0);
+        if ((ret = pthread_join(this->send_thread, NULL)) != 0)
+        {
+            std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
+            s << "Couldn't join send thread: " << err << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        if ((ret = pthread_cancel(this->recv_thread)) != 0)
+        {
+            std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
+            s << "Couldn't cancel recv thread: " << err << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        sleep(0);
+        if ((ret = pthread_join(this->recv_thread, NULL)) != 0)
+        {
+            std::ostringstream s;
+            char err[128];
+
+            strerror_r(ret, err, sizeof(err));
+            s << "Couldn't join recv thread: " << err << " (" << ret << ")";
+            throw std::runtime_error(s.str());
+        }
+        this->threads_started = false;
+    }
 }
 
 void Comm::send(packet *p, size_t len)

@@ -1,9 +1,9 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Apr 2018, 07:33:13 tquirk
+ *   last updated 13 Apr 2019, 16:18:18 tquirk
  *
- * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Revision IX game protocol
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,9 +41,11 @@
  *            second connection to the neighboring server, for position
  *            updates.  This will also be used to let servers know about
  *            new neighboring servers.
+ *   LGTREQ:  This packet is a user request to logout.
+ *   SRVKEY:  This packet is a server login response which includes
+ *            the server key.
  *
  * Things to do
- *   - We want to do some crypto on this protocol.
  *   - Rethink the removal of in-band geometry and texture fetching.
  *
  */
@@ -70,6 +72,7 @@
 #define TYPE_SRVNOT 4        /* Server notice */
 #define TYPE_PNGPKT 5        /* Ping packet */
 #define TYPE_LGTREQ 6        /* Logout request */
+#define TYPE_SRVKEY 7        /* Server key request */
 
 /* Access types for the login ACK's misc field.  Are there more types? */
 #define ACCESS_NONE 1        /* No access allowed */
@@ -84,7 +87,7 @@ typedef struct basic_packet_tag
 {
     uint8_t type;
     uint8_t version;
-    uint32_t sequence;
+    uint64_t sequence;
 } __attribute__ ((__packed__))
 basic_packet;
 
@@ -95,7 +98,7 @@ typedef struct ack_packet_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint8_t request;        /* packet type of original request */
     uint64_t misc[4];       /* miscellaneous data */
 } __attribute__ ((__packed__))
@@ -105,10 +108,11 @@ typedef struct login_request_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
-    char username[64];
+    uint64_t sequence;      /* timestamp / sequence number */
+    char username[64];      /* in UTF-8 */
     char password[64];
-    char charname[64];
+    char charname[64];      /* in UTF-8 */
+    uint8_t pubkey[256];    /* in DER format */
 } __attribute__ ((__packed__))
 login_request;
 
@@ -116,7 +120,7 @@ typedef struct action_request_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint64_t object_id;
     uint16_t action_id;
     uint8_t power_level;
@@ -139,7 +143,7 @@ typedef struct position_update_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint64_t object_id;
     uint16_t frame_number;
     /* We may consider adding the sector vector back in here */
@@ -154,13 +158,22 @@ typedef struct server_notice_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint8_t ipproto;        /* 4 or 6 */
     char addr[INET6_ADDRSTRLEN];
     in_port_t port;
     uint8_t direction;      /* where the neighbor is */
 } __attribute__ ((__packed__))
 server_notice;
+
+typedef struct server_key_tag
+{
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint32_t sequence;      /* timestamp / sequence number */
+    uint8_t pubkey[256];    /* in DER format */
+} __attribute__ ((__packed__))
+server_key;
 
 /* We can cast unknown packets to this and read basic.type to determine
  * the type, then use the corresponding element of the union to process it.
@@ -175,6 +188,7 @@ typedef union packet_tag
     action_request   act;
     position_update  pos;
     server_notice    srv;
+    server_key       key;
 }
 packet;
 
@@ -188,6 +202,7 @@ packet;
 #define is_position_update(x)  (((packet *)(x))->basic.type == TYPE_POSUPD)
 #define is_server_notice(x)    (((packet *)(x))->basic.type == TYPE_SRVNOT)
 #define is_ping_packet(x)      (((packet *)(x))->basic.type == TYPE_PNGPKT)
+#define is_server_key(x)       (((packet *)(x))->basic.type == TYPE_SRVKEY)
 
 #ifdef __cplusplus
 extern "C"

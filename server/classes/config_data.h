@@ -1,9 +1,9 @@
 /* config_data.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Aug 2017, 23:36:01 tquirk
+ *   last updated 07 Apr 2019, 08:58:09 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,6 +32,8 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+
+#include <openssl/evp.h>
 
 typedef struct location_struct
 {
@@ -84,6 +86,9 @@ class config_data
     location size, spawn;
     std::string db_type, db_host, db_user, db_pass, db_name;
     std::string action_lib;
+
+    EVP_PKEY *priv_key;
+    uint8_t pub_key[128];
 
     config_data();
     ~config_data();

@@ -10,6 +10,7 @@ struct object *self_obj;
 
 bool socket_error = false, mutex_error = false, cond_error = false;
 bool create_send_error = false, create_recv_error = false;
+bool broadcast_error = false, join_error = false, cancel_error = false;
 int create_calls, cancel_calls, join_calls;
 int cond_destroy_calls, mutex_destroy_calls;
 
@@ -73,12 +74,16 @@ int pthread_create(pthread_t *a, const pthread_attr_t *b,
 int pthread_cancel(pthread_t a)
 {
     ++cancel_calls;
+    if (cancel_error == true)
+        return EINVAL;
     return 0;
 }
 
 int pthread_join(pthread_t a, void **b)
 {
     ++join_calls;
+    if (join_error == true)
+        return EINVAL;
     return 0;
 }
 
@@ -96,6 +101,8 @@ int pthread_mutex_destroy(pthread_mutex_t *a)
 
 int pthread_cond_broadcast(pthread_cond_t *a)
 {
+    if (broadcast_error == true)
+        return EINVAL;
     return 0;
 }
 
@@ -250,6 +257,7 @@ void test_start_failure(void)
     create_recv_error = false;
     cancel_calls = join_calls = cond_destroy_calls = mutex_destroy_calls
         = create_calls = 0;
+    obj->start();
     delete obj;
     is(cancel_calls, 1, test + st + "expected cancels");
     is(join_calls, 2, test + st + "expected joins");
@@ -259,13 +267,91 @@ void test_start_failure(void)
         = create_calls = 0;
 }
 
+void test_stop_failure(void)
+{
+    std::string test = "stop failure: ", st;
+    Comm *obj = NULL;
+    struct addrinfo a;
+    struct sockaddr_storage s;
+    a.ai_addr = (struct sockaddr *)&s;
+
+    st = "cond broadcast: ";
+    try
+    {
+        obj = new Comm(&a);
+        obj->start();
+    }
+    catch (...)
+    {
+        fail(test + st + "constructor exception");
+    }
+    broadcast_error = true;
+    try
+    {
+        obj->stop();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't wake send thread"), std::string::npos,
+             test + st + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + st + "wrong error type");
+    }
+
+    st = "join: ";
+    broadcast_error = false;
+    join_error = true;
+    try
+    {
+        obj->stop();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't join send thread"), std::string::npos,
+             test + st + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + st + "wrong error type");
+    }
+
+    st = "cancel: ";
+    join_error = false;
+    cancel_error = true;
+    try
+    {
+        obj->stop();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't cancel recv thread"), std::string::npos,
+             test + st + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + st + "wrong error type");
+    }
+
+    cancel_error = false;
+    delete obj;
+}
+
 int main(int argc, char **argv)
 {
-    plan(17);
+    plan(20);
 
     test_socket_failure();
     test_mutex_failure();
     test_cond_failure();
     test_start_failure();
+    test_stop_failure();
     return exit_status();
 }
