@@ -1,9 +1,9 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Apr 2018, 09:41:14 tquirk
+ *   last updated 27 May 2019, 14:19:22 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -61,7 +61,9 @@ MySQL::~MySQL()
 
 /* Check that the user really is who he says he is */
 uint64_t MySQL::check_authentication(const std::string& user,
-                                      const std::string& pass)
+                                     const std::string& pass,
+                                     const uint8_t *pubkey,
+                                     size_t key_size)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;

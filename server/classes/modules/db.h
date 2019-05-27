@@ -1,9 +1,9 @@
 /* db.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jan 2018, 08:59:56 tquirk
+ *   last updated 30 May 2019, 22:58:29 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -64,7 +64,8 @@ class DB
 
     /* Player functions */
     virtual uint64_t check_authentication(const std::string&,
-                                           const std::string&) = 0;
+                                          const std::string&,
+                                          const uint8_t *, size_t) = 0;
     virtual int check_authorization(uint64_t, uint64_t) = 0;
     virtual int check_authorization(uint64_t, const std::string&) = 0;
     virtual uint64_t get_characterid(uint64_t, const std::string&) = 0;

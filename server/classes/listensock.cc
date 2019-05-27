@@ -1,9 +1,9 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2018, 07:49:27 tquirk
+ *   last updated 30 May 2019, 23:01:13 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -326,7 +326,8 @@ uint64_t listen_socket::get_userid(login_request& log)
                                                 strlen(log.username)));
     std::string password(log.password, std::min(sizeof(log.password),
                                                 strlen(log.password)));
-    uint64_t userid = database->check_authentication(username, password);
+    uint64_t userid = database->check_authentication(username, password,
+                                                     NULL, 0);
 
     /* Don't want to keep passwords around in core if we can help it. */
     memset(log.password, 0, sizeof(log.password));

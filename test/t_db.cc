@@ -59,7 +59,9 @@ class fake_DB : public DB
 
     /* Player functions */
     virtual uint64_t check_authentication(const std::string& a,
-                                          const std::string& b)
+                                          const std::string& b,
+                                          const uint8_t *c,
+                                          size_t d)
         {
             return 0LL;
         };

@@ -1,9 +1,9 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Apr 2018, 09:44:09 tquirk
+ *   last updated 30 May 2019, 22:56:19 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -53,7 +53,9 @@ PgSQL::PgSQL(const std::string& host, const std::string& user,
 }
 
 uint64_t PgSQL::check_authentication(const std::string& user,
-                                     const std::string& pass)
+                                     const std::string& pass,
+                                     const uint8_t *pubkey,
+                                     size_t key_size)
 {
     PGresult *res;
     char str[256];
