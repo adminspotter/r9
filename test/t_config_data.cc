@@ -124,7 +124,7 @@ void test_create_delete(void)
        test + "expected zone z steps");
 
     ok(conf->key.priv_key == NULL, test + "expected private key");
-    uint8_t expected_pub_key[128];
+    uint8_t expected_pub_key[170];
     memset(expected_pub_key, 0, sizeof(expected_pub_key));
     is(memcmp(conf->key.pub_key, expected_pub_key, sizeof(conf->key.pub_key)),
        0,

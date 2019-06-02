@@ -118,6 +118,7 @@
 #include "../server.h"
 
 #include <proto/key.h>
+#include <proto/ec.h>
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 
@@ -525,6 +526,16 @@ static void config_key_element(const std::string& key,
 {
     crypto_key *c_key = (crypto_key *)ptr;
 
-    c_key->priv_key = file_to_pkey(value.c_str(), NULL);
-    /* Calculate the public key and store it in pub_key */
+    if ((c_key->priv_key = file_to_pkey(value.c_str(), NULL)) == NULL)
+    {
+        std::clog << "Couldn't load key file " << value << std::endl;
+        return;
+    }
+    if (pkey_to_public_key(c_key->priv_key,
+                           c_key->pub_key,
+                           sizeof(c_key->pub_key)) == 0)
+    {
+        std::clog << "Couldn't convert key into public key" << std::endl;
+        return;
+    }
 }
