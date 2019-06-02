@@ -1,6 +1,6 @@
 /* config_data.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Apr 2019, 08:58:09 tquirk
+ *   last updated 02 Jun 2019, 16:00:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -59,6 +59,13 @@ typedef struct port_struct
 }
 port;
 
+typedef struct crypto_key_struct
+{
+    EVP_PKEY *priv_key;
+    uint8_t pub_key[128];
+}
+crypto_key;
+
 class config_data
 {
   public:
@@ -87,8 +94,7 @@ class config_data
     std::string db_type, db_host, db_user, db_pass, db_name;
     std::string action_lib;
 
-    EVP_PKEY *priv_key;
-    uint8_t pub_key[128];
+    crypto_key key;
 
     config_data();
     ~config_data();
