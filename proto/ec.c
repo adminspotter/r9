@@ -1,6 +1,6 @@
 /* ec.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Feb 2019, 08:52:36 tquirk
+ *   last updated 02 Jun 2019, 16:07:57 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -26,6 +26,10 @@
  * Things to do
  *
  */
+
+#include <string.h>
+
+#include <openssl/ec.h>
 
 #include "ec.h"
 
@@ -55,4 +59,19 @@ EVP_PKEY *generate_ecdh_key(void)
 
   BAILOUT1:
     return key;
+}
+
+int pkey_to_public_key(EVP_PKEY *pkey, uint8_t *keybuf, size_t keybuf_sz)
+{
+    EC_KEY *key = NULL;
+    int keylen = 0;
+
+    if ((key = (EC_KEY *)EVP_PKEY_get0(pkey)) != NULL)
+        if ((keylen = i2o_ECPublicKey(key, NULL)) != 0 && keybuf_sz >= keylen)
+        {
+            memset(keybuf, 0, keybuf_sz);
+            i2o_ECPublicKey(key, &keybuf);
+            return keylen;
+        }
+    return 0;
 }

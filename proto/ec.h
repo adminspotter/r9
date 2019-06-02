@@ -1,6 +1,6 @@
 /* ec.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Feb 2019, 08:52:45 tquirk
+ *   last updated 02 Jun 2019, 16:39:05 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -30,6 +30,8 @@
 #ifndef __INC_R9_PROTO_EC_H__
 #define __INC_R9_PROTO_EC_H__
 
+#include <stdint.h>
+
 #include <openssl/evp.h>
 #include <openssl/ec.h>
 
@@ -41,6 +43,7 @@ extern "C"
 #endif /* __cplusplus */
 
 EVP_PKEY *generate_ecdh_key(void);
+int pkey_to_public_key(EVP_PKEY *, uint8_t *, size_t);
 
 #ifdef __cplusplus
 }
