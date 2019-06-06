@@ -1,6 +1,6 @@
 /* config_data.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jun 2019, 22:30:08 tquirk
+ *   last updated 06 Jun 2019, 08:10:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -33,7 +33,7 @@
 #include <vector>
 #include <string>
 
-#include <openssl/evp.h>
+#include <proto/ec.h>
 
 typedef struct location_struct
 {
@@ -62,7 +62,7 @@ port;
 typedef struct crypto_key_struct
 {
     EVP_PKEY *priv_key;
-    uint8_t pub_key[170];
+    uint8_t pub_key[R9_PUBKEY_SZ];
 }
 crypto_key;
 

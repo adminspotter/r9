@@ -1,6 +1,6 @@
 /* ec.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jun 2019, 21:58:56 tquirk
+ *   last updated 06 Jun 2019, 08:08:19 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -36,6 +36,8 @@
 #include <openssl/ec.h>
 
 #define R9_CURVE  NID_sect571r1
+
+#define R9_PUBKEY_SZ  145
 
 #ifdef __cplusplus
 extern "C"

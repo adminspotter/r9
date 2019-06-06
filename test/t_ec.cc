@@ -29,7 +29,7 @@ void test_pkey_to_public_key(void)
     is(pub_len, 0, test + st + "expected result");
 
     st = "good buffer: ";
-    uint8_t good_pubkey[170];
+    uint8_t good_pubkey[R9_PUBKEY_SZ];
 
     pub_len = pkey_to_public_key(key, good_pubkey, sizeof(good_pubkey));
     is(pub_len > 0, true, test + st + "expected result");
@@ -42,7 +42,7 @@ void test_public_key_to_pkey(void)
     std::string test = "public_key_to_pkey: ", st;
 
     EVP_PKEY *key = generate_ecdh_key();
-    uint8_t pubkey[170];
+    uint8_t pubkey[R9_PUBKEY_SZ];
     int len = pkey_to_public_key(key, pubkey, sizeof(pubkey));
     is(len > 0, true, test + "expected representation");
 
