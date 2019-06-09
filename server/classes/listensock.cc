@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jun 2019, 09:17:04 tquirk
+ *   last updated 09 Jun 2019, 09:44:41 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -331,6 +331,7 @@ void listen_socket::login_user(access_list& p)
     if (bu == NULL)
         return;
 
+    bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     this->connect_user(bu, p);
 }
 

@@ -677,6 +677,7 @@ void test_listen_socket_login(void)
     is(listen->users.size(), 1, test + "expected user list size");
     is(listen->users[123LL]->auth_level, ACCESS_MOVE,
        test + "expected auth level");
+    is(listen->send_pool->queue_size(), 2, test + "expected queue size");
 
     delete (fake_Zone *)zone;
     delete listen;
@@ -751,7 +752,7 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(73);
+    plan(74);
 
     test_base_user_create_delete();
     test_base_user_less_than();
