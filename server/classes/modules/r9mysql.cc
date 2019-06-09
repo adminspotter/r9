@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 May 2019, 14:19:22 tquirk
+ *   last updated 09 Jun 2019, 08:43:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -59,7 +59,7 @@ MySQL::~MySQL()
 {
 }
 
-/* Check that the user really is who he says he is */
+/* Check that the user really is who they say they are */
 uint64_t MySQL::check_authentication(const std::string& user,
                                      const std::string& pass,
                                      const uint8_t *pubkey,
@@ -71,11 +71,15 @@ uint64_t MySQL::check_authentication(const std::string& user,
     uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
-             "SELECT playerid "
-             "FROM players "
-             "WHERE username='%.*s' "
-             "AND password=SHA2('%.*s',512) "
-             "AND suspended=0",
+             "SELECT a.playerid, b.public_key, LEN(b.public_key) "
+             "FROM players AS a, player_keys AS b "
+             "WHERE a.username='%.*s' "
+             "AND a.password=SHA2('%.*s',512) "
+             "AND a.playerid=b.playerid "
+             "AND b.not_before <= NOW() "
+             "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
+             "AND a.suspended=0 "
+             "ORDER BY b.not_before DESC",
              DB::MAX_USERNAME, user.c_str(),
              DB::MAX_PASSWORD, pass.c_str());
     this->db_connect();
@@ -84,7 +88,8 @@ uint64_t MySQL::check_authentication(const std::string& user,
         && (res = mysql_use_result(&(this->db_handle))) != NULL
         && (row = mysql_fetch_row(res)) != NULL)
     {
-        retval = strtoull(row[0], NULL, 10);
+        if (key_size == atoi(row[2]) && !memcmp(row[1], pubkey, key_size))
+            retval = strtoull(row[0], NULL, 10);
         mysql_free_result(res);
     }
     mysql_close(&(this->db_handle));

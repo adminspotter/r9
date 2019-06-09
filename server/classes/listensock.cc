@@ -327,7 +327,7 @@ uint64_t listen_socket::get_userid(login_request& log)
     std::string password(log.password, std::min(sizeof(log.password),
                                                 strlen(log.password)));
     uint64_t userid = database->check_authentication(username, password,
-                                                     NULL, 0);
+                                                     log.pubkey, R9_PUBKEY_SZ);
 
     /* Don't want to keep passwords around in core if we can help it. */
     memset(log.password, 0, sizeof(log.password));
