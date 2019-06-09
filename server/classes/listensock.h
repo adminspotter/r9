@@ -1,9 +1,9 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2018, 07:49:18 tquirk
+ *   last updated 09 Jun 2019, 09:07:25 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -56,6 +56,7 @@ class base_user : public Control {
 
     virtual const base_user& operator=(const base_user&);
 
+    void send_server_key(uint8_t *, size_t);
     void send_ping(void);
     void send_ack(uint8_t,
                   uint64_t = 0LL, uint64_t = 0LL,

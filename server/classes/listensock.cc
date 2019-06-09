@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 May 2019, 23:01:13 tquirk
+ *   last updated 09 Jun 2019, 09:17:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -67,6 +67,20 @@ const base_user& base_user::operator=(const base_user& u)
     this->pending_logout = u.pending_logout;
     this->sequence = u.sequence;
     return *this;
+}
+
+void base_user::send_server_key(uint8_t *pubkey, size_t key_sz)
+{
+    packet_list pkt;
+
+    pkt.buf.key.type = TYPE_SRVKEY;
+    pkt.buf.key.version = 1;
+    pkt.buf.key.sequence = this->sequence++;
+    memset(pkt.buf.key.pubkey, 0, sizeof(pkt.buf.key.pubkey));
+    memcpy(pkt.buf.key.pubkey, pubkey, std::min(key_sz,
+                                                sizeof(pkt.buf.key.pubkey)));
+    pkt.who = this;
+    this->parent->send_pool->push(pkt);
 }
 
 void base_user::send_ping(void)

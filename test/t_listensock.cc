@@ -152,6 +152,27 @@ void test_base_user_disconnect_on_destroy(void)
     delete go;
 }
 
+void test_base_user_send_key(void)
+{
+    std::string test = "base_user send_server_key: ";
+    struct addrinfo *addr = create_addrinfo();
+    listen_socket *listen = new listen_socket(addr);
+
+    base_user *bu = new base_user(123LL, NULL, listen);
+
+    listen->users[123LL] = bu;
+
+    is(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    uint8_t key[145];
+    bu->send_server_key(key, 145);
+
+    isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
+
+    delete listen;
+    freeaddrinfo(addr);
+}
+
 void test_base_user_send_ping(void)
 {
     std::string test = "base_user send_ping: ";
@@ -730,13 +751,14 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(71);
+    plan(73);
 
     test_base_user_create_delete();
     test_base_user_less_than();
     test_base_user_equal_to();
     test_base_user_assignment();
     test_base_user_disconnect_on_destroy();
+    test_base_user_send_key();
     test_base_user_send_ping();
     test_base_user_send_ack();
 
