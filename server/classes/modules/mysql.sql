@@ -7,6 +7,15 @@ CREATE TABLE players (
   PRIMARY KEY (playerid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE player_keys (
+  playerid BIGINT NOT NULL,
+  public_key BLOB NOT NULL,
+  not_before DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  not_after DATETIME,
+  PRIMARY KEY (playerid),
+  FOREIGN KEY (playerid) REFERENCES players(playerid) ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE characters (
   characterid BIGINT NOT NULL AUTO_INCREMENT,
   owner BIGINT NOT NULL,
