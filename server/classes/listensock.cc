@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jun 2019, 09:44:41 tquirk
+ *   last updated 12 Jun 2019, 06:25:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -30,6 +30,7 @@
  *
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
@@ -38,6 +39,16 @@
 #include "config_data.h"
 
 #include "../server.h"
+
+static size_t rand_bytes(uint8_t *buf, size_t buf_sz)
+{
+    size_t i;
+
+    srand(time(NULL));
+    for (i = 0; i < buf_sz; ++i)
+        buf[i] = rand() % 256;
+    return i;
+}
 
 base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     : Control(u, g)
@@ -48,6 +59,8 @@ base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     /* Come up with some sort of random sequence number to start? */
     this->sequence = 0LL;
     this->characterid = 0LL;
+
+    rand_bytes(this->iv, R9_SYMMETRIC_IV_BUF_SZ);
 }
 
 base_user::~base_user()
@@ -79,6 +92,7 @@ void base_user::send_server_key(uint8_t *pubkey, size_t key_sz)
     memset(pkt.buf.key.pubkey, 0, sizeof(pkt.buf.key.pubkey));
     memcpy(pkt.buf.key.pubkey, pubkey, std::min(key_sz,
                                                 sizeof(pkt.buf.key.pubkey)));
+    memcpy(pkt.buf.key.iv, this->iv, R9_SYMMETRIC_IV_BUF_SZ);
     pkt.who = this;
     this->parent->send_pool->push(pkt);
 }

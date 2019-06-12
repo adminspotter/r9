@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2019, 16:18:18 tquirk
+ *   last updated 11 Jun 2019, 08:04:18 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -170,8 +170,9 @@ typedef struct server_key_tag
 {
     uint8_t type;
     uint8_t version;        /* protocol version number */
-    uint32_t sequence;      /* timestamp / sequence number */
+    uint64_t sequence;      /* timestamp / sequence number */
     uint8_t pubkey[256];    /* in DER format */
+    uint8_t iv[16];
 } __attribute__ ((__packed__))
 server_key;
 

@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jun 2019, 09:07:25 tquirk
+ *   last updated 12 Jun 2019, 06:25:49 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -33,6 +33,8 @@
 
 #include <map>
 
+#include <proto/encrypt.h>
+
 #include "basesock.h"
 #include "control.h"
 #include "thread_pool.h"
@@ -46,6 +48,9 @@ class base_user : public Control {
     time_t timestamp;
     bool pending_logout;
     uint8_t auth_level;
+
+  private:
+    uint8_t iv[R9_SYMMETRIC_IV_BUF_SZ];
 
   protected:
     listen_socket *parent;
