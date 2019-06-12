@@ -75,11 +75,43 @@ void test_decrypt(void)
        test + "expected cleartext");
 }
 
+void test_in_place_operation(void)
+{
+    std::string test = "in-place round-trip: ";
+
+    const unsigned char expected_clear[16] = "test text";
+    const unsigned char expected_encrypt[16] =
+        {
+            0xb7, 0x00, 0x90, 0x21, 0x50, 0x71, 0xfa, 0x40,
+            0xec, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        };
+    unsigned char text[16] = "test text";
+    const unsigned char key[33] = "abcd1234efgh5678ijkl9012mnop3456";
+    unsigned char iv[33] = "12345678123456781234567812345678";
+    uint64_t sequence = 1LL;
+
+    int result = r9_encrypt(text, strlen((const char *)text),
+                            key, iv, sequence, text);
+
+    is(result, 9, test + "expected ciphertext length");
+    is(memcmp(text, expected_encrypt, sizeof(expected_encrypt)),
+       0,
+       test + "expected ciphertext");
+
+    result = r9_decrypt(text, result, key, iv, sequence, text);
+
+    is(result, 9, test + "expected cleartext length");
+    is(memcmp(text, expected_clear, sizeof(expected_clear)),
+       0,
+       test + "expected cleartext");
+}
+
 int main(int argc, char **argv)
 {
-    plan(5);
+    plan(9);
 
     test_encrypt();
     test_decrypt();
+    test_in_place_operation();
     return exit_status();
 }
