@@ -50,7 +50,7 @@ class base_user : public Control {
     uint8_t auth_level;
 
   private:
-    uint8_t iv[R9_SYMMETRIC_IV_BUF_SZ];
+    uint8_t key[R9_SYMMETRIC_KEY_BUF_SZ], iv[R9_SYMMETRIC_IV_BUF_SZ];
 
   protected:
     listen_socket *parent;
@@ -60,6 +60,9 @@ class base_user : public Control {
     virtual ~base_user();
 
     virtual const base_user& operator=(const base_user&);
+
+    void encrypt_packet(packet&);
+    void decrypt_packet(packet&);
 
     void send_server_key(uint8_t *, size_t);
     void send_ping(void);

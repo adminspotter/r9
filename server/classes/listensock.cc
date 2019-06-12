@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jun 2019, 06:25:37 tquirk
+ *   last updated 05 Jul 2019, 22:21:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -80,6 +80,36 @@ const base_user& base_user::operator=(const base_user& u)
     this->pending_logout = u.pending_logout;
     this->sequence = u.sequence;
     return *this;
+}
+
+void base_user::encrypt_packet(packet& pkt)
+{
+    size_t buf_sz = packet_size(&pkt) - sizeof(basic_packet);
+
+    if (buf_sz > 0)
+    {
+        uint8_t *buf = (uint8_t *)&pkt + sizeof(basic_packet);
+
+        r9_encrypt(buf, buf_sz,
+                   this->key,
+                   this->iv, pkt.basic.sequence,
+                   buf);
+    }
+}
+
+void base_user::decrypt_packet(packet& pkt)
+{
+    size_t buf_sz = packet_size(&pkt) - sizeof(basic_packet);
+
+    if (buf_sz > 0)
+    {
+        uint8_t *buf = (uint8_t *)&pkt + sizeof(basic_packet);
+
+        r9_decrypt(buf, buf_sz,
+                   this->key,
+                   this->iv, pkt.basic.sequence,
+                   buf);
+    }
 }
 
 void base_user::send_server_key(uint8_t *pubkey, size_t key_sz)
