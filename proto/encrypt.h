@@ -29,6 +29,8 @@
 #ifndef __INC_R9_PROTO_ENCRYPT_H__
 #define __INC_R9_PROTO_ENCRYPT_H__
 
+#include <stdint.h>
+
 #include <openssl/evp.h>
 
 #define R9_SYMMETRIC_KEY_SZ      256
@@ -42,10 +44,10 @@ extern "C"
 #endif /* __cplusplus */
 
 int r9_encrypt(const unsigned char *, int,
-               const unsigned char *, const unsigned char *,
+               const unsigned char *, unsigned char *, uint64_t,
                unsigned char *);
 int r9_decrypt(const unsigned char *, int,
-               const unsigned char *, const unsigned char *,
+               const unsigned char *, unsigned char *, uint64_t,
                unsigned char *);
 
 #ifdef __cplusplus
