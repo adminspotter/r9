@@ -112,6 +112,9 @@ AC_ARG_WITH([lua],
             AS_HELP_STRING([--with-lua], [Build the Lua server module]),
             [],
             [with_lua="no"])
+AC_ARG_WITH([lua-includes],
+            AS_HELP_STRING([--with-lua-includes=<path>], [Lua include path]),
+            [], [])
 AC_ARG_WITH([python],
             AS_HELP_STRING([--with-python], [Build the Python server module]),
             [],
@@ -324,8 +327,20 @@ then
   # Lua server module
   if test "$with_lua" == "yes"
   then
+    if test "x$with_lua_includes" != "x"
+    then
+      LUA_INCLUDES="-I$with_lua_includes"
+    fi
+    LUA_SAVE_CXXFLAGS="$CXXFLAGS"
+    LUA_SAVE_CPPFLAGS="$CPPFLAGS"
+    CXXFLAGS="$LUA_INCLUDES"
+    CPPFLAGS="$LUA_INCLUDES"
     AC_CHECK_HEADERS([lua.h lauxlib.h lualib.h lua.hpp], [],
         [AC_MSG_ERROR([no valid Lua headers found, can not continue])])
+    CXXFLAGS="$LUA_SAVE_CXXFLAGS"
+    CPPFLAGS="$LUA_SAVE_CPPFLAGS"
+    AC_SUBST(LUA_INCLUDES)
+
     LUA_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([luaL_newstate], [lua lua5.2 lua5.3],
