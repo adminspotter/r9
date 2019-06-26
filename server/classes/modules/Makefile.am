@@ -27,6 +27,7 @@ libr9_MySQL_la_CXXFLAGS= $(MYSQL_INCLUDES)
 libr9_MySQL_la_LIBADD = $(MYSQL_LDLIBS)
 
 libr9_pgsql_la_SOURCES = db.cc r9pgsql.cc db.h
+libr9_pgsql_la_CXXFLAGS = $(PGSQL_INCLUDES)
 libr9_pgsql_la_LIBADD = $(PGSQL_LDLIBS)
 
 libr9_lua_la_SOURCES = r9lua.cc r9lua.h language.cc language.h

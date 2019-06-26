@@ -104,6 +104,9 @@ AC_ARG_WITH([pgsql],
             AS_HELP_STRING([--with-pgsql], [Build the PostgreSQL server module]),
             [],
             [with_pgsql="no"])
+AC_ARG_WITH([pgsql-includes],
+            AS_HELP_STRING([--with-pgsql-includes=<path>], [PostgreSql include path]),
+            [], [])
 
 AC_ARG_WITH([lua],
             AS_HELP_STRING([--with-lua], [Build the Lua server module]),
@@ -292,8 +295,20 @@ then
   # PostgreSQL server module
   if test "$with_pgsql" == "yes"
   then
+    if test "x$with_pgsql_includes" != "x"
+    then
+      PGSQL_INCLUDES="-I$with_pgsql_includes"
+    fi
+    PGSQL_SAVE_CXXFLAGS="$CXXFLAGS"
+    PGSQL_SAVE_CPPFLAGS="$CPPFLAGS"
+    CXXFLAGS="$PGSQL_INCLUDES"
+    CPPFLAGS="$PGSQL_INCLUDES"
     AC_CHECK_HEADERS([postgresql/libpq-fe.h], [],
         [AC_MSG_ERROR([no valid PostgreSQL headers found, can not continue])])
+    CXXFLAGS="$PGSQL_SAVE_CXXFLAGS"
+    CPPFLAGS="$PGSQL_SAVE_CPPFLAGS"
+    AC_SUBST(PGSQL_INCLUDES)
+
     PGSQL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([PQsetdbLogin], [pq],
