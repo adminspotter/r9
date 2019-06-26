@@ -31,6 +31,7 @@ libr9_pgsql_la_CXXFLAGS = $(PGSQL_INCLUDES)
 libr9_pgsql_la_LIBADD = $(PGSQL_LDLIBS)
 
 libr9_lua_la_SOURCES = r9lua.cc r9lua.h language.cc language.h
+libr9_lua_la_CXXFLAGS = $(LUA_INCLUDES)
 libr9_lua_la_LIBADD = $(LUA_LDLIBS)
 
 libr9_python_la_SOURCES = r9python.cc r9python.h language.cc language.h
