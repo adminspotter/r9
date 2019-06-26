@@ -97,6 +97,9 @@ AC_ARG_WITH([mysql],
             AS_HELP_STRING([--with-mysql], [Build the MySQL server module]),
             [],
             [with_mysql="no"])
+AC_ARG_WITH([mysql-includes],
+            AS_HELP_STRING([--with-mysql-includes=<path>], [MySQL include path]),
+            [], [])
 AC_ARG_WITH([pgsql],
             AS_HELP_STRING([--with-pgsql], [Build the PostgreSQL server module]),
             [],
@@ -260,8 +263,20 @@ then
   # MySQL server module
   if test "$with_mysql" == "yes"
   then
+    if test "x$with_mysql_includes" != "x"
+    then
+      MYSQL_INCLUDES="-I$with_mysql_includes"
+    fi
+    MYSQL_SAVE_CXXFLAGS="$CXXFLAGS"
+    MYSQL_SAVE_CPPFLAGS="$CPPFLAGS"
+    CXXFLAGS="$MYSQL_INCLUDES"
+    CPPFLAGS="$MYSQL_INCLUDES"
     AC_CHECK_HEADERS([mysql.h], [],
         [AC_MSG_ERROR([no valid MySQL headers found, can not continue])])
+    CXXFLAGS="$MYSQL_SAVE_CXXFLAGS"
+    CPPFLAGS="$MYSQL_SAVE_CPPFLAGS"
+    AC_SUBST(MYSQL_INCLUDES)
+
     MYSQL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([mysql_init], [mysqlclient_r mysqlclient],
