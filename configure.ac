@@ -93,10 +93,6 @@ AC_ARG_WITH([server],
             [],
             [with_server="no"])
 
-AC_ARG_WITH([tcl],
-            AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
-            [],
-            [with_tcl="no"])
 AC_ARG_WITH([mysql],
             AS_HELP_STRING([--with-mysql], [Build the MySQL server module]),
             [],
