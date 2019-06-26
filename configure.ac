@@ -340,9 +340,12 @@ then
     LIBS="$TCL_LIBS_SAVE"
   fi
 
+  DLOPEN_LIBS_SAVE="$LIBS"
+  LIBS=""
   AC_SEARCH_LIBS([dlopen], [dl],
-      [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen $LIBS"],
+      [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen"],
       [AC_MSG_ERROR([can not build without dlopen.])])
+  LIBS="$DLOPEN_LIBS_SAVE"
 
   SERVER_LDLIBS="$SERVER_LDLIBS $PROFILE_LDLIBS"
 
@@ -375,22 +378,28 @@ then
 fi
 
 # Make sure we have a new enough version of OpenSSL
+OPENSSL_LIBS_SAVE="$LIBS"
+LIBS=""
 AC_SEARCH_LIBS([EVP_PKEY_derive], [openssl ssl crypto],
-    [test "$ac_cv_search_EVP_PKEY_derive" = "none required" || LIBS="$ac_cv_search_EVP_PKEY_derive $LIBS"],
+    [test "$ac_cv_search_EVP_PKEY_derive" = "none required" || OPENSSL_LIBS="$ac_cv_search_EVP_PKEY_derive"],
     [AC_MSG_ERROR([can not build without OpenSSL >= 1.0.0])])
+LIBS="$OPENSSL_LIBS_SAVE"
 OPENSSL_CPPFLAGS_SAVE="$CPPFLAGS"
 CPPFLAGS="$CXXFLAGS"
 AC_CHECK_HEADERS([openssl/evp.h openssl/ec.h], [], [AC_MSG_ERROR([no valid OpenSSL installation found, can not continue])])
 CPPFLAGS="$OPENSSL_CPPFLAGS_SAVE"
 
+PTHREAD_LIBS_SAVE="$LIBS"
+LIBS=""
 AC_SEARCH_LIBS([pthread_create], [pthread],
-    [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],
+    [test "$ac_cv_search_pthread_create" = "none required" || PTHREAD_LIBS="$ac_cv_search_pthread_create"],
     [AC_MSG_ERROR([can not build without pthreads.])])
+LIBS="$PTHREAD_LIBS_SAVE"
 
 CFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CFLAGS"
 CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
 LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
-LIBS="$LIBS $PROFILE_LDLIBS"
+LIBS="$LIBS $OPENSSL_LIBS $PTHREAD_LIBS $PROFILE_LDLIBS"
 
 AC_CONFIG_SUBDIRS([client/cuddly-gl])
 
