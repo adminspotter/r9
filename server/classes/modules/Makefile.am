@@ -35,7 +35,6 @@ libr9_lua_la_CXXFLAGS = $(LUA_INCLUDES)
 libr9_lua_la_LIBADD = $(LUA_LDLIBS)
 
 libr9_python_la_SOURCES = r9python.cc r9python.h language.cc language.h
-libr9_python_la_CFLAGS = $(PYTHON_CFLAGS)
 libr9_python_la_CXXFLAGS = $(PYTHON_CFLAGS)
 libr9_python_la_LDFLAGS = -module $(PYTHON_LDFLAGS)
 
