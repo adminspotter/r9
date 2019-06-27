@@ -13,7 +13,9 @@ AC_GNU_SOURCE
 AC_SYS_LARGEFILE
 
 # Checks for programs.
+${CXXFLAGS=""}
 AC_PROG_CXX
+${CFLAGS=""}
 AC_PROG_CC
 AC_PROG_INSTALL
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
