@@ -123,6 +123,9 @@ AC_ARG_WITH([tcl],
             AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
             [],
             [with_tcl="no"])
+AC_ARG_WITH([tcl-includes],
+            AS_HELP_STRING([--with-tcl-includes=<path>], [Tcl include path]),
+            [], [])
 
 AC_ARG_WITH([client],
             AS_HELP_STRING([--with-client], [Build the client program]),
@@ -371,8 +374,20 @@ then
   # Tcl server module
   if test "$with_tcl" == "yes"
   then
+    if test "x$with_tcl_includes" != "x"
+    then
+      TCL_INCLUDES="-I$with_tcl_includes"
+    fi
+    TCL_SAVE_CXXFLAGS="$CXXFLAGS"
+    TCL_SAVE_CPPFLAGS="$CPPFLAGS"
+    CXXFLAGS="$TCL_INCLUDES"
+    CPPFLAGS="$TCL_INCLUDES"
     AC_CHECK_HEADERS([tcl.h], [],
         [AC_MSG_ERROR([no valid Tcl headers found, can not continue])])
+    CXXFLAGS="$TCL_SAVE_CXXFLAGS"
+    CPPFLAGS="$TCL_SAVE_CPPFLAGS"
+    AC_SUBST(TCL_INCLUDES)
+
     TCL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
