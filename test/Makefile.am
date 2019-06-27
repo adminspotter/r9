@@ -239,6 +239,7 @@ t_tcl_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_tcl_exception_SOURCES = t_tcl_exception.cc \
 	../server/classes/modules/r9tcl.cc ../server/classes/modules/r9tcl.h
+t_tcl_exception_CXXFLAGS = $(TAP_INCLUDES) $(TCL_INCLUDES)
 t_tcl_exception_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS) \
 	$(TCL_LDLIBS)
 

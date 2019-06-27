@@ -40,6 +40,7 @@ libr9_python_la_CXXFLAGS = $(PYTHON_CFLAGS)
 libr9_python_la_LDFLAGS = -module $(PYTHON_LDFLAGS)
 
 libr9_tcl_la_SOURCES = r9tcl.cc r9tcl.h language.cc language.h
+libr9_tcl_la_CXXFLAGS = $(TCL_INCLUDES)
 libr9_tcl_la_LIBADD = $(TCL_LDLIBS)
 
 clean-local:
