@@ -13,7 +13,9 @@ AC_GNU_SOURCE
 AC_SYS_LARGEFILE
 
 # Checks for programs.
+${CXXFLAGS=""}
 AC_PROG_CXX
+${CFLAGS=""}
 AC_PROG_CC
 AC_PROG_INSTALL
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -93,23 +95,28 @@ AC_ARG_WITH([server],
             [],
             [with_server="no"])
 
-AC_ARG_WITH([tcl],
-            AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
-            [],
-            [with_tcl="no"])
 AC_ARG_WITH([mysql],
             AS_HELP_STRING([--with-mysql], [Build the MySQL server module]),
             [],
             [with_mysql="no"])
+AC_ARG_WITH([mysql-includes],
+            AS_HELP_STRING([--with-mysql-includes=<path>], [MySQL include path]),
+            [], [])
 AC_ARG_WITH([pgsql],
             AS_HELP_STRING([--with-pgsql], [Build the PostgreSQL server module]),
             [],
             [with_pgsql="no"])
+AC_ARG_WITH([pgsql-includes],
+            AS_HELP_STRING([--with-pgsql-includes=<path>], [PostgreSql include path]),
+            [], [])
 
 AC_ARG_WITH([lua],
             AS_HELP_STRING([--with-lua], [Build the Lua server module]),
             [],
             [with_lua="no"])
+AC_ARG_WITH([lua-includes],
+            AS_HELP_STRING([--with-lua-includes=<path>], [Lua include path]),
+            [], [])
 AC_ARG_WITH([python],
             AS_HELP_STRING([--with-python], [Build the Python server module]),
             [],
@@ -118,6 +125,9 @@ AC_ARG_WITH([tcl],
             AS_HELP_STRING([--with-tcl], [Build the Tcl server module]),
             [],
             [with_tcl="no"])
+AC_ARG_WITH([tcl-includes],
+            AS_HELP_STRING([--with-tcl-includes=<path>], [Tcl include path]),
+            [], [])
 
 AC_ARG_WITH([client],
             AS_HELP_STRING([--with-client], [Build the client program]),
@@ -235,7 +245,6 @@ then
   AC_SUBST(CLIENT_CXXFLAGS)
   AC_SUBST(CLIENT_INCLUDES)
   AC_SUBST(CLIENT_LDFLAGS)
-  AC_SUBST(FREETYPE_LDLIBS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
@@ -264,8 +273,20 @@ then
   # MySQL server module
   if test "$with_mysql" == "yes"
   then
+    if test "x$with_mysql_includes" != "x"
+    then
+      MYSQL_INCLUDES="-I$with_mysql_includes"
+    fi
+    MYSQL_SAVE_CXXFLAGS="$CXXFLAGS"
+    MYSQL_SAVE_CPPFLAGS="$CPPFLAGS"
+    CXXFLAGS="$MYSQL_INCLUDES"
+    CPPFLAGS="$MYSQL_INCLUDES"
     AC_CHECK_HEADERS([mysql.h], [],
         [AC_MSG_ERROR([no valid MySQL headers found, can not continue])])
+    CXXFLAGS="$MYSQL_SAVE_CXXFLAGS"
+    CPPFLAGS="$MYSQL_SAVE_CPPFLAGS"
+    AC_SUBST(MYSQL_INCLUDES)
+
     MYSQL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([mysql_init], [mysqlclient_r mysqlclient],
@@ -281,8 +302,20 @@ then
   # PostgreSQL server module
   if test "$with_pgsql" == "yes"
   then
+    if test "x$with_pgsql_includes" != "x"
+    then
+      PGSQL_INCLUDES="-I$with_pgsql_includes"
+    fi
+    PGSQL_SAVE_CXXFLAGS="$CXXFLAGS"
+    PGSQL_SAVE_CPPFLAGS="$CPPFLAGS"
+    CXXFLAGS="$PGSQL_INCLUDES"
+    CPPFLAGS="$PGSQL_INCLUDES"
     AC_CHECK_HEADERS([postgresql/libpq-fe.h], [],
         [AC_MSG_ERROR([no valid PostgreSQL headers found, can not continue])])
+    CXXFLAGS="$PGSQL_SAVE_CXXFLAGS"
+    CPPFLAGS="$PGSQL_SAVE_CPPFLAGS"
+    AC_SUBST(PGSQL_INCLUDES)
+
     PGSQL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([PQsetdbLogin], [pq],
@@ -298,8 +331,20 @@ then
   # Lua server module
   if test "$with_lua" == "yes"
   then
+    if test "x$with_lua_includes" != "x"
+    then
+      LUA_INCLUDES="-I$with_lua_includes"
+    fi
+    LUA_SAVE_CXXFLAGS="$CXXFLAGS"
+    LUA_SAVE_CPPFLAGS="$CPPFLAGS"
+    CXXFLAGS="$LUA_INCLUDES"
+    CPPFLAGS="$LUA_INCLUDES"
     AC_CHECK_HEADERS([lua.h lauxlib.h lualib.h lua.hpp], [],
         [AC_MSG_ERROR([no valid Lua headers found, can not continue])])
+    CXXFLAGS="$LUA_SAVE_CXXFLAGS"
+    CPPFLAGS="$LUA_SAVE_CPPFLAGS"
+    AC_SUBST(LUA_INCLUDES)
+
     LUA_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([luaL_newstate], [lua lua5.2 lua5.3],
@@ -330,8 +375,20 @@ then
   # Tcl server module
   if test "$with_tcl" == "yes"
   then
+    if test "x$with_tcl_includes" != "x"
+    then
+      TCL_INCLUDES="-I$with_tcl_includes"
+    fi
+    TCL_SAVE_CXXFLAGS="$CXXFLAGS"
+    TCL_SAVE_CPPFLAGS="$CPPFLAGS"
+    CXXFLAGS="$TCL_INCLUDES"
+    CPPFLAGS="$TCL_INCLUDES"
     AC_CHECK_HEADERS([tcl.h], [],
         [AC_MSG_ERROR([no valid Tcl headers found, can not continue])])
+    CXXFLAGS="$TCL_SAVE_CXXFLAGS"
+    CPPFLAGS="$TCL_SAVE_CPPFLAGS"
+    AC_SUBST(TCL_INCLUDES)
+
     TCL_LIBS_SAVE="$LIBS"
     LIBS=""
     AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
@@ -344,9 +401,12 @@ then
     LIBS="$TCL_LIBS_SAVE"
   fi
 
+  DLOPEN_LIBS_SAVE="$LIBS"
+  LIBS=""
   AC_SEARCH_LIBS([dlopen], [dl],
-      [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen $LIBS"],
+      [test "$ac_cv_search_dlopen" = "none required" || SERVER_LDLIBS="$ac_cv_search_dlopen"],
       [AC_MSG_ERROR([can not build without dlopen.])])
+  LIBS="$DLOPEN_LIBS_SAVE"
 
   SERVER_LDLIBS="$SERVER_LDLIBS $PROFILE_LDLIBS"
 
@@ -379,22 +439,28 @@ then
 fi
 
 # Make sure we have a new enough version of OpenSSL
+OPENSSL_LIBS_SAVE="$LIBS"
+LIBS=""
 AC_SEARCH_LIBS([EVP_PKEY_derive], [openssl ssl crypto],
-    [test "$ac_cv_search_EVP_PKEY_derive" = "none required" || LIBS="$ac_cv_search_EVP_PKEY_derive $LIBS"],
+    [test "$ac_cv_search_EVP_PKEY_derive" = "none required" || OPENSSL_LIBS="$ac_cv_search_EVP_PKEY_derive"],
     [AC_MSG_ERROR([can not build without OpenSSL >= 1.0.0])])
+LIBS="$OPENSSL_LIBS_SAVE"
 OPENSSL_CPPFLAGS_SAVE="$CPPFLAGS"
 CPPFLAGS="$CXXFLAGS"
 AC_CHECK_HEADERS([openssl/evp.h openssl/ec.h], [], [AC_MSG_ERROR([no valid OpenSSL installation found, can not continue])])
 CPPFLAGS="$OPENSSL_CPPFLAGS_SAVE"
 
+PTHREAD_LIBS_SAVE="$LIBS"
+LIBS=""
 AC_SEARCH_LIBS([pthread_create], [pthread],
-    [test "$ac_cv_search_pthread_create" = "none required" || LIBS="$ac_cv_search_pthread_create $LIBS"],
+    [test "$ac_cv_search_pthread_create" = "none required" || PTHREAD_LIBS="$ac_cv_search_pthread_create"],
     [AC_MSG_ERROR([can not build without pthreads.])])
+LIBS="$PTHREAD_LIBS_SAVE"
 
 CFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CFLAGS"
 CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
 LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
-LIBS="$LIBS $PROFILE_LDLIBS"
+LIBS="$LIBS $OPENSSL_LIBS $PTHREAD_LIBS $PROFILE_LDLIBS"
 
 AC_CONFIG_SUBDIRS([client/cuddly-gl])
 
