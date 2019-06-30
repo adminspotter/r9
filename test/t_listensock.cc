@@ -152,6 +152,46 @@ void test_base_user_disconnect_on_destroy(void)
     delete go;
 }
 
+void test_base_user_encrypt_decrypt(void)
+{
+    std::string test = "base_user encrypt/decrypt: ", st;
+    base_user *base = NULL;
+    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+
+    base = new base_user(123LL, go, NULL);
+
+    packet pkt, pkt2;
+
+    st = "unencrypted packet: ";
+    memset(&pkt, 0, sizeof(packet));
+    pkt.basic.type = TYPE_PNGPKT;
+    memcpy(&pkt2, &pkt, sizeof(packet));
+
+    base->encrypt_packet(pkt2);
+
+    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+
+    st = "undecrypted packet: ";
+    base->decrypt_packet(pkt2);
+
+    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+
+    st = "encrypted packet: ";
+    memset(&pkt, 0, sizeof(packet));
+    pkt.basic.type = TYPE_POSUPD;
+    memcpy(&pkt2, &pkt, sizeof(packet));
+
+    base->encrypt_packet(pkt2);
+
+    isnt(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+
+    st = "decrypted packet: ";
+
+    base->decrypt_packet(pkt2);
+
+    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+}
+
 void test_base_user_send_key(void)
 {
     std::string test = "base_user send_server_key: ";
@@ -752,13 +792,14 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(74);
+    plan(78);
 
     test_base_user_create_delete();
     test_base_user_less_than();
     test_base_user_equal_to();
     test_base_user_assignment();
     test_base_user_disconnect_on_destroy();
+    test_base_user_encrypt_decrypt();
     test_base_user_send_key();
     test_base_user_send_ping();
     test_base_user_send_ack();
