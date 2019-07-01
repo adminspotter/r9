@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2019, 22:21:12 tquirk
+ *   last updated 30 Jun 2019, 19:01:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -33,6 +33,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+#include <openssl/crypto.h>
+#include <proto/dh.h>
+#include <proto/ec.h>
 
 #include "listensock.h"
 #include "zone.h"
@@ -374,6 +378,12 @@ void listen_socket::login_user(access_list& p)
 
     if (bu == NULL)
         return;
+
+    EVP_PKEY *pubkey = public_key_to_pkey(p.buf.log.pubkey, R9_PUBKEY_SZ);
+    struct dh_message *shared = dh_shared_secret(config.key.priv_key, pubkey);
+    memcpy(bu->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
+    OPENSSL_free(pubkey);
+    free_dh_message(shared);
 
     bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     this->connect_user(bu, p);
