@@ -5,6 +5,7 @@ using namespace TAP;
 #include "../server/classes/dgram.h"
 #include "../server/classes/config_data.h"
 
+#include "mock_base_user.h"
 #include "mock_server_globals.h"
 
 int sendto_stage = 0;
@@ -168,7 +169,8 @@ void test_send_worker(void)
 
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, dgs);
+    fake_base_user *bu = new fake_base_user(123LL);
+    bu->parent = (listen_socket *)dgs;
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));

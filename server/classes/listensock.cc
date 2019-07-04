@@ -54,6 +54,18 @@ static size_t rand_bytes(uint8_t *buf, size_t buf_sz)
     return i;
 }
 
+base_user::base_user(uint64_t userid)
+    : username(), Control(userid, NULL)
+{
+    this->parent = NULL;
+    this->timestamp = time(NULL);
+    this->pending_logout = false;
+    this->sequence = 0LL;
+    this->auth_level = ACCESS_NONE;
+    this->slave = this->default_slave = NULL;
+    this->characterid = 0LL;
+}
+
 base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
     : username(), Control(u, g)
 {

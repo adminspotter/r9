@@ -8,6 +8,7 @@ using namespace TAP;
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "mock_base_user.h"
 #include "mock_db.h"
 #include "mock_server_globals.h"
 
@@ -66,14 +67,14 @@ void test_reaper_worker(void)
     listen_socket *listen = new test_listen_socket(addr);
 
     /* This user will be sent a ping */
-    base_user *bu = new base_user(123LL, NULL, listen);
+    fake_base_user *bu = new fake_base_user(123LL);
+    bu->parent = listen;
     bu->pending_logout = false;
     bu->timestamp = time(NULL) - listen_socket::PING_TIMEOUT - 1;
     listen->users[123LL] = bu;
 
     /* This user will be logged out entirely */
-    GameObject *gob = new GameObject(NULL, NULL, 1234LL);
-    base_user *bu2 = new base_user(1234LL, gob, listen);
+    fake_base_user *bu2 = new fake_base_user(1234LL);
     bu2->username = "bobbo";
     bu2->pending_logout = true;
     bu2->timestamp = time(NULL) - listen_socket::LINK_DEAD_TIMEOUT - 1;
@@ -95,7 +96,6 @@ void test_reaper_worker(void)
     is(listen->users.size(), 1, test + "expected user list size");
 
     delete bu;
-    delete gob;
     delete listen;
     freeaddrinfo(addr);
 }

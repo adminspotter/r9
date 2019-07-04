@@ -56,6 +56,8 @@ class base_user : public Control {
   protected:
     listen_socket *parent;
 
+    base_user(uint64_t);
+
   public:
     base_user(uint64_t, GameObject *, listen_socket *);
     virtual ~base_user();

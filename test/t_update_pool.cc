@@ -5,6 +5,7 @@ using namespace TAP;
 #include "../server/classes/update_pool.h"
 #include "../server/classes/listensock.h"
 
+#include "mock_base_user.h"
 #include "mock_listensock.h"
 #include "mock_server_globals.h"
 
@@ -43,9 +44,9 @@ void test_operate(void)
     sock->send_pool = send_pool;
     sockets.push_back(sock);
 
-    sock->users[1LL] = new base_user(1LL, NULL, NULL);
-    sock->users[2LL] = new base_user(2LL, NULL, NULL);
-    sock->users[3LL] = new base_user(3LL, NULL, NULL);
+    sock->users[1LL] = new fake_base_user(1LL);
+    sock->users[2LL] = new fake_base_user(2LL);
+    sock->users[3LL] = new fake_base_user(3LL);
     is(sock->users.size(), 3, test + "expected user list size");
 
     try
