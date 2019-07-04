@@ -1,9 +1,9 @@
 /* control.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Aug 2017, 10:56:10 tquirk
+ *   last updated 02 Jul 2019, 07:56:03 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -45,7 +45,6 @@ class Control
   public:
     uint64_t userid;
     GameObject *default_slave, *slave;
-    std::string username;
     std::map<uint16_t, action_level> actions;
 
     typedef std::map<uint16_t, action_level>::iterator actions_iterator;

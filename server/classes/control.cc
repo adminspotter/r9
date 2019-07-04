@@ -1,9 +1,9 @@
 /* control.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Aug 2017, 09:10:37 tquirk
+ *   last updated 02 Jul 2019, 08:14:37 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -63,7 +63,6 @@ const Control& Control::operator=(const Control& c)
     this->userid = c.userid;
     this->default_slave = c.default_slave;
     this->slave = c.slave;
-    this->username = c.username;
     this->actions.insert(c.actions.begin(), c.actions.end());
     return *this;
 }

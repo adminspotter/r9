@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 Jun 2019, 19:01:37 tquirk
+ *   last updated 04 Jul 2019, 15:57:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -55,7 +55,7 @@ static size_t rand_bytes(uint8_t *buf, size_t buf_sz)
 }
 
 base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
-    : Control(u, g)
+    : username(), Control(u, g)
 {
     this->parent = l;
     this->timestamp = time(NULL);
@@ -80,6 +80,7 @@ base_user::~base_user()
 const base_user& base_user::operator=(const base_user& u)
 {
     this->Control::operator=((const Control&)u);
+    this->username = u.username;
     this->timestamp = u.timestamp;
     this->pending_logout = u.pending_logout;
     this->sequence = u.sequence;

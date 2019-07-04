@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jun 2019, 06:25:49 tquirk
+ *   last updated 04 Jul 2019, 11:19:17 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -44,6 +44,7 @@ class listen_socket;
 
 class base_user : public Control {
   public:
+    std::string username;
     uint64_t sequence, characterid;
     time_t timestamp;
     bool pending_logout;
