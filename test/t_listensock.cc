@@ -4,6 +4,7 @@ using namespace TAP;
 
 #include "../server/classes/listensock.h"
 
+#include "mock_base_user.h"
 #include "mock_db.h"
 #include "mock_server_globals.h"
 #include "mock_zone.h"
@@ -75,14 +76,29 @@ int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
     return 2;
 }
 
+class fake_listen_socket : public listen_socket
+{
+  public:
+    fake_listen_socket(void) : listen_socket() {};
+    virtual ~fake_listen_socket() {};
+};
+
 void test_base_user_create_delete(void)
 {
     std::string test = "base_user create/delete: ";
+    database = new fake_DB("a", "b", "c", "d");
     base_user *base = NULL;
+
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_VIEW;
+    get_character_objectid_count = 0;
+    get_characterid_count = 0;
+    get_characterid_result = 1234LL;
+    get_player_server_skills_count = 0;
 
     try
     {
-        base = new base_user(0LL, NULL, NULL);
+        base = new base_user(0LL, "a", "b", NULL);
     }
     catch (...)
     {
@@ -90,39 +106,80 @@ void test_base_user_create_delete(void)
     }
     is(base->userid, 0LL, test + "expected userid");
     is(base->pending_logout, false, test + "expected logout");
+    is(check_authorization_count, 1, test + "expected auth call");
+    is(get_character_objectid_count, 0, test + "expected no char objid call");
+    is(get_characterid_count, 1, test + "expected charid call");
+    is(get_player_server_skills_count, 1, test + "expected server skills call");
 
     delete base;
+    delete (fake_DB *)database;
+}
+
+void test_base_user_no_access(void)
+{
+    std::string test = "base_user no access: ";
+    database = new fake_DB("a", "b", "c", "d");
+
+    check_authorization_count = 0;
+    check_authorization_result = ACCESS_NONE;
+
+    try
+    {
+        base_user *bu = new base_user(123LL, "a", "b", NULL);
+    }
+    catch (...)
+    {
+        pass(test + "expected exception");
+    }
+
+    is(check_authorization_count, 1, test + "expected database call");
+
+    delete (fake_DB *)database;
 }
 
 void test_base_user_less_than(void)
 {
     std::string test = "base_user less: ";
-    base_user *base1 = new base_user(123LL, NULL, NULL);
-    base_user *base2 = new base_user(124LL, NULL, NULL);
+    database = new fake_DB("a", "b", "c", "d");
+
+    check_authorization_result = ACCESS_VIEW;
+
+    base_user *base1 = new base_user(123LL, "a", "b", NULL);
+    base_user *base2 = new base_user(124LL, "c", "d", NULL);
 
     is(*base1 < *base2, true, test + "object less than object");
 
     delete base2;
     delete base1;
+    delete (fake_DB *)database;
 }
 
 void test_base_user_equal_to(void)
 {
     std::string test = "base_user equal: ";
-    base_user *base1 = new base_user(123LL, NULL, NULL);
-    base_user *base2 = new base_user(124LL, NULL, NULL);
+    database = new fake_DB("a", "b", "c", "d");
+
+    check_authorization_result = ACCESS_VIEW;
+
+    base_user *base1 = new base_user(123LL, "a", "b", NULL);
+    base_user *base2 = new base_user(124LL, "c", "d", NULL);
 
     is(*base1 == *base2, false, test + "objects not equal");
 
     delete base2;
     delete base1;
+    delete (fake_DB *)database;
 }
 
 void test_base_user_assignment(void)
 {
     std::string test = "base_user assign: ";
-    base_user *base1 = new base_user(123LL, NULL, NULL);
-    base_user *base2 = new base_user(124LL, NULL, NULL);
+    database = new fake_DB("a", "b", "c", "d");
+
+    check_authorization_result = ACCESS_VIEW;
+
+    base_user *base1 = new base_user(123LL, "a", "b", NULL);
+    base_user *base2 = new base_user(124LL, "c", "d", NULL);
 
     is(*base1 == *base2, false, test + "objects not equal");
 
@@ -132,15 +189,23 @@ void test_base_user_assignment(void)
 
     delete base2;
     delete base1;
+    delete (fake_DB *)database;
 }
 
 void test_base_user_disconnect_on_destroy(void)
 {
     std::string test = "base_user disconnect: ";
-    base_user *base = NULL;
+    database = new fake_DB("a", "b", "c", "d");
+    zone = new fake_Zone(1000, 1, database);
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
+    zone->game_objects[1234LL] = go;
 
-    base = new base_user(123LL, go, NULL);
+    check_authorization_result = ACCESS_MOVE;
+    get_character_objectid_result = 1234LL;
+
+    base_user *base = new base_user(123LL, "a", "b", NULL);
+    is(base->default_slave, go, test + "expected default slave");
+    is(base->slave, go, test + "expected slave");
     is(go->natures.size(), 0, test + "expected natures size");
 
     delete base;
@@ -149,16 +214,18 @@ void test_base_user_disconnect_on_destroy(void)
          test + "added invisible nature");
     isnt(go->natures.find("non-interactive"), go->natures.end(),
          test + "added non-interactive nature");
-    delete go;
+    delete (fake_Zone *)zone;
+    delete (fake_DB *)database;
 }
 
 void test_base_user_encrypt_decrypt(void)
 {
     std::string test = "base_user encrypt/decrypt: ", st;
-    base_user *base = NULL;
-    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+    database = new fake_DB("a", "b", "c", "d");
 
-    base = new base_user(123LL, go, NULL);
+    check_authorization_result = ACCESS_VIEW;
+
+    base_user *base = new base_user(123LL, "a", "b", NULL);
 
     packet pkt, pkt2;
 
@@ -190,15 +257,21 @@ void test_base_user_encrypt_decrypt(void)
     base->decrypt_packet(pkt2);
 
     is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+
+    delete base;
+    delete (fake_DB *)database;
 }
 
 void test_base_user_send_key(void)
 {
     std::string test = "base_user send_server_key: ";
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket();
 
-    base_user *bu = new base_user(123LL, NULL, listen);
+    database = new fake_DB("a", "b", "c", "d");
+
+    check_authorization_result = ACCESS_VIEW;
+
+    base_user *bu = new base_user(123LL, "a", "b", listen);
 
     listen->users[123LL] = bu;
 
@@ -209,17 +282,20 @@ void test_base_user_send_key(void)
 
     isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
+    delete (fake_DB *)database;
     delete listen;
-    freeaddrinfo(addr);
 }
 
 void test_base_user_send_ping(void)
 {
     std::string test = "base_user send_ping: ";
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket();
 
-    base_user *bu = new base_user(123LL, NULL, listen);
+    database = new fake_DB("a", "b", "c", "d");
+
+    check_authorization_result = ACCESS_VIEW;
+
+    base_user *bu = new base_user(123LL, "a", "b", listen);
 
     listen->users[123LL] = bu;
 
@@ -229,17 +305,20 @@ void test_base_user_send_ping(void)
 
     isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
+    delete (fake_DB *)database;
     delete listen;
-    freeaddrinfo(addr);
 }
 
 void test_base_user_send_ack(void)
 {
     std::string test = "base_user send_ack: ";
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket();
 
-    base_user *bu = new base_user(123LL, NULL, listen);
+    database = new fake_DB("a", "b", "c", "d");
+
+    check_authorization_result = ACCESS_VIEW;
+
+    base_user *bu = new base_user(123LL, "a", "b", listen);
 
     listen->users[123LL] = bu;
 
@@ -249,8 +328,8 @@ void test_base_user_send_ack(void)
 
     isnt(listen->send_pool->queue_size(), 0, test + "expected send queue size");
 
+    delete (fake_DB *)database;
     delete listen;
-    freeaddrinfo(addr);
 }
 
 void test_listen_socket_create_delete(void)
@@ -380,7 +459,7 @@ void test_listen_socket_handle_ack(void)
     std::string test = "listen_socket handle_ack: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, listen);
+    fake_base_user *bu = new fake_base_user(123LL);
 
     listen->users[bu->userid] = bu;
 
@@ -404,7 +483,7 @@ void test_listen_socket_handle_action(void)
     std::string test = "listen_socket handle_action: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, listen);
+    fake_base_user *bu = new fake_base_user(123LL);
 
     listen->users[bu->userid] = bu;
 
@@ -439,7 +518,7 @@ void test_listen_socket_handle_logout(void)
     std::string test = "listen_socket handle_logout: ";
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, listen);
+    fake_base_user *bu = new fake_base_user(123LL);
 
     listen->users[bu->userid] = bu;
 
@@ -466,111 +545,6 @@ void test_listen_socket_handle_logout(void)
     freeaddrinfo(addr);
 }
 
-void test_listen_socket_get_userid(void)
-{
-    std::string test = "listen_socket get_userid: ";
-    database = new fake_DB("a", "b", "c", "d");
-
-    check_authentication_count = 0;
-    check_authentication_result = 12345LL;
-
-    login_request log;
-
-    memset(&log, 0, sizeof(login_request));
-    strncpy(log.username, "howdy", 6);
-    strncpy(log.password, "pass", 5);
-
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
-
-    uint64_t userid = listen->get_userid(log);
-
-    is(check_authentication_count, 1, test + "expected database call");
-    is(userid, 12345LL, test + "expected userid");
-    is(strncmp(log.password, "", sizeof(log.password)), 0,
-       test + "password is cleared");
-
-    delete listen;
-    freeaddrinfo(addr);
-    delete database;
-}
-
-void test_listen_socket_no_access(void)
-{
-    std::string test = "listen_socket no access: ";
-    database = new fake_DB("a", "b", "c", "d");
-
-    check_authorization_count = 0;
-    check_authorization_result = ACCESS_NONE;
-
-    login_request log;
-
-    memset(&log, 0, sizeof(login_request));
-    strncpy(log.username, "howdy", 6);
-    strncpy(log.password, "pass", 5);
-    strncpy(log.charname, "blah", 5);
-
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
-
-    base_user *bu = listen->check_access(123LL, log);
-
-    is(check_authorization_count, 1, test + "expected database call");
-    is(bu == NULL, true, test + "expected result");
-
-    delete listen;
-    freeaddrinfo(addr);
-    delete (fake_DB *)database;
-}
-
-void test_listen_socket_check_access(void)
-{
-    std::string test = "listen_socket check_access: ";
-    database = new fake_DB("a", "b", "c", "d");
-
-    check_authorization_count = 0;
-    check_authorization_result = ACCESS_MOVE;
-
-    get_character_objectid_count = 0;
-    get_character_objectid_result = 1234LL;
-
-    get_characterid_count = 0;
-    get_characterid_result = 12345678LL;
-
-    get_player_server_skills_count = 0;
-
-    zone = new fake_Zone(1000, 1, database);
-
-    send_nearby_objects_count = 0;
-
-    GameObject *go = new GameObject(NULL, NULL, 1234LL);
-
-    login_request log;
-
-    memset(&log, 0, sizeof(login_request));
-    strncpy(log.username, "howdy", 6);
-    strncpy(log.password, "pass", 5);
-    strncpy(log.charname, "blah", 5);
-
-    struct addrinfo *addr = create_addrinfo();
-    listen_socket *listen = new listen_socket(addr);
-
-    base_user *bu = listen->check_access(123LL, log);
-
-    is(check_authorization_count, 1, test + "expected authorization call");
-    is(get_character_objectid_count, 1, test + "expected objectid call");
-    is(get_characterid_count, 1, test + "expected characterid call");
-    is(get_player_server_skills_count, 1, test + "expected skills call");
-    is(send_nearby_objects_count, 1, test + "expected nearby objects call");
-    is(bu != NULL, true, test + "got a good base_user");
-
-    delete bu;
-    delete listen;
-    freeaddrinfo(addr);
-    delete (fake_Zone *)zone;
-    delete (fake_DB *)database;
-}
-
 void test_listen_socket_login_no_user(void)
 {
     std::string test = "listen_socket no user: ";
@@ -595,8 +569,6 @@ void test_listen_socket_login_no_user(void)
 
     is(check_authentication_count, 1, test + "expected authentication call");
     is(listen->users.size(), 0, test + "expected user list size");
-    is(strncmp(access.buf.log.password, "", sizeof(access.buf.log.password)), 0,
-       test + "password is cleared");
 
     delete listen;
     freeaddrinfo(addr);
@@ -620,7 +592,7 @@ void test_listen_socket_login_already(void)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    base_user *bu = new base_user(123LL, NULL, listen);
+    fake_base_user *bu = new fake_base_user(123LL);
     bu->pending_logout = true;
     listen->users[123LL] = bu;
 
@@ -676,20 +648,8 @@ void test_listen_socket_login(void)
     std::string test = "listen_socket login: ";
     database = new fake_DB("a", "b", "c", "d");
 
-    check_authentication_count = 0;
     check_authentication_result = 123LL;
-
-    check_authorization_count = 0;
-    check_authorization_result = ACCESS_MOVE;
-
-    get_character_objectid_count = 0;
-    get_character_objectid_result = 1234LL;
-
-    get_characterid_count = 0;
-
-    get_player_server_skills_count = 0;
-
-    GameObject *go = new GameObject(NULL, NULL, 1234LL);
+    check_authorization_result = ACCESS_VIEW;
 
     zone = new fake_Zone(1000, 1, database);
 
@@ -709,13 +669,9 @@ void test_listen_socket_login(void)
 
     listen->login_user(access);
 
-    is(check_authorization_count, 1, test + "expected authorization call");
-    is(get_character_objectid_count, 1, test + "expected objectid call");
-    is(get_characterid_count, 1, test + "expected characterid call");
-    is(get_player_server_skills_count, 1, test + "expected skills call");
     is(send_nearby_objects_count, 1, test + "expected nearby objects call");
     is(listen->users.size(), 1, test + "expected user list size");
-    is(listen->users[123LL]->auth_level, ACCESS_MOVE,
+    is(listen->users[123LL]->auth_level, ACCESS_VIEW,
        test + "expected auth level");
     is(listen->send_pool->queue_size(), 2, test + "expected queue size");
 
@@ -731,7 +687,8 @@ void test_listen_socket_logout(void)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    base_user *bu = new base_user(123LL, NULL, listen);
+    fake_base_user *bu = new fake_base_user(123LL);
+    bu->parent = listen;
 
     listen->users[123LL] = bu;
 
@@ -752,7 +709,8 @@ void test_listen_socket_connect_user(void)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    base_user *bu = new base_user(123LL, NULL, listen);
+    fake_base_user *bu = new fake_base_user(123LL);
+    bu->parent = listen;
 
     access_list access;
 
@@ -776,7 +734,8 @@ void test_listen_socket_disconnect_user(void)
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
 
-    base_user *bu = new base_user(123LL, NULL, listen);
+    fake_base_user *bu = new fake_base_user(123LL);
+    bu->parent = listen;
 
     listen->users[123LL] = bu;
 
@@ -792,9 +751,10 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(78);
+    plan(70);
 
     test_base_user_create_delete();
+    test_base_user_no_access();
     test_base_user_less_than();
     test_base_user_equal_to();
     test_base_user_assignment();
@@ -810,9 +770,6 @@ int main(int argc, char **argv)
     test_listen_socket_handle_ack();
     test_listen_socket_handle_action();
     test_listen_socket_handle_logout();
-    test_listen_socket_get_userid();
-    test_listen_socket_no_access();
-    test_listen_socket_check_access();
     test_listen_socket_login_no_user();
     test_listen_socket_login_already();
     test_listen_socket_login_no_access();
