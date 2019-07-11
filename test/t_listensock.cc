@@ -3,6 +3,9 @@
 using namespace TAP;
 
 #include "../server/classes/listensock.h"
+#include "../server/classes/config_data.h"
+
+#include "../proto/ec.h"
 
 #include "mock_base_user.h"
 #include "mock_db.h"
@@ -655,12 +658,20 @@ void test_listen_socket_login(void)
 
     send_nearby_objects_count = 0;
 
+    config.key.priv_key = generate_ecdh_key();
+
     access_list access;
 
     memset(&access.buf, 0, sizeof(packet));
     strncpy(access.buf.log.username, "howdy", 6);
     strncpy(access.buf.log.password, "pass", 5);
     strncpy(access.buf.log.charname, "blah", 5);
+
+    EVP_PKEY *pubkey = generate_ecdh_key();
+    size_t result = pkey_to_public_key(pubkey,
+                                       access.buf.log.pubkey,
+                                       R9_PUBKEY_SZ);
+    is(result, R9_PUBKEY_SZ, test + "expected pubkey string size");
 
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
@@ -675,6 +686,7 @@ void test_listen_socket_login(void)
        test + "expected auth level");
     is(listen->send_pool->queue_size(), 2, test + "expected queue size");
 
+    OPENSSL_free(pubkey);
     delete (fake_Zone *)zone;
     delete listen;
     freeaddrinfo(addr);
@@ -751,7 +763,7 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(70);
+    plan(71);
 
     test_base_user_create_delete();
     test_base_user_no_access();

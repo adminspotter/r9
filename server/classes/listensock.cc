@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 05 Jul 2019, 22:19:08 tquirk
+ *   last updated 11 Jul 2019, 08:59:42 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -113,6 +113,23 @@ const base_user& base_user::operator=(const base_user& u)
     this->pending_logout = u.pending_logout;
     this->sequence = u.sequence;
     return *this;
+}
+
+void base_user::set_shared_key(EVP_PKEY *priv, uint8_t *pubkey, size_t key_sz)
+{
+    EVP_PKEY *pub = NULL;
+    struct dh_message *shared = NULL;
+
+    if ((pub = public_key_to_pkey(pubkey, key_sz)) == NULL)
+        throw std::runtime_error("couldn't convert string to EVP_PKEY");
+    if ((shared = dh_shared_secret(priv, pub)) == NULL)
+    {
+        OPENSSL_free(pub);
+        throw std::runtime_error("couldn't calculate shared secret");
+    }
+    memcpy(this->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
+    free_dh_message(shared);
+    OPENSSL_free(pub);
 }
 
 void base_user::encrypt_packet(packet& pkt)
@@ -414,6 +431,8 @@ void listen_socket::login_user(access_list& p)
                              std::min(sizeof(p.buf.log.charname),
                                       strlen(p.buf.log.charname)));
         bu = new base_user(userid, username, charname, this);
+        bu->set_shared_key(config.key.priv_key,
+                           p.buf.log.pubkey, R9_PUBKEY_SZ);
     }
     catch (std::runtime_error e)
     {

@@ -67,6 +67,8 @@ class base_user : public Control {
 
     virtual const base_user& operator=(const base_user&);
 
+    void set_shared_key(EVP_PKEY *, uint8_t *, size_t);
+
     void encrypt_packet(packet&);
     void decrypt_packet(packet&);
 
