@@ -166,11 +166,20 @@ void test_send_worker(void)
     std::string test = "send worker: ";
     config.send_threads = 1;
     config.access_threads = 1;
+    config.key.priv_key = generate_ecdh_key();
+    pkey_to_public_key(config.key.priv_key, config.key.pub_key, R9_PUBKEY_SZ);
 
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
     bu->parent = (listen_socket *)dgs;
+
+    EVP_PKEY *peer = generate_ecdh_key();
+    uint8_t peer_key[R9_PUBKEY_SZ];
+    size_t sz = pkey_to_public_key(peer, peer_key, sizeof(peer_key));
+    bu->set_shared_key(config.key.priv_key, peer_key, sz);
+    OPENSSL_free(peer);
+
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));

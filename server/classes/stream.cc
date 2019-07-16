@@ -1,9 +1,9 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Apr 2018, 05:34:00 tquirk
+ *   last updated 16 Jul 2019, 08:28:45 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -280,7 +280,6 @@ void stream_socket::handle_users(void)
 void *stream_socket::stream_send_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
-    int fd;
     packet_list req;
     size_t realsize;
 
@@ -291,11 +290,10 @@ void *stream_socket::stream_send_worker(void *arg)
         sts->send_pool->pop(&req);
 
         realsize = packet_size(&req.buf);
-        if (hton_packet(&req.buf, realsize))
+        if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
         {
-            fd = sts->user_fds[req.who->userid];
-            /* TODO: Encryption */
-            if (write(fd, (void *)&req, realsize) == -1)
+            if (write(sts->user_fds[req.who->userid],
+                      (void *)&req, realsize) == -1)
             {
                 char err[128];
 
@@ -303,7 +301,7 @@ void *stream_socket::stream_send_worker(void *arg)
                 std::clog << syslogErr
                           << "error sending packet out stream port "
                           << sts->sock.sa->port() << ", user port "
-                          << fd << ": "
+                          << sts->user_fds[req.who->userid] << ": "
                           << err << " (" << errno << ")"
                           << std::endl;
             }

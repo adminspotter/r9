@@ -1,9 +1,9 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Apr 2018, 07:38:14 tquirk
+ *   last updated 15 Jul 2019, 08:15:37 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -178,7 +178,6 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
 void *dgram_socket::dgram_send_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
-    base_user *bu;
     packet_list req;
     size_t realsize;
 
@@ -189,14 +188,11 @@ void *dgram_socket::dgram_send_worker(void *arg)
         dgs->send_pool->pop(&req);
 
         realsize = packet_size(&req.buf);
-        if (hton_packet(&req.buf, realsize))
+        if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
         {
-            bu = req.who;
-
-            /* TODO: Encryption */
             if (sendto(dgs->sock.sock,
                        (void *)&req.buf, realsize, 0,
-                       dgs->user_socks[bu->userid]->sockaddr(),
+                       dgs->user_socks[req.who->userid]->sockaddr(),
                        sizeof(struct sockaddr_storage)) == -1)
             {
                 char err[128];
