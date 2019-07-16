@@ -135,7 +135,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         pthread_testcancel();
 
         /* If anything is wrong, just ignore what we got */
-        if (len <= 0 || fromlen == 0 || !ntoh_packet(&buf, len))
+        if (len <= 0 || fromlen == 0)
             continue;
 
         try { sa = build_sockaddr((struct sockaddr&)from); }
@@ -144,24 +144,21 @@ void *dgram_socket::dgram_listen_worker(void *arg)
             continue;
         }
 
-        dgs->handle_packet(buf, sa);
+        dgs->handle_packet(buf, len, sa);
     }
     std::clog << "exiting connection loop for datagram port "
               << dgs->sock.sa->port() << std::endl;
     return NULL;
 }
 
-void dgram_socket::handle_packet(packet& p, Sockaddr *sa)
+void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
 {
-    base_user *bu = NULL;
     auto handler = packet_handlers.find(p.basic.type);
     auto found = this->socks.find(sa);
 
-    if (found != this->socks.end())
-        bu = found->second;
-
-    if (handler != packet_handlers.end())
-        (handler->second)(this, p, bu, sa);
+    if (found != this->socks.end() && handler != packet_handlers.end())
+        if (found->second->decrypt_packet(p) && ntoh_packet(&p, len))
+            (handler->second)(this, p, found->second, sa);
     delete sa;
 }
 

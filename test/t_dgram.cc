@@ -184,7 +184,7 @@ void test_handle_packet_unknown(void)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_POSUPD;
 
-    dgs->handle_packet(p, sa);
+    dgs->handle_packet(p, sizeof(position_update), sa);
 
     /* Not sure what to assert here.  We're exercising the code, but
      * if there's nothing to do, there's nothing to prove.
@@ -216,7 +216,7 @@ void test_handle_packet(void)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACKPKT;
 
-    dgs->handle_packet(p, sa);
+    dgs->handle_packet(p, sizeof(ack_packet), sa);
 
     isnt(bu->timestamp, 0, test + "expected timestamp");
 

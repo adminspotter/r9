@@ -209,7 +209,7 @@ void test_handle_packet(void)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACKPKT;
 
-    sts->handle_packet(p, fd);
+    sts->handle_packet(p, sizeof(ack_packet), fd);
 
     isnt(bu->timestamp, 0, test + "expected timestamp update");
 

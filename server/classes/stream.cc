@@ -114,17 +114,14 @@ void stream_socket::start(void)
     this->sock.start(stream_socket::stream_listen_worker);
 }
 
-void stream_socket::handle_packet(packet& p, int fd)
+void stream_socket::handle_packet(packet& p, int len, int fd)
 {
-    base_user *bu = NULL;
     auto handler = packet_handlers.find(p.basic.type);
     auto found = this->fds.find(fd);
 
-    if (found != this->fds.end())
-        bu = found->second;
-
-    if (handler != packet_handlers.end())
-        (handler->second)(this, p, bu, &fd);
+    if (found != this->fds.end() && handler != packet_handlers.end())
+        if (found->second->decrypt_packet(p) && ntoh_packet(&p, len))
+            (handler->second)(this, p, found->second, &fd);
 }
 
 void stream_socket::handle_login(listen_socket *s, packet& p,
@@ -257,12 +254,7 @@ void stream_socket::handle_users(void)
             if ((len = read((*i).first,
                             (void *)&buf,
                             sizeof(buf))) > 0)
-            {
-                if (!ntoh_packet(&buf, len))
-                    continue;
-
-                this->handle_packet(buf, (*i).first);
-            }
+                this->handle_packet(buf, len, (*i).first);
             else
             {
                 /* It's either that the other end closed the socket,

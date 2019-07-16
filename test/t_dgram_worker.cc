@@ -40,18 +40,13 @@ ssize_t recvfrom(int sockfd,
 
       case 2:
         pkt->basic.type = TYPE_ACKPKT;
-        retval = 1;
-        break;
-
-      case 3:
-        pkt->basic.type = TYPE_ACKPKT;
         retval = sizeof(ack_packet);
         /* If we set the sockaddr all 0, it should fail to build. */
         memset(sin, 0, sizeof(struct sockaddr_in));
         break;
 
       default:
-      case 4:
+      case 3:
         main_loop_exit_flag = 1;
         pkt->basic.type = TYPE_ACKPKT;
         retval = sizeof(ack_packet);
