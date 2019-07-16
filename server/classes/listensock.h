@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Jul 2019, 19:54:20 tquirk
+ *   last updated 15 Jul 2019, 07:34:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -69,8 +69,8 @@ class base_user : public Control {
 
     void set_shared_key(EVP_PKEY *, uint8_t *, size_t);
 
-    void encrypt_packet(packet&);
-    void decrypt_packet(packet&);
+    int encrypt_packet(packet&);
+    int decrypt_packet(packet&);
 
     void send_server_key(uint8_t *, size_t);
     void send_ping(void);

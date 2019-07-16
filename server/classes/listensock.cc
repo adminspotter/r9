@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2019, 08:59:42 tquirk
+ *   last updated 15 Jul 2019, 07:34:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -132,34 +132,40 @@ void base_user::set_shared_key(EVP_PKEY *priv, uint8_t *pubkey, size_t key_sz)
     OPENSSL_free(pub);
 }
 
-void base_user::encrypt_packet(packet& pkt)
+int base_user::encrypt_packet(packet& pkt)
 {
     size_t buf_sz = packet_size(&pkt) - sizeof(basic_packet);
 
+    if (pkt.basic.type == TYPE_SRVKEY)
+        return 1;
     if (buf_sz > 0)
     {
         uint8_t *buf = (uint8_t *)&pkt + sizeof(basic_packet);
 
-        r9_encrypt(buf, buf_sz,
-                   this->key,
-                   this->iv, pkt.basic.sequence,
-                   buf);
+        return r9_encrypt(buf, buf_sz,
+                          this->key,
+                          this->iv, pkt.basic.sequence,
+                          buf);
     }
+    return 1;
 }
 
-void base_user::decrypt_packet(packet& pkt)
+int base_user::decrypt_packet(packet& pkt)
 {
     size_t buf_sz = packet_size(&pkt) - sizeof(basic_packet);
 
+    if (pkt.basic.type == TYPE_LOGREQ)
+        return 1;
     if (buf_sz > 0)
     {
         uint8_t *buf = (uint8_t *)&pkt + sizeof(basic_packet);
 
-        r9_decrypt(buf, buf_sz,
-                   this->key,
-                   this->iv, pkt.basic.sequence,
-                   buf);
+        return r9_decrypt(buf, buf_sz,
+                          this->key,
+                          this->iv, pkt.basic.sequence,
+                          buf);
     }
+    return 1;
 }
 
 void base_user::send_server_key(uint8_t *pubkey, size_t key_sz)

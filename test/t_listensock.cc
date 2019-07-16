@@ -237,29 +237,57 @@ void test_base_user_encrypt_decrypt(void)
     pkt.basic.type = TYPE_PNGPKT;
     memcpy(&pkt2, &pkt, sizeof(packet));
 
-    base->encrypt_packet(pkt2);
+    int result = base->encrypt_packet(pkt2);
 
-    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+    is(result, 1, test + st + "expected result");
+    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected packet");
 
     st = "undecrypted packet: ";
-    base->decrypt_packet(pkt2);
+    result = base->decrypt_packet(pkt2);
 
-    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+    is(result, 1, test + st + "expected result");
+    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected packet");
 
     st = "encrypted packet: ";
     memset(&pkt, 0, sizeof(packet));
     pkt.basic.type = TYPE_POSUPD;
     memcpy(&pkt2, &pkt, sizeof(packet));
 
-    base->encrypt_packet(pkt2);
+    result = base->encrypt_packet(pkt2);
 
-    isnt(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+    is(result, sizeof(position_update) - sizeof(basic_packet),
+       test + st + "expected result");
+    isnt(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected packet");
 
     st = "decrypted packet: ";
 
-    base->decrypt_packet(pkt2);
+    result = base->decrypt_packet(pkt2);
 
-    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected result");
+    is(result, sizeof(position_update) - sizeof(basic_packet),
+       test + st + "expected result");
+    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected packet");
+
+    st = "skip encrypted packet: ";
+
+    memset(&pkt, 0, sizeof(packet));
+    pkt.basic.type = TYPE_SRVKEY;
+    memcpy(&pkt2, &pkt, sizeof(packet));
+
+    result = base->encrypt_packet(pkt2);
+
+    is(result, 1, test + st + "expected result");
+    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected packet");
+
+    st = "skip decrypted packet: ";
+
+    memset(&pkt, 0, sizeof(packet));
+    pkt.basic.type = TYPE_LOGREQ;
+    memcpy(&pkt2, &pkt, sizeof(packet));
+
+    result = base->decrypt_packet(pkt2);
+
+    is(result, 1, test + st + "expected result");
+    is(memcmp(&pkt, &pkt2, sizeof(packet)), 0, test + st + "expected packet");
 
     delete base;
     delete (fake_DB *)database;
@@ -763,7 +791,7 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(71);
+    plan(79);
 
     test_base_user_create_delete();
     test_base_user_no_access();
