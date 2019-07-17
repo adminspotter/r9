@@ -1,6 +1,6 @@
 /* encrypt.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jun 2019, 07:09:58 tquirk
+ *   last updated 16 Jul 2019, 21:58:24 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -26,6 +26,8 @@
  *
  */
 
+#include <string.h>
+
 #include <openssl/conf.h>
 #include <openssl/err.h>
 
@@ -39,13 +41,15 @@ int r9_encrypt(const unsigned char *plaintext, int plaintext_len,
 {
     EVP_CIPHER_CTX *ctx;
     int len, ciphertext_len = 0;
+    unsigned char iv_copy[R9_SYMMETRIC_IV_BUF_SZ];
 
     if ((ctx = EVP_CIPHER_CTX_new()) == NULL)
         goto BAILOUT1;
 
-    *(uint64_t *)iv = htonll(sequence);
+    memcpy(iv_copy, iv, R9_SYMMETRIC_IV_BUF_SZ);
+    *(uint64_t *)iv_copy = htonll(sequence);
 
-    if (EVP_EncryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv) != 1
+    if (EVP_EncryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv_copy) != 1
         || EVP_EncryptUpdate(ctx,
                              ciphertext, &len,
                              plaintext, plaintext_len) != 1)
@@ -71,13 +75,15 @@ int r9_decrypt(const unsigned char *ciphertext, int ciphertext_len,
 {
     EVP_CIPHER_CTX *ctx;
     int len, plaintext_len = 0;
+    unsigned char iv_copy[R9_SYMMETRIC_IV_BUF_SZ];
 
     if ((ctx = EVP_CIPHER_CTX_new()) == NULL)
         goto BAILOUT1;
 
-    *(uint64_t *)iv = htonll(sequence);
+    memcpy(iv_copy, iv, R9_SYMMETRIC_IV_BUF_SZ);
+    *(uint64_t *)iv_copy = htonll(sequence);
 
-    if (EVP_DecryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv) != 1
+    if (EVP_DecryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv_copy) != 1
         || EVP_DecryptUpdate(ctx,
                              plaintext, &len,
                              ciphertext, ciphertext_len) != 1)
