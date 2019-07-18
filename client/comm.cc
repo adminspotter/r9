@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 May 2019, 13:11:52 tquirk
+ *   last updated 18 Jul 2019, 09:08:30 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -192,9 +192,10 @@ void *Comm::recv_worker(void *arg)
             continue;
         }
         /* Needs to be a real packet type */
-        if (buf.basic.type >= sizeof(pkt_type))
+        if (buf.basic.type >= sizeof(pkt_type) / sizeof(pkt_handler))
         {
-            std::clog << "Unknown packet type " << buf.basic.type << std::endl;
+            std::clog << "Unknown packet type " << (int)buf.basic.type
+                      << std::endl;
             continue;
         }
         /* We should be able to convert to host byte ordering */
