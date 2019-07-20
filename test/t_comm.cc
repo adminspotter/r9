@@ -16,7 +16,8 @@ ObjectCache *obj = new ObjectCache("fake");
 struct object *self_obj;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
-bool bad_ntoh = false, bad_hton = false, sendto_error = false;
+bool bad_ntoh = false, bad_hton = false, bad_encrypt = false;
+bool sendto_error = false;
 bool bad_pubkey = false, bad_shared_secret = false;
 int recvfrom_calls, packet_type;
 
@@ -102,6 +103,15 @@ int hton_packet(packet *a, size_t b)
     return 1;
 }
 
+int r9_encrypt(const unsigned char *a, int b,
+               const unsigned char *c, unsigned char *d,
+               uint64_t e, unsigned char *f)
+{
+    if (bad_encrypt == true)
+        return 0;
+    return 1;
+}
+
 EVP_PKEY *public_key_to_pkey(uint8_t *a, size_t b)
 {
     if (bad_pubkey == true)
@@ -162,6 +172,7 @@ void test_send_bad_hton(void)
     pkt->basic.version = 1;
 
     bad_hton = true;
+    bad_encrypt = false;
     sendto_error = false;
     recvfrom_calls = 1;
     packet_type = -1;
@@ -186,6 +197,43 @@ void test_send_bad_hton(void)
     new_clog.str(std::string());
 }
 
+void test_send_bad_encrypt(void)
+{
+    std::string test = "encrypt failure: ";
+    fake_Comm *comm = NULL;
+
+    packet *pkt = new packet;
+
+    memset((void *)pkt, 0, sizeof(packet));
+    pkt->basic.type = TYPE_PNGPKT;
+    pkt->basic.version = 1;
+
+    bad_hton = false;
+    bad_encrypt = true;
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    try
+    {
+        comm = new fake_Comm();
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
+    comm->send(pkt, sizeof(packet));
+    while (comm->send_queue.size() != 0)
+        ;
+    delete comm;
+
+    isnt(new_clog.str().find("Error encrypting packet"),
+         std::string::npos,
+         test + "expected log entry");
+    new_clog.str(std::string());
+}
+
 void test_send_bad_send(void)
 {
     std::string test = "sendto failure: ";
@@ -198,6 +246,7 @@ void test_send_bad_send(void)
     pkt->basic.version = 1;
 
     bad_hton = false;
+    bad_encrypt = false;
     sendto_error = true;
     recvfrom_calls = 1;
     packet_type = -1;
@@ -781,11 +830,12 @@ void test_recv_unsupported(void)
 
 int main(int argc, char **argv)
 {
-    plan(45);
+    plan(46);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
     test_send_bad_hton();
+    test_send_bad_encrypt();
     test_send_bad_send();
     test_send_packet();
     test_send_login();

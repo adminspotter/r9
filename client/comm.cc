@@ -121,6 +121,24 @@ void Comm::create_socket(struct addrinfo *ai)
     }
 }
 
+int Comm::encrypt_packet(packet& p)
+{
+    size_t pkt_sz;
+
+    if (p.basic.type == TYPE_LOGREQ)
+        return 1;
+    if ((pkt_sz = packet_size(&p) - sizeof(basic_packet)) > 0)
+    {
+        uint8_t *pkt = (uint8_t *)&p + sizeof(basic_packet);
+
+        return r9_encrypt(pkt, pkt_sz,
+                          this->key,
+                          this->iv, p.basic.sequence,
+                          pkt);
+    }
+    return 1;
+}
+
 void *Comm::send_worker(void *arg)
 {
     Comm *comm = (Comm *)arg;
@@ -466,6 +484,11 @@ void Comm::send(packet *p, size_t len)
     if (!hton_packet(p, len))
     {
         std::clog << "Error hton'ing packet" << std::endl;
+        delete p;
+    }
+    else if (!this->encrypt_packet(*p))
+    {
+        std::clog << "Error encrypting packet" << std::endl;
         delete p;
     }
     else
