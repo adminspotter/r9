@@ -1,6 +1,6 @@
 /* db.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 May 2019, 22:58:29 tquirk
+ *   last updated 20 Jul 2019, 14:45:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -45,7 +45,6 @@ class DB
   public:
     /* A couple of maximum lengths */
     static const int MAX_USERNAME = 64;
-    static const int MAX_PASSWORD = 64;
     static const int MAX_CHARNAME = 64;
 
   protected:
@@ -64,7 +63,6 @@ class DB
 
     /* Player functions */
     virtual uint64_t check_authentication(const std::string&,
-                                          const std::string&,
                                           const uint8_t *, size_t) = 0;
     virtual int check_authorization(uint64_t, uint64_t) = 0;
     virtual int check_authorization(uint64_t, const std::string&) = 0;

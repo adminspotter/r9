@@ -16,7 +16,6 @@ they reside in, e.g. the 0-ID server corresponds to all servers.
 CREATE TABLE players (
 	playerid BIGINT NOT NULL,
 	username VARCHAR2(64) NOT NULL,
-	password VARCHAR2(64) NOT NULL,
 	email VARCHAR2(64) NOT NULL,
 	suspended TINYINT NOT NULL,
 	CONSTRAINT players_PK PRIMARY KEY (playerid)

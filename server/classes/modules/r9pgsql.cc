@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Jun 2019, 09:39:44 tquirk
+ *   last updated 20 Jul 2019, 14:46:22 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -53,7 +53,6 @@ PgSQL::PgSQL(const std::string& host, const std::string& user,
 }
 
 uint64_t PgSQL::check_authentication(const std::string& user,
-                                     const std::string& pass,
                                      const uint8_t *pubkey,
                                      size_t key_size)
 {
@@ -64,14 +63,13 @@ uint64_t PgSQL::check_authentication(const std::string& user,
     snprintf(str, sizeof(str),
              "SELECT a.playerid, b.public_key, LEN(b.public_key) "
              "FROM players AS a, player_keys AS b "
-             "WHERE a.username='%s' "
-             "AND a.password='%s' "
+             "WHERE a.username='%.*s' "
              "AND a.playerid=b.playerid "
              "AND b.not_before <= current_timestamp "
              "AND (b.not_after IS NULL OR b.not_after >= current_timestamp) "
              "AND a.suspended=0 "
              "ORDER BY b.not_before DESC;",
-             user.c_str(), pass.c_str());
+             DB::MAX_USERNAME, user.c_str());
     this->db_connect();
 
     res = PQexec(this->db_handle, str);
@@ -81,9 +79,6 @@ uint64_t PgSQL::check_authentication(const std::string& user,
             retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
     PQclear(res);
     this->db_close();
-
-    /* Don't want to keep passwords around in core if we can help it */
-    memset(str, 0, sizeof(str));
     return retval;
 }
 

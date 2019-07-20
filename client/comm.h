@@ -107,9 +107,7 @@ class Comm
 
     virtual void send(packet *, size_t);
 
-    virtual void send_login(const std::string&,
-                            const std::string&,
-                            const std::string&);
+    virtual void send_login(const std::string&, const std::string&);
     virtual void send_action_request(uint16_t, uint64_t, uint8_t);
     virtual void send_action_request(uint16_t, glm::vec3&, uint8_t);
     virtual void send_logout(void);

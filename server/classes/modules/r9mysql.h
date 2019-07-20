@@ -1,6 +1,6 @@
 /* r9mysql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 30 May 2019, 22:58:07 tquirk
+ *   last updated 19 Jul 2019, 08:08:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -46,9 +46,7 @@ class MySQL : public DB
     ~MySQL();
 
     /* Player functions */
-    uint64_t check_authentication(const std::string&,
-                                  const std::string&,
-                                  const uint8_t *, size_t);
+    uint64_t check_authentication(const std::string&, const uint8_t *, size_t);
     int check_authorization(uint64_t, uint64_t);
     int check_authorization(uint64_t, const std::string&);
     uint64_t get_characterid(uint64_t, const std::string&);

@@ -311,7 +311,7 @@ void test_send_login(void)
 {
     std::string test = "send_login: ";
     fake_Comm *comm = NULL;
-    std::string a("hi"), b("howdy"), c("hello");
+    std::string a("hi"), b("howdy");
 
     try
     {
@@ -322,7 +322,7 @@ void test_send_login(void)
         fail(test + "constructor exception");
     }
     is(comm->send_queue.size(), 0, test + "queue empty before call");
-    comm->send_login(a, b, c);
+    comm->send_login(a, b);
     is(comm->send_queue.size(), 1, test + "expected queue entry");
     delete comm;
 

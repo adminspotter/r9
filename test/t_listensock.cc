@@ -588,7 +588,6 @@ void test_listen_socket_login_no_user(void)
 
     memset(&access.buf, 0, sizeof(packet));
     strncpy(access.buf.log.username, "howdy", 6);
-    strncpy(access.buf.log.password, "pass", 5);
     strncpy(access.buf.log.charname, "bob", 4);
 
     struct addrinfo *addr = create_addrinfo();
@@ -618,7 +617,6 @@ void test_listen_socket_login_already(void)
 
     memset(&access.buf, 0, sizeof(packet));
     strncpy(access.buf.log.username, "howdy", 6);
-    strncpy(access.buf.log.password, "pass", 5);
 
     struct addrinfo *addr = create_addrinfo();
     listen_socket *listen = new listen_socket(addr);
@@ -655,7 +653,6 @@ void test_listen_socket_login_no_access(void)
 
     memset(&access.buf, 0, sizeof(packet));
     strncpy(access.buf.log.username, "howdy", 6);
-    strncpy(access.buf.log.password, "pass", 5);
     strncpy(access.buf.log.charname, "blah", 5);
 
     struct addrinfo *addr = create_addrinfo();
@@ -692,7 +689,6 @@ void test_listen_socket_login(void)
 
     memset(&access.buf, 0, sizeof(packet));
     strncpy(access.buf.log.username, "howdy", 6);
-    strncpy(access.buf.log.password, "pass", 5);
     strncpy(access.buf.log.charname, "blah", 5);
 
     EVP_PKEY *pubkey = generate_ecdh_key();

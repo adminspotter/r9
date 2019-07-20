@@ -148,7 +148,7 @@ void setup_comm_callback(ui::active *t, void *call, void *client)
         return;
     }
     config.read_crypto_key(pass_str);
-    setup_comm(ai, user_str.c_str(), pass_str.c_str(), config.charname.c_str());
+    setup_comm(ai, user_str.c_str(), config.charname.c_str());
 }
 
 void close_dialog_callback(ui::active *t, void *call, void *client)

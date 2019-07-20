@@ -1,9 +1,9 @@
 /* client.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Nov 2017, 08:02:08 tquirk
+ *   last updated 20 Jul 2019, 14:48:08 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,7 +38,7 @@
 
 #include "cuddly-gl/ui.h"
 
-void setup_comm(struct addrinfo *, const char *, const char *, const char *);
+void setup_comm(struct addrinfo *, const char *, const char *);
 void cleanup_comm(void);
 
 void create_login_dialog(ui::context *);

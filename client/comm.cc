@@ -523,7 +523,6 @@ void Comm::send(packet *p, size_t len)
 }
 
 void Comm::send_login(const std::string& user,
-                      const std::string& pass,
                       const std::string& character)
 {
     packet *req = new packet;
@@ -533,7 +532,6 @@ void Comm::send_login(const std::string& user,
     req->log.version = 1;
     req->log.sequence = this->sequence++;
     strncpy(req->log.username, user.c_str(), sizeof(req->log.username));
-    strncpy(req->log.password, pass.c_str(), sizeof(req->log.password));
     strncpy(req->log.charname, character.c_str(), sizeof(req->log.charname));
     this->send(req, sizeof(login_request));
 }

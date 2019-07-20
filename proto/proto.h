@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jun 2019, 08:04:18 tquirk
+ *   last updated 19 Jul 2019, 08:16:51 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -110,7 +110,6 @@ typedef struct login_request_tag
     uint8_t version;        /* protocol version number */
     uint64_t sequence;      /* timestamp / sequence number */
     char username[64];      /* in UTF-8 */
-    char password[64];
     char charname[64];      /* in UTF-8 */
     uint8_t pubkey[256];    /* in DER format */
 } __attribute__ ((__packed__))

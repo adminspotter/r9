@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jul 2019, 07:34:19 tquirk
+ *   last updated 19 Jul 2019, 08:12:30 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -416,7 +416,7 @@ void listen_socket::login_user(access_list& p)
     std::string username(p.buf.log.username,
                          std::min(sizeof(p.buf.log.username),
                                   strlen(p.buf.log.username)));
-    uint64_t userid = database->check_authentication(username, std::string(),
+    uint64_t userid = database->check_authentication(username,
                                                      p.buf.log.pubkey,
                                                      R9_PUBKEY_SZ);
     if (userid == 0LL)

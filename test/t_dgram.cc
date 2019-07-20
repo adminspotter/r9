@@ -125,7 +125,6 @@ void test_connect_user(void)
     al.what.login.who.dgram = NULL;
     al.buf.basic.type = TYPE_LOGREQ;
     strncpy(al.buf.log.username, "bobbo", sizeof(al.buf.log.username));
-    strncpy(al.buf.log.password, "argh!", sizeof(al.buf.log.password));
     strncpy(al.buf.log.charname, "howdy", sizeof(al.buf.log.charname));
 
     dgs->connect_user(bu, al);
