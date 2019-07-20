@@ -82,6 +82,7 @@ class Comm
     void create_socket(struct addrinfo *);
 
     int encrypt_packet(packet&);
+    int decrypt_packet(packet&);
 
     static void *send_worker(void *);
     static void *recv_worker(void *);

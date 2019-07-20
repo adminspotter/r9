@@ -17,7 +17,7 @@ struct object *self_obj;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
 bool bad_ntoh = false, bad_hton = false, bad_encrypt = false;
-bool sendto_error = false;
+bool bad_decrypt = false, sendto_error = false;
 bool bad_pubkey = false, bad_shared_secret = false;
 int recvfrom_calls, packet_type;
 
@@ -108,6 +108,15 @@ int r9_encrypt(const unsigned char *a, int b,
                uint64_t e, unsigned char *f)
 {
     if (bad_encrypt == true)
+        return 0;
+    return 1;
+}
+
+int r9_decrypt(const unsigned char *a, int b,
+               const unsigned char *c, unsigned char *d,
+               uint64_t e, unsigned char *f)
+{
+    if (bad_decrypt == true)
         return 0;
     return 1;
 }
@@ -454,6 +463,7 @@ void test_recv_bad_sender(void)
     recvfrom_error = false;
     bad_sender = true;
     bad_packet = false;
+    bad_decrypt = false;
     bad_ntoh = false;
     recvfrom_calls = 0;
 
@@ -491,12 +501,13 @@ void test_recv_bad_packet(void)
     expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
-    expected_packet.basic.type = 123;
+    expected_packet.basic.type = TYPE_PNGPKT;
     expected_packet.basic.version = 1;
 
     recvfrom_error = false;
     bad_sender = false;
     bad_packet = true;
+    bad_decrypt = false;
     bad_ntoh = false;
     recvfrom_calls = 0;
 
@@ -518,6 +529,50 @@ void test_recv_bad_packet(void)
     new_clog.str(std::string());
 }
 
+void test_recv_no_decrypt(void)
+{
+    std::string test = "decrypt failure: ";
+    fake_Comm *comm = NULL;
+    struct addrinfo ai;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    memset((void *)&expected_packet, 0, sizeof(packet));
+    expected_packet.basic.type = TYPE_ACKPKT;
+    expected_packet.basic.version = 1;
+
+    recvfrom_error = false;
+    bad_sender = false;
+    bad_packet = false;
+    bad_decrypt = true;
+    bad_ntoh = false;
+    recvfrom_calls = 0;
+
+    try
+    {
+        comm = new fake_Comm(&ai);
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
+    while (new_clog.str().size() == 0)
+        ;
+    delete comm;
+
+    isnt(new_clog.str().find("Error while decrypting packet"),
+         std::string::npos,
+         test + "expected log entry");
+    new_clog.str(std::string());
+}
+
 void test_recv_no_ntoh(void)
 {
     std::string test = "ntoh failure: ";
@@ -533,12 +588,13 @@ void test_recv_no_ntoh(void)
     expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
-    expected_packet.basic.type = TYPE_PNGPKT;
+    expected_packet.basic.type = TYPE_ACKPKT;
     expected_packet.basic.version = 1;
 
     recvfrom_error = false;
     bad_sender = false;
     bad_packet = false;
+    bad_decrypt = false;
     bad_ntoh = true;
     recvfrom_calls = 0;
 
@@ -582,6 +638,7 @@ void test_recv_packet(void)
     recvfrom_error = false;
     bad_sender = false;
     bad_packet = false;
+    bad_decrypt = false;
     bad_ntoh = false;
     recvfrom_calls = 0;
 
@@ -830,7 +887,7 @@ void test_recv_unsupported(void)
 
 int main(int argc, char **argv)
 {
-    plan(46);
+    plan(47);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
@@ -846,6 +903,7 @@ int main(int argc, char **argv)
     test_recv_bad_result();
     test_recv_bad_sender();
     test_recv_bad_packet();
+    test_recv_no_decrypt();
     test_recv_no_ntoh();
     test_recv_packet();
     test_recv_ping();

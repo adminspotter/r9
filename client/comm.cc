@@ -139,6 +139,24 @@ int Comm::encrypt_packet(packet& p)
     return 1;
 }
 
+int Comm::decrypt_packet(packet& p)
+{
+    size_t pkt_sz;
+
+    if (p.basic.type == TYPE_SRVKEY)
+        return 1;
+    if ((pkt_sz = packet_size(&p) - sizeof(basic_packet)) > 0)
+    {
+        uint8_t *pkt = (uint8_t *)&p + sizeof(basic_packet);
+
+        return r9_decrypt(pkt, pkt_sz,
+                          this->key,
+                          this->iv, p.basic.sequence,
+                          pkt);
+    }
+    return 1;
+}
+
 void *Comm::send_worker(void *arg)
 {
     Comm *comm = (Comm *)arg;
@@ -219,6 +237,11 @@ void *Comm::recv_worker(void *arg)
         {
             std::clog << "Unknown packet type " << (int)buf.basic.type
                       << std::endl;
+            continue;
+        }
+        if (!comm->decrypt_packet(buf))
+        {
+            std::clog << "Error while decrypting packet" << std::endl;
             continue;
         }
         /* We should be able to convert to host byte ordering */
