@@ -61,13 +61,12 @@ These are actions which will only ever be initiated by a client.
   </svg>
 </div>
 
-* type
-* version
-* sequence
-* username
-* password
-* charname
-* pubkey
+* type (unsigned byte)
+* version (unsigned byte)
+* sequence (unsigned 64-bit integer)
+* username (64-byte character string)
+* charname (64-byte character string)
+* pubkey (256-byte unsigned byte string)
 
 ### Logout Request ###
 
@@ -104,19 +103,19 @@ The `type` field is set to `LGTREQ`.
   </svg>
 </div>
 
-* type
-* version
-* sequence
-* object_id
-* action_id
-* power_level
-* x_pos_source
-* y_pos_source
-* z_pos_source
-* dest_object_id
-* x_pos_dest
-* y_pos_dest
-* z_pos_dest
+* type (unsigned byte)
+* version (unsigned byte)
+* sequence (64-bit unsigned integer)
+* object_id (64-bit unsigned integer)
+* action_id (16-bit unsigned integer)
+* power_level (unsigned byte)
+* x_pos_source (64-bit unsigned integer)
+* y_pos_source (64-bit unsigned integer)
+* z_pos_source (64-bit unsigned integer)
+* dest_object_id (64-bit unsigned integer)
+* x_pos_dest (64-bit unsigned integer)
+* y_pos_dest (64-bit unsigned integer)
+* z_pos_dest (64-bit unsigned integer)
 
 ## Server-initiated actions ##
 
@@ -124,10 +123,11 @@ The `type` field is set to `LGTREQ`.
 
 This is the initial response to a [login request](#login%20request).
 
-* type
-* version
-* sequence
-* pubkey
+* type (unsigned byte)
+* version (unsigned byte)
+* sequence (64-bit unsigned integer)
+* pubkey (256-byte unsigned byte string)
+* iv (16-byte unsigned byte string)
 
 ### Position Update ###
 
@@ -142,23 +142,28 @@ This is the initial response to a [login request](#login%20request).
   </svg>
 </div>
 
-* type
-* version
-* sequence
-* object_id
-* frame_number
-* x_pos
-* y_pos
-* z_pos
-* x_orient
-* y_orient
-* z_orient
-* w_orient
-* x_look
-* y_look
-* z_look
+* type (unsigned byte)
+* version (unsigned byte)
+* sequence (64-bit unsigned integer)
+* object_id (64-bit unsigned integer)
+* frame_number (16-bit unsigned integer)
+* x_pos (64-bit unsigned integer)
+* y_pos (64-bit unsigned integer)
+* z_pos (64-bit unsigned integer)
+* x_orient (32-bit unsigned integer)
+* y_orient (32-bit unsigned integer)
+* z_orient (32-bit unsigned integer)
+* w_orient (32-bit unsigned integer)
+* x_look (32-bit unsigned integer)
+* y_look (32-bit unsigned integer)
+* z_look (32-bit unsigned integer)
 
 ### Server Notification ###
+
+This packet is still in the planning stages.  It currently has fields,
+but they will almost certainly change once it's determined how these
+packets should function.  Currently the server never sends it, and the
+client mostly ignores any one it may happen to receive.
 
 ### Ping ###
 
