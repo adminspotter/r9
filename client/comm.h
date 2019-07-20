@@ -1,6 +1,6 @@
 /* comm.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 May 2019, 12:43:12 tquirk
+ *   last updated 20 Jul 2019, 09:53:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -53,6 +53,7 @@
 #include <glm/vec3.hpp>
 
 #include "../proto/proto.h"
+#include "../proto/encrypt.h"
 
 class Comm
 {
@@ -69,12 +70,14 @@ class Comm
     pthread_cond_t send_queue_not_empty;
     std::queue<packet *> send_queue;
 
+    uint8_t key[R9_SYMMETRIC_KEY_BUF_SZ], iv[R9_SYMMETRIC_IV_BUF_SZ];
+
     static uint64_t sequence;
     uint64_t src_object_id;
     std::atomic<bool> thread_exit_flag;
 
     typedef void (Comm::*pkt_handler)(packet&);
-    static pkt_handler pkt_type[7];
+    static pkt_handler pkt_type[8];
 
     void create_socket(struct addrinfo *);
 
@@ -85,6 +88,7 @@ class Comm
     void handle_ackpkt(packet&);
     void handle_posupd(packet&);
     void handle_srvnot(packet&);
+    void handle_srvkey(packet&);
     void handle_unsupported(packet&);
 
   protected:

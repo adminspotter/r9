@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Jul 2019, 09:08:30 tquirk
+ *   last updated 20 Jul 2019, 09:54:22 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -66,6 +66,10 @@
 
 #include "client_core.h"
 #include "comm.h"
+#include "configdata.h"
+
+#include "../proto/dh.h"
+#include "../proto/ec.h"
 
 uint64_t Comm::sequence = 0LL;
 
@@ -78,7 +82,8 @@ Comm::pkt_handler Comm::pkt_type[] =
     &Comm::handle_posupd,       /* Position update */
     &Comm::handle_srvnot,       /* Server notice   */
     &Comm::handle_pngpkt,       /* Ping            */
-    &Comm::handle_unsupported   /* Logout req      */
+    &Comm::handle_unsupported,  /* Logout req      */
+    &Comm::handle_srvkey        /* Server key      */
 };
 
 #define COMM_MEMBER(a, b) ((a).*(b))
@@ -274,6 +279,31 @@ void Comm::handle_posupd(packet& p)
 void Comm::handle_srvnot(packet& p)
 {
     std::clog << "Got a server notice" << std::endl;
+}
+
+void Comm::handle_srvkey(packet& p)
+{
+    EVP_PKEY *pub = NULL;
+    struct dh_message *shared = NULL;
+
+    /* TODO: there should be some authentication done here.  Perhaps a
+     * known_hosts mechanism like openssh?
+     */
+    if ((pub = public_key_to_pkey(p.key.pubkey, R9_PUBKEY_SZ)) == NULL)
+    {
+        std::clog << "Got a bad public key" << std::endl;
+        return;
+    }
+    if ((shared = dh_shared_secret(config.priv_key, pub)) == NULL)
+    {
+        OPENSSL_free(pub);
+        std::clog << "Could not derive shared secret" << std::endl;
+        return;
+    }
+    memcpy(this->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
+    free_dh_message(shared);
+    OPENSSL_free(pub);
+    memcpy(p.key.iv, this->iv, R9_SYMMETRIC_IV_BUF_SZ);
 }
 
 void Comm::handle_unsupported(packet& p)

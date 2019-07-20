@@ -2,20 +2,29 @@
 
 using namespace TAP;
 
+#include "../client/configdata.h"
 #include "../client/comm.h"
 #include "../client/object.h"
 
+#include "../proto/dh.h"
+#include "../proto/ec.h"
+
 std::stringstream new_clog;
 
+ConfigData config;
 ObjectCache *obj = new ObjectCache("fake");
 struct object *self_obj;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
 bool bad_ntoh = false, bad_hton = false, sendto_error = false;
+bool bad_pubkey = false, bad_shared_secret = false;
 int recvfrom_calls, packet_type;
 
 struct sockaddr_storage expected_sockaddr;
 packet expected_packet;
+
+unsigned char dh_msg[R9_SYMMETRIC_KEY_BUF_SZ];
+struct dh_message msg = { dh_msg, sizeof(dh_msg) };
 
 void move_object(uint64_t a, uint16_t b,
                  float c, float d, float e,
@@ -91,6 +100,34 @@ int hton_packet(packet *a, size_t b)
     return 1;
 }
 
+EVP_PKEY *public_key_to_pkey(uint8_t *a, size_t b)
+{
+    if (bad_pubkey == true)
+        return NULL;
+    return (EVP_PKEY *)&msg;
+}
+
+struct dh_message *dh_shared_secret(EVP_PKEY *a, EVP_PKEY *b)
+{
+    if (bad_shared_secret == true)
+        return NULL;
+    return &msg;
+}
+
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+void CRYPTO_free(void *a, const char *b, int c)
+#else
+void CRYPTO_free(void *a)
+#endif
+{
+    /* Do nothing. */
+}
+
+void free_dh_message(struct dh_message *a)
+{
+    /* Do nothing. */
+}
+
 class fake_Comm : public Comm
 {
   public:
@@ -100,11 +137,14 @@ class fake_Comm : public Comm
 
     using Comm::send_queue;
     using Comm::src_object_id;
+    using Comm::key;
+    using Comm::iv;
 
     using Comm::handle_pngpkt;
     using Comm::handle_ackpkt;
     using Comm::handle_posupd;
     using Comm::handle_srvnot;
+    using Comm::handle_srvkey;
     using Comm::handle_unsupported;
 };
 
@@ -660,6 +700,57 @@ void test_recv_server_notice(void)
     new_clog.str(std::string());
 }
 
+void test_recv_server_key(void)
+{
+    std::string test = "handle_srvkey: ", st;
+    fake_Comm *comm = NULL;
+
+    memset((void *)&expected_packet, 0, sizeof(packet));
+    expected_packet.basic.type = TYPE_SRVKEY;
+    expected_packet.basic.version = 1;
+
+    try
+    {
+        comm = new fake_Comm();
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+
+    st = "bad pubkey: ";
+    bad_pubkey = true;
+    bad_shared_secret = false;
+
+    comm->handle_srvkey(expected_packet);
+
+    isnt(new_clog.str().find("Got a bad public key"),
+         std::string::npos,
+         test + st + "expected log entry");
+    new_clog.str(std::string());
+
+    st = "bad shared secret: ";
+    bad_pubkey = false;
+    bad_shared_secret = true;
+
+    comm->handle_srvkey(expected_packet);
+
+    isnt(new_clog.str().find("Could not derive shared secret"),
+         std::string::npos,
+         test + st + "expected log entry");
+    new_clog.str(std::string());
+
+    st = "good srvkey: ";
+    bad_pubkey = false;
+    bad_shared_secret = false;
+
+    comm->handle_srvkey(expected_packet);
+
+    is(new_clog.str().size(), 0, test + st + "no log entry");
+
+    delete comm;
+}
+
 void test_recv_unsupported(void)
 {
     std::string test = "handle_unsupported: ";
@@ -688,7 +779,7 @@ void test_recv_unsupported(void)
 
 int main(int argc, char **argv)
 {
-    plan(42);
+    plan(45);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
@@ -709,6 +800,7 @@ int main(int argc, char **argv)
     test_recv_ack();
     test_recv_pos_update();
     test_recv_server_notice();
+    test_recv_server_key();
     test_recv_unsupported();
     return exit_status();
 }
