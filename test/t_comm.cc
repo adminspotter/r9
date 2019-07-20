@@ -58,6 +58,8 @@ ssize_t recvfrom(int a,
     else
         memcpy((void *)e, (void *)&expected_sockaddr, *f);
     memcpy(b, (void *)&expected_packet, c);
+    if (bad_packet == true)
+        ((packet *)b)->basic.type = 123;
     return c;
 }
 
