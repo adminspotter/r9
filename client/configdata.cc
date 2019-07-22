@@ -56,7 +56,7 @@
 #include "configdata.h"
 #include "l10n.h"
 
-#include <proto/key.h>
+#include "../proto/key.h"
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 
@@ -242,6 +242,7 @@ bool ConfigData::read_crypto_key(const std::string& passphrase)
             pp[i++] = (unsigned char)c;
         pp[i] = 0;
         this->priv_key = file_to_pkey(this->key_fname.c_str(), pp);
+        pkey_to_public_key(this->priv_key, this->pub_key, R9_PUBKEY_SZ);
     }
     return this->priv_key != NULL;
 }

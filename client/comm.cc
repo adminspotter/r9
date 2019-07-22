@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2019, 09:54:22 tquirk
+ *   last updated 22 Jul 2019, 07:06:07 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -533,6 +533,7 @@ void Comm::send_login(const std::string& user,
     req->log.sequence = this->sequence++;
     strncpy(req->log.username, user.c_str(), sizeof(req->log.username));
     strncpy(req->log.charname, character.c_str(), sizeof(req->log.charname));
+    memcpy(req->log.pubkey, config.pub_key, R9_PUBKEY_SZ);
     this->send(req, sizeof(login_request));
 }
 
