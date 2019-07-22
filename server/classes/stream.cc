@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jul 2019, 08:28:45 tquirk
+ *   last updated 21 Jul 2019, 23:01:38 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -118,10 +118,18 @@ void stream_socket::handle_packet(packet& p, int len, int fd)
 {
     auto handler = packet_handlers.find(p.basic.type);
     auto found = this->fds.find(fd);
+    base_user *u = NULL;
 
-    if (found != this->fds.end() && handler != packet_handlers.end())
-        if (found->second->decrypt_packet(p) && ntoh_packet(&p, len))
-            (handler->second)(this, p, found->second, &fd);
+    if (handler != packet_handlers.end())
+    {
+        if (found != this->fds.end())
+        {
+            u = found->second;
+            if (!u->decrypt_packet(p) || !ntoh_packet(&p, len))
+                return;
+        }
+        (handler->second)(this, p, u, &fd);
+    }
 }
 
 void stream_socket::handle_login(listen_socket *s, packet& p,

@@ -1,6 +1,6 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jul 2019, 08:15:37 tquirk
+ *   last updated 21 Jul 2019, 23:04:40 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -155,10 +155,19 @@ void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
 {
     auto handler = packet_handlers.find(p.basic.type);
     auto found = this->socks.find(sa);
+    base_user *u = NULL;
 
-    if (found != this->socks.end() && handler != packet_handlers.end())
-        if (found->second->decrypt_packet(p) && ntoh_packet(&p, len))
-            (handler->second)(this, p, found->second, sa);
+    if (handler != packet_handlers.end())
+    {
+        if (found != this->socks.end())
+        {
+            u = found->second;
+            if (!u->decrypt_packet(p) || !ntoh_packet(&p, len))
+                goto BAILOUT;
+        }
+        (handler->second)(this, p, u, sa);
+    }
+  BAILOUT:
     delete sa;
 }
 
