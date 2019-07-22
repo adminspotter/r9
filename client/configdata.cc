@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Apr 2019, 08:58:15 tquirk
+ *   last updated 22 Jul 2019, 07:08:22 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -177,22 +177,7 @@ void ConfigData::parse_command_line(int count, const char **args)
         }
     }
     this->make_config_dirs();
-    try { this->read_config_file(); }
-    catch (std::ios_base::failure& e)
-    {
-#if HAVE_IOS_BASE_FAILURE_CODE
-        /* No idea if we'll actually get errno values here */
-        if (e.code().value() == ENOENT)
-#else
-        struct stat state;
-
-        if (stat(this->config_fname.c_str(), &state) && errno == ENOENT)
-#endif /* HAVE_IOS_BASE_FAILURE_CODE */
-            /* Nothing there; write a default config file */
-            this->write_config_file();
-        else
-            throw;
-    }
+    this->read_config_file();
 }
 
 void ConfigData::read_config_file(void)
@@ -200,6 +185,15 @@ void ConfigData::read_config_file(void)
     std::ifstream ifs(this->config_fname);
     std::string str, pristine_str;
 
+    if (!ifs)
+    {
+        struct stat state;
+
+        if (stat(this->config_fname.c_str(), &state) && errno == ENOENT)
+            /* Nothing there; write a default config file */
+            this->write_config_file();
+        return;
+    }
     while (ifs.good())
     {
         std::getline(ifs, str);

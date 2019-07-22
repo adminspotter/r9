@@ -36,27 +36,6 @@ AC_CANONICAL_HOST
 # Check for c++11 language support
 AX_CXX_COMPILE_STDCXX_11
 
-# Check for 'code' member in std::ios_base::failure
-AC_MSG_CHECKING([if std::ios_base::failure has the code member])
-AC_COMPILE_IFELSE(
-    [AC_LANG_PROGRAM(
-        [
-#include <cassert>
-#include <system_error>
-#include <ios>
-        ],
-        [
-std::ios_base::failure f("whoa", std::error_code(5, std::system_category()));
-
-assert(f.code().value() == 5);
-        ])
-    ],
-    [
-      AC_MSG_RESULT([yes])
-      AC_DEFINE(HAVE_IOS_BASE_FAILURE_CODE, [1], [g++ has a bug in its std::ios_base::failure implementation])
-    ],
-    [AC_MSG_RESULT([no])])
-
 # Check for std::put_time existence
 AC_MSG_CHECKING([if std::put_time exists])
 AC_COMPILE_IFELSE(
