@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Apr 2019, 08:58:15 tquirk
+ *   last updated 24 Jul 2019, 08:31:20 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -53,6 +53,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <boost/algorithm/string.hpp>
+
 #include "configdata.h"
 #include "l10n.h"
 
@@ -63,17 +65,20 @@
 const int ConfigData::SERVER_PORT    = 8500;
 const char ConfigData::SERVER_ADDR[] = "127.0.0.1";
 const char *ConfigData::FONT_PATHS[] = {
-#if defined(__APPLE__)
+    /* MacOS paths */
     "~/Library/Fonts",
     "/Library/Fonts",
     "/Network/Library/Fonts",
     "/System/Library/Fonts",
     "/System/Folder/Fonts",
-#elif defined(__linux__)
+    /* Old-school Linux paths */
     "/usr/share/fonts",
     "/usr/share/fonts/default/Type1",
     "/usr/share/fonts/default/ttf",
-#endif
+    /* Debian paths */
+    "/usr/share/fonts/opentype",
+    "/usr/share/fonts/truetype",
+    "/usr/share/fonts/type1",
     NULL
 };
 
@@ -139,8 +144,11 @@ void ConfigData::set_defaults(void)
     this->font_paths.clear();
     while (*ptr != NULL)
     {
+        struct stat state;
+
         str = *ptr;
-        this->font_paths.push_back(str);
+        if (stat(str.c_str(), &state) == 0)
+            this->font_paths.push_back(str);
         ++ptr;
     }
 
@@ -359,16 +367,28 @@ static void read_paths(const std::string& key,
 {
     std::vector<std::string> *element = (std::vector<std::string> *)ptr;
     std::string str = (std::string&)value;
-    std::string::size_type loc;
+    std::vector<std::string> paths;
+    std::string::size_type pos;
+    struct stat state;
 
     /* Split things on : */
     element->clear();
-    while ((loc = str.find(':')) != std::string::npos)
+    boost::split(paths, str, [](char c){ return c == ':'; });
+    for (auto path : paths)
     {
-        element->push_back(str.substr(0, loc));
-        str.erase(0, loc + 1);
+        if ((pos = path.find('~')) != std::string::npos)
+        {
+            char *home;
+            std::string home_str;
+
+            if ((home = getenv("HOME")) == NULL)
+                throw std::runtime_error("Could not find home directory");
+            home_str = home;
+            path.replace(pos, 1, home_str);
+        }
+        if (stat(path.c_str(), &state) != -1)
+            element->push_back(path);
     }
-    element->push_back(str);
 }
 
 static void read_integer(const std::string& key,

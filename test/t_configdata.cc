@@ -94,7 +94,7 @@ void create_temp_config_file(std::string& fname)
     ofs << "ServerPort 12345   	       " << std::endl;
     ofs << "Username  		someuser" << std::endl;
     ofs << "   Charname    worstcharnameintheworld   " << std::endl;
-    ofs << "FontPaths /a/b/c:~/d/e/f:/g/h/i" << std::endl;
+    ofs << "FontPaths /bin:~:/tmp:/does_not_exist" << std::endl;
     ofs << "KeyFile " << fname << ".key" << std::endl;
     ofs.close();
 }
@@ -310,11 +310,11 @@ void test_read_config_file(void)
     expected = "worstcharnameintheworld";
     is(conf->charname, expected, test + "expected charname");
     is(conf->font_paths.size(), 3, test + "expected font path size");
-    expected = "/a/b/c";
+    expected = "/bin";
     is(conf->font_paths[0], expected, test + "expected font path 1");
-    expected = "~/d/e/f";
+    expected = tmpdir;
     is(conf->font_paths[1], expected, test + "expected font path 2");
-    expected = "/g/h/i";
+    expected = "/tmp";
     is(conf->font_paths[2], expected, test + "expected font path 3");
     is(conf->key_fname, key_fname, test + "expected key filename");
 
@@ -367,8 +367,8 @@ void test_write_config_file(void)
     conf->username = "howdy";
     conf->charname = "anotherreallybadcharname";
     conf->font_paths.clear();
-    conf->font_paths.push_back("/a/b/c");
-    conf->font_paths.push_back("~/d/e/f");
+    conf->font_paths.push_back("/bin");
+    conf->font_paths.push_back("~");
     conf->key_fname = "somefileorother";
 
     conf->config_dir = tmpdir;
@@ -409,9 +409,9 @@ void test_write_config_file(void)
     expected = "anotherreallybadcharname";
     is(conf->charname, expected, test + st + "expected charname");
     is(conf->font_paths.size(), 2, test + st + "expected font path size");
-    expected = "/a/b/c";
+    expected = "/bin";
     is(conf->font_paths[0], expected, test + st + "expected font path 1");
-    expected = "~/d/e/f";
+    expected = tmpdir;
     is(conf->font_paths[1], expected, test + st + "expected font path 2");
     expected = "somefileorother";
     is(conf->key_fname, expected, test + st + "expected key filename");
