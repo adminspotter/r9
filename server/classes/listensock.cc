@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2019, 08:12:30 tquirk
+ *   last updated 24 Jul 2019, 08:56:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -37,6 +37,8 @@
 #include <openssl/crypto.h>
 #include <proto/dh.h>
 #include <proto/ec.h>
+
+#include <sstream>
 
 #include "listensock.h"
 #include "zone.h"
@@ -113,6 +115,23 @@ const base_user& base_user::operator=(const base_user& u)
     this->pending_logout = u.pending_logout;
     this->sequence = u.sequence;
     return *this;
+}
+
+std::string base_user::to_string(void)
+{
+    std::ostringstream s;
+    uint64_t obj_id = (this->default_slave != NULL
+                       ? this->default_slave->get_object_id()
+                       : 0LL);
+
+    s << this->username
+      << " (" << this->userid
+      << "), char " << this->charactername
+      << " (" << this->characterid
+      << ") obj " << obj_id
+      << ", " << this->actions.size()
+      << " actions, auth " << (int)this->auth_level;
+    return s.str();
 }
 
 void base_user::set_shared_key(EVP_PKEY *priv, uint8_t *pubkey, size_t key_sz)
@@ -446,16 +465,8 @@ void listen_socket::login_user(access_list& p)
             delete bu;
         return;
     }
-    std::clog << "login for user " << bu->username
-              << " (" << bu->userid
-              << "), char " << bu->charactername
-              << " (" << bu->characterid
-              << ") obj "
-              << (bu->default_slave != NULL
-                  ? bu->default_slave->get_object_id()
-                  : 0LL)
-              << ", " << bu->actions.size()
-              << " actions, auth " << (int)bu->auth_level << std::endl;
+
+    std::clog << "login for user " << bu->to_string() << std::endl;
     this->connect_user(bu, p);
     bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     zone->send_nearby_objects(bu->characterid);

@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Jul 2019, 07:34:30 tquirk
+ *   last updated 24 Jul 2019, 08:56:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -66,6 +66,8 @@ class base_user : public Control {
     virtual ~base_user();
 
     virtual const base_user& operator=(const base_user&);
+
+    std::string to_string(void);
 
     void set_shared_key(EVP_PKEY *, uint8_t *, size_t);
 

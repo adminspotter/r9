@@ -114,6 +114,8 @@ void test_base_user_create_delete(void)
     is(get_characterid_count, 1, test + "expected charid call");
     is(get_player_server_skills_count, 1, test + "expected server skills call");
 
+    diag(base->to_string());
+
     delete base;
     delete (fake_DB *)database;
 }
@@ -210,6 +212,7 @@ void test_base_user_disconnect_on_destroy(void)
     is(base->default_slave, go, test + "expected default slave");
     is(base->slave, go, test + "expected slave");
     is(go->natures.size(), 0, test + "expected natures size");
+    diag(base->to_string());
 
     delete base;
     is(go->natures.size(), 2, test + "expected natures size");
