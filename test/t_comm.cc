@@ -214,7 +214,7 @@ void test_send_bad_encrypt(void)
     packet *pkt = new packet;
 
     memset((void *)pkt, 0, sizeof(packet));
-    pkt->basic.type = TYPE_PNGPKT;
+    pkt->basic.type = TYPE_ACTREQ;
     pkt->basic.version = 1;
 
     bad_hton = false;
