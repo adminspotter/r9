@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jul 2019, 07:06:07 tquirk
+ *   last updated 24 Jul 2019, 00:07:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -344,7 +344,7 @@ void Comm::handle_srvkey(packet& p)
     memcpy(this->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
     free_dh_message(shared);
     OPENSSL_free(pub);
-    memcpy(p.key.iv, this->iv, R9_SYMMETRIC_IV_BUF_SZ);
+    memcpy(this->iv, p.key.iv, R9_SYMMETRIC_IV_BUF_SZ);
 }
 
 void Comm::handle_unsupported(packet& p)
