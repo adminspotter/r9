@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2019, 08:10:59 tquirk
+ *   last updated 23 Jul 2019, 08:32:31 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -66,27 +66,28 @@ uint64_t MySQL::check_authentication(const std::string& user,
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[768], key_str[key_size * 2 + 1];
     uint64_t retval = 0;
 
+    mysql_hex_string(key_str, (const char *)pubkey, key_size);
     snprintf(str, sizeof(str),
-             "SELECT a.playerid, b.public_key, LEN(b.public_key) "
+             "SELECT a.playerid "
              "FROM players AS a, player_keys AS b "
              "WHERE a.username='%.*s' "
              "AND a.playerid=b.playerid "
+             "AND HEX(b.public_key)='%.*s' "
              "AND b.not_before <= NOW() "
              "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
              "AND a.suspended=0 "
              "ORDER BY b.not_before DESC",
-             DB::MAX_USERNAME, user.c_str());
+             DB::MAX_USERNAME, user.c_str(), (int)(key_size * 2), key_str);
     this->db_connect();
 
     if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
         && (res = mysql_use_result(&(this->db_handle))) != NULL
         && (row = mysql_fetch_row(res)) != NULL)
     {
-        if (key_size == atoi(row[2]) && !memcmp(row[1], pubkey, key_size))
-            retval = strtoull(row[0], NULL, 10);
+        retval = strtoull(row[0], NULL, 10);
         mysql_free_result(res);
     }
     mysql_close(&(this->db_handle));
