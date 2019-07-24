@@ -1,6 +1,6 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jun 2019, 08:05:12 tquirk
+ *   last updated 24 Jul 2019, 08:59:13 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -82,7 +82,7 @@ int ntoh_packet(packet *p, size_t s)
 
 size_t packet_size(packet *p)
 {
-    if (p->basic.type > TYPE_PNGPKT)
+    if (p->basic.type > TYPE_SRVKEY)
         return 0;
     return (packet_handlers[p->basic.type].packetsize);
 }
