@@ -468,7 +468,6 @@ void listen_socket::login_user(access_list& p)
 
     std::clog << "login for user " << bu->to_string() << std::endl;
     this->connect_user(bu, p);
-    bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     zone->send_nearby_objects(bu->characterid);
 }
 
@@ -498,6 +497,7 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
     this->users[bu->userid] = bu;
     if (bu->default_slave != NULL)
         obj_id = bu->default_slave->get_object_id();
+    bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     bu->send_ack(TYPE_LOGREQ, bu->auth_level, obj_id);
 }
 
