@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2019-04-12 10:25-0700\n"
+"POT-Creation-Date: 2019-07-24 21:34-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,6 +19,86 @@ msgstr ""
 
 #: client/client.cc:81
 msgid "failed to initialize GLFW"
+msgstr ""
+
+#: client/comm.cc:97
+msgid "Couldn't open socket: "
+msgstr ""
+
+#: client/comm.cc:153
+msgid "got a send error: "
+msgstr ""
+
+#: client/comm.cc:185
+msgid "Error receiving packet: "
+msgstr ""
+
+#: client/comm.cc:192
+msgid "Got packet from unknown sender"
+msgstr ""
+
+#: client/comm.cc:198
+msgid "Unknown packet type "
+msgstr ""
+
+#: client/comm.cc:205
+msgid "Error while ntoh'ing packet"
+msgstr ""
+
+#: client/comm.cc:235
+msgid "Login response, access "
+msgstr ""
+
+#: client/comm.cc:237 client/comm.cc:248
+msgid "unknown"
+msgstr ""
+
+#: client/comm.cc:246
+msgid "Logout response, access "
+msgstr ""
+
+#: client/comm.cc:254
+msgid "Got an unknown ack packet: "
+msgstr ""
+
+#: client/comm.cc:282
+msgid "Got an unexpected packet type: "
+msgstr ""
+
+#: client/comm.cc:303
+msgid "Couldn't init queue mutex: "
+msgstr ""
+
+#: client/comm.cc:312
+msgid "Couldn't init queue-not-empty cond: "
+msgstr ""
+
+#: client/comm.cc:357
+msgid "Couldn't start send thread: "
+msgstr ""
+
+#: client/comm.cc:371
+msgid "Couldn't start recv thread: "
+msgstr ""
+
+#: client/comm.cc:398
+msgid "Couldn't wake send thread: "
+msgstr ""
+
+#: client/comm.cc:409
+msgid "Couldn't join send thread: "
+msgstr ""
+
+#: client/comm.cc:419
+msgid "Couldn't cancel recv thread: "
+msgstr ""
+
+#: client/comm.cc:430
+msgid "Couldn't join recv thread: "
+msgstr ""
+
+#: client/comm.cc:443
+msgid "Error hton'ing packet"
 msgstr ""
 
 #: client/comm_dialog.cc:72
@@ -41,8 +121,20 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: client/configdata.cc:210
+#: client/configdata.cc:184
+msgid "WARNING: Unknown option "
+msgstr ""
+
+#: client/configdata.cc:218
 msgid "Skipping bad config line: "
+msgstr ""
+
+#: client/configdata.cc:273
+msgid "Error creating r9 preferences directory "
+msgstr ""
+
+#: client/configdata.cc:286 client/configdata.cc:298 client/configdata.cc:310
+msgid "Can't make config directory "
 msgstr ""
 
 #: util/r9_keygen.cc:113 util/r9_keygen.cc:123

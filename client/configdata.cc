@@ -181,7 +181,7 @@ void ConfigData::parse_command_line(int count, const char **args)
             else if ((*j) == "-f")
                 this->config_fname = *(++j);
             else
-                std::clog << "WARNING: Unknown option " << *j;
+                std::clog << _("WARNING: Unknown option ") << *j;
         }
     }
     this->make_config_dirs();
@@ -270,7 +270,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Error creating r9 preferences directory " << dirname << ": "
+        s << _("Error creating r9 preferences directory ") << dirname << ": "
           << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
@@ -283,7 +283,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Can't make config directory " << subdirname << ": "
+        s << _("Can't make config directory ") << subdirname << ": "
           << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
@@ -295,7 +295,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Can't make config directory " << subdirname << ": "
+        s << _("Can't make config directory ") << subdirname << ": "
           << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
@@ -307,7 +307,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Can't make config directory " << subdirname << ": "
+        s << _("Can't make config directory ") << subdirname << ": "
           << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
