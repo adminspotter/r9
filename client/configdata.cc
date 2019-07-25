@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2019, 08:31:20 tquirk
+ *   last updated 25 Jul 2019, 08:39:13 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -376,15 +376,13 @@ static void read_paths(const std::string& key,
     boost::split(paths, str, [](char c){ return c == ':'; });
     for (auto path : paths)
     {
-        if ((pos = path.find('~')) != std::string::npos)
+        if ((pos = path.find('~')) == 0)
         {
             char *home;
-            std::string home_str;
 
             if ((home = getenv("HOME")) == NULL)
                 throw std::runtime_error("Could not find home directory");
-            home_str = home;
-            path.replace(pos, 1, home_str);
+            path.replace(pos, 1, home);
         }
         if (stat(path.c_str(), &state) != -1)
             element->push_back(path);

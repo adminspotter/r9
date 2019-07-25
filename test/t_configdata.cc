@@ -23,13 +23,17 @@ using namespace TAP;
 #define TMP_ROOT "/tmp"
 
 std::string tmpdir;
+bool getenv_error = false;
 int mkdir_fail_index = 5, mkdir_count;
 
 char *getenv(const char *a)
 {
-    /* Cast away const, haha! */
     if (!strcmp(a, "HOME"))
+    {
+        if (getenv_error == true)
+            return NULL;
         return (char *)tmpdir.c_str();
+    }
     return NULL;
 }
 
@@ -341,6 +345,55 @@ void test_read_config_file(void)
     cleanup_fixture();
 }
 
+void test_bad_getenv_home(void)
+{
+    std::string test = "getenv failure: ";
+    ConfigData *conf;
+
+    setup_fixture();
+    try
+    {
+        conf = new ConfigData;
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+
+    conf->config_fname = tmpdir + "/config";
+    std::ofstream conf_file(conf->config_fname,
+                            std::fstream::out | std::fstream::trunc);
+    conf_file << "FontPaths ~:/whatever" << std::endl;
+    conf_file.close();
+
+    getenv_error = true;
+
+    try
+    {
+        conf->read_config_file();
+        fail(test + "no exception");
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Could not find home directory"), std::string::npos,
+             test + "expected exception");
+    }
+
+    getenv_error = false;
+
+    try
+    {
+        delete conf;
+    }
+    catch (...)
+    {
+        fail(test + "destructor exception");
+    }
+    cleanup_fixture();
+}
+
 /* Previous test proved that read_config_file works, so we'll use
  * write_config_file to write one out, and then read_config_file into
  * a new object to make sure the file was written as expected.
@@ -429,7 +482,7 @@ void test_write_config_file(void)
 
 int main(int argc, char **argv)
 {
-    plan(45);
+    plan(48);
 
 #if OPENSSL_API_COMPAT < 0x10100000
     OpenSSL_add_all_algorithms();
@@ -440,6 +493,7 @@ int main(int argc, char **argv)
     test_make_config_dirs();
     test_parse_command_line();
     test_read_config_file();
+    test_bad_getenv_home();
     test_write_config_file();
     return exit_status();
 }
