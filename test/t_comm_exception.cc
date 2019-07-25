@@ -12,7 +12,8 @@ struct object *self_obj;
 
 bool socket_error = false, mutex_error = false, cond_error = false;
 bool create_send_error = false, create_recv_error = false;
-bool broadcast_error = false, join_error = false, cancel_error = false;
+bool broadcast_error = false, join_error = false, second_join_error = false;
+bool cancel_error = false;
 int create_calls, cancel_calls, join_calls;
 int cond_destroy_calls, mutex_destroy_calls;
 
@@ -84,7 +85,9 @@ int pthread_cancel(pthread_t a)
 int pthread_join(pthread_t a, void **b)
 {
     ++join_calls;
-    if (join_error == true)
+    if (join_error == true && join_calls == 1)
+        return EINVAL;
+    if (second_join_error == true && join_calls == 2)
         return EINVAL;
     return 0;
 }
@@ -307,6 +310,7 @@ void test_stop_failure(void)
     st = "join: ";
     broadcast_error = false;
     join_error = true;
+    join_calls = 0;
     try
     {
         obj->stop();
@@ -342,13 +346,32 @@ void test_stop_failure(void)
         fail(test + st + "wrong error type");
     }
 
+    st = "second join: ";
     cancel_error = false;
+    second_join_error = true;
+    join_calls = 0;
+    try
+    {
+        obj->stop();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Couldn't join recv thread"), std::string::npos,
+             test + st + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + st + "wrong error type");
+    }
+
     delete obj;
 }
 
 int main(int argc, char **argv)
 {
-    plan(20);
+    plan(21);
 
     test_socket_failure();
     test_mutex_failure();

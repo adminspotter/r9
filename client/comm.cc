@@ -66,6 +66,7 @@
 
 #include "client_core.h"
 #include "comm.h"
+#include "l10n.h"
 #include "configdata.h"
 
 #include "../proto/dh.h"
@@ -98,7 +99,7 @@ void Comm::create_socket(struct addrinfo *ai)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Couldn't open socket: " << err << " (" << errno << ")";
+        s << _("Couldn't open socket: ") << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
     memcpy(&this->remote, ai->ai_addr, sizeof(sockaddr_storage));
@@ -190,7 +191,7 @@ void *Comm::send_worker(void *arg)
             char err[128];
 
             strerror_r(errno, err, sizeof(err));
-            std::clog << "got a send error: "
+            std::clog << _("got a send error: ")
                       << err << " (" << errno << ')' << std::endl;
         }
         comm->send_queue.pop();
@@ -222,20 +223,20 @@ void *Comm::recv_worker(void *arg)
             char err[128];
 
             strerror_r(errno, err, sizeof(err));
-            std::clog << "Error receiving packet: "
+            std::clog << _("Error receiving packet: ")
                       << err << " (" << errno << ')' << std::endl;
             continue;
         }
         /* Verify that the sender is who we think it should be */
         if (memcmp(&sin, &(comm->remote), fromlen))
         {
-            std::clog << "Got packet from unknown sender" << std::endl;
+            std::clog << _("Got packet from unknown sender") << std::endl;
             continue;
         }
         /* Needs to be a real packet type */
         if (buf.basic.type >= sizeof(pkt_type) / sizeof(pkt_handler))
         {
-            std::clog << "Unknown packet type " << (int)buf.basic.type
+            std::clog << _("Unknown packet type ") << (int)buf.basic.type
                       << std::endl;
             continue;
         }
@@ -247,7 +248,7 @@ void *Comm::recv_worker(void *arg)
         /* We should be able to convert to host byte ordering */
         if (!ntoh_packet(&buf, len))
         {
-            std::clog << "Error while ntoh'ing packet" << std::endl;
+            std::clog << _("Error while ntoh'ing packet") << std::endl;
             continue;
         }
 
@@ -277,26 +278,26 @@ void Comm::handle_ackpkt(packet& p)
     {
       case TYPE_LOGREQ:
         /* The response to our login request */
-        std::clog << "Login response, type ";
+        std::clog << _("Login response, access ");
         if (a.misc[0] < 1 || a.misc[0] >= sizeof(access_type))
-            std::clog << "unknown" << std::endl;
+            std::clog << _("unknown") << std::endl;
         else
-            std::clog << access_type[a.misc[0]] << " access" << std::endl;
+            std::clog << access_type[a.misc[0]] << std::endl;
         this->src_object_id = a.misc[1];
         self_obj = &((*obj)[this->src_object_id]);
         break;
 
       case TYPE_LGTREQ:
         /* The response to our logout request */
-        std::clog << "Logout response, type ";
+        std::clog << _("Logout response, access ");
         if (a.misc[0] < 1 || a.misc[0] >= sizeof(access_type))
-            std::clog << "unknown" << std::endl;
+            std::clog << _("unknown") << std::endl;
         else
-            std::clog << access_type[a.misc[0]] << " access" << std::endl;
+            std::clog << access_type[a.misc[0]] << std::endl;
         break;
 
       default:
-        std::clog << "Got an unknown ack packet: " << a.request
+        std::clog << _("Got an unknown ack packet: ") << a.request
                   << std::endl;
         break;
     }
@@ -349,7 +350,7 @@ void Comm::handle_srvkey(packet& p)
 
 void Comm::handle_unsupported(packet& p)
 {
-    std::clog << "Got an unexpected packet type: " << (int)p.basic.type
+    std::clog << _("Got an unexpected packet type: ") << (int)p.basic.type
               << std::endl;
 }
 
@@ -370,7 +371,7 @@ void Comm::init(void)
 
         strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << "Couldn't init queue mutex: " << err << " (" << ret << ")";
+        s << _("Couldn't init queue mutex: ") << err << " (" << ret << ")";
         throw std::runtime_error(s.str());
     }
     if ((ret = pthread_cond_init(&send_queue_not_empty, NULL)) != 0)
@@ -379,7 +380,7 @@ void Comm::init(void)
 
         strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << "Couldn't init queue-not-empty cond: "
+        s << _("Couldn't init queue-not-empty cond: ")
           << err << " (" << ret << ")";
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
@@ -424,7 +425,7 @@ void Comm::start(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Couldn't start send thread: " << err << " (" << ret << ")";
+        s << _("Couldn't start send thread: ") << err << " (" << ret << ")";
         pthread_cond_destroy(&(this->send_queue_not_empty));
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
@@ -438,7 +439,7 @@ void Comm::start(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Couldn't start recv thread: " << err << " (" << ret << ")";
+        s << _("Couldn't start recv thread: ") << err << " (" << ret << ")";
         pthread_cancel(this->send_thread);
         sleep(0);
         pthread_join(this->send_thread, NULL);
@@ -465,7 +466,8 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << "Couldn't wake send thread: " << err << " (" << ret << ")";
+            s << _("Couldn't wake send thread: ")
+              << err << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
         sleep(0);
@@ -475,7 +477,8 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << "Couldn't join send thread: " << err << " (" << ret << ")";
+            s << _("Couldn't join send thread: ")
+              << err << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
         if ((ret = pthread_cancel(this->recv_thread)) != 0)
@@ -484,7 +487,8 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << "Couldn't cancel recv thread: " << err << " (" << ret << ")";
+            s << _("Couldn't cancel recv thread: ")
+              << err << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
         sleep(0);
@@ -494,7 +498,8 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << "Couldn't join recv thread: " << err << " (" << ret << ")";
+            s << _("Couldn't join recv thread: ")
+              << err << " (" << ret << ")";
             throw std::runtime_error(s.str());
         }
         this->threads_started = false;
@@ -506,7 +511,7 @@ void Comm::send(packet *p, size_t len)
     pthread_mutex_lock(&(this->send_lock));
     if (!hton_packet(p, len))
     {
-        std::clog << "Error hton'ing packet" << std::endl;
+        std::clog << _("Error hton'ing packet") << std::endl;
         delete p;
     }
     else if (!this->encrypt_packet(*p))

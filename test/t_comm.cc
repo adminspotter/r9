@@ -710,14 +710,14 @@ void test_recv_ack(void)
     expected_packet.ack.misc[1] = 12345;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Login response, type ACCESS_NONE"),
+    isnt(new_clog.str().find("Login response, access ACCESS_NONE"),
          std::string::npos,
          test + st + "good access: expected log entry");
 
     expected_packet.ack.misc[0] = 12345;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Login response, type unknown"),
+    isnt(new_clog.str().find("Login response, access unknown"),
          std::string::npos,
          test + st + "bad access: expected log entry");
 
@@ -727,14 +727,14 @@ void test_recv_ack(void)
     expected_packet.ack.misc[0] = ACCESS_NONE;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Logout response, type ACCESS_NONE"),
+    isnt(new_clog.str().find("Logout response, access ACCESS_NONE"),
          std::string::npos,
          test + st + "good access: expected log entry");
 
     expected_packet.ack.misc[0] = 12345;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Logout response, type unknown"),
+    isnt(new_clog.str().find("Logout response, access unknown"),
          std::string::npos,
          test + st + "bad access: expected log entry");
 

@@ -208,6 +208,8 @@ then
       [AC_MSG_ERROR([ not valid, can not build client program.])],
       [$CLIENT_LDFLAGS])
 
+  AC_CHECK_HEADERS([boost/algorithm/string.hpp], [], [AC_MSG_ERROR(need Boost string algorithm header to build client program)])
+
   CLIENT_CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CLIENT_CXXFLAGS"
   CLIENT_LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $CLIENT_LDFLAGS"
   CLIENT_LDLIBS="$CLIENT_LDLIBS $PROFILE_LDLIBS"

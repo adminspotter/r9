@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jul 2019, 07:08:22 tquirk
+ *   last updated 25 Jul 2019, 08:39:13 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -53,6 +53,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <boost/algorithm/string.hpp>
+
 #include "configdata.h"
 #include "l10n.h"
 
@@ -63,17 +65,20 @@
 const int ConfigData::SERVER_PORT    = 8500;
 const char ConfigData::SERVER_ADDR[] = "127.0.0.1";
 const char *ConfigData::FONT_PATHS[] = {
-#if defined(__APPLE__)
+    /* MacOS paths */
     "~/Library/Fonts",
     "/Library/Fonts",
     "/Network/Library/Fonts",
     "/System/Library/Fonts",
     "/System/Folder/Fonts",
-#elif defined(__linux__)
+    /* Old-school Linux paths */
     "/usr/share/fonts",
     "/usr/share/fonts/default/Type1",
     "/usr/share/fonts/default/ttf",
-#endif
+    /* Debian paths */
+    "/usr/share/fonts/opentype",
+    "/usr/share/fonts/truetype",
+    "/usr/share/fonts/type1",
     NULL
 };
 
@@ -139,8 +144,11 @@ void ConfigData::set_defaults(void)
     this->font_paths.clear();
     while (*ptr != NULL)
     {
+        struct stat state;
+
         str = *ptr;
-        this->font_paths.push_back(str);
+        if (stat(str.c_str(), &state) == 0)
+            this->font_paths.push_back(str);
         ++ptr;
     }
 
@@ -173,7 +181,7 @@ void ConfigData::parse_command_line(int count, const char **args)
             else if ((*j) == "-f")
                 this->config_fname = *(++j);
             else
-                std::clog << "WARNING: Unknown option " << *j;
+                std::clog << _("WARNING: Unknown option ") << *j;
         }
     }
     this->make_config_dirs();
@@ -257,7 +265,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Error creating r9 preferences directory " << dirname << ": "
+        s << _("Error creating r9 preferences directory ") << dirname << ": "
           << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
@@ -270,7 +278,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Can't make config directory " << subdirname << ": "
+        s << _("Can't make config directory ") << subdirname << ": "
           << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
@@ -282,7 +290,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Can't make config directory " << subdirname << ": "
+        s << _("Can't make config directory ") << subdirname << ": "
           << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
@@ -294,7 +302,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << "Can't make config directory " << subdirname << ": "
+        s << _("Can't make config directory ") << subdirname << ": "
           << err << " (" << errno << ")";
         throw std::runtime_error(s.str());
     }
@@ -354,16 +362,26 @@ static void read_paths(const std::string& key,
 {
     std::vector<std::string> *element = (std::vector<std::string> *)ptr;
     std::string str = (std::string&)value;
-    std::string::size_type loc;
+    std::vector<std::string> paths;
+    std::string::size_type pos;
+    struct stat state;
 
     /* Split things on : */
     element->clear();
-    while ((loc = str.find(':')) != std::string::npos)
+    boost::split(paths, str, [](char c){ return c == ':'; });
+    for (auto path : paths)
     {
-        element->push_back(str.substr(0, loc));
-        str.erase(0, loc + 1);
+        if ((pos = path.find('~')) == 0)
+        {
+            char *home;
+
+            if ((home = getenv("HOME")) == NULL)
+                throw std::runtime_error("Could not find home directory");
+            path.replace(pos, 1, home);
+        }
+        if (stat(path.c_str(), &state) != -1)
+            element->push_back(path);
     }
-    element->push_back(str);
 }
 
 static void read_integer(const std::string& key,
