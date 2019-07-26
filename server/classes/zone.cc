@@ -1,9 +1,9 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2017, 08:02:43 tquirk
+ *   last updated 24 Jul 2019, 21:39:23 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -50,6 +50,8 @@ void Zone::init(DB *database)
     std::vector<std::vector<Octree *> > y_row;
 
     database->get_server_objects(this->game_objects);
+    std::clog << syslogNotice << "loaded " << this->game_objects.size()
+              << " objects" << std::endl;
     std::clog << syslogNotice << "creating " << this->x_steps << 'x'
               << this->y_steps << 'x' << this->z_steps << " elements"
               << std::endl;
@@ -101,15 +103,14 @@ Zone::~Zone()
                     delete this->sectors[i][j][k];
 
     /* Delete all the game objects. */
-    std::clog << "deleting game objects" << std::endl;
     if (this->game_objects.size())
     {
         Zone::objects_iterator i;
 
-        for (i = this->game_objects.begin();
-             i != this->game_objects.end();
-             ++i)
-            delete i->second;
+        std::clog << "deleting " << this->game_objects.size()
+                  << " game objects" << std::endl;
+        for (auto i : this->game_objects)
+            delete i.second;
         /* Maybe save the game objects' locations before deleting them? */
         this->game_objects.erase(this->game_objects.begin(),
                                  this->game_objects.end());
