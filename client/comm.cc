@@ -242,7 +242,7 @@ void *Comm::recv_worker(void *arg)
         }
         if (!comm->decrypt_packet(buf))
         {
-            std::clog << "Error while decrypting packet" << std::endl;
+            std::clog << _("Error while decrypting packet") << std::endl;
             continue;
         }
         /* We should be able to convert to host byte ordering */
@@ -333,13 +333,13 @@ void Comm::handle_srvkey(packet& p)
      */
     if ((pub = public_key_to_pkey(p.key.pubkey, R9_PUBKEY_SZ)) == NULL)
     {
-        std::clog << "Got a bad public key" << std::endl;
+        std::clog << _("Got a bad public key") << std::endl;
         return;
     }
     if ((shared = dh_shared_secret(config.priv_key, pub)) == NULL)
     {
         OPENSSL_free(pub);
-        std::clog << "Could not derive shared secret" << std::endl;
+        std::clog << _("Could not derive shared secret") << std::endl;
         return;
     }
     memcpy(this->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
@@ -516,7 +516,7 @@ void Comm::send(packet *p, size_t len)
     }
     else if (!this->encrypt_packet(*p))
     {
-        std::clog << "Error encrypting packet" << std::endl;
+        std::clog << _("Error encrypting packet") << std::endl;
         delete p;
     }
     else
