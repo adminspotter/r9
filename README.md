@@ -37,6 +37,7 @@ server-side) in those other embedded languages.
 ## Features ##
 
 * Network agnosticism (IPv4, IPv6, datagram, stream, whatever!)
+* Encrypted wire protocol
 * Pluggable server modules for client actions
 * Support for backend MySQL and PostgreSQL databases
 * Pluggable embedded language support
@@ -45,8 +46,6 @@ server-side) in those other embedded languages.
   * Tcl
 
 ### Under active development ###
-
-* Encryption of the wire protocol
 
 ### To come ###
 
@@ -68,6 +67,7 @@ love to collaborate on.
 r9 has been built and tested on:
 
 * CentOS Linux 6/7
+* Debian GNU/Linux Stretch
 * Ubuntu GNU/Linux Trusty Tahr and Xenial Xerus (via [Travis CI](https://travis-ci.org))
 * MacOS X Mavericks - Mojave
 
