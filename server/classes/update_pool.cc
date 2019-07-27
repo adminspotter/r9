@@ -1,6 +1,6 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Jul 2017, 20:23:07 tquirk
+ *   last updated 27 Jul 2019, 07:19:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -64,7 +64,6 @@ void *UpdatePool::update_pool_worker(void *arg)
 
         pkt.buf.pos.type = TYPE_POSUPD;
         pkt.buf.pos.version = 1;
-        /*pkt.buf.pos.sequence = ;*/
         pkt.buf.pos.object_id = req->get_object_id();
         pkt.buf.pos.x_pos = (uint64_t)(req->position.x * 100);
         pkt.buf.pos.y_pos = (uint64_t)(req->position.y * 100);
@@ -79,13 +78,12 @@ void *UpdatePool::update_pool_worker(void *arg)
 
         /* Figure out who to send it to */
         /* Send to EVERYONE (for now) */
-        for (sock = sockets.begin(); sock != sockets.end(); ++sock)
-            for (user = (*sock)->users.begin();
-                 user != (*sock)->users.end();
-                 ++user)
+        for (auto sock : sockets)
+            for (auto& user : sock->users)
             {
-                pkt.who = user->second;
-                (*sock)->send_pool->push(pkt);
+                pkt.who = user.second;
+                pkt.buf.pos.sequence = user.second->sequence++;
+                sock->send_pool->push(pkt);
             }
     }
     return NULL;
