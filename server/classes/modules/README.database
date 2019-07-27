@@ -16,10 +16,18 @@ they reside in, e.g. the 0-ID server corresponds to all servers.
 CREATE TABLE players (
 	playerid BIGINT NOT NULL,
 	username VARCHAR2(64) NOT NULL,
-	password VARCHAR2(64) NOT NULL,
 	email VARCHAR2(64) NOT NULL,
 	suspended TINYINT NOT NULL,
 	CONSTRAINT players_PK PRIMARY KEY (playerid)
+);
+
+CREATE TABLE player_keys (
+        playerid BIGINT NOT NULL,
+        public_key BLOB NOT NULL,
+        not_before TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        not_after TIMESTAMP,
+        CONSTRAINT player_keys_PK PRIMARY KEY (playerid),
+        CONSTRAINT playerid_FK REFERENCES players(playerid)
 );
 
 CREATE TABLE characters (
@@ -57,10 +65,10 @@ CREATE TABLE player_logins (
 	CONSTRAINT serverid_FK REFERENCES servers(serverid),
 	src_ip INTEGER NOT NULL,
 	src_port SMALLINT NOT NULL,
-	login_time DATETIME NOT NULL,
-	enter_time DATETIME,
-	exit_time DATETIME,
-	logout_time DATETIME,
+	login_time TIMESTAMP NOT NULL,
+	enter_time TIMESTAMP,
+	exit_time TIMESTAMP,
+	logout_time TIMESTAMP,
 	CONSTRAINT player_logins_PK PRIMARY KEY (playerid, characterid, login_time)
 );
 

@@ -2,9 +2,11 @@
 
 using namespace TAP;
 
+#include "../client/configdata.h"
 #include "../client/comm.h"
 #include "../client/object.h"
 
+ConfigData config;
 ObjectCache *obj;
 struct object *self_obj;
 

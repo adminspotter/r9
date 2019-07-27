@@ -5,6 +5,7 @@ using namespace TAP;
 #include "../server/classes/stream.h"
 #include "../server/classes/config_data.h"
 
+#include "mock_base_user.h"
 #include "mock_server_globals.h"
 
 bool stop_error = false;
@@ -194,20 +195,21 @@ void test_handle_packet(void)
 {
     std::string test = "handle_packet: ";
     test_stream_socket *sts = new test_stream_socket();
-    base_user *bu = new base_user(123LL, NULL, sts);
+    fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
 
     sts->users[bu->userid] = bu;
     sts->fds[fd] = bu;
     sts->user_fds[bu->userid] = fd;
 
+    bu->parent = sts;
     bu->timestamp = 0;
 
     packet p;
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACKPKT;
 
-    sts->handle_packet(p, fd);
+    sts->handle_packet(p, sizeof(ack_packet), fd);
 
     isnt(bu->timestamp, 0, test + "expected timestamp update");
 
@@ -249,7 +251,8 @@ void test_connect_user(void)
     is(sts->fds.size(), 0, test + "expected fds size");
     is(sts->user_fds.size(), 0, test + "expected user fds size");
 
-    base_user *bu = new base_user(123LL, NULL, sts);
+    fake_base_user *bu = new fake_base_user(123LL);
+    bu->parent = sts;
 
     access_list al;
 
@@ -257,7 +260,6 @@ void test_connect_user(void)
     al.what.login.who.stream = 99;
     al.buf.basic.type = TYPE_LOGREQ;
     strncpy(al.buf.log.username, "bobbo", sizeof(al.buf.log.username));
-    strncpy(al.buf.log.password, "argh!", sizeof(al.buf.log.password));
     strncpy(al.buf.log.charname, "howdy", sizeof(al.buf.log.charname));
 
     sts->connect_user(bu, al);
@@ -273,8 +275,10 @@ void test_disconnect_user(void)
 {
     std::string test = "disconnect_user: ";
     test_stream_socket *sts = new test_stream_socket();
-    base_user *bu = new base_user(123LL, NULL, sts);
+    fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
+
+    bu->parent = sts;
 
     sts->users[bu->userid] = bu;
     sts->fds[fd] = bu;
@@ -367,7 +371,7 @@ void test_handle_users_bad_packet(void)
 {
     std::string test = "handle_users w/bad packet: ";
     test_stream_socket *sts = new test_stream_socket();
-    base_user *bu = new base_user(123LL, NULL, sts);
+    fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
 
     sts->users[bu->userid] = bu;
@@ -376,6 +380,7 @@ void test_handle_users_bad_packet(void)
     sts->max_fd = fd + 1;
     FD_SET(fd, &sts->readfs);
 
+    bu->parent = sts;
     bu->timestamp = 0;
 
     read_bad_packet = true;
@@ -393,7 +398,7 @@ void test_handle_users_read_error(void)
 {
     std::string test = "handle_users w/read error: ";
     test_stream_socket *sts = new test_stream_socket();
-    base_user *bu = new base_user(123LL, NULL, sts);
+    fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
 
     sts->users[bu->userid] = bu;
@@ -401,6 +406,8 @@ void test_handle_users_read_error(void)
     sts->user_fds[bu->userid] = fd;
     sts->max_fd = fd + 1;
     FD_SET(fd, &sts->readfs);
+
+    bu->parent = sts;
 
     read_nothing = true;
 
@@ -419,7 +426,7 @@ void test_handle_users(void)
 {
     std::string test = "handle_users: ";
     test_stream_socket *sts = new test_stream_socket();
-    base_user *bu = new base_user(123LL, NULL, sts);
+    fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
 
     sts->users[bu->userid] = bu;
@@ -428,6 +435,7 @@ void test_handle_users(void)
     sts->max_fd = fd + 1;
     FD_SET(fd, &sts->readfs);
 
+    bu->parent = sts;
     bu->timestamp = 0;
 
     sts->handle_users();

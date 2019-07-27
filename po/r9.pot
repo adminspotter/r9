@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2019-07-24 21:34-0700\n"
+"POT-Creation-Date: 2019-07-25 09:20-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,84 +21,100 @@ msgstr ""
 msgid "failed to initialize GLFW"
 msgstr ""
 
-#: client/comm.cc:97
+#: client/comm.cc:102
 msgid "Couldn't open socket: "
 msgstr ""
 
-#: client/comm.cc:153
+#: client/comm.cc:194
 msgid "got a send error: "
 msgstr ""
 
-#: client/comm.cc:185
+#: client/comm.cc:226
 msgid "Error receiving packet: "
 msgstr ""
 
-#: client/comm.cc:192
+#: client/comm.cc:233
 msgid "Got packet from unknown sender"
 msgstr ""
 
-#: client/comm.cc:198
+#: client/comm.cc:239
 msgid "Unknown packet type "
 msgstr ""
 
-#: client/comm.cc:205
+#: client/comm.cc:245
+msgid "Error while decrypting packet"
+msgstr ""
+
+#: client/comm.cc:251
 msgid "Error while ntoh'ing packet"
 msgstr ""
 
-#: client/comm.cc:235
+#: client/comm.cc:281
 msgid "Login response, access "
 msgstr ""
 
-#: client/comm.cc:237 client/comm.cc:248
+#: client/comm.cc:283 client/comm.cc:294
 msgid "unknown"
 msgstr ""
 
-#: client/comm.cc:246
+#: client/comm.cc:292
 msgid "Logout response, access "
 msgstr ""
 
-#: client/comm.cc:254
+#: client/comm.cc:300
 msgid "Got an unknown ack packet: "
 msgstr ""
 
-#: client/comm.cc:282
+#: client/comm.cc:336
+msgid "Got a bad public key"
+msgstr ""
+
+#: client/comm.cc:342
+msgid "Could not derive shared secret"
+msgstr ""
+
+#: client/comm.cc:353
 msgid "Got an unexpected packet type: "
 msgstr ""
 
-#: client/comm.cc:303
+#: client/comm.cc:374
 msgid "Couldn't init queue mutex: "
 msgstr ""
 
-#: client/comm.cc:312
+#: client/comm.cc:383
 msgid "Couldn't init queue-not-empty cond: "
 msgstr ""
 
-#: client/comm.cc:357
+#: client/comm.cc:428
 msgid "Couldn't start send thread: "
 msgstr ""
 
-#: client/comm.cc:371
+#: client/comm.cc:442
 msgid "Couldn't start recv thread: "
 msgstr ""
 
-#: client/comm.cc:398
+#: client/comm.cc:469
 msgid "Couldn't wake send thread: "
 msgstr ""
 
-#: client/comm.cc:409
+#: client/comm.cc:480
 msgid "Couldn't join send thread: "
 msgstr ""
 
-#: client/comm.cc:419
+#: client/comm.cc:490
 msgid "Couldn't cancel recv thread: "
 msgstr ""
 
-#: client/comm.cc:430
+#: client/comm.cc:501
 msgid "Couldn't join recv thread: "
 msgstr ""
 
-#: client/comm.cc:443
+#: client/comm.cc:514
 msgid "Error hton'ing packet"
+msgstr ""
+
+#: client/comm.cc:519
+msgid "Error encrypting packet"
 msgstr ""
 
 #: client/comm_dialog.cc:72
@@ -121,19 +137,19 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: client/configdata.cc:184
+#: client/configdata.cc:185
 msgid "WARNING: Unknown option "
 msgstr ""
 
-#: client/configdata.cc:218
+#: client/configdata.cc:213
 msgid "Skipping bad config line: "
 msgstr ""
 
-#: client/configdata.cc:273
+#: client/configdata.cc:269
 msgid "Error creating r9 preferences directory "
 msgstr ""
 
-#: client/configdata.cc:286 client/configdata.cc:298 client/configdata.cc:310
+#: client/configdata.cc:282 client/configdata.cc:294 client/configdata.cc:306
 msgid "Can't make config directory "
 msgstr ""
 

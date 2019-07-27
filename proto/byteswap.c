@@ -1,9 +1,9 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Apr 2019, 08:12:03 tquirk
+ *   last updated 24 Jul 2019, 08:59:13 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,40 +27,8 @@
  *
  */
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif /* HAVE_CONFIG_H */
-
-#if HAVE_ENDIAN_H
-#include <endian.h>
-#endif /* HAVE_ENDIAN_H */
-#if HAVE_BYTESWAP_H
-#include <byteswap.h>
-#endif /* HAVE_BYTESWAP_H */
-#if HAVE_ARCHITECTURE_BYTE_ORDER_H
-#include <architecture/byte_order.h>
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define htonll(x) __builtin_bswap64(x)
-#define ntohll(x) __builtin_bswap64(x)
-#endif /* __BYTE_ORDER__ */
-#endif /* HAVE_ARCHITECTURE_BYTE_ORDER_H */
-
-#if !(HAVE_HTONLL) && !defined(htonll)
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define htonll(x) (x)
-#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define htonll(x) __bswap_64(x)
-#endif /* __BYTE_ORDER__ */
-#endif /* HAVE_HTONLL */
-#if !(HAVE_NTOHLL) && !defined(ntohll)
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define ntohll(x) (x)
-#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define ntohll(x) __bswap_64(x)
-#endif /* __BYTE_ORDER__ */
-#endif /* HAVE_NTOHLL */
-
 #include "proto.h"
+#include "byteswap.h"
 
 static int hton_basic_packet(packet *, size_t);
 static int ntoh_basic_packet(packet *, size_t);
@@ -114,7 +82,7 @@ int ntoh_packet(packet *p, size_t s)
 
 size_t packet_size(packet *p)
 {
-    if (p->basic.type > TYPE_PNGPKT)
+    if (p->basic.type > TYPE_SRVKEY)
         return 0;
     return (packet_handlers[p->basic.type].packetsize);
 }

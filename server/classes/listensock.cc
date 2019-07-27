@@ -1,9 +1,9 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2018, 07:49:27 tquirk
+ *   last updated 24 Jul 2019, 08:56:12 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,8 +30,15 @@
  *
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+#include <openssl/crypto.h>
+#include <proto/dh.h>
+#include <proto/ec.h>
+
+#include <sstream>
 
 #include "listensock.h"
 #include "zone.h"
@@ -39,15 +46,55 @@
 
 #include "../server.h"
 
-base_user::base_user(uint64_t u, GameObject *g, listen_socket *l)
-    : Control(u, g)
+static size_t rand_bytes(uint8_t *buf, size_t buf_sz)
+{
+    size_t i;
+
+    srand(time(NULL));
+    for (i = 0; i < buf_sz; ++i)
+        buf[i] = rand() % 256;
+    return i;
+}
+
+base_user::base_user(uint64_t userid)
+    : username(), charactername(), Control(userid, NULL)
+{
+    this->parent = NULL;
+    this->timestamp = time(NULL);
+    this->pending_logout = false;
+    this->sequence = 0LL;
+    this->auth_level = ACCESS_NONE;
+    this->slave = this->default_slave = NULL;
+    this->characterid = 0LL;
+}
+
+base_user::base_user(uint64_t userid,
+                     const std::string& uname,
+                     const std::string& cname,
+                     listen_socket *l)
+    : username(uname), charactername(cname), Control(userid, NULL)
 {
     this->parent = l;
     this->timestamp = time(NULL);
     this->pending_logout = false;
     /* Come up with some sort of random sequence number to start? */
     this->sequence = 0LL;
-    this->characterid = 0LL;
+
+    this->auth_level = database->check_authorization(userid, cname);
+    if (this->auth_level < ACCESS_VIEW)
+        throw std::runtime_error("unauthorized user");
+    if (this->auth_level >= ACCESS_MOVE)
+    {
+        uint64_t objid = database->get_character_objectid(userid, cname);
+        this->default_slave = this->slave = zone->find_game_object(objid);
+        this->slave->connect(this);
+    }
+    this->characterid = database->get_characterid(userid, cname);
+    database->get_player_server_skills(this->userid,
+                                       this->characterid,
+                                       this->actions);
+
+    rand_bytes(this->iv, R9_SYMMETRIC_IV_BUF_SZ);
 }
 
 base_user::~base_user()
@@ -63,10 +110,96 @@ base_user::~base_user()
 const base_user& base_user::operator=(const base_user& u)
 {
     this->Control::operator=((const Control&)u);
+    this->username = u.username;
     this->timestamp = u.timestamp;
     this->pending_logout = u.pending_logout;
     this->sequence = u.sequence;
     return *this;
+}
+
+std::string base_user::to_string(void)
+{
+    std::ostringstream s;
+    uint64_t obj_id = (this->default_slave != NULL
+                       ? this->default_slave->get_object_id()
+                       : 0LL);
+
+    s << this->username
+      << " (" << this->userid
+      << "), char " << this->charactername
+      << " (" << this->characterid
+      << ") obj " << obj_id
+      << ", " << this->actions.size()
+      << " actions, auth " << (int)this->auth_level;
+    return s.str();
+}
+
+void base_user::set_shared_key(EVP_PKEY *priv, uint8_t *pubkey, size_t key_sz)
+{
+    EVP_PKEY *pub = NULL;
+    struct dh_message *shared = NULL;
+
+    if ((pub = public_key_to_pkey(pubkey, key_sz)) == NULL)
+        throw std::runtime_error("couldn't convert string to EVP_PKEY");
+    if ((shared = dh_shared_secret(priv, pub)) == NULL)
+    {
+        OPENSSL_free(pub);
+        throw std::runtime_error("couldn't calculate shared secret");
+    }
+    memcpy(this->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
+    free_dh_message(shared);
+    OPENSSL_free(pub);
+}
+
+int base_user::encrypt_packet(packet& pkt)
+{
+    size_t buf_sz = packet_size(&pkt) - sizeof(basic_packet);
+
+    if (pkt.basic.type == TYPE_SRVKEY)
+        return 1;
+    if (buf_sz > 0)
+    {
+        uint8_t *buf = (uint8_t *)&pkt + sizeof(basic_packet);
+
+        return r9_encrypt(buf, buf_sz,
+                          this->key,
+                          this->iv, pkt.basic.sequence,
+                          buf);
+    }
+    return 1;
+}
+
+int base_user::decrypt_packet(packet& pkt)
+{
+    size_t buf_sz = packet_size(&pkt) - sizeof(basic_packet);
+
+    if (pkt.basic.type == TYPE_LOGREQ)
+        return 1;
+    if (buf_sz > 0)
+    {
+        uint8_t *buf = (uint8_t *)&pkt + sizeof(basic_packet);
+
+        return r9_decrypt(buf, buf_sz,
+                          this->key,
+                          this->iv, pkt.basic.sequence,
+                          buf);
+    }
+    return 1;
+}
+
+void base_user::send_server_key(uint8_t *pubkey, size_t key_sz)
+{
+    packet_list pkt;
+
+    pkt.buf.key.type = TYPE_SRVKEY;
+    pkt.buf.key.version = 1;
+    pkt.buf.key.sequence = this->sequence++;
+    memset(pkt.buf.key.pubkey, 0, sizeof(pkt.buf.key.pubkey));
+    memcpy(pkt.buf.key.pubkey, pubkey, std::min(key_sz,
+                                                sizeof(pkt.buf.key.pubkey)));
+    memcpy(pkt.buf.key.iv, this->iv, R9_SYMMETRIC_IV_BUF_SZ);
+    pkt.who = this;
+    this->parent->send_pool->push(pkt);
 }
 
 void base_user::send_ping(void)
@@ -299,8 +432,12 @@ void listen_socket::handle_logout(listen_socket *s, packet& p,
 
 void listen_socket::login_user(access_list& p)
 {
-    uint64_t userid = this->get_userid(p.buf.log);
-
+    std::string username(p.buf.log.username,
+                         std::min(sizeof(p.buf.log.username),
+                                  strlen(p.buf.log.username)));
+    uint64_t userid = database->check_authentication(username,
+                                                     p.buf.log.pubkey,
+                                                     R9_PUBKEY_SZ);
     if (userid == 0LL)
         return;
 
@@ -312,57 +449,26 @@ void listen_socket::login_user(access_list& p)
         return;
     }
 
-    base_user *bu = this->check_access(userid, p.buf.log);
-
-    if (bu == NULL)
+    base_user *bu = NULL;
+    try
+    {
+        std::string charname(p.buf.log.charname,
+                             std::min(sizeof(p.buf.log.charname),
+                                      strlen(p.buf.log.charname)));
+        bu = new base_user(userid, username, charname, this);
+        bu->set_shared_key(config.key.priv_key,
+                           p.buf.log.pubkey, R9_PUBKEY_SZ);
+    }
+    catch (std::runtime_error e)
+    {
+        if (bu != NULL)
+            delete bu;
         return;
+    }
 
+    std::clog << "login for user " << bu->to_string() << std::endl;
     this->connect_user(bu, p);
-}
-
-uint64_t listen_socket::get_userid(login_request& log)
-{
-    std::string username(log.username, std::min(sizeof(log.username),
-                                                strlen(log.username)));
-    std::string password(log.password, std::min(sizeof(log.password),
-                                                strlen(log.password)));
-    uint64_t userid = database->check_authentication(username, password);
-
-    /* Don't want to keep passwords around in core if we can help it. */
-    memset(log.password, 0, sizeof(log.password));
-    password.clear();
-
-    return userid;
-}
-
-base_user *listen_socket::check_access(uint64_t userid, login_request& log)
-{
-    std::string charname(log.charname, std::min(sizeof(log.charname),
-                                                strlen(log.charname)));
-    int auth_level = database->check_authorization(userid, charname);
-    if (auth_level < ACCESS_VIEW)
-        return NULL;
-
-    uint64_t charid = database->get_character_objectid(userid, charname);
-    GameObject *go = NULL;
-    if (auth_level >= ACCESS_MOVE)
-        go = zone->find_game_object(charid);
-
-    base_user *bu = new base_user(userid, go, this);
-    bu->username = std::string(log.username, std::min(sizeof(log.username),
-                                                      strlen(log.username)));
-    bu->characterid = database->get_characterid(userid, charname);
-    bu->auth_level = auth_level;
-    database->get_player_server_skills(userid, bu->characterid, bu->actions);
-
-    std::clog << "login for user " << bu->username << " (" << bu->userid
-              << "), char " << charname << " (id " << bu->characterid
-              << ", obj " << charid << ", " << bu->actions.size()
-              << " actions), auth " << auth_level << std::endl;
-
-    zone->send_nearby_objects(charid);
-
-    return bu;
+    zone->send_nearby_objects(bu->characterid);
 }
 
 void listen_socket::logout_user(uint64_t userid)
@@ -391,6 +497,7 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
     this->users[bu->userid] = bu;
     if (bu->default_slave != NULL)
         obj_id = bu->default_slave->get_object_id();
+    bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     bu->send_ack(TYPE_LOGREQ, bu->auth_level, obj_id);
 }
 

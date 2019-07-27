@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libr9_proto.la
 
-libr9_proto_la_SOURCES = byteswap.c \
+libr9_proto_la_SOURCES = byteswap.c byteswap.h \
 	dh.c dh.h \
 	ec.c ec.h \
 	encrypt.c encrypt.h \

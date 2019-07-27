@@ -1,6 +1,6 @@
 /* configdata.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Apr 2019, 08:58:03 tquirk
+ *   last updated 22 Jul 2019, 07:05:40 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -33,7 +33,7 @@
 #include <vector>
 #include <string>
 
-#include <openssl/evp.h>
+#include "../proto/ec.h"
 
 class ConfigData
 {
@@ -53,7 +53,7 @@ class ConfigData
 
     std::string key_fname;
     EVP_PKEY *priv_key;
-    uint8_t pub_key[128];
+    uint8_t pub_key[R9_PUBKEY_SZ];
 
     ConfigData();
     ~ConfigData();

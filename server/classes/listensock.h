@@ -1,9 +1,9 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2018, 07:49:18 tquirk
+ *   last updated 24 Jul 2019, 08:56:21 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,6 +33,8 @@
 
 #include <map>
 
+#include <proto/encrypt.h>
+
 #include "basesock.h"
 #include "control.h"
 #include "thread_pool.h"
@@ -42,20 +44,37 @@ class listen_socket;
 
 class base_user : public Control {
   public:
+    std::string username, charactername;
     uint64_t sequence, characterid;
     time_t timestamp;
     bool pending_logout;
     uint8_t auth_level;
 
+  private:
+    uint8_t key[R9_SYMMETRIC_KEY_BUF_SZ], iv[R9_SYMMETRIC_IV_BUF_SZ];
+
   protected:
     listen_socket *parent;
 
+    base_user(uint64_t);
+
   public:
-    base_user(uint64_t, GameObject *, listen_socket *);
+    base_user(uint64_t,
+              const std::string&,
+              const std::string&,
+              listen_socket *);
     virtual ~base_user();
 
     virtual const base_user& operator=(const base_user&);
 
+    std::string to_string(void);
+
+    void set_shared_key(EVP_PKEY *, uint8_t *, size_t);
+
+    int encrypt_packet(packet&);
+    int decrypt_packet(packet&);
+
+    void send_server_key(uint8_t *, size_t);
     void send_ping(void);
     void send_ack(uint8_t,
                   uint64_t = 0LL, uint64_t = 0LL,
@@ -105,9 +124,6 @@ class listen_socket {
     static void handle_logout(listen_socket *, packet&, base_user *, void *);
 
     void login_user(access_list&);
-    uint64_t get_userid(login_request&);
-    base_user *check_access(uint64_t, login_request&);
-
     void logout_user(uint64_t);
 
     virtual void connect_user(base_user *, access_list&);

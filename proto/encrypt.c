@@ -1,6 +1,6 @@
 /* encrypt.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Mar 2019, 08:31:17 tquirk
+ *   last updated 16 Jul 2019, 21:58:24 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -26,22 +26,30 @@
  *
  */
 
+#include <string.h>
+
 #include <openssl/conf.h>
 #include <openssl/err.h>
 
 #include "encrypt.h"
+#include "byteswap.h"
 
 int r9_encrypt(const unsigned char *plaintext, int plaintext_len,
-               const unsigned char *key, const unsigned char *iv,
+               const unsigned char *key, unsigned char *iv,
+               uint64_t sequence,
                unsigned char *ciphertext)
 {
     EVP_CIPHER_CTX *ctx;
     int len, ciphertext_len = 0;
+    unsigned char iv_copy[R9_SYMMETRIC_IV_BUF_SZ];
 
     if ((ctx = EVP_CIPHER_CTX_new()) == NULL)
         goto BAILOUT1;
 
-    if (EVP_EncryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv) != 1
+    memcpy(iv_copy, iv, R9_SYMMETRIC_IV_BUF_SZ);
+    *(uint64_t *)iv_copy = htonll(sequence);
+
+    if (EVP_EncryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv_copy) != 1
         || EVP_EncryptUpdate(ctx,
                              ciphertext, &len,
                              plaintext, plaintext_len) != 1)
@@ -61,16 +69,21 @@ int r9_encrypt(const unsigned char *plaintext, int plaintext_len,
 }
 
 int r9_decrypt(const unsigned char *ciphertext, int ciphertext_len,
-               const unsigned char *key, const unsigned char *iv,
+               const unsigned char *key, unsigned char *iv,
+               uint64_t sequence,
                unsigned char *plaintext)
 {
     EVP_CIPHER_CTX *ctx;
     int len, plaintext_len = 0;
+    unsigned char iv_copy[R9_SYMMETRIC_IV_BUF_SZ];
 
     if ((ctx = EVP_CIPHER_CTX_new()) == NULL)
         goto BAILOUT1;
 
-    if (EVP_DecryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv) != 1
+    memcpy(iv_copy, iv, R9_SYMMETRIC_IV_BUF_SZ);
+    *(uint64_t *)iv_copy = htonll(sequence);
+
+    if (EVP_DecryptInit_ex(ctx, R9_SYMMETRIC_ALGO, NULL, key, iv_copy) != 1
         || EVP_DecryptUpdate(ctx,
                              plaintext, &len,
                              ciphertext, ciphertext_len) != 1)

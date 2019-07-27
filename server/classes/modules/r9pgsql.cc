@@ -1,9 +1,9 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Apr 2018, 09:44:09 tquirk
+ *   last updated 20 Jul 2019, 14:46:22 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -53,29 +53,32 @@ PgSQL::PgSQL(const std::string& host, const std::string& user,
 }
 
 uint64_t PgSQL::check_authentication(const std::string& user,
-                                     const std::string& pass)
+                                     const uint8_t *pubkey,
+                                     size_t key_size)
 {
     PGresult *res;
     char str[256];
     uint64_t retval = 0;
 
     snprintf(str, sizeof(str),
-             "SELECT playerid "
-             "FROM players "
-             "WHERE username='%s' "
-             "AND password='%s' "
-             "AND suspended=0;",
-             user.c_str(), pass.c_str());
+             "SELECT a.playerid, b.public_key, LEN(b.public_key) "
+             "FROM players AS a, player_keys AS b "
+             "WHERE a.username='%.*s' "
+             "AND a.playerid=b.playerid "
+             "AND b.not_before <= current_timestamp "
+             "AND (b.not_after IS NULL OR b.not_after >= current_timestamp) "
+             "AND a.suspended=0 "
+             "ORDER BY b.not_before DESC;",
+             DB::MAX_USERNAME, user.c_str());
     this->db_connect();
 
     res = PQexec(this->db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
-        retval = atol(PQgetvalue(res, 0, 0));
+        if (key_size == atoi(PQgetvalue(res, 0, 2))
+            && !memcmp(PQgetvalue(res, 0, 1), pubkey, key_size))
+            retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
     PQclear(res);
     this->db_close();
-
-    /* Don't want to keep passwords around in core if we can help it */
-    memset(str, 0, sizeof(str));
     return retval;
 }
 

@@ -4,6 +4,7 @@ using namespace TAP;
 
 #include "../server/classes/dgram.h"
 
+#include "mock_base_user.h"
 #include "mock_server_globals.h"
 
 bool stop_error = false;
@@ -115,7 +116,8 @@ void test_connect_user(void)
     is(dgs->socks.size(), 0, test + "expected socks size");
     is(dgs->user_socks.size(), 0, test + "expected user socks size");
 
-    base_user *bu = new base_user(123LL, NULL, dgs);
+    fake_base_user *bu = new fake_base_user(123LL);
+    bu->parent = (listen_socket *)dgs;
 
     access_list al;
 
@@ -123,7 +125,6 @@ void test_connect_user(void)
     al.what.login.who.dgram = NULL;
     al.buf.basic.type = TYPE_LOGREQ;
     strncpy(al.buf.log.username, "bobbo", sizeof(al.buf.log.username));
-    strncpy(al.buf.log.password, "argh!", sizeof(al.buf.log.password));
     strncpy(al.buf.log.charname, "howdy", sizeof(al.buf.log.charname));
 
     dgs->connect_user(bu, al);
@@ -141,7 +142,7 @@ void test_disconnect_user(void)
     std::string test = "disconnect_user: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, dgs);
+    fake_base_user *bu = new fake_base_user(123LL);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));
@@ -182,7 +183,7 @@ void test_handle_packet_unknown(void)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_POSUPD;
 
-    dgs->handle_packet(p, sa);
+    dgs->handle_packet(p, sizeof(position_update), sa);
 
     /* Not sure what to assert here.  We're exercising the code, but
      * if there's nothing to do, there's nothing to prove.
@@ -197,7 +198,7 @@ void test_handle_packet(void)
     std::string test = "handle_packet: ";
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, dgs);
+    fake_base_user *bu = new fake_base_user(123LL);
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));
@@ -214,7 +215,7 @@ void test_handle_packet(void)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACKPKT;
 
-    dgs->handle_packet(p, sa);
+    dgs->handle_packet(p, sizeof(ack_packet), sa);
 
     isnt(bu->timestamp, 0, test + "expected timestamp");
 

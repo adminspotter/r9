@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Apr 2019, 16:42:05 tquirk
+ *   last updated 02 Jun 2019, 15:47:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -118,6 +118,7 @@
 #include "../server.h"
 
 #include <proto/key.h>
+#include <proto/ec.h>
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 
@@ -168,7 +169,7 @@ handlers[] =
     { "DBPassword",    off(db_pass),        &config_string_element   },
     { "DBType",        off(db_type),        &config_string_element   },
     { "DBUser",        off(db_user),        &config_string_element   },
-    { "KeyFile",       off(priv_key),       &config_key_element      },
+    { "KeyFile",       off(key),            &config_key_element      },
     { "LogFacility",   off(log_facility),   &config_logfac_element   },
     { "LogPrefix",     off(log_prefix),     &config_string_element   },
     { "MotionThreads", off(motion_threads), &config_integer_element  },
@@ -212,8 +213,8 @@ config_data::config_data()
 
 config_data::~config_data()
 {
-    if (this->priv_key != NULL)
-        EVP_PKEY_free(this->priv_key);
+    if (this->key.priv_key != NULL)
+        EVP_PKEY_free(this->key.priv_key);
     this->argv.clear();
     this->listen_ports.clear();
     this->consoles.clear();
@@ -253,8 +254,8 @@ void config_data::set_defaults(void)
     this->size.steps[1]  = config_data::ZONE_STEPS;
     this->size.steps[2]  = config_data::ZONE_STEPS;
 
-    this->priv_key = NULL;
-    memset(this->pub_key, 0, sizeof(this->pub_key));
+    this->key.priv_key = NULL;
+    memset(this->key.pub_key, 0, sizeof(this->key.pub_key));
 }
 
 void setup_configuration(int count, char **args)
@@ -278,10 +279,10 @@ void setup_configuration(int count, char **args)
 
 void cleanup_configuration(void)
 {
-    if (config.priv_key != NULL)
+    if (config.key.priv_key != NULL)
     {
-        EVP_PKEY_free(config.priv_key);
-        config.priv_key = NULL;
+        EVP_PKEY_free(config.key.priv_key);
+        config.key.priv_key = NULL;
     }
 
     /* We'll leave argv alone because this may be a reinit */
@@ -523,8 +524,18 @@ static void config_key_element(const std::string& key,
                                const std::string& value,
                                void *ptr)
 {
-    EVP_PKEY **pkey = (EVP_PKEY **)ptr;
+    crypto_key *c_key = (crypto_key *)ptr;
 
-    *pkey = file_to_pkey(value.c_str(), NULL);
-    /* Calculate the public key and store it in pub_key */
+    if ((c_key->priv_key = file_to_pkey(value.c_str(), NULL)) == NULL)
+    {
+        std::clog << "Couldn't load key file " << value << std::endl;
+        return;
+    }
+    if (pkey_to_public_key(c_key->priv_key,
+                           c_key->pub_key,
+                           sizeof(c_key->pub_key)) == 0)
+    {
+        std::clog << "Couldn't convert key into public key" << std::endl;
+        return;
+    }
 }

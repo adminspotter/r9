@@ -1,9 +1,9 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Apr 2018, 09:41:14 tquirk
+ *   last updated 23 Jul 2019, 08:32:31 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -59,23 +59,28 @@ MySQL::~MySQL()
 {
 }
 
-/* Check that the user really is who he says he is */
+/* Check that the user really is who they say they are */
 uint64_t MySQL::check_authentication(const std::string& user,
-                                      const std::string& pass)
+                                     const uint8_t *pubkey,
+                                     size_t key_size)
 {
     MYSQL_RES *res;
     MYSQL_ROW row;
-    char str[256];
+    char str[768], key_str[key_size * 2 + 1];
     uint64_t retval = 0;
 
+    mysql_hex_string(key_str, (const char *)pubkey, key_size);
     snprintf(str, sizeof(str),
-             "SELECT playerid "
-             "FROM players "
-             "WHERE username='%.*s' "
-             "AND password=SHA2('%.*s',512) "
-             "AND suspended=0",
-             DB::MAX_USERNAME, user.c_str(),
-             DB::MAX_PASSWORD, pass.c_str());
+             "SELECT a.playerid "
+             "FROM players AS a, player_keys AS b "
+             "WHERE a.username='%.*s' "
+             "AND a.playerid=b.playerid "
+             "AND HEX(b.public_key)='%.*s' "
+             "AND b.not_before <= NOW() "
+             "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
+             "AND a.suspended=0 "
+             "ORDER BY b.not_before DESC",
+             DB::MAX_USERNAME, user.c_str(), (int)(key_size * 2), key_str);
     this->db_connect();
 
     if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
@@ -86,9 +91,6 @@ uint64_t MySQL::check_authentication(const std::string& user,
         mysql_free_result(res);
     }
     mysql_close(&(this->db_handle));
-
-    /* Don't leave passwords lying around in memory */
-    memset(str, 0, sizeof(str));
     return retval;
 }
 

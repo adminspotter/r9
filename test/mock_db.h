@@ -41,7 +41,8 @@ class fake_DB : public DB
     virtual ~fake_DB() {};
 
     virtual uint64_t check_authentication(const std::string& a,
-                                          const std::string& b)
+                                          const uint8_t *b,
+                                          size_t c)
         {
             ++check_authentication_count;
             return check_authentication_result;

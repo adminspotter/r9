@@ -5,6 +5,7 @@ using namespace TAP;
 #include "../server/classes/dgram.h"
 #include "../server/classes/config_data.h"
 
+#include "mock_base_user.h"
 #include "mock_server_globals.h"
 
 int sendto_stage = 0;
@@ -39,18 +40,13 @@ ssize_t recvfrom(int sockfd,
 
       case 2:
         pkt->basic.type = TYPE_ACKPKT;
-        retval = 1;
-        break;
-
-      case 3:
-        pkt->basic.type = TYPE_ACKPKT;
         retval = sizeof(ack_packet);
         /* If we set the sockaddr all 0, it should fail to build. */
         memset(sin, 0, sizeof(struct sockaddr_in));
         break;
 
       default:
-      case 4:
+      case 3:
         main_loop_exit_flag = 1;
         pkt->basic.type = TYPE_ACKPKT;
         retval = sizeof(ack_packet);
@@ -165,10 +161,20 @@ void test_send_worker(void)
     std::string test = "send worker: ";
     config.send_threads = 1;
     config.access_threads = 1;
+    config.key.priv_key = generate_ecdh_key();
+    pkey_to_public_key(config.key.priv_key, config.key.pub_key, R9_PUBKEY_SZ);
 
     struct addrinfo *addr = create_addrinfo();
     dgram_socket *dgs = new dgram_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, dgs);
+    fake_base_user *bu = new fake_base_user(123LL);
+    bu->parent = (listen_socket *)dgs;
+
+    EVP_PKEY *peer = generate_ecdh_key();
+    uint8_t peer_key[R9_PUBKEY_SZ];
+    size_t sz = pkey_to_public_key(peer, peer_key, sizeof(peer_key));
+    bu->set_shared_key(config.key.priv_key, peer_key, sz);
+    OPENSSL_free(peer);
+
     struct sockaddr_in sin;
 
     memset(&sin, 0, sizeof(struct sockaddr_in));

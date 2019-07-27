@@ -1,9 +1,9 @@
 /* r9pgsql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Apr 2018, 09:44:42 tquirk
+ *   last updated 19 Jul 2019, 08:09:35 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -47,7 +47,7 @@ class PgSQL : public DB
     ~PgSQL();
 
     /* Player functions */
-    uint64_t check_authentication(const std::string&, const std::string&);
+    uint64_t check_authentication(const std::string&, const uint8_t *, size_t);
     int check_authorization(uint64_t, uint64_t);
     int check_authorization(uint64_t, const std::string&);
     uint64_t get_characterid(uint64_t, const std::string&);

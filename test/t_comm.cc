@@ -2,20 +2,30 @@
 
 using namespace TAP;
 
+#include "../client/configdata.h"
 #include "../client/comm.h"
 #include "../client/object.h"
 
+#include "../proto/dh.h"
+#include "../proto/ec.h"
+
 std::stringstream new_clog;
 
+ConfigData config;
 ObjectCache *obj = new ObjectCache("fake");
 struct object *self_obj;
 
 bool recvfrom_error = false, bad_sender = false, bad_packet = false;
-bool bad_ntoh = false, bad_hton = false, sendto_error = false;
+bool bad_ntoh = false, bad_hton = false, bad_encrypt = false;
+bool bad_decrypt = false, sendto_error = false;
+bool bad_pubkey = false, bad_shared_secret = false;
 int recvfrom_calls, packet_type;
 
 struct sockaddr_storage expected_sockaddr;
 packet expected_packet;
+
+unsigned char dh_msg[R9_SYMMETRIC_KEY_BUF_SZ];
+struct dh_message msg = { dh_msg, sizeof(dh_msg) };
 
 void move_object(uint64_t a, uint16_t b,
                  float c, float d, float e,
@@ -49,6 +59,8 @@ ssize_t recvfrom(int a,
     else
         memcpy((void *)e, (void *)&expected_sockaddr, *f);
     memcpy(b, (void *)&expected_packet, c);
+    if (bad_packet == true)
+        ((packet *)b)->basic.type = 123;
     return c;
 }
 
@@ -91,6 +103,52 @@ int hton_packet(packet *a, size_t b)
     return 1;
 }
 
+int r9_encrypt(const unsigned char *a, int b,
+               const unsigned char *c, unsigned char *d,
+               uint64_t e, unsigned char *f)
+{
+    if (bad_encrypt == true)
+        return 0;
+    return 1;
+}
+
+int r9_decrypt(const unsigned char *a, int b,
+               const unsigned char *c, unsigned char *d,
+               uint64_t e, unsigned char *f)
+{
+    if (bad_decrypt == true)
+        return 0;
+    return 1;
+}
+
+EVP_PKEY *public_key_to_pkey(uint8_t *a, size_t b)
+{
+    if (bad_pubkey == true)
+        return NULL;
+    return (EVP_PKEY *)&msg;
+}
+
+struct dh_message *dh_shared_secret(EVP_PKEY *a, EVP_PKEY *b)
+{
+    if (bad_shared_secret == true)
+        return NULL;
+    return &msg;
+}
+
+#if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+void CRYPTO_free(void *a, const char *b, int c)
+#else
+void CRYPTO_free(void *a)
+#endif
+{
+    /* Do nothing. */
+}
+
+void free_dh_message(struct dh_message *a)
+{
+    /* Do nothing. */
+}
+
 class fake_Comm : public Comm
 {
   public:
@@ -100,11 +158,14 @@ class fake_Comm : public Comm
 
     using Comm::send_queue;
     using Comm::src_object_id;
+    using Comm::key;
+    using Comm::iv;
 
     using Comm::handle_pngpkt;
     using Comm::handle_ackpkt;
     using Comm::handle_posupd;
     using Comm::handle_srvnot;
+    using Comm::handle_srvkey;
     using Comm::handle_unsupported;
 };
 
@@ -120,6 +181,7 @@ void test_send_bad_hton(void)
     pkt->basic.version = 1;
 
     bad_hton = true;
+    bad_encrypt = false;
     sendto_error = false;
     recvfrom_calls = 1;
     packet_type = -1;
@@ -144,6 +206,43 @@ void test_send_bad_hton(void)
     new_clog.str(std::string());
 }
 
+void test_send_bad_encrypt(void)
+{
+    std::string test = "encrypt failure: ";
+    fake_Comm *comm = NULL;
+
+    packet *pkt = new packet;
+
+    memset((void *)pkt, 0, sizeof(packet));
+    pkt->basic.type = TYPE_ACTREQ;
+    pkt->basic.version = 1;
+
+    bad_hton = false;
+    bad_encrypt = true;
+    sendto_error = false;
+    recvfrom_calls = 1;
+    packet_type = -1;
+
+    try
+    {
+        comm = new fake_Comm();
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
+    comm->send(pkt, sizeof(packet));
+    while (comm->send_queue.size() != 0)
+        ;
+    delete comm;
+
+    isnt(new_clog.str().find("Error encrypting packet"),
+         std::string::npos,
+         test + "expected log entry");
+    new_clog.str(std::string());
+}
+
 void test_send_bad_send(void)
 {
     std::string test = "sendto failure: ";
@@ -156,6 +255,7 @@ void test_send_bad_send(void)
     pkt->basic.version = 1;
 
     bad_hton = false;
+    bad_encrypt = false;
     sendto_error = true;
     recvfrom_calls = 1;
     packet_type = -1;
@@ -211,7 +311,7 @@ void test_send_login(void)
 {
     std::string test = "send_login: ";
     fake_Comm *comm = NULL;
-    std::string a("hi"), b("howdy"), c("hello");
+    std::string a("hi"), b("howdy");
 
     try
     {
@@ -222,7 +322,7 @@ void test_send_login(void)
         fail(test + "constructor exception");
     }
     is(comm->send_queue.size(), 0, test + "queue empty before call");
-    comm->send_login(a, b, c);
+    comm->send_login(a, b);
     is(comm->send_queue.size(), 1, test + "expected queue entry");
     delete comm;
 
@@ -363,6 +463,7 @@ void test_recv_bad_sender(void)
     recvfrom_error = false;
     bad_sender = true;
     bad_packet = false;
+    bad_decrypt = false;
     bad_ntoh = false;
     recvfrom_calls = 0;
 
@@ -400,12 +501,13 @@ void test_recv_bad_packet(void)
     expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
-    expected_packet.basic.type = 123;
+    expected_packet.basic.type = TYPE_PNGPKT;
     expected_packet.basic.version = 1;
 
     recvfrom_error = false;
     bad_sender = false;
     bad_packet = true;
+    bad_decrypt = false;
     bad_ntoh = false;
     recvfrom_calls = 0;
 
@@ -427,6 +529,50 @@ void test_recv_bad_packet(void)
     new_clog.str(std::string());
 }
 
+void test_recv_no_decrypt(void)
+{
+    std::string test = "decrypt failure: ";
+    fake_Comm *comm = NULL;
+    struct addrinfo ai;
+
+    memset((void *)&ai, 0, sizeof(struct addrinfo));
+    ai.ai_family = AF_INET;
+    ai.ai_socktype = SOCK_DGRAM;
+    ai.ai_protocol = 17;
+    ai.ai_addr = (struct sockaddr *)&expected_sockaddr;
+    memset((void *)&expected_sockaddr, 0, sizeof(struct sockaddr_storage));
+    expected_sockaddr.ss_family = AF_INET;
+
+    memset((void *)&expected_packet, 0, sizeof(packet));
+    expected_packet.basic.type = TYPE_ACKPKT;
+    expected_packet.basic.version = 1;
+
+    recvfrom_error = false;
+    bad_sender = false;
+    bad_packet = false;
+    bad_decrypt = true;
+    bad_ntoh = false;
+    recvfrom_calls = 0;
+
+    try
+    {
+        comm = new fake_Comm(&ai);
+        comm->start();
+    }
+    catch (...)
+    {
+        fail(test + "constructor/start exception");
+    }
+    while (new_clog.str().size() == 0)
+        ;
+    delete comm;
+
+    isnt(new_clog.str().find("Error while decrypting packet"),
+         std::string::npos,
+         test + "expected log entry");
+    new_clog.str(std::string());
+}
+
 void test_recv_no_ntoh(void)
 {
     std::string test = "ntoh failure: ";
@@ -442,12 +588,13 @@ void test_recv_no_ntoh(void)
     expected_sockaddr.ss_family = AF_INET;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
-    expected_packet.basic.type = TYPE_PNGPKT;
+    expected_packet.basic.type = TYPE_ACKPKT;
     expected_packet.basic.version = 1;
 
     recvfrom_error = false;
     bad_sender = false;
     bad_packet = false;
+    bad_decrypt = false;
     bad_ntoh = true;
     recvfrom_calls = 0;
 
@@ -491,6 +638,7 @@ void test_recv_packet(void)
     recvfrom_error = false;
     bad_sender = false;
     bad_packet = false;
+    bad_decrypt = false;
     bad_ntoh = false;
     recvfrom_calls = 0;
 
@@ -660,6 +808,57 @@ void test_recv_server_notice(void)
     new_clog.str(std::string());
 }
 
+void test_recv_server_key(void)
+{
+    std::string test = "handle_srvkey: ", st;
+    fake_Comm *comm = NULL;
+
+    memset((void *)&expected_packet, 0, sizeof(packet));
+    expected_packet.basic.type = TYPE_SRVKEY;
+    expected_packet.basic.version = 1;
+
+    try
+    {
+        comm = new fake_Comm();
+    }
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+
+    st = "bad pubkey: ";
+    bad_pubkey = true;
+    bad_shared_secret = false;
+
+    comm->handle_srvkey(expected_packet);
+
+    isnt(new_clog.str().find("Got a bad public key"),
+         std::string::npos,
+         test + st + "expected log entry");
+    new_clog.str(std::string());
+
+    st = "bad shared secret: ";
+    bad_pubkey = false;
+    bad_shared_secret = true;
+
+    comm->handle_srvkey(expected_packet);
+
+    isnt(new_clog.str().find("Could not derive shared secret"),
+         std::string::npos,
+         test + st + "expected log entry");
+    new_clog.str(std::string());
+
+    st = "good srvkey: ";
+    bad_pubkey = false;
+    bad_shared_secret = false;
+
+    comm->handle_srvkey(expected_packet);
+
+    is(new_clog.str().size(), 0, test + st + "no log entry");
+
+    delete comm;
+}
+
 void test_recv_unsupported(void)
 {
     std::string test = "handle_unsupported: ";
@@ -688,11 +887,12 @@ void test_recv_unsupported(void)
 
 int main(int argc, char **argv)
 {
-    plan(42);
+    plan(47);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
     test_send_bad_hton();
+    test_send_bad_encrypt();
     test_send_bad_send();
     test_send_packet();
     test_send_login();
@@ -703,12 +903,14 @@ int main(int argc, char **argv)
     test_recv_bad_result();
     test_recv_bad_sender();
     test_recv_bad_packet();
+    test_recv_no_decrypt();
     test_recv_no_ntoh();
     test_recv_packet();
     test_recv_ping();
     test_recv_ack();
     test_recv_pos_update();
     test_recv_server_notice();
+    test_recv_server_key();
     test_recv_unsupported();
     return exit_status();
 }

@@ -1,9 +1,9 @@
 /* stream.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Apr 2018, 05:34:19 tquirk
+ *   last updated 14 Jul 2019, 23:44:17 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -59,7 +59,7 @@ class stream_socket : public listen_socket
 
     void start(void) override;
 
-    void handle_packet(packet&, int);
+    void handle_packet(packet&, int, int);
 
     static void handle_login(listen_socket *, packet&, base_user *, void *);
 

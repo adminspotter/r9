@@ -5,6 +5,7 @@ using namespace TAP;
 #include "../server/classes/stream.h"
 #include "../server/classes/config_data.h"
 
+#include "mock_base_user.h"
 #include "mock_server_globals.h"
 
 int write_stage = 0;
@@ -94,7 +95,7 @@ void test_listen_worker(void)
 
     struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts = new test_stream_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, sts);
+    fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
 
     sts->users[bu->userid] = bu;
@@ -103,6 +104,7 @@ void test_listen_worker(void)
     sts->max_fd = fd + 1;
     FD_SET(fd, &sts->master_readfs);
 
+    bu->parent = sts;
     time_t now = time(NULL) - 2;
     bu->timestamp = now;
 
@@ -134,7 +136,7 @@ void test_send_worker(void)
 
     struct addrinfo *addr = create_addrinfo();
     test_stream_socket *sts = new test_stream_socket(addr);
-    base_user *bu = new base_user(123LL, NULL, sts);
+    fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
 
     sts->users[bu->userid] = bu;
@@ -142,6 +144,8 @@ void test_send_worker(void)
     sts->user_fds[bu->userid] = fd;
     sts->max_fd = fd + 1;
     FD_SET(fd, &sts->master_readfs);
+
+    bu->parent = sts;
     bu->timestamp = time(NULL);
 
     packet_list pl;

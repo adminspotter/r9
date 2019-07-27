@@ -9,6 +9,7 @@ using namespace TAP;
 #include "mock_library.h"
 #include "mock_listensock.h"
 #include "mock_server_globals.h"
+#include "mock_zone.h"
 
 void register_actions(std::map<uint16_t, action_rec>&);
 void unregister_actions(std::map<uint16_t, action_rec>&);
@@ -62,10 +63,13 @@ void setup_fixture(void)
     (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
 
     listensock = new fake_listen_socket(NULL);
+
+    zone = new fake_Zone(1000, 1, database);
 }
 
 void cleanup_fixture(void)
 {
+    delete (fake_Zone *)zone;
     delete listensock;
     delete (*game_objs)[9876LL];
     delete game_objs;
@@ -130,7 +134,9 @@ void test_no_skill(void)
 
     setup_fixture();
 
-    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    check_authorization_result = ACCESS_MOVE;
+    get_character_objectid_result = 9876LL;
+    base_user *bu = new base_user(123LL, "a", "b", listensock);
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
 
@@ -163,7 +169,9 @@ void test_invalid_skill(void)
 
     setup_fixture();
 
-    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    check_authorization_result = ACCESS_MOVE;
+    get_character_objectid_result = 9876LL;
+    base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[567] = {567, 5, 0, 0};
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
@@ -197,7 +205,9 @@ void test_wrong_object_id(void)
 
     setup_fixture();
 
-    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    check_authorization_result = ACCESS_MOVE;
+    get_character_objectid_result = 9876LL;
+    base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
@@ -231,7 +241,9 @@ void test_good_object_id(void)
 
     setup_fixture();
 
-    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    check_authorization_result = ACCESS_MOVE;
+    get_character_objectid_result = 9876LL;
+    base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
     action_pool = new ActionPool(1, *game_objs, lib, database);
@@ -265,7 +277,9 @@ void test_worker(void)
 
     setup_fixture();
 
-    base_user *bu = new base_user(123LL, (*game_objs)[9876LL], listensock);
+    check_authorization_result = ACCESS_MOVE;
+    get_character_objectid_result = 9876LL;
+    base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
     action_pool = new ActionPool(1, *game_objs, lib, database);

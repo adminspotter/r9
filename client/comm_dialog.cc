@@ -1,6 +1,6 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Dec 2018, 08:31:09 tquirk
+ *   last updated 17 Jul 2019, 08:40:50 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -147,7 +147,8 @@ void setup_comm_callback(ui::active *t, void *call, void *client)
                   << std::endl;
         return;
     }
-    setup_comm(ai, user_str.c_str(), pass_str.c_str(), config.charname.c_str());
+    config.read_crypto_key(pass_str);
+    setup_comm(ai, user_str.c_str(), config.charname.c_str());
 }
 
 void close_dialog_callback(ui::active *t, void *call, void *client)

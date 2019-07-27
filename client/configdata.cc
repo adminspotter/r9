@@ -58,7 +58,7 @@
 #include "configdata.h"
 #include "l10n.h"
 
-#include <proto/key.h>
+#include "../proto/key.h"
 
 #define ENTRIES(x)  (sizeof(x) / sizeof(x[0]))
 
@@ -185,22 +185,7 @@ void ConfigData::parse_command_line(int count, const char **args)
         }
     }
     this->make_config_dirs();
-    try { this->read_config_file(); }
-    catch (std::ios_base::failure& e)
-    {
-#if HAVE_IOS_BASE_FAILURE_CODE
-        /* No idea if we'll actually get errno values here */
-        if (e.code().value() == ENOENT)
-#else
-        struct stat state;
-
-        if (stat(this->config_fname.c_str(), &state) && errno == ENOENT)
-#endif /* HAVE_IOS_BASE_FAILURE_CODE */
-            /* Nothing there; write a default config file */
-            this->write_config_file();
-        else
-            throw;
-    }
+    this->read_config_file();
 }
 
 void ConfigData::read_config_file(void)
@@ -208,6 +193,15 @@ void ConfigData::read_config_file(void)
     std::ifstream ifs(this->config_fname);
     std::string str, pristine_str;
 
+    if (!ifs)
+    {
+        struct stat state;
+
+        if (stat(this->config_fname.c_str(), &state) && errno == ENOENT)
+            /* Nothing there; write a default config file */
+            this->write_config_file();
+        return;
+    }
     while (ifs.good())
     {
         std::getline(ifs, str);
@@ -256,6 +250,7 @@ bool ConfigData::read_crypto_key(const std::string& passphrase)
             pp[i++] = (unsigned char)c;
         pp[i] = 0;
         this->priv_key = file_to_pkey(this->key_fname.c_str(), pp);
+        pkey_to_public_key(this->priv_key, this->pub_key, R9_PUBKEY_SZ);
     }
     return this->priv_key != NULL;
 }

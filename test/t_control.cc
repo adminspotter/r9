@@ -102,7 +102,6 @@ void test_assignment(void)
     GameObject *go2 = new GameObject(NULL, NULL, 124LL);
     Control *con1 = new Control(123LL, go1);
     con1->slave = go2;
-    con1->username = "howdy";
 
     Control *con2 = new Control(987LL, NULL);
 
@@ -110,8 +109,6 @@ void test_assignment(void)
     is(con1->default_slave == con2->default_slave, false,
        test + "default slaves are not equal");
     is(con1->slave == con2->slave, false, test + "slaves are not equal");
-    is(con1->username == con2->username, false,
-       test + "usernames are not equal");
 
     *con2 = *con1;
 
@@ -119,7 +116,6 @@ void test_assignment(void)
     is(con1->default_slave, con2->default_slave,
        test + "default slaves are equal");
     is(con1->slave, con2->slave, test + "slaves are equal");
-    is(con1->username, con2->username, test + "usernames are equal");
 
     delete con2;
     delete con1;
@@ -147,7 +143,7 @@ void test_take_over(void)
 
 int main(int argc, char **argv)
 {
-    plan(19);
+    plan(17);
 
     test_create_delete();
     test_create_delete_connected();

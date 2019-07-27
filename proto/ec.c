@@ -1,6 +1,6 @@
 /* ec.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Feb 2019, 08:52:36 tquirk
+ *   last updated 02 Jun 2019, 22:25:36 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -26,6 +26,10 @@
  * Things to do
  *
  */
+
+#include <string.h>
+
+#include <openssl/ec.h>
 
 #include "ec.h"
 
@@ -55,4 +59,49 @@ EVP_PKEY *generate_ecdh_key(void)
 
   BAILOUT1:
     return key;
+}
+
+int pkey_to_public_key(EVP_PKEY *pkey, uint8_t *keybuf, size_t keybuf_sz)
+{
+    EC_KEY *key = NULL;
+    int keylen = 0;
+
+    if ((key = (EC_KEY *)EVP_PKEY_get0(pkey)) != NULL)
+        if ((keylen = i2o_ECPublicKey(key, NULL)) != 0 && keybuf_sz >= keylen)
+        {
+            memset(keybuf, 0, keybuf_sz);
+            i2o_ECPublicKey(key, &keybuf);
+            return keylen;
+        }
+    return 0;
+}
+
+EVP_PKEY *public_key_to_pkey(uint8_t *keybuf, size_t keybuf_sz)
+{
+    EC_KEY *key = NULL;
+    EC_GROUP *grp = NULL;
+    EVP_PKEY *pkey = NULL;
+
+    if (keybuf == NULL || keybuf_sz == 0 || (key = EC_KEY_new()) == NULL)
+        return pkey;
+    if ((grp = EC_GROUP_new_by_curve_name(R9_CURVE)) == NULL)
+        goto BAILOUT1;
+    if (EC_KEY_set_group(key, grp) == 0)
+        goto BAILOUT2;
+    if ((pkey = EVP_PKEY_new()) == NULL
+        || o2i_ECPublicKey(&key,
+                           (const unsigned char **)&keybuf,
+                           keybuf_sz) == NULL
+        || EVP_PKEY_assign_EC_KEY(pkey, key) == 0)
+        goto BAILOUT3;
+    EC_GROUP_free(grp);
+    return pkey;
+
+  BAILOUT3:
+    EVP_PKEY_free(pkey);
+  BAILOUT2:
+    EC_GROUP_free(grp);
+  BAILOUT1:
+    EC_KEY_free(key);
+    return NULL;
 }

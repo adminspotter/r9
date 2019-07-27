@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 May 2019, 13:11:52 tquirk
+ *   last updated 24 Jul 2019, 00:07:51 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -67,6 +67,10 @@
 #include "client_core.h"
 #include "comm.h"
 #include "l10n.h"
+#include "configdata.h"
+
+#include "../proto/dh.h"
+#include "../proto/ec.h"
 
 uint64_t Comm::sequence = 0LL;
 
@@ -79,7 +83,8 @@ Comm::pkt_handler Comm::pkt_type[] =
     &Comm::handle_posupd,       /* Position update */
     &Comm::handle_srvnot,       /* Server notice   */
     &Comm::handle_pngpkt,       /* Ping            */
-    &Comm::handle_unsupported   /* Logout req      */
+    &Comm::handle_unsupported,  /* Logout req      */
+    &Comm::handle_srvkey        /* Server key      */
 };
 
 #define COMM_MEMBER(a, b) ((a).*(b))
@@ -115,6 +120,42 @@ void Comm::create_socket(struct addrinfo *ai)
       default:
         break;
     }
+}
+
+int Comm::encrypt_packet(packet& p)
+{
+    size_t pkt_sz;
+
+    if (p.basic.type == TYPE_LOGREQ)
+        return 1;
+    if ((pkt_sz = packet_size(&p) - sizeof(basic_packet)) > 0)
+    {
+        uint8_t *pkt = (uint8_t *)&p + sizeof(basic_packet);
+
+        return r9_encrypt(pkt, pkt_sz,
+                          this->key,
+                          this->iv, p.basic.sequence,
+                          pkt);
+    }
+    return 1;
+}
+
+int Comm::decrypt_packet(packet& p)
+{
+    size_t pkt_sz;
+
+    if (p.basic.type == TYPE_SRVKEY)
+        return 1;
+    if ((pkt_sz = packet_size(&p) - sizeof(basic_packet)) > 0)
+    {
+        uint8_t *pkt = (uint8_t *)&p + sizeof(basic_packet);
+
+        return r9_decrypt(pkt, pkt_sz,
+                          this->key,
+                          this->iv, p.basic.sequence,
+                          pkt);
+    }
+    return 1;
 }
 
 void *Comm::send_worker(void *arg)
@@ -193,10 +234,15 @@ void *Comm::recv_worker(void *arg)
             continue;
         }
         /* Needs to be a real packet type */
-        if (buf.basic.type >= sizeof(pkt_type))
+        if (buf.basic.type >= sizeof(pkt_type) / sizeof(pkt_handler))
         {
             std::clog << _("Unknown packet type ") << (int)buf.basic.type
                       << std::endl;
+            continue;
+        }
+        if (!comm->decrypt_packet(buf))
+        {
+            std::clog << _("Error while decrypting packet") << std::endl;
             continue;
         }
         /* We should be able to convert to host byte ordering */
@@ -275,6 +321,31 @@ void Comm::handle_posupd(packet& p)
 void Comm::handle_srvnot(packet& p)
 {
     std::clog << "Got a server notice" << std::endl;
+}
+
+void Comm::handle_srvkey(packet& p)
+{
+    EVP_PKEY *pub = NULL;
+    struct dh_message *shared = NULL;
+
+    /* TODO: there should be some authentication done here.  Perhaps a
+     * known_hosts mechanism like openssh?
+     */
+    if ((pub = public_key_to_pkey(p.key.pubkey, R9_PUBKEY_SZ)) == NULL)
+    {
+        std::clog << _("Got a bad public key") << std::endl;
+        return;
+    }
+    if ((shared = dh_shared_secret(config.priv_key, pub)) == NULL)
+    {
+        OPENSSL_free(pub);
+        std::clog << _("Could not derive shared secret") << std::endl;
+        return;
+    }
+    memcpy(this->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
+    free_dh_message(shared);
+    OPENSSL_free(pub);
+    memcpy(this->iv, p.key.iv, R9_SYMMETRIC_IV_BUF_SZ);
 }
 
 void Comm::handle_unsupported(packet& p)
@@ -443,6 +514,11 @@ void Comm::send(packet *p, size_t len)
         std::clog << _("Error hton'ing packet") << std::endl;
         delete p;
     }
+    else if (!this->encrypt_packet(*p))
+    {
+        std::clog << _("Error encrypting packet") << std::endl;
+        delete p;
+    }
     else
     {
         this->send_queue.push(p);
@@ -452,7 +528,6 @@ void Comm::send(packet *p, size_t len)
 }
 
 void Comm::send_login(const std::string& user,
-                      const std::string& pass,
                       const std::string& character)
 {
     packet *req = new packet;
@@ -462,8 +537,8 @@ void Comm::send_login(const std::string& user,
     req->log.version = 1;
     req->log.sequence = this->sequence++;
     strncpy(req->log.username, user.c_str(), sizeof(req->log.username));
-    strncpy(req->log.password, pass.c_str(), sizeof(req->log.password));
     strncpy(req->log.charname, character.c_str(), sizeof(req->log.charname));
+    memcpy(req->log.pubkey, config.pub_key, R9_PUBKEY_SZ);
     this->send(req, sizeof(login_request));
 }
 

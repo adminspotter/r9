@@ -1,6 +1,6 @@
 /* r9_keygen.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Apr 2019, 09:49:59 tquirk
+ *   last updated 22 Jul 2019, 08:00:53 tquirk
  *
  * Revision IX game utility
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -203,6 +203,21 @@ void write_key(EVP_PKEY *key, std::string& key_fname, std::string& passphrase)
         std::cerr << _("Could not write private key file: ")
                   << strerror(errno) << "(" << errno << ")" << std::endl;
         exit(KEYGEN_RETURN);
+    }
+    if (do_client_key == true)
+    {
+        std::string pubkey_fname = key_fname + ".pub";
+        FILE *pubkey_file = fopen(pubkey_fname.c_str(), "wb");
+
+        if (pubkey_file != NULL)
+        {
+            uint8_t pubkey[R9_PUBKEY_SZ];
+
+            pkey_to_public_key(key, pubkey, sizeof(pubkey));
+            for (int i = 0; i < sizeof(pubkey); ++i)
+                fprintf(pubkey_file, "%c", pubkey[i]);
+            fclose(pubkey_file);
+        }
     }
 }
 

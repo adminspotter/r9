@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Apr 2019, 16:44:57 tquirk
+ *   last updated 17 Jul 2019, 08:36:48 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -180,13 +180,12 @@ void move_key_callback(ui::active *a, void *call, void *client)
     }
 }
 
-void setup_comm(struct addrinfo *ai,
-                const char *user, const char *pass, const char *charname)
+void setup_comm(struct addrinfo *ai, const char *user, const char *charname)
 {
     Comm *c = new Comm(ai);
     comm.push_back(c);
     c->start();
-    c->send_login(user, pass, charname);
+    c->send_login(user, charname);
 }
 
 void cleanup_comm(void)

@@ -123,10 +123,10 @@ void test_create_delete(void)
     is(conf->size.steps[2], config_data::ZONE_STEPS,
        test + "expected zone z steps");
 
-    ok(conf->priv_key == NULL, test + "expected private key");
-    uint8_t expected_pub_key[128];
+    ok(conf->key.priv_key == NULL, test + "expected private key");
+    uint8_t expected_pub_key[R9_PUBKEY_SZ];
     memset(expected_pub_key, 0, sizeof(expected_pub_key));
-    is(memcmp(conf->pub_key, expected_pub_key, sizeof(conf->pub_key)),
+    is(memcmp(conf->key.pub_key, expected_pub_key, sizeof(conf->key.pub_key)),
        0,
        test + "expected public key");
 
@@ -185,7 +185,7 @@ void test_setup_cleanup(void)
     is(seteuid_count, 0, test + st + "expected seteuids");
     is(setegid_count, 0, test + st + "expected setegids");
     is(chdir_count, 0, test + st + "expected chdirs");
-    ok(config.priv_key != NULL, test + st + "expected key");
+    ok(config.key.priv_key != NULL, test + st + "expected key");
 
     cleanup_configuration();
 
@@ -207,7 +207,7 @@ void test_setup_cleanup(void)
     is(seteuid_count, 1, test + st + "expected seteuids");
     is(setegid_count, 1, test + st + "expected setegids");
     is(chdir_count, 1, test + st + "expected chdirs");
-    ok(config.priv_key == NULL, test + st + "expected key");
+    ok(config.key.priv_key == NULL, test + st + "expected key");
 }
 
 void test_parse_command_line(void)
