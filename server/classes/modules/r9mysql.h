@@ -1,6 +1,6 @@
 /* r9mysql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2019, 08:08:07 tquirk
+ *   last updated 07 Sep 2019, 18:29:54 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -37,9 +37,6 @@
 
 class MySQL : public DB
 {
-  private:
-    MYSQL db_handle;
-
   public:
     MySQL(const std::string&, const std::string&,
           const std::string&, const std::string&);
@@ -63,7 +60,7 @@ class MySQL : public DB
     int get_server_objects(std::map<uint64_t, GameObject *> &);
 
   private:
-    void db_connect(void);
+    MYSQL *db_connect(void);
 };
 
 #endif /* __INC_R9MYSQL_H__ */
