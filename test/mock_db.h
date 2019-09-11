@@ -27,8 +27,6 @@ int get_characterid_count = 0;
 uint64_t get_characterid_result = 0LL;
 int get_character_objectid_count = 0;
 uint64_t get_character_objectid_result = 0LL;
-int open_new_login_result = 0, check_open_login_result = 0;
-int close_open_login_result = 0;
 int get_player_server_skills_count = 0, get_player_server_skills_result = 0;
 int get_server_skills_count = 0, get_server_skills_result = 0;
 int get_server_objects_count = 0, get_server_objects_result = 0;
@@ -66,18 +64,6 @@ class fake_DB : public DB
         {
             ++get_character_objectid_count;
             return get_character_objectid_result;
-        };
-    virtual int open_new_login(uint64_t a, uint64_t b, Sockaddr *c)
-        {
-            return open_new_login_result;
-        };
-    virtual int check_open_login(uint64_t a, uint64_t b)
-        {
-            return check_open_login_result;
-        };
-    virtual int close_open_login(uint64_t a, uint64_t b, Sockaddr *c)
-        {
-            return close_open_login_result;
         };
     virtual int get_player_server_skills(uint64_t a, uint64_t b,
                                          std::map<uint16_t, action_level>& c)

@@ -56,22 +56,6 @@ CREATE TABLE server_access (
 	CONSTRAINT server_access_PK PRIMARY KEY (serverid, characterid)
 );
 
-CREATE TABLE player_logins (
-	playerid BIGINT NOT NULL,
-	CONSTRAINT playerid_FK REFERENCES players(playerid),
-	characterid BIGINT NOT NULL,
-	CONSTRAINT characterid_FK REFERENCES characters(characterid),
-	serverid BIGINT NOT NULL,
-	CONSTRAINT serverid_FK REFERENCES servers(serverid),
-	src_ip INTEGER NOT NULL,
-	src_port SMALLINT NOT NULL,
-	login_time TIMESTAMP NOT NULL,
-	enter_time TIMESTAMP,
-	exit_time TIMESTAMP,
-	logout_time TIMESTAMP,
-	CONSTRAINT player_logins_PK PRIMARY KEY (playerid, characterid, login_time)
-);
-
 CREATE TABLE skills (
 	skillid BIGINT NOT NULL,
 	skillname VARCHAR2(64) NOT NULL,

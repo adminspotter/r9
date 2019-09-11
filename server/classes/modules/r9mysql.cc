@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Sep 2019, 18:29:12 tquirk
+ *   last updated 10 Sep 2019, 22:47:07 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -23,7 +23,6 @@
  * This file contains the MySQL routines to do the common database tasks.
  *
  * Things to do
- *   - Finish writing open_new_login and close_open_login.
  *
  */
 
@@ -346,87 +345,6 @@ int MySQL::get_player_server_skills(uint64_t userid,
     }
     mysql_close(db_handle);
     return count;
-}
-
-int MySQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
-{
-    MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
-    int retval = 0;
-
-    snprintf(str, sizeof(str),
-             "INSERT INTO player_logins "
-             "(playerid, characterid, serverid, src_ip, src_port) "
-             "VALUES (%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",'%s',%d)",
-             userid, charid, this->host_id, sa->hostname(), sa->port());
-
-    db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0)
-        retval = mysql_affected_rows(db_handle);
-    mysql_close(db_handle);
-    return retval;
-}
-
-/* Returns count of open logins for the given player/char on this server */
-int MySQL::check_open_login(uint64_t userid, uint64_t charid)
-{
-    MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[400];
-    int retval = 0;
-
-    snprintf(str, sizeof(str),
-             "SELECT COUNT(d.logout_time) "
-             "FROM players AS a, characters AS b, servers AS c, "
-             "player_logins AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=d.playerid "
-             "AND a.playerid=b.owner "
-             "AND b.characterid=%" PRIu64 " "
-             "AND b.characterid=d.characterid "
-             "AND c.ip='%s' "
-             "AND c.serverid=d.serverid "
-             "AND d.logout_time IS NULL",
-             userid, charid, this->host_ip);
-
-    db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0
-        && (res = mysql_use_result(db_handle)) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = atoi(row[0]);
-        mysql_free_result(res);
-    }
-    mysql_close(db_handle);
-    return retval;
-}
-
-int MySQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
-{
-    MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
-    int retval = 0;
-
-    snprintf(str, sizeof(str),
-             "UPDATE player_logins SET logout_time=NOW() "
-             "WHERE playerid=%" PRIu64 " "
-             "AND characterid=%" PRIu64 " "
-             "AND serverid=%" PRIu64 " "
-             "AND src_ip='%s' "
-             "AND src_port=%d "
-             "AND logout_time IS NULL",
-             userid, charid, this->host_id, sa->hostname(), sa->port());
-
-    db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0)
-        retval = mysql_affected_rows(db_handle);
-    mysql_close(db_handle);
-    return retval;
 }
 
 MYSQL *MySQL::db_connect(void)

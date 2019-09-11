@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2019, 14:46:22 tquirk
+ *   last updated 10 Sep 2019, 22:36:32 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -302,81 +302,6 @@ int PgSQL::get_player_server_skills(uint64_t userid,
     PQclear(res);
     this->db_close();
     return count;
-}
-
-int PgSQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
-{
-    PGresult *res;
-    char str[256];
-    int retval = 0;
-
-    this->db_connect();
-    snprintf(str, sizeof(str),
-             "INSERT INTO player_logins "
-             "(playerid, characterid, serverid, src_ip, src_port) "
-             "VALUES (%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",'%s',%d)",
-             userid, charid, this->host_id, sa->hostname(), sa->port());
-
-    res = PQexec(this->db_handle, str);
-    if (PQresultStatus(res) == PGRES_COMMAND_OK)
-        retval = 1;
-    PQclear(res);
-    this->db_close();
-    return retval;
-}
-
-int PgSQL::check_open_login(uint64_t userid, uint64_t charid)
-{
-    PGresult *res;
-    char str[400];
-    int retval = 0;
-
-    snprintf(str, sizeof(str),
-             "SELECT COUNT(d.logout_time) "
-             "FROM players AS a, characters AS b, servers AS c, "
-             "player_logins AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=d.playerid "
-             "AND a.playerid=b.owner "
-             "AND b.characterid=%" PRIu64 " "
-             "AND b.characterid=d.characterid "
-             "AND c.ip='%s' "
-             "AND c.serverid=d.serverid "
-             "AND d.logout_time IS NULL",
-             userid, charid, this->host_ip);
-    this->db_connect();
-
-    res = PQexec(this->db_handle, str);
-    if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
-        retval = atol(PQgetvalue(res, 0, 0));
-    PQclear(res);
-    this->db_close();
-    return retval;
-}
-
-int PgSQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
-{
-    PGresult *res;
-    char str[256];
-    int retval = 0;
-
-    this->db_connect();
-    snprintf(str, sizeof(str),
-             "UPDATE player_logins SET logout_time=NOW() "
-             "WHERE playerid=%" PRIu64 " "
-             "AND characterid=%" PRIu64 " "
-             "AND serverid=%" PRIu64 " "
-             "AND src_ip='%s' "
-             "AND src_port=%d "
-             "AND logout_time IS NULL",
-             userid, charid, this->host_id, sa->hostname(), sa->port());
-
-    res = PQexec(this->db_handle, str);
-    if (PQresultStatus(res) == PGRES_COMMAND_OK)
-        retval = 1;
-    PQclear(res);
-    this->db_close();
-    return retval;
 }
 
 void PgSQL::db_connect(void)

@@ -42,22 +42,6 @@ CREATE TABLE server_access (
   FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE player_logins (
-  playerid BIGINT NOT NULL,
-  characterid BIGINT NOT NULL,
-  serverid BIGINT NOT NULL,
-  src_ip VARCHAR(45) NOT NULL,
-  src_port SMALLINT NOT NULL,
-  login_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  enter_time TIMESTAMP,
-  exit_time TIMESTAMP,
-  logout_time TIMESTAMP,
-  PRIMARY KEY (playerid, characterid, login_time),
-  FOREIGN KEY (playerid) REFERENCES players(playerid) ON UPDATE CASCADE ON DELETE NO ACTION,
-  FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE NO ACTION,
-  FOREIGN KEY (serverid) REFERENCES servers(serverid) ON UPDATE CASCADE ON DELETE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 CREATE TABLE skills (
   skillid BIGINT NOT NULL,
   skillname VARCHAR(64) NOT NULL,

@@ -80,18 +80,6 @@ class fake_DB : public DB
         {
             return 0LL;
         };
-    virtual int open_new_login(uint64_t a, uint64_t b, Sockaddr *c)
-        {
-            return 0;
-        };
-    virtual int check_open_login(uint64_t a, uint64_t b)
-        {
-            return 0;
-        };
-    virtual int close_open_login(uint64_t a, uint64_t b, Sockaddr *c)
-        {
-            return 0;
-        };
     virtual int get_player_server_skills(uint64_t a, uint64_t b,
                                          std::map<uint16_t,
                                          action_level>& c)
