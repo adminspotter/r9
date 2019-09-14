@@ -43,6 +43,9 @@
 
 #include "db.h"
 
+const char DB::get_serverid_query[] =
+    "SELECT serverid FROM servers WHERE ip=?";
+
 void DB::get_host_address(void)
 {
     struct addrinfo *info;

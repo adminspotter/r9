@@ -371,21 +371,36 @@ MYSQL *MySQL::db_connect(void)
     /* Retrieve our server id if we haven't already gotten it. */
     if (this->host_id == 0LL)
     {
-        MYSQL_RES *res;
-        MYSQL_ROW row;
-        char str[256];
+        MYSQL_STMT *stmt;
+        MYSQL_BIND bind[1];
+        unsigned long length = strlen(this->host_ip);
+        my_bool is_null, error;
 
-        snprintf(str, sizeof(str),
-                 "SELECT serverid FROM servers WHERE ip='%s'",
-                 this->host_ip);
+        stmt = mysql_stmt_init(db_handle);
+        mysql_stmt_prepare(stmt,
+                           DB::get_serverid_query,
+                           strlen(DB::get_serverid_query));
 
-        if (mysql_real_query(db_handle, str, strlen(str)) == 0
-            && (res = mysql_use_result(db_handle)) != NULL
-            && (row = mysql_fetch_row(res)) != NULL)
-        {
-            this->host_id = strtoull(row[1], NULL, 10);
-            mysql_free_result(res);
-        }
+        memset(bind, 0, sizeof(bind));
+        bind[0].buffer_type = MYSQL_TYPE_STRING;
+        bind[0].buffer = this->host_ip;
+        bind[0].buffer_length = INET6_ADDRSTRLEN;
+        bind[0].length = &length;
+
+        mysql_stmt_bind_param(stmt, bind);
+        mysql_stmt_execute(stmt);
+
+        memset(bind, 0, sizeof(bind));
+        bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+        bind[0].is_unsigned = true;
+        bind[0].buffer = &this->host_id;
+        bind[0].length = &length;
+        bind[0].is_null = &is_null;
+        bind[0].error = &error;
+
+        mysql_stmt_bind_result(stmt, bind);
+        mysql_stmt_fetch(stmt);
+        mysql_stmt_close(stmt);
     }
     return db_handle;
 }
