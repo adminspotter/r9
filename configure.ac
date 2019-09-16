@@ -175,11 +175,6 @@ then
       ],
       [AC_MSG_ERROR([libm not valid, can not build client program.])])
 
-  # We're currently only doing l10n in the client, so we'll check that
-  # header here.
-  AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
-  AC_CHECK_FUNCS([setlocale])
-
   # OpenGL libs
   case $host_os in
     darwin*)
@@ -430,6 +425,10 @@ OPENSSL_CPPFLAGS_SAVE="$CPPFLAGS"
 CPPFLAGS="$CXXFLAGS"
 AC_CHECK_HEADERS([openssl/evp.h openssl/ec.h], [], [AC_MSG_ERROR([no valid OpenSSL installation found, can not continue])])
 CPPFLAGS="$OPENSSL_CPPFLAGS_SAVE"
+
+# We're doing l10n in the client and the utils, so we'll always check it
+AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
+AC_CHECK_FUNCS([setlocale])
 
 PTHREAD_LIBS_SAVE="$LIBS"
 LIBS=""
