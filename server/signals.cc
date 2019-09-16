@@ -82,7 +82,7 @@ void setup_signals(void)
         std::clog << syslogErr << "couldn't set SIGHUP handler: "
                   << err << " (" << errno << ")" << std::endl;
     }
-    /* SIGHUP - reread the configuration files. */
+    /* SIGUSR1 - reread the configuration files. */
     sa.sa_handler = sigusr1_handler;
     if (sigaction(SIGUSR1, &sa, NULL) == -1)
     {
