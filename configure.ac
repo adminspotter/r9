@@ -445,7 +445,7 @@ LIBS="$LIBS $OPENSSL_LIBS $PTHREAD_LIBS $PROFILE_LDLIBS"
 AC_CONFIG_SUBDIRS([client/cuddly-gl])
 
 # Checks for header files.
-AC_CHECK_HEADERS([architecture/byte_order.h arpa/inet.h byteswap.h endian.h fcntl.h getopt.h grp.h inttypes.h limits.h netdb.h netinet/in.h pwd.h signal.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/resource.h sys/socket.h sys/syslimits.h sys/time.h syslog.h termios.h unistd.h])
+AC_CHECK_HEADERS([architecture/byte_order.h arpa/inet.h byteswap.h endian.h fcntl.h getopt.h grp.h inttypes.h limits.h netdb.h netinet/in.h pwd.h signal.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/resource.h sys/socket.h sys/time.h syslog.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

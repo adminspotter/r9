@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jun 2019, 15:47:12 tquirk
+ *   last updated 16 Sep 2019, 08:27:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -91,9 +91,6 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
-#if HAVE_SYS_SYSLIMITS_H
-#include <sys/syslimits.h>
-#endif
 #if HAVE_PWD_H
 #include <pwd.h>
 #endif /* HAVE_PWD_H */
