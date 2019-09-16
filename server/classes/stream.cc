@@ -1,6 +1,6 @@
 /* stream.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jul 2019, 23:01:38 tquirk
+ *   last updated 16 Sep 2019, 07:56:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -31,18 +31,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#if HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-#if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
-#endif
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <errno.h>
-#ifdef HAVE_SIGNAL_H
 #include <signal.h>
-#endif
 
 #include <algorithm>
 #include <sstream>

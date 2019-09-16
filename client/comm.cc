@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2019, 00:07:51 tquirk
+ *   last updated 16 Sep 2019, 07:50:54 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -48,15 +48,9 @@
 
 #include <config.h>
 
-#if HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
-#if HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
-#endif /* HAVE_ARPA_INET_H */
 #include <errno.h>
 
 #include <cstdint>

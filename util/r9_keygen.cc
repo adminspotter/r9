@@ -1,6 +1,6 @@
 /* r9_keygen.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Jul 2019, 08:00:53 tquirk
+ *   last updated 16 Sep 2019, 08:00:38 tquirk
  *
  * Revision IX game utility
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -32,27 +32,13 @@
 
 #include <config.h>
 
-#if HAVE_STDIO_H
 #include <stdio.h>
-#endif /* HAVE_STDIO_H */
-#if HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
-#if HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif /* HAVE_STDLIB_H */
-#if HAVE_GETOPT_H
 #include <getopt.h>
-#endif /* HAVE_GETOPT_H */
-#if HAVE_TERMIOS_H
 #include <termios.h>
-#endif /* HAVE_TERMIOS_H */
-#if HAVE_ERRNO_H
 #include <errno.h>
-#endif /* HAVE_ERRNO_H */
 
 #if WANT_LOCALES && HAVE_LIBINTL_H
 #include <libintl.h>

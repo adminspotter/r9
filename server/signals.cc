@@ -1,6 +1,6 @@
 /* signals.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 07:17:49 tquirk
+ *   last updated 16 Sep 2019, 07:57:49 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -27,17 +27,11 @@
  *
  */
 
-#if HAVE_CONFIG_H
 #include <config.h>
-#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif /* HAVE_STDLIB_H */
-#if HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
 #include <signal.h>
 #include <errno.h>
 
