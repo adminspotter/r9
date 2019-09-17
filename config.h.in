@@ -13,9 +13,6 @@
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
-/* Define to 1 if you have the `backtrace' function. */
-#undef HAVE_BACKTRACE
-
 /* Define to 1 if you have the <boost/algorithm/string.hpp> header file. */
 #undef HAVE_BOOST_ALGORITHM_STRING_HPP
 
@@ -45,9 +42,6 @@
 
 /* Define to 1 if you have the <endian.h> header file. */
 #undef HAVE_ENDIAN_H
-
-/* Define to 1 if you have the <execinfo.h> header file. */
-#undef HAVE_EXECINFO_H
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H

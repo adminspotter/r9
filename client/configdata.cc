@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Jul 2019, 08:39:13 tquirk
+ *   last updated 16 Sep 2019, 07:51:10 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -36,15 +36,9 @@
 
 #include <config.h>
 
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif /* HAVE_STDLIB_H */
-#if HAVE_STDDEF_H
 #include <stddef.h>
-#endif
-#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif /* HAVE_SYS_STAT_H */
 #include <errno.h>
 
 #include <cstring>

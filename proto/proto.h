@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2019, 08:16:51 tquirk
+ *   last updated 16 Sep 2019, 07:54:24 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -53,16 +53,8 @@
 #ifndef __INC_PROTO_H__
 #define __INC_PROTO_H__
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif /* HAVE_CONFIG_H */
-
-#if HAVE_STDINT_H
 #include <stdint.h>
-#endif /* HAVE_STDINT_H */
-#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
-#endif /* HAVE_ARPA_INET_H */
 
 /* Some defines for packet types. */
 #define TYPE_ACKPKT 0        /* Acknowledgement packet */

@@ -175,11 +175,6 @@ then
       ],
       [AC_MSG_ERROR([libm not valid, can not build client program.])])
 
-  # We're currently only doing l10n in the client, so we'll check that
-  # header here.
-  AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
-  AC_CHECK_FUNCS([setlocale])
-
   # OpenGL libs
   case $host_os in
     darwin*)
@@ -431,6 +426,10 @@ CPPFLAGS="$CXXFLAGS"
 AC_CHECK_HEADERS([openssl/evp.h openssl/ec.h], [], [AC_MSG_ERROR([no valid OpenSSL installation found, can not continue])])
 CPPFLAGS="$OPENSSL_CPPFLAGS_SAVE"
 
+# We're doing l10n in the client and the utils, so we'll always check it
+AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
+AC_CHECK_FUNCS([setlocale])
+
 PTHREAD_LIBS_SAVE="$LIBS"
 LIBS=""
 AC_SEARCH_LIBS([pthread_create], [pthread],
@@ -445,8 +444,14 @@ LIBS="$LIBS $OPENSSL_LIBS $PTHREAD_LIBS $PROFILE_LDLIBS"
 
 AC_CONFIG_SUBDIRS([client/cuddly-gl])
 
-# Checks for header files.
-AC_CHECK_HEADERS([architecture/byte_order.h arpa/inet.h byteswap.h endian.h execinfo.h fcntl.h getopt.h grp.h inttypes.h limits.h netdb.h netinet/in.h pwd.h signal.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/resource.h sys/socket.h sys/syslimits.h sys/time.h syslog.h termios.h unistd.h])
+# Checks for various endianness-related header files and functions.
+AC_CHECK_HEADERS([architecture/byte_order.h byteswap.h endian.h])
+AC_CHECK_FUNCS([htonll ntohll])
+
+# The rest of the headers which we can't continue without.
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h getopt.h grp.h inttypes.h limits.h netdb.h netinet/in.h pwd.h signal.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h],
+                 [],
+                 [AC_MSG_ERROR([missing required headers, can not build])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -461,10 +466,12 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 
-# Checks for library functions.
+# Checks for required library functions.
 AC_FUNC_FORK
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([backtrace dup2 getcwd gethostname getopt_long gettimeofday getrlimit htonll kill memset mkdir nanosleep ntohll select socket strdup strerror_r strtoull])
+AC_CHECK_FUNCS([dup2 getcwd gethostname getopt_long gettimeofday getrlimit kill memset mkdir nanosleep select socket strdup strerror_r strtoull],
+               [],
+               [AC_MSG_ERROR([missing required functions, can not build])])
 
 # One of the mocks in our test suite needs a possibly-different
 # prototype, depending on the system we're building on.

@@ -1,9 +1,9 @@
 /* signals.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Feb 2018, 07:56:07 tquirk
+ *   last updated 16 Sep 2019, 07:57:49 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,27 +23,17 @@
  * This file contains the signal handlers and registration functions.
  *
  * Things to do
- *   - See if we can make the sigsegv handler dump core.
  *   - Catch everything else that may need to be caught.
  *
  */
 
-#if HAVE_CONFIG_H
 #include <config.h>
-#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif /* HAVE_STDLIB_H */
-#if HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
 #include <signal.h>
 #include <errno.h>
-#if HAVE_EXECINFO_H
-#include <execinfo.h>
-#endif /* HAVE_EXECINFO_H */
 
 #include "signals.h"
 #include "server.h"
@@ -82,7 +72,7 @@ void setup_signals(void)
         std::clog << syslogErr << "couldn't set SIGHUP handler: "
                   << err << " (" << errno << ")" << std::endl;
     }
-    /* SIGHUP - reread the configuration files. */
+    /* SIGUSR1 - reread the configuration files. */
     sa.sa_handler = sigusr1_handler;
     if (sigaction(SIGUSR1, &sa, NULL) == -1)
     {
@@ -126,16 +116,6 @@ void setup_signals(void)
         std::clog << syslogErr << "couldn't set SIGINT handler: "
                   << err << " (" << errno << ")" << std::endl;
     }
-    /* SIGSEGV - clean up and terminate the process. */
-    sa.sa_handler = sigsegv_handler;
-    if (sigaction(SIGSEGV, &sa, NULL) == -1)
-    {
-        char err[128];
-
-        strerror_r(errno, err, sizeof(err));
-        std::clog << syslogErr << "couldn't set SIGSEGV handler: "
-                  << err << " (" << errno << ")" << std::endl;
-    }
 }
 
 /* Reset the signal handlers to the default actions. */
@@ -153,7 +133,6 @@ void cleanup_signals(void)
     sigaction(SIGUSR1, &sa, NULL);
     sigaction(SIGUSR2, &sa, NULL);
     sigaction(SIGSEGV, &sa, NULL);
-    sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
 }
 
@@ -190,28 +169,4 @@ static void sigint_handler(int sig)
 {
     std::clog << syslogInfo << "received SIGINT, terminating" << std::endl;
     set_exit_flag();
-}
-
-static void sigsegv_handler(int sig)
-{
-    std::clog << syslogInfo << "received SIGSEGV, detonating" << std::endl;
-
-#if HAVE_BACKTRACE
-    void *stack_trace[10];
-    char **strings;
-    size_t trace_size, i;
-
-    /* Generate a stack dump.  This seems like it might be dangerous in
-     * a signal handler (for SIGSEGV, even) because it appears that quite
-     * a bit of memory will be allocated.  We'll go with it, and if it
-     * works, ok, and if not, we'll have to move to backtrace_symbols_fd.
-     */
-    trace_size = backtrace(stack_trace, sizeof(stack_trace));
-    strings = backtrace_symbols(stack_trace, trace_size);
-    for (i = 0; i < trace_size; ++i)
-        std::clog << strings[i] << std::endl;
-#endif /* HAVE_BACKTRACE */
-
-    /* Let's try to actually get a corefile */
-    abort();
 }

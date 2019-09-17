@@ -1,6 +1,6 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jun 2019, 15:47:12 tquirk
+ *   last updated 16 Sep 2019, 08:27:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -77,35 +77,16 @@
  *
  */
 
-#if HAVE_CONFIG_H
 #include <config.h>
-#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif /* HAVE_STDLIB_H */
-#if HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
-#if HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#if HAVE_SYS_SYSLIMITS_H
-#include <sys/syslimits.h>
-#endif
-#if HAVE_PWD_H
 #include <pwd.h>
-#endif /* HAVE_PWD_H */
-#if HAVE_GRP_H
 #include <grp.h>
-#endif /* HAVE_GRP_H */
-#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
-#if HAVE_SYSLOG_H
 #include <syslog.h>
-#endif /* HAVE_SYSLOG_H */
 #include <errno.h>
 
 #include <map>
