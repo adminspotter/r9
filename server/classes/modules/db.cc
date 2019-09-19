@@ -53,6 +53,14 @@ const char DB::check_authentication_query[] =
     "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
     "AND a.suspended=0 "
     "ORDER BY b.not_before DESC";
+const char DB::check_authorization_id_query[] =
+    "SELECT c.access_type "
+    "FROM players AS a, characters AS b, server_access AS c "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.characterid=? "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=?";
 const char DB::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=?";
 

@@ -112,33 +112,46 @@ uint64_t MySQL::check_authentication(const std::string& user,
 int MySQL::check_authorization(uint64_t userid, uint64_t charid)
 {
     MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[350];
-    int retval = ACCESS_NONE;
-
-    snprintf(str, sizeof(str),
-             "SELECT c.access_type "
-             "FROM players AS a, characters AS b, server_access AS c, "
-             "servers AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.characterid=%" PRIu64 " "
-             "AND b.characterid=c.characterid "
-             "AND c.serverid=d.serverid "
-             "AND d.ip='%s'",
-             userid, charid, this->host_ip);
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[3];
+    unsigned long length;
+    my_bool is_null, error;
+    char retval = ACCESS_NONE;
 
     db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0
-        && (res = mysql_use_result(db_handle)) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = atoi(row[0]);
-        mysql_free_result(res);
-    }
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       DB::check_authorization_id_query,
+                       strlen(DB::check_authorization_id_query));
+
+    length = strlen(this->host_ip);
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &userid;
+    bind[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = &charid;
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_TINY;
+    bind[0].is_unsigned = false;
+    bind[0].buffer = &retval;
+    bind[0].length = &length;
+    bind[0].is_null = &is_null;
+    bind[0].error = &error;
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_fetch(stmt);
+    mysql_stmt_close(stmt);
     mysql_close(db_handle);
-    return retval;
+    return (int)retval;
 }
 
 int MySQL::check_authorization(uint64_t userid, const std::string& charname)
