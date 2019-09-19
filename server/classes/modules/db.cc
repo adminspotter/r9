@@ -61,6 +61,14 @@ const char DB::check_authorization_id_query[] =
     "AND b.characterid=? "
     "AND b.characterid=c.characterid "
     "AND c.serverid=?";
+const char DB::check_authorization_name_query[] =
+    "SELECT c.access_type "
+    "FROM players AS a, characters AS b, server_access AS c "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=? "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=?";
 const char DB::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=?";
 
