@@ -88,6 +88,10 @@ const char DB::get_server_skills_query[] =
     "FROM skills AS a, server_skills AS b "
     "WHERE a.skillid=b.skillid "
     "AND b.serverid=?";
+const char DB::get_server_objects_query[] =
+    "SELECT objectid, characterid, pos_x, pos_y, pos_z "
+    "FROM server_objects "
+    "WHERE serverid=?";
 const char DB::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=?";
 

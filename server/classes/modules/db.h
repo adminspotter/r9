@@ -55,6 +55,7 @@ class DB
     static const char get_characterid_query[120];
     static const char get_character_objectid_query[187];
     static const char get_server_skills_query[141];
+    static const char get_server_objects_query[87];
     static const char get_serverid_query[40];
 
     /* IPv6 addresses can be a lot longer than IPv4, so we'll just use

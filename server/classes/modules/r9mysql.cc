@@ -367,44 +367,77 @@ int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
 int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 {
     MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[5];
+    uint64_t objid, charid;
+    long pos_x, pos_y, pos_z;
+    unsigned long length[5];
+    my_bool is_null[5], error[5];
     int count = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT b.objectid, b.characterid, b.pos_x, b.pos_y, b.pos_z "
-             "FROM servers AS a, server_objects AS b "
-             "WHERE a.ip='%s' "
-             "AND a.serverid=b.serverid",
-             this->host_ip);
-
     db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0
-        && (res = mysql_use_result(db_handle)) != NULL)
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       DB::get_server_objects_query,
+                       strlen(DB::get_server_objects_query));
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &objid;
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null[0];
+    bind[0].error = &error[0];
+    bind[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = &charid;
+    bind[1].length = &length[1];
+    bind[1].is_null = &is_null[1];
+    bind[1].error = &error[1];
+    bind[2].buffer_type = MYSQL_TYPE_LONG;
+    bind[2].buffer = &pos_x;
+    bind[2].length = &length[2];
+    bind[2].is_null = &is_null[2];
+    bind[2].error = &error[2];
+    bind[3].buffer_type = MYSQL_TYPE_LONG;
+    bind[3].buffer = &pos_y;
+    bind[3].length = &length[3];
+    bind[3].is_null = &is_null[3];
+    bind[3].error = &error[3];
+    bind[4].buffer_type = MYSQL_TYPE_LONG;
+    bind[4].buffer = &pos_z;
+    bind[4].length = &length[4];
+    bind[4].is_null = &is_null[4];
+    bind[4].error = &error[4];
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_store_result(stmt);
+    while (mysql_stmt_fetch(stmt) == 0)
     {
-        while ((row = mysql_fetch_row(res)) != NULL)
+        //Geometry *geom = new Geometry();
+        GameObject *go = new GameObject(NULL, NULL, objid);
+
+        go->position[0] = pos_x / 100.0;
+        go->position[1] = pos_y / 100.0;
+        go->position[2] = pos_z / 100.0;
+        if (charid != 0LL)
         {
-            uint64_t objid = strtoull(row[0], NULL, 10);
-            uint64_t charid = strtoull(row[1], NULL, 10);
-
-            //Geometry *geom = new Geometry();
-            GameObject *go = new GameObject(NULL, NULL, objid);
-
-            go->position[0] = atol(row[2]) / 100.0;
-            go->position[1] = atol(row[3]) / 100.0;
-            go->position[2] = atol(row[4]) / 100.0;
-            if (charid != 0LL)
-            {
-                /* All characters first rez invisible and non-interactive */
-                go->natures.insert("invisible");
-                go->natures.insert("non-interactive");
-            }
-            gomap[objid] = go;
-            ++count;
+            /* All characters first rez invisible and non-interactive */
+            go->natures.insert("invisible");
+            go->natures.insert("non-interactive");
         }
-        mysql_free_result(res);
+        gomap[objid] = go;
+        ++count;
     }
+    mysql_stmt_close(stmt);
     mysql_close(db_handle);
     return count;
 }
