@@ -43,6 +43,16 @@
 
 #include "db.h"
 
+const char DB::check_authentication_query[] =
+    "SELECT a.playerid "
+    "FROM players AS a, player_keys AS b "
+    "WHERE a.username=? "
+    "AND a.playerid=b.playerid "
+    "AND b.public_key=? "
+    "AND b.not_before <= NOW() "
+    "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
+    "AND a.suspended=0 "
+    "ORDER BY b.not_before DESC";
 const char DB::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=?";
 

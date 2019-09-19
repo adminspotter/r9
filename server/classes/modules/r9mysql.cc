@@ -40,6 +40,7 @@
 #define __STDC_FORMAT_MACROS
 #endif
 #include <inttypes.h>
+#include <proto/ec.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -64,32 +65,45 @@ uint64_t MySQL::check_authentication(const std::string& user,
                                      size_t key_size)
 {
     MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[768], key_str[key_size * 2 + 1];
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[2];
+    unsigned long length[2];
+    my_bool is_null, error;
     uint64_t retval = 0;
 
-    mysql_hex_string(key_str, (const char *)pubkey, key_size);
-    snprintf(str, sizeof(str),
-             "SELECT a.playerid "
-             "FROM players AS a, player_keys AS b "
-             "WHERE a.username='%.*s' "
-             "AND a.playerid=b.playerid "
-             "AND HEX(b.public_key)='%.*s' "
-             "AND b.not_before <= NOW() "
-             "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
-             "AND a.suspended=0 "
-             "ORDER BY b.not_before DESC",
-             DB::MAX_USERNAME, user.c_str(), (int)(key_size * 2), key_str);
-
     db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0
-        && (res = mysql_use_result(db_handle)) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = strtoull(row[0], NULL, 10);
-        mysql_free_result(res);
-    }
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       DB::check_authentication_query,
+                       strlen(DB::check_authentication_query));
+
+    length[0] = user.size();
+    length[1] = key_size;
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_STRING;
+    bind[0].buffer = (void *)user.c_str();
+    bind[0].buffer_length = DB::MAX_USERNAME;
+    bind[0].length = &length[0];
+    bind[1].buffer_type = MYSQL_TYPE_BLOB;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = (void *)pubkey;
+    bind[1].buffer_length = R9_PUBKEY_SZ;
+    bind[1].length = &length[1];
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &retval;
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null;
+    bind[0].error = &error;
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_fetch(stmt);
+    mysql_stmt_close(stmt);
     mysql_close(db_handle);
     return retval;
 }
