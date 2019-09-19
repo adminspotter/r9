@@ -248,31 +248,45 @@ uint64_t MySQL::get_character_objectid(uint64_t userid,
                                        const std::string& charname)
 {
     MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[350];
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[3];
+    unsigned long length;
+    my_bool is_null, error;
     uint64_t retval = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT d.objectid "
-             "FROM players AS a, characters AS b, "
-             "servers AS c, server_objects AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.charactername='%.*s' "
-             "AND b.characterid=d.characterid "
-             "AND c.serverid=d.serverid "
-             "AND c.ip='%s'",
-             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
-
     db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0
-        && (res = mysql_use_result(db_handle)) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = strtoull(row[0], NULL, 10);
-        mysql_free_result(res);
-    }
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       DB::get_character_objectid_query,
+                       strlen(DB::get_character_objectid_query));
+
+    length = charname.size();
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &userid;
+    bind[1].buffer_type = MYSQL_TYPE_STRING;
+    bind[1].buffer = (void *)charname.c_str();
+    bind[1].buffer_length = DB::MAX_CHARNAME;
+    bind[1].length = &length;
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &retval;
+    bind[0].length = &length;
+    bind[0].is_null = &is_null;
+    bind[0].error = &error;
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_fetch(stmt);
+    mysql_stmt_close(stmt);
     mysql_close(db_handle);
     return retval;
 }
