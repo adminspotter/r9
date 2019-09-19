@@ -83,6 +83,11 @@ const char DB::get_character_objectid_query[] =
     "AND b.charactername=? "
     "AND b.characterid=c.characterid "
     "AND c.serverid=?";
+const char DB::get_server_skills_query[] =
+    "SELECT a.skillname, b.skillid, b.defaultid, b.lower, b.upper "
+    "FROM skills AS a, server_skills AS b "
+    "WHERE a.skillid=b.skillid "
+    "AND b.serverid=?";
 const char DB::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=?";
 

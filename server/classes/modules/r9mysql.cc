@@ -295,36 +295,71 @@ uint64_t MySQL::get_character_objectid(uint64_t userid,
 int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
 {
     MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[5];
+    uint64_t id, def;
+    int lower, upper;
+    char name[DB::MAX_SKILLNAME + 1];
+    unsigned long length[5];
+    my_bool is_null[5], error[5];
     int count = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT b.skillname, c.skillid, c.defaultid, c.lower, c.upper "
-             "FROM skills AS b, servers AS a, server_skills AS c "
-             "WHERE a.ip='%s' "
-             "AND a.serverid=c.serverid "
-             "AND b.skillid=c.skillid",
-             this->host_ip);
-
     db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0
-        && (res = mysql_use_result(db_handle)) != NULL)
-    {
-        while ((row = mysql_fetch_row(res)) != NULL)
-        {
-            uint64_t id = strtoull(row[1], NULL, 10);
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       DB::get_server_skills_query,
+                       strlen(DB::get_server_skills_query));
 
-            actions[id].name = row[0];
-            actions[id].def = strtoull(row[2], NULL, 10);
-            actions[id].lower = atoi(row[3]);
-            actions[id].upper = atoi(row[4]);
-            actions[id].valid = true;
-            ++count;
-        }
-        mysql_free_result(res);
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_STRING;
+    bind[0].buffer = name;
+    bind[0].buffer_length = sizeof(name);
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null[0];
+    bind[0].error = &error[0];
+    bind[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = &id;
+    bind[1].length = &length[1];
+    bind[1].is_null = &is_null[1];
+    bind[1].error = &error[1];
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &def;
+    bind[2].length = &length[2];
+    bind[2].is_null = &is_null[2];
+    bind[2].error = &error[2];
+    bind[3].buffer_type = MYSQL_TYPE_LONG;
+    bind[3].buffer = &lower;
+    bind[3].length = &length[3];
+    bind[3].is_null = &is_null[3];
+    bind[3].error = &error[3];
+    bind[4].buffer_type = MYSQL_TYPE_LONG;
+    bind[4].buffer = &upper;
+    bind[4].length = &length[4];
+    bind[4].is_null = &is_null[4];
+    bind[4].error = &error[4];
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_store_result(stmt);
+    while (mysql_stmt_fetch(stmt) == 0)
+    {
+        actions[id].name = name;
+        actions[id].def = def;
+        actions[id].lower = lower;
+        actions[id].upper = upper;
+        actions[id].valid = true;
+        ++count;
     }
+    mysql_stmt_close(stmt);
     mysql_close(db_handle);
     return count;
 }
