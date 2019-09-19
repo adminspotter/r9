@@ -25,6 +25,15 @@
  * without a specific database context.
  *
  * Things to do
+ *   - Add a method to save server object positions.  Perhaps also a
+ *     method to save a single object, such as when somebody logs out.
+ *   - Add a method to add or increase a character's skill and last
+ *     updated time.
+ *   - Add methods to add/change/remove server skills.  These changes
+ *     could be initiated from the server console.
+ *   - Add methods for suspending/unsuspending users?  Could also be
+ *     done via the server console.
+ *   - Consider how login/logout tracking should be done.
  *
  */
 
