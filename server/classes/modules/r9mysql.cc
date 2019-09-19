@@ -33,13 +33,6 @@
 #include <time.h>
 #include <errno.h>
 
-/* The PRIu64 type macros are not defined unless specifically
- * requested by the following macro.
- */
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS
-#endif
-#include <inttypes.h>
 #include <proto/ec.h>
 
 #include <sstream>
@@ -48,6 +41,20 @@
 #include "r9mysql.h"
 #include "../game_obj.h"
 #include "../../../proto/proto.h"
+
+static time_t MYSQL_TIME_to_time_t(MYSQL_TIME *mt)
+{
+    time_t result = 0L;
+    struct tm timeinfo;
+
+    timeinfo.tm_year = mt->year;
+    timeinfo.tm_mon = mt->month;
+    timeinfo.tm_mday = mt->day;
+    timeinfo.tm_hour = mt->hour;
+    timeinfo.tm_min = mt->minute;
+    timeinfo.tm_sec = mt->second;
+    return mktime(&timeinfo);
+}
 
 MySQL::MySQL(const std::string& host, const std::string& user,
              const std::string& pass, const std::string& db)
@@ -448,40 +455,68 @@ int MySQL::get_player_server_skills(uint64_t userid,
                                     std::map<uint16_t, action_level>& actions)
 {
     MYSQL *db_handle;
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[420];
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[4];
+    uint64_t skillid;
+    int level, improvement;
+    MYSQL_TIME last_increase;
+    unsigned long length[4];
+    my_bool is_null[4], error[4];
     int count = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT e.skillid, e.level, e.improvement, "
-             "UNIX_TIMESTAMP(e.last_increase) "
-             "FROM players AS a, characters AS b, servers AS c, "
-             "server_skills AS d, character_skills AS e "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.characterid=%" PRIu64 " "
-             "AND b.characterid=e.characterid "
-             "AND c.ip='%s' "
-             "AND c.serverid=d.serverid "
-             "AND d.skillid=e.skillid",
-             userid, charid, this->host_ip);
-
     db_handle = this->db_connect();
-    if (mysql_real_query(db_handle, str, strlen(str)) == 0
-        && (res = mysql_use_result(db_handle)) != NULL)
-    {
-        while ((row = mysql_fetch_row(res)) != NULL)
-        {
-            uint64_t id = strtoull(row[0], NULL, 10);
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       DB::get_player_server_skills_query,
+                       strlen(DB::get_player_server_skills_query));
 
-            actions[id].level = atoi(row[1]);
-            actions[id].improvement = atoi(row[2]);
-            actions[id].last_level = (time_t)atol(row[3]);
-            ++count;
-        }
-        mysql_free_result(res);
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &userid;
+    bind[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = &charid;
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &skillid;
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null[0];
+    bind[0].error = &error[0];
+    bind[1].buffer_type = MYSQL_TYPE_LONG;
+    bind[1].buffer = &level;
+    bind[1].length = &length[1];
+    bind[1].is_null = &is_null[1];
+    bind[1].error = &error[1];
+    bind[2].buffer_type = MYSQL_TYPE_LONG;
+    bind[2].buffer = &improvement;
+    bind[2].length = &length[2];
+    bind[2].is_null = &is_null[2];
+    bind[2].error = &error[2];
+    bind[3].buffer_type = MYSQL_TYPE_TIMESTAMP;
+    bind[3].buffer = &last_increase;
+    bind[3].length = &length[3];
+    bind[3].is_null = &is_null[3];
+    bind[3].error = &error[3];
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_store_result(stmt);
+    while (mysql_stmt_fetch(stmt) == 0)
+    {
+        actions[skillid].level = level;
+        actions[skillid].improvement = improvement;
+        actions[skillid].last_level = MYSQL_TIME_to_time_t(&last_increase);
+        ++count;
     }
+    mysql_stmt_close(stmt);
     mysql_close(db_handle);
     return count;
 }
