@@ -1,6 +1,6 @@
 /* db.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Sep 2019, 22:51:11 tquirk
+ *   last updated 20 Sep 2019, 09:07:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -56,17 +56,6 @@ class DB
     static const int MAX_USERNAME = 64;
     static const int MAX_CHARNAME = 64;
     static const int MAX_SKILLNAME = 64;
-
-  protected:
-    static const char check_authentication_query[239];
-    static const char check_authorization_id_query[187];
-    static const char check_authorization_name_query[189];
-    static const char get_characterid_query[120];
-    static const char get_character_objectid_query[187];
-    static const char get_server_skills_query[141];
-    static const char get_server_objects_query[87];
-    static const char get_player_server_skills_query[271];
-    static const char get_serverid_query[40];
 
     /* IPv6 addresses can be a lot longer than IPv4, so we'll just use
      * the IPv6 max length to ensure that everything will fit.

@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Sep 2019, 22:47:07 tquirk
+ *   last updated 20 Sep 2019, 09:08:50 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -42,6 +42,68 @@
 #include "../game_obj.h"
 #include "../../../proto/proto.h"
 
+const char MySQL::check_authentication_query[] =
+    "SELECT a.playerid "
+    "FROM players AS a, player_keys AS b "
+    "WHERE a.username=? "
+    "AND a.playerid=b.playerid "
+    "AND b.public_key=? "
+    "AND b.not_before <= NOW() "
+    "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
+    "AND a.suspended=0 "
+    "ORDER BY b.not_before DESC";
+const char MySQL::check_authorization_id_query[] =
+    "SELECT c.access_type "
+    "FROM players AS a, characters AS b, server_access AS c "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.characterid=? "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=?";
+const char MySQL::check_authorization_name_query[] =
+    "SELECT c.access_type "
+    "FROM players AS a, characters AS b, server_access AS c "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=? "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=?";
+const char MySQL::get_characterid_query[] =
+    "SELECT b.characterid "
+    "FROM players AS a, characters AS b "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=?";
+const char MySQL::get_character_objectid_query[] =
+    "SELECT c.objectid "
+    "FROM players AS a, characters AS b, server_objects AS c "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=? "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=?";
+const char MySQL::get_server_skills_query[] =
+    "SELECT a.skillname, b.skillid, b.defaultid, b.lower, b.upper "
+    "FROM skills AS a, server_skills AS b "
+    "WHERE a.skillid=b.skillid "
+    "AND b.serverid=?";
+const char MySQL::get_server_objects_query[] =
+    "SELECT objectid, characterid, pos_x, pos_y, pos_z "
+    "FROM server_objects "
+    "WHERE serverid=?";
+const char MySQL::get_player_server_skills_query[] =
+    "SELECT d.skillid, d.level, d.improvement, d.last_increase "
+    "FROM players AS a, characters AS b, "
+    "server_skills AS c, character_skills AS d "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.characterid=? "
+    "AND b.characterid=d.characterid "
+    "AND c.serverid=? "
+    "AND c.skillid=d.skillid";
+const char MySQL::get_serverid_query[] =
+    "SELECT serverid FROM servers WHERE ip=?";
+
 static time_t MYSQL_TIME_to_time_t(MYSQL_TIME *mt)
 {
     time_t result = 0L;
@@ -81,8 +143,8 @@ uint64_t MySQL::check_authentication(const std::string& user,
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
     mysql_stmt_prepare(stmt,
-                       DB::check_authentication_query,
-                       strlen(DB::check_authentication_query));
+                       MySQL::check_authentication_query,
+                       strlen(MySQL::check_authentication_query));
 
     length[0] = user.size();
     length[1] = key_size;
@@ -128,8 +190,8 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
     mysql_stmt_prepare(stmt,
-                       DB::check_authorization_id_query,
-                       strlen(DB::check_authorization_id_query));
+                       MySQL::check_authorization_id_query,
+                       strlen(MySQL::check_authorization_id_query));
 
     length = strlen(this->host_ip);
     memset(bind, 0, sizeof(bind));
@@ -173,8 +235,8 @@ int MySQL::check_authorization(uint64_t userid, const std::string& charname)
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
     mysql_stmt_prepare(stmt,
-                       DB::check_authorization_name_query,
-                       strlen(DB::check_authorization_name_query));
+                       MySQL::check_authorization_name_query,
+                       strlen(MySQL::check_authorization_name_query));
 
     length[0] = charname.size();
     length[1] = strlen(this->host_ip);
@@ -220,8 +282,8 @@ uint64_t MySQL::get_characterid(uint64_t userid, const std::string& charname)
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
     mysql_stmt_prepare(stmt,
-                       DB::get_characterid_query,
-                       strlen(DB::get_characterid_query));
+                       MySQL::get_characterid_query,
+                       strlen(MySQL::get_characterid_query));
 
     length = charname.size();
     memset(bind, 0, sizeof(bind));
@@ -264,8 +326,8 @@ uint64_t MySQL::get_character_objectid(uint64_t userid,
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
     mysql_stmt_prepare(stmt,
-                       DB::get_character_objectid_query,
-                       strlen(DB::get_character_objectid_query));
+                       MySQL::get_character_objectid_query,
+                       strlen(MySQL::get_character_objectid_query));
 
     length = charname.size();
     memset(bind, 0, sizeof(bind));
@@ -314,8 +376,8 @@ int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
     mysql_stmt_prepare(stmt,
-                       DB::get_server_skills_query,
-                       strlen(DB::get_server_skills_query));
+                       MySQL::get_server_skills_query,
+                       strlen(MySQL::get_server_skills_query));
 
     memset(bind, 0, sizeof(bind));
     bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
@@ -385,8 +447,8 @@ int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
     mysql_stmt_prepare(stmt,
-                       DB::get_server_objects_query,
-                       strlen(DB::get_server_objects_query));
+                       MySQL::get_server_objects_query,
+                       strlen(MySQL::get_server_objects_query));
 
     memset(bind, 0, sizeof(bind));
     bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
@@ -467,8 +529,8 @@ int MySQL::get_player_server_skills(uint64_t userid,
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
     mysql_stmt_prepare(stmt,
-                       DB::get_player_server_skills_query,
-                       strlen(DB::get_player_server_skills_query));
+                       MySQL::get_player_server_skills_query,
+                       strlen(MySQL::get_player_server_skills_query));
 
     memset(bind, 0, sizeof(bind));
     bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
@@ -552,8 +614,8 @@ MYSQL *MySQL::db_connect(void)
 
         stmt = mysql_stmt_init(db_handle);
         mysql_stmt_prepare(stmt,
-                           DB::get_serverid_query,
-                           strlen(DB::get_serverid_query));
+                           MySQL::get_serverid_query,
+                           strlen(MySQL::get_serverid_query));
 
         memset(bind, 0, sizeof(bind));
         bind[0].buffer_type = MYSQL_TYPE_STRING;

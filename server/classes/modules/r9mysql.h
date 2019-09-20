@@ -1,6 +1,6 @@
 /* r9mysql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Sep 2019, 22:35:57 tquirk
+ *   last updated 20 Sep 2019, 09:07:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -37,6 +37,17 @@
 
 class MySQL : public DB
 {
+  private:
+    static const char check_authentication_query[239];
+    static const char check_authorization_id_query[187];
+    static const char check_authorization_name_query[189];
+    static const char get_characterid_query[120];
+    static const char get_character_objectid_query[187];
+    static const char get_server_skills_query[141];
+    static const char get_server_objects_query[87];
+    static const char get_player_server_skills_query[271];
+    static const char get_serverid_query[40];
+
   public:
     MySQL(const std::string&, const std::string&,
           const std::string&, const std::string&);
