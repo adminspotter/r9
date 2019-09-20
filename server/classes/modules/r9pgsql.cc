@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Sep 2019, 22:36:32 tquirk
+ *   last updated 20 Sep 2019, 09:24:37 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -60,6 +60,7 @@ uint64_t PgSQL::check_authentication(const std::string& user,
                                      const uint8_t *pubkey,
                                      size_t key_size)
 {
+    PGconn *db_handle;
     PGresult *res;
     char str[256];
     uint64_t retval = 0;
@@ -74,20 +75,21 @@ uint64_t PgSQL::check_authentication(const std::string& user,
              "AND a.suspended=0 "
              "ORDER BY b.not_before DESC;",
              DB::MAX_USERNAME, user.c_str());
-    this->db_connect();
+    db_handle = this->db_connect();
 
-    res = PQexec(this->db_handle, str);
+    res = PQexec(db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
         if (key_size == atoi(PQgetvalue(res, 0, 2))
             && !memcmp(PQgetvalue(res, 0, 1), pubkey, key_size))
             retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
     PQclear(res);
-    this->db_close();
+    this->db_close(db_handle);
     return retval;
 }
 
 int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
 {
+    PGconn *db_handle;
     PGresult *res;
     char str[350];
     int retval = ACCESS_NONE;
@@ -103,18 +105,19 @@ int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
              "AND c.serverid=d.serverid "
              "AND d.ip='%s'",
              userid, charid, this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
 
-    res = PQexec(this->db_handle, str);
+    res = PQexec(db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
         retval = atol(PQgetvalue(res, 0, 0));
     PQclear(res);
-    this->db_close();
+    this->db_close(db_handle);
     return retval;
 }
 
 int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 {
+    PGconn *db_handle;
     PGresult *res;
     char str[350];
     int retval = ACCESS_NONE;
@@ -130,18 +133,19 @@ int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
              "AND c.serverid=d.serverid "
              "AND d.ip='%s'",
              userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
 
-    res = PQexec(this->db_handle, str);
+    res = PQexec(db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
         retval = atol(PQgetvalue(res, 0, 0));
     PQclear(res);
-    this->db_close();
+    this->db_close(db_handle);
     return retval;
 }
 
 uint64_t PgSQL::get_characterid(uint64_t userid, const std::string& charname)
 {
+    PGconn *db_handle;
     PGresult *res;
     char str[256];
     uint64_t retval = 0;
@@ -153,19 +157,20 @@ uint64_t PgSQL::get_characterid(uint64_t userid, const std::string& charname)
              "AND a.playerid=b.owner "
              "AND b.charactername='%.*s'",
              userid, DB::MAX_CHARNAME, charname.c_str());
-    this->db_connect();
+    db_handle = this->db_connect();
 
-    res = PQexec(this->db_handle, str);
+    res = PQexec(db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
         retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
     PQclear(res);
-    this->db_close();
+    this->db_close(db_handle);
     return retval;
 }
 
 uint64_t PgSQL::get_character_objectid(uint64_t userid,
                                        const std::string& charname)
 {
+    PGconn *db_handle;
     PGresult *res;
     char str[350];
     uint64_t retval = 0;
@@ -181,18 +186,19 @@ uint64_t PgSQL::get_character_objectid(uint64_t userid,
              "AND c.serverid=d.serverid "
              "AND c.ip='%s'",
              userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
 
-    res = PQexec(this->db_handle, str);
+    res = PQexec(db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
         retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
     PQclear(res);
-    this->db_close();
+    this->db_close(db_handle);
     return retval;
 }
 
 int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
 {
+    PGconn *db_handle;
     PGresult *res;
     char str[256];
     int count = 0, num_tuples;
@@ -204,9 +210,9 @@ int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
              "AND a.serverid=c.serverid "
              "AND b.skillid=c.skillid",
              this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
 
-    res = PQexec(this->db_handle, str);
+    res = PQexec(db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK)
     {
         num_tuples = PQntuples(res);
@@ -222,12 +228,13 @@ int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
         }
     }
     PQclear(res);
-    this->db_close();
+    this->db_close(db_handle);
     return count;
 }
 
 int PgSQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 {
+    PGconn *db_handle;
     PGresult *res;
     char str[256];
     int count = 0, num_tuples;
@@ -238,9 +245,9 @@ int PgSQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
              "WHERE a.ip='%s' "
              "AND a.serverid=b.serverid",
              this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
 
-    res = PQexec(this->db_handle, str);
+    res = PQexec(db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK)
     {
         num_tuples = PQntuples(res);
@@ -263,7 +270,7 @@ int PgSQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
         }
     }
     PQclear(res);
-    this->db_close();
+    this->db_close(db_handle);
     return count;
 }
 
@@ -271,6 +278,7 @@ int PgSQL::get_player_server_skills(uint64_t userid,
                                     uint64_t charid,
                                     std::map<uint16_t, action_level>& actions)
 {
+    PGconn *db_handle;
     PGresult *res;
     char str[420];
     int count = 0, num_tuples;
@@ -288,9 +296,9 @@ int PgSQL::get_player_server_skills(uint64_t userid,
              "AND c.serverid=d.serverid "
              "AND d.skillid=e.skillid",
              userid, charid, this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
 
-    res = PQexec(this->db_handle, str);
+    res = PQexec(db_handle, str);
     if (PQresultStatus(res) == PGRES_TUPLES_OK)
     {
         num_tuples = PQntuples(res);
@@ -304,32 +312,33 @@ int PgSQL::get_player_server_skills(uint64_t userid,
         }
     }
     PQclear(res);
-    this->db_close();
+    this->db_close(db_handle);
     return count;
 }
 
-void PgSQL::db_connect(void)
+PGconn *PgSQL::db_connect(void)
 {
-    this->db_handle = PQsetdbLogin(this->dbhost.c_str(),
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   this->dbname.c_str(),
-                                   this->dbuser.c_str(),
-                                   this->dbpass.c_str());
-    if (PQstatus(this->db_handle) == CONNECTION_BAD)
+    PGconn *db_handle = PQsetdbLogin(this->dbhost.c_str(),
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     this->dbname.c_str(),
+                                     this->dbuser.c_str(),
+                                     this->dbpass.c_str());
+    if (PQstatus(db_handle) == CONNECTION_BAD)
     {
         std::ostringstream s;
         s << "couldn't connect to PGSQL server: "
-          << PQerrorMessage(this->db_handle);
-        this->db_handle = NULL;
+          << PQerrorMessage(db_handle);
+        db_handle = NULL;
         throw std::runtime_error(s.str());
     }
+    return db_handle;
 }
 
-void PgSQL::db_close(void)
+void PgSQL::db_close(PGconn *db_handle)
 {
-    PQfinish(this->db_handle);
+    PQfinish(db_handle);
 }
 
 extern "C" DB *db_create(const std::string& a, const std::string& b,

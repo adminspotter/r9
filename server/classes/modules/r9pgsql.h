@@ -1,6 +1,6 @@
 /* r9pgsql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Sep 2019, 22:36:17 tquirk
+ *   last updated 20 Sep 2019, 09:20:29 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -38,9 +38,6 @@
 
 class PgSQL : public DB
 {
-  private:
-    PGconn *db_handle;
-
   public:
     PgSQL(const std::string&, const std::string&,
           const std::string&, const std::string&);
@@ -61,8 +58,8 @@ class PgSQL : public DB
     int get_server_objects(std::map<uint64_t, GameObject *> &);
 
   private:
-    void db_connect(void);
-    void db_close(void);
+    PGconn *db_connect(void);
+    void db_close(PGconn *);
 };
 
 #endif /* __INC_R9PGSQL_H__ */
