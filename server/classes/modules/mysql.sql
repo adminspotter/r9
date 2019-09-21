@@ -51,7 +51,7 @@ CREATE TABLE skills (
 CREATE TABLE server_skills (
   serverid BIGINT NOT NULL,
   skillid BIGINT NOT NULL,
-  defaultid BIGINT NOT NULL,
+  defaultid BIGINT NOT NULL DEFAULT 0,
   lower SMALLINT NOT NULL,
   upper SMALLINT NOT NULL,
   PRIMARY KEY (serverid, skillid),
@@ -63,8 +63,8 @@ CREATE TABLE server_skills (
 CREATE TABLE character_skills (
   characterid BIGINT NOT NULL,
   skillid BIGINT NOT NULL,
-  level SMALLINT NOT NULL,
-  improvement SMALLINT NOT NULL,
+  level SMALLINT NOT NULL DEFAULT 0,
+  improvement SMALLINT NOT NULL DEFAULT 0,
   last_increase TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (characterid, skillid),
   FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE CASCADE,
