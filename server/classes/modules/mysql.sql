@@ -94,3 +94,13 @@ CREATE TABLE character_skills (
   FOREIGN KEY (skillid) REFERENCES skills(skillid) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+INSERT INTO players (playerid, username, email, suspended) VALUES (0, 'No player', 'No email', 0);
+INSERT INTO characters (characterid, owner, charactername) VALUES (0, 0, 'No character');
+INSERT INTO servers (serverid, ip, port, owner, servername) VALUES (0, '0', 0, 0, 'No server');
+INSERT INTO geometries (geometryid, geometryname) VALUES (0, 'No geometry');
+INSERT INTO skills (skillid, skillname) VALUES (0, 'No skill');
+INSERT INTO skills (skillid, skillname) VALUES (1, 'Control');
+INSERT INTO skills (skillid, skillname) VALUES (2, 'Uncontrol');
+INSERT INTO skills (skillid, skillname) VALUES (3, 'Move');
+INSERT INTO skills (skillid, skillname) VALUES (4, 'Rotate');
+INSERT INTO skills (skillid, skillname) VALUES (5, 'Stop');
