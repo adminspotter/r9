@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Sep 2019, 22:35:02 tquirk
+ *   last updated 22 Sep 2019, 22:57:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -64,6 +64,14 @@ const char PgSQL::check_authorization_id_query[] =
     "AND b.characterid=$2 "
     "AND b.characterid=c.characterid "
     "AND c.serverid=$3;";
+const char PgSQL::check_authorization_name_query[] =
+    "SELECT c.access_type "
+    "FROM players AS a, characters AS b, server_access AS c "
+    "WHERE a.playerid=$1 "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=$2 "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=$3;";
 const char PgSQL::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=$1;";
 
@@ -123,25 +131,17 @@ int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
 
 int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 {
-    PGconn *db_handle;
+    PGconn *db_handle = this->db_connect();
     PGresult *res;
-    char str[350];
+    std::string user_id = std::to_string(userid);
+    std::string host_id = std::to_string(this->host_id);
+    const char *vals[3] = {user_id.c_str(), charname.c_str(), host_id.c_str()};
     int retval = ACCESS_NONE;
 
-    snprintf(str, sizeof(str),
-             "SELECT c.access_type "
-             "FROM players AS a, characters AS b, server_access AS c, "
-             "servers AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.charactername='%.*s' "
-             "AND b.characterid=c.characterid "
-             "AND c.serverid=d.serverid "
-             "AND d.ip='%s'",
-             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
-    db_handle = this->db_connect();
-
-    res = PQexec(db_handle, str);
+    res = PQexecParams(db_handle,
+                       PgSQL::check_authorization_name_query,
+                       3, NULL,
+                       vals, NULL, NULL, 0);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
         retval = atol(PQgetvalue(res, 0, 0));
     PQclear(res);
