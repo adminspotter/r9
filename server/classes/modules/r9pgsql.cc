@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Sep 2019, 22:57:48 tquirk
+ *   last updated 22 Sep 2019, 23:32:33 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -72,6 +72,12 @@ const char PgSQL::check_authorization_name_query[] =
     "AND b.charactername=$2 "
     "AND b.characterid=c.characterid "
     "AND c.serverid=$3;";
+const char PgSQL::get_characterid_query[] =
+    "SELECT b.characterid "
+    "FROM players AS a, characters AS b "
+    "WHERE a.playerid=$1 "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=$2;";
 const char PgSQL::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=$1;";
 
@@ -151,21 +157,16 @@ int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
 
 uint64_t PgSQL::get_characterid(uint64_t userid, const std::string& charname)
 {
-    PGconn *db_handle;
+    PGconn *db_handle = this->db_connect();
     PGresult *res;
-    char str[256];
+    std::string user_id = std::to_string(userid);
+    const char *vals[2] = {user_id.c_str(), charname.c_str()};
     uint64_t retval = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT b.characterid "
-             "FROM players AS a, characters AS b "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.charactername='%.*s'",
-             userid, DB::MAX_CHARNAME, charname.c_str());
-    db_handle = this->db_connect();
-
-    res = PQexec(db_handle, str);
+    res = PQexecParams(db_handle,
+                       PgSQL::get_characterid_query,
+                       2, NULL,
+                       vals, NULL, NULL, 0);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
         retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
     PQclear(res);
