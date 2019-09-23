@@ -43,6 +43,7 @@ class PgSQL : public DB
     static const char check_authorization_id_query[191];
     static const char check_authorization_name_query[193];
     static const char get_characterid_query[123];
+    static const char get_character_objectid_query[191];
     static const char get_serverid_query[42];
 
   public:
