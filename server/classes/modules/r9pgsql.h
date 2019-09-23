@@ -1,6 +1,6 @@
 /* r9pgsql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Sep 2019, 09:20:29 tquirk
+ *   last updated 20 Sep 2019, 17:25:10 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -38,6 +38,9 @@
 
 class PgSQL : public DB
 {
+  private:
+    static const char get_serverid_query[42];
+
   public:
     PgSQL(const std::string&, const std::string&,
           const std::string&, const std::string&);

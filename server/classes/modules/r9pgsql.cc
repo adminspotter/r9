@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Sep 2019, 09:24:37 tquirk
+ *   last updated 20 Sep 2019, 22:50:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -45,6 +45,9 @@
 
 #include "r9pgsql.h"
 #include "../game_obj.h"
+
+const char PgSQL::get_serverid_query[] =
+    "SELECT serverid FROM servers WHERE ip=$1;";
 
 PgSQL::PgSQL(const std::string& host, const std::string& user,
              const std::string& pass, const std::string& db)
@@ -332,6 +335,18 @@ PGconn *PgSQL::db_connect(void)
           << PQerrorMessage(db_handle);
         db_handle = NULL;
         throw std::runtime_error(s.str());
+    }
+
+    if (this->host_id == 0LL)
+    {
+        const char *vals[1] = {this->host_ip};
+        PGresult *res = PQexecParams(db_handle,
+                                     PgSQL::get_serverid_query,
+                                     1, NULL,
+                                     vals, NULL, NULL, 0);
+        if (PQresultStatus(res) == PGRES_TUPLES_OK)
+            this->host_id = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
+        PQclear(res);
     }
     return db_handle;
 }
