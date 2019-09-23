@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Sep 2019, 22:50:11 tquirk
+ *   last updated 22 Sep 2019, 22:13:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -46,6 +46,16 @@
 #include "r9pgsql.h"
 #include "../game_obj.h"
 
+const char PgSQL::check_authentication_query[] =
+    "SELECT a.playerid "
+    "FROM players AS a, player_keys AS b "
+    "WHERE a.username=$1 "
+    "AND a.playerid=b.playerid "
+    "AND b.public_key=$2 "
+    "AND b.not_before <= NOW() "
+    "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
+    "AND a.suspended=0 "
+    "ORDER BY b.not_before DESC;";
 const char PgSQL::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=$1;";
 
@@ -63,28 +73,20 @@ uint64_t PgSQL::check_authentication(const std::string& user,
                                      const uint8_t *pubkey,
                                      size_t key_size)
 {
-    PGconn *db_handle;
-    PGresult *res;
-    char str[256];
+    PGconn *db_handle = this->db_connect();
+    PGresult *stmt, *res;
+    const char *vals[2] = {user.c_str(), (const char *)pubkey};
+    const int lens[2] = {static_cast<int>(user.size()),
+                         static_cast<int>(key_size)};
+    const int binary[2] = {0, 1};
     uint64_t retval = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT a.playerid, b.public_key, LEN(b.public_key) "
-             "FROM players AS a, player_keys AS b "
-             "WHERE a.username='%.*s' "
-             "AND a.playerid=b.playerid "
-             "AND b.not_before <= current_timestamp "
-             "AND (b.not_after IS NULL OR b.not_after >= current_timestamp) "
-             "AND a.suspended=0 "
-             "ORDER BY b.not_before DESC;",
-             DB::MAX_USERNAME, user.c_str());
-    db_handle = this->db_connect();
-
-    res = PQexec(db_handle, str);
+    res = PQexecParams(db_handle,
+                       PgSQL::check_authentication_query,
+                       2, NULL,
+                       vals, lens, binary, 0);
     if (PQresultStatus(res) == PGRES_TUPLES_OK && PQntuples(res) > 0)
-        if (key_size == atoi(PQgetvalue(res, 0, 2))
-            && !memcmp(PQgetvalue(res, 0, 1), pubkey, key_size))
-            retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
+        retval = strtoull(PQgetvalue(res, 0, 0), NULL, 10);
     PQclear(res);
     this->db_close(db_handle);
     return retval;
