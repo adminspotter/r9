@@ -45,6 +45,7 @@ class PgSQL : public DB
     static const char get_characterid_query[123];
     static const char get_character_objectid_query[191];
     static const char get_server_skills_query[143];
+    static const char get_server_objects_query[89];
     static const char get_serverid_query[42];
 
   public:
