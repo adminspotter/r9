@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 22 Sep 2019, 23:42:13 tquirk
+ *   last updated 23 Sep 2019, 18:37:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -86,6 +86,11 @@ const char PgSQL::get_character_objectid_query[] =
     "AND b.charactername=$2 "
     "AND b.characterid=c.characterid "
     "AND c.serverid=$3;";
+const char PgSQL::get_server_skills_query[] =
+    "SELECT a.skillname, b.skillid, b.defaultid, b.lower, b.upper "
+    "FROM skills AS a, server_skills AS b "
+    "WHERE a.skillid=b.skillid "
+    "AND b.serverid=$1;";
 const char PgSQL::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=$1;";
 
@@ -205,24 +210,19 @@ uint64_t PgSQL::get_character_objectid(uint64_t userid,
 
 int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
 {
-    PGconn *db_handle;
+    PGconn *db_handle = this->db_connect();
     PGresult *res;
-    char str[256];
-    int count = 0, num_tuples;
+    std::string host_id = std::to_string(this->host_id);
+    const char *vals[1] = {host_id.c_str()};
+    int count = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT b.skillname, c.skillid, c.defaultid, c.lower, c.upper "
-             "FROM skills AS b, servers AS a, server_skills AS c "
-             "WHERE a.ip='%s' "
-             "AND a.serverid=c.serverid "
-             "AND b.skillid=c.skillid",
-             this->host_ip);
-    db_handle = this->db_connect();
-
-    res = PQexec(db_handle, str);
+    res = PQexecParams(db_handle,
+                       PgSQL::get_server_skills_query,
+                       1, NULL,
+                       vals, NULL, NULL, 0);
     if (PQresultStatus(res) == PGRES_TUPLES_OK)
     {
-        num_tuples = PQntuples(res);
+        int num_tuples = PQntuples(res);
         for (count = 0; count < num_tuples; ++count)
         {
             uint64_t id = strtoull(PQgetvalue(res, count, 1), NULL, 10);
