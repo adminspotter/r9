@@ -52,6 +52,10 @@ PgSQL::PgSQL(const std::string& host, const std::string& user,
 {
 }
 
+PgSQL::~PgSQL()
+{
+}
+
 uint64_t PgSQL::check_authentication(const std::string& user,
                                      const uint8_t *pubkey,
                                      size_t key_size)
