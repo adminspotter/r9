@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Sep 2019, 22:47:41 tquirk
+ *   last updated 28 Sep 2019, 10:11:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -31,14 +31,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-
-/* The PRIu64 type macros are not defined unless specifically
- * requested by the following macro.
- */
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS
-#endif
-#include <inttypes.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -95,6 +87,17 @@ const char PgSQL::get_server_objects_query[] =
     "SELECT objectid, characterid, pos_x, pos_y, pos_z "
     "FROM server_objects "
     "WHERE serverid=$1;";
+const char PgSQL::get_player_server_skills_query[] =
+    "SELECT d.skillid, d.level, d.improvement, "
+    "EXTRACT(EPOCH FROM d.last_increase) "
+    "FROM players AS a, characters AS b, "
+    "server_skills AS c, character_skills AS d "
+    "WHERE a.playerid=$1 "
+    "AND a.playerid=b.owner "
+    "AND b.characterid=$2 "
+    "AND b.characterid=d.characterid "
+    "AND c.serverid=$3 "
+    "AND c.skillid=d.skillid;";
 const char PgSQL::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=$1;";
 
@@ -285,30 +288,21 @@ int PgSQL::get_player_server_skills(uint64_t userid,
                                     uint64_t charid,
                                     std::map<uint16_t, action_level>& actions)
 {
-    PGconn *db_handle;
+    PGconn *db_handle = this->db_connect();
     PGresult *res;
-    char str[420];
-    int count = 0, num_tuples;
+    std::string user_id = std::to_string(userid);
+    std::string char_id = std::to_string(charid);
+    std::string host_id = std::to_string(this->host_id);
+    const char *vals[3] = {user_id.c_str(), char_id.c_str(), host_id.c_str()};
+    int count = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT e.skillid, e.level, e.improvement, "
-             "UNIX_TIMESTAMP(e.last_increase) "
-             "FROM players AS a, characters AS b, servers AS c, "
-             "server_skills AS d, character_skills AS e "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.characterid=%" PRIu64 " "
-             "AND b.characterid=e.characterid "
-             "AND c.ip='%s' "
-             "AND c.serverid=d.serverid "
-             "AND d.skillid=e.skillid",
-             userid, charid, this->host_ip);
-    db_handle = this->db_connect();
-
-    res = PQexec(db_handle, str);
+    res = PQexecParams(db_handle,
+                       PgSQL::get_player_server_skills_query,
+                       3, NULL,
+                       vals, NULL, NULL, 0);
     if (PQresultStatus(res) == PGRES_TUPLES_OK)
     {
-        num_tuples = PQntuples(res);
+        int num_tuples = PQntuples(res);
         for (count = 0; count < num_tuples; ++count)
         {
             uint64_t id = strtoull(PQgetvalue(res, count, 0), NULL, 10);
