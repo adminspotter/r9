@@ -42,20 +42,27 @@ CREATE TABLE server_access (
   FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE player_logins (
-  playerid BIGINT NOT NULL,
-  characterid BIGINT NOT NULL,
+CREATE TABLE geometries (
+  geometryid BIGINT NOT NULL AUTO_INCREMENT,
+  geometryname VARCHAR(64) NOT NULL,
+  PRIMARY KEY (geometryid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE server_objects (
+  objectid BIGINT NOT NULL AUTO_INCREMENT,
   serverid BIGINT NOT NULL,
-  src_ip VARCHAR(45) NOT NULL,
-  src_port SMALLINT NOT NULL,
-  login_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  enter_time TIMESTAMP,
-  exit_time TIMESTAMP,
-  logout_time TIMESTAMP,
-  PRIMARY KEY (playerid, characterid, login_time),
-  FOREIGN KEY (playerid) REFERENCES players(playerid) ON UPDATE CASCADE ON DELETE NO ACTION,
-  FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE NO ACTION,
-  FOREIGN KEY (serverid) REFERENCES servers(serverid) ON UPDATE CASCADE ON DELETE NO ACTION
+  characterid BIGINT NOT NULL DEFAULT 0,
+  geometryid BIGINT NOT NULL DEFAULT 0,
+  sector_x BIGINT NOT NULL,
+  sector_y BIGINT NOT NULL,
+  sector_z BIGINT NOT NULL,
+  pos_x BIGINT NOT NULL,
+  pos_y BIGINT NOT NULL,
+  pos_z BIGINT NOT NULL,
+  PRIMARY KEY (serverid, objectid, characterid),
+  FOREIGN KEY (serverid) REFERENCES servers(serverid) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (geometryid) REFERENCES geometries(geometryid) ON UPDATE CASCADE ON DELETE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE skills (
@@ -67,7 +74,7 @@ CREATE TABLE skills (
 CREATE TABLE server_skills (
   serverid BIGINT NOT NULL,
   skillid BIGINT NOT NULL,
-  defaultid BIGINT NOT NULL,
+  defaultid BIGINT NOT NULL DEFAULT 0,
   lower SMALLINT NOT NULL,
   upper SMALLINT NOT NULL,
   PRIMARY KEY (serverid, skillid),
@@ -79,26 +86,21 @@ CREATE TABLE server_skills (
 CREATE TABLE character_skills (
   characterid BIGINT NOT NULL,
   skillid BIGINT NOT NULL,
-  level SMALLINT NOT NULL,
-  improvement SMALLINT NOT NULL,
+  level SMALLINT NOT NULL DEFAULT 0,
+  improvement SMALLINT NOT NULL DEFAULT 0,
   last_increase TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (characterid, skillid),
   FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (skillid) REFERENCES skills(skillid) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE server_objects (
-  serverid BIGINT NOT NULL,
-  objectid BIGINT NOT NULL,
-  characterid BIGINT NOT NULL,
-  geometryid BIGINT DEFAULT 0,
-  sector_x BIGINT NOT NULL,
-  sector_y BIGINT NOT NULL,
-  sector_z BIGINT NOT NULL,
-  pos_x BIGINT NOT NULL,
-  pos_y BIGINT NOT NULL,
-  pos_z BIGINT NOT NULL,
-  PRIMARY KEY (serverid, objectid, characterid),
-  FOREIGN KEY (serverid) REFERENCES servers(serverid) ON UPDATE CASCADE ON DELETE NO ACTION,
-  FOREIGN KEY (characterid) REFERENCES characters(characterid) ON UPDATE CASCADE ON DELETE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT INTO players (playerid, username, email, suspended) VALUES (0, 'No player', 'No email', 0);
+INSERT INTO characters (characterid, owner, charactername) VALUES (0, 0, 'No character');
+INSERT INTO servers (serverid, ip, port, owner, servername) VALUES (0, '0', 0, 0, 'No server');
+INSERT INTO geometries (geometryid, geometryname) VALUES (0, 'No geometry');
+INSERT INTO skills (skillid, skillname) VALUES (0, 'No skill');
+INSERT INTO skills (skillid, skillname) VALUES (1, 'Control');
+INSERT INTO skills (skillid, skillname) VALUES (2, 'Uncontrol');
+INSERT INTO skills (skillid, skillname) VALUES (3, 'Move');
+INSERT INTO skills (skillid, skillname) VALUES (4, 'Rotate');
+INSERT INTO skills (skillid, skillname) VALUES (5, 'Stop');

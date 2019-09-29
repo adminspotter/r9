@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Jul 2019, 08:32:31 tquirk
+ *   last updated 20 Sep 2019, 09:08:50 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -23,7 +23,6 @@
  * This file contains the MySQL routines to do the common database tasks.
  *
  * Things to do
- *   - Finish writing open_new_login and close_open_login.
  *
  */
 
@@ -34,13 +33,7 @@
 #include <time.h>
 #include <errno.h>
 
-/* The PRIu64 type macros are not defined unless specifically
- * requested by the following macro.
- */
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS
-#endif
-#include <inttypes.h>
+#include <proto/ec.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -48,6 +41,82 @@
 #include "r9mysql.h"
 #include "../game_obj.h"
 #include "../../../proto/proto.h"
+
+const char MySQL::check_authentication_query[] =
+    "SELECT a.playerid "
+    "FROM players AS a, player_keys AS b "
+    "WHERE a.username=? "
+    "AND a.playerid=b.playerid "
+    "AND b.public_key=? "
+    "AND b.not_before <= NOW() "
+    "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
+    "AND a.suspended=0 "
+    "ORDER BY b.not_before DESC";
+const char MySQL::check_authorization_id_query[] =
+    "SELECT c.access_type "
+    "FROM players AS a, characters AS b, server_access AS c "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.characterid=? "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=?";
+const char MySQL::check_authorization_name_query[] =
+    "SELECT c.access_type "
+    "FROM players AS a, characters AS b, server_access AS c "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=? "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=?";
+const char MySQL::get_characterid_query[] =
+    "SELECT b.characterid "
+    "FROM players AS a, characters AS b "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=?";
+const char MySQL::get_character_objectid_query[] =
+    "SELECT c.objectid "
+    "FROM players AS a, characters AS b, server_objects AS c "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.charactername=? "
+    "AND b.characterid=c.characterid "
+    "AND c.serverid=?";
+const char MySQL::get_server_skills_query[] =
+    "SELECT a.skillname, b.skillid, b.defaultid, b.lower, b.upper "
+    "FROM skills AS a, server_skills AS b "
+    "WHERE a.skillid=b.skillid "
+    "AND b.serverid=?";
+const char MySQL::get_server_objects_query[] =
+    "SELECT objectid, characterid, pos_x, pos_y, pos_z "
+    "FROM server_objects "
+    "WHERE serverid=?";
+const char MySQL::get_player_server_skills_query[] =
+    "SELECT d.skillid, d.level, d.improvement, d.last_increase "
+    "FROM players AS a, characters AS b, "
+    "server_skills AS c, character_skills AS d "
+    "WHERE a.playerid=? "
+    "AND a.playerid=b.owner "
+    "AND b.characterid=? "
+    "AND b.characterid=d.characterid "
+    "AND c.serverid=? "
+    "AND c.skillid=d.skillid";
+const char MySQL::get_serverid_query[] =
+    "SELECT serverid FROM servers WHERE ip=?";
+
+static time_t MYSQL_TIME_to_time_t(MYSQL_TIME *mt)
+{
+    time_t result = 0L;
+    struct tm timeinfo;
+
+    timeinfo.tm_year = mt->year;
+    timeinfo.tm_mon = mt->month;
+    timeinfo.tm_mday = mt->day;
+    timeinfo.tm_hour = mt->hour;
+    timeinfo.tm_min = mt->minute;
+    timeinfo.tm_sec = mt->second;
+    return mktime(&timeinfo);
+}
 
 MySQL::MySQL(const std::string& host, const std::string& user,
              const std::string& pass, const std::string& db)
@@ -64,236 +133,381 @@ uint64_t MySQL::check_authentication(const std::string& user,
                                      const uint8_t *pubkey,
                                      size_t key_size)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[768], key_str[key_size * 2 + 1];
+    MYSQL *db_handle;
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[2];
+    unsigned long length[2];
+    my_bool is_null, error;
     uint64_t retval = 0;
 
-    mysql_hex_string(key_str, (const char *)pubkey, key_size);
-    snprintf(str, sizeof(str),
-             "SELECT a.playerid "
-             "FROM players AS a, player_keys AS b "
-             "WHERE a.username='%.*s' "
-             "AND a.playerid=b.playerid "
-             "AND HEX(b.public_key)='%.*s' "
-             "AND b.not_before <= NOW() "
-             "AND (b.not_after IS NULL OR b.not_after >= NOW()) "
-             "AND a.suspended=0 "
-             "ORDER BY b.not_before DESC",
-             DB::MAX_USERNAME, user.c_str(), (int)(key_size * 2), key_str);
-    this->db_connect();
+    db_handle = this->db_connect();
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       MySQL::check_authentication_query,
+                       strlen(MySQL::check_authentication_query));
 
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = strtoull(row[0], NULL, 10);
-        mysql_free_result(res);
-    }
-    mysql_close(&(this->db_handle));
+    length[0] = user.size();
+    length[1] = key_size;
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_STRING;
+    bind[0].buffer = (void *)user.c_str();
+    bind[0].buffer_length = DB::MAX_USERNAME;
+    bind[0].length = &length[0];
+    bind[1].buffer_type = MYSQL_TYPE_BLOB;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = (void *)pubkey;
+    bind[1].buffer_length = R9_PUBKEY_SZ;
+    bind[1].length = &length[1];
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &retval;
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null;
+    bind[0].error = &error;
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_fetch(stmt);
+    mysql_stmt_close(stmt);
+    mysql_close(db_handle);
     return retval;
 }
 
 /* See what kind of access the user/character is allowed on this server */
 int MySQL::check_authorization(uint64_t userid, uint64_t charid)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[350];
-    int retval = ACCESS_NONE;
+    MYSQL *db_handle;
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[3];
+    unsigned long length;
+    my_bool is_null, error;
+    char retval = ACCESS_NONE;
 
-    snprintf(str, sizeof(str),
-             "SELECT c.access_type "
-             "FROM players AS a, characters AS b, server_access AS c, "
-             "servers AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.characterid=%" PRIu64 " "
-             "AND b.characterid=c.characterid "
-             "AND c.serverid=d.serverid "
-             "AND d.ip='%s'",
-             userid, charid, this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       MySQL::check_authorization_id_query,
+                       strlen(MySQL::check_authorization_id_query));
 
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = atoi(row[0]);
-        mysql_free_result(res);
-    }
-    mysql_close(&(this->db_handle));
-    return retval;
+    length = strlen(this->host_ip);
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &userid;
+    bind[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = &charid;
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_TINY;
+    bind[0].is_unsigned = false;
+    bind[0].buffer = &retval;
+    bind[0].length = &length;
+    bind[0].is_null = &is_null;
+    bind[0].error = &error;
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_fetch(stmt);
+    mysql_stmt_close(stmt);
+    mysql_close(db_handle);
+    return (int)retval;
 }
 
 int MySQL::check_authorization(uint64_t userid, const std::string& charname)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[350];
-    int retval = ACCESS_NONE;
+    MYSQL *db_handle;
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[3];
+    unsigned long length[2];
+    my_bool is_null, error;
+    char retval = ACCESS_NONE;
 
-    snprintf(str, sizeof(str),
-             "SELECT c.access_type "
-             "FROM players AS a, characters AS b, server_access AS c, "
-             "servers AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.charactername='%.*s' "
-             "AND b.characterid=c.characterid "
-             "AND c.serverid=d.serverid "
-             "AND d.ip='%s'",
-             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       MySQL::check_authorization_name_query,
+                       strlen(MySQL::check_authorization_name_query));
 
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = atoi(row[0]);
-        mysql_free_result(res);
-    }
-    mysql_close(&(this->db_handle));
-    return retval;
+    length[0] = charname.size();
+    length[1] = strlen(this->host_ip);
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &userid;
+    bind[1].buffer_type = MYSQL_TYPE_STRING;
+    bind[1].buffer = (void *)charname.c_str();
+    bind[1].buffer_length = DB::MAX_CHARNAME;
+    bind[1].length = &length[0];
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_TINY;
+    bind[0].is_unsigned = false;
+    bind[0].buffer = &retval;
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null;
+    bind[0].error = &error;
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_fetch(stmt);
+    mysql_stmt_close(stmt);
+    mysql_close(db_handle);
+    return (int)retval;
 }
 
 uint64_t MySQL::get_characterid(uint64_t userid, const std::string& charname)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
+    MYSQL *db_handle;
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[2];
+    unsigned long length;
+    my_bool is_null, error;
     uint64_t retval = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT b.characterid "
-             "FROM players AS a, characters AS b "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.charactername='%.*s'",
-             userid, DB::MAX_CHARNAME, charname.c_str());
-    this->db_connect();
+    db_handle = this->db_connect();
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       MySQL::get_characterid_query,
+                       strlen(MySQL::get_characterid_query));
 
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = strtoull(row[0], NULL, 10);
-        mysql_free_result(res);
-    }
-    mysql_close(&(this->db_handle));
+    length = charname.size();
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &userid;
+    bind[1].buffer_type = MYSQL_TYPE_STRING;
+    bind[1].buffer = (void *)charname.c_str();
+    bind[1].buffer_length = DB::MAX_CHARNAME;
+    bind[1].length = &length;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &retval;
+    bind[0].length = &length;
+    bind[0].is_null = &is_null;
+    bind[0].error = &error;
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_fetch(stmt);
+    mysql_stmt_close(stmt);
+    mysql_close(db_handle);
     return retval;
 }
 
 uint64_t MySQL::get_character_objectid(uint64_t userid,
                                        const std::string& charname)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[350];
+    MYSQL *db_handle;
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[3];
+    unsigned long length;
+    my_bool is_null, error;
     uint64_t retval = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT d.objectid "
-             "FROM players AS a, characters AS b, "
-             "servers AS c, server_objects AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.charactername='%.*s' "
-             "AND b.characterid=d.characterid "
-             "AND c.serverid=d.serverid "
-             "AND c.ip='%s'",
-             userid, DB::MAX_CHARNAME, charname.c_str(), this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       MySQL::get_character_objectid_query,
+                       strlen(MySQL::get_character_objectid_query));
 
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = strtoull(row[0], NULL, 10);
-        mysql_free_result(res);
-    }
-    mysql_close(&(this->db_handle));
+    length = charname.size();
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &userid;
+    bind[1].buffer_type = MYSQL_TYPE_STRING;
+    bind[1].buffer = (void *)charname.c_str();
+    bind[1].buffer_length = DB::MAX_CHARNAME;
+    bind[1].length = &length;
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &retval;
+    bind[0].length = &length;
+    bind[0].is_null = &is_null;
+    bind[0].error = &error;
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_fetch(stmt);
+    mysql_stmt_close(stmt);
+    mysql_close(db_handle);
     return retval;
 }
 
 /* Get the list of skills that are used on this server */
 int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
+    MYSQL *db_handle;
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[5];
+    uint64_t id, def;
+    int lower, upper;
+    char name[DB::MAX_SKILLNAME + 1];
+    unsigned long length[5];
+    my_bool is_null[5], error[5];
     int count = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT b.skillname, c.skillid, c.defaultid, c.lower, c.upper "
-             "FROM skills AS b, servers AS a, server_skills AS c "
-             "WHERE a.ip='%s' "
-             "AND a.serverid=c.serverid "
-             "AND b.skillid=c.skillid",
-             this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       MySQL::get_server_skills_query,
+                       strlen(MySQL::get_server_skills_query));
 
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL)
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_STRING;
+    bind[0].buffer = name;
+    bind[0].buffer_length = sizeof(name);
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null[0];
+    bind[0].error = &error[0];
+    bind[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = &id;
+    bind[1].length = &length[1];
+    bind[1].is_null = &is_null[1];
+    bind[1].error = &error[1];
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &def;
+    bind[2].length = &length[2];
+    bind[2].is_null = &is_null[2];
+    bind[2].error = &error[2];
+    bind[3].buffer_type = MYSQL_TYPE_LONG;
+    bind[3].buffer = &lower;
+    bind[3].length = &length[3];
+    bind[3].is_null = &is_null[3];
+    bind[3].error = &error[3];
+    bind[4].buffer_type = MYSQL_TYPE_LONG;
+    bind[4].buffer = &upper;
+    bind[4].length = &length[4];
+    bind[4].is_null = &is_null[4];
+    bind[4].error = &error[4];
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_store_result(stmt);
+    while (mysql_stmt_fetch(stmt) == 0)
     {
-        while ((row = mysql_fetch_row(res)) != NULL)
-        {
-            uint64_t id = strtoull(row[1], NULL, 10);
-
-            actions[id].name = row[0];
-            actions[id].def = strtoull(row[2], NULL, 10);
-            actions[id].lower = atoi(row[3]);
-            actions[id].upper = atoi(row[4]);
-            actions[id].valid = true;
-            ++count;
-        }
-        mysql_free_result(res);
+        actions[id].name = name;
+        actions[id].def = def;
+        actions[id].lower = lower;
+        actions[id].upper = upper;
+        actions[id].valid = true;
+        ++count;
     }
-    mysql_close(&(this->db_handle));
+    mysql_stmt_close(stmt);
+    mysql_close(db_handle);
     return count;
 }
 
 int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
+    MYSQL *db_handle;
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[5];
+    uint64_t objid, charid;
+    long pos_x, pos_y, pos_z;
+    unsigned long length[5];
+    my_bool is_null[5], error[5];
     int count = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT b.objectid, b.characterid, b.pos_x, b.pos_y, b.pos_z "
-             "FROM servers AS a, server_objects AS b "
-             "WHERE a.ip='%s' "
-             "AND a.serverid=b.serverid",
-             this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       MySQL::get_server_objects_query,
+                       strlen(MySQL::get_server_objects_query));
 
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL)
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &objid;
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null[0];
+    bind[0].error = &error[0];
+    bind[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = &charid;
+    bind[1].length = &length[1];
+    bind[1].is_null = &is_null[1];
+    bind[1].error = &error[1];
+    bind[2].buffer_type = MYSQL_TYPE_LONG;
+    bind[2].buffer = &pos_x;
+    bind[2].length = &length[2];
+    bind[2].is_null = &is_null[2];
+    bind[2].error = &error[2];
+    bind[3].buffer_type = MYSQL_TYPE_LONG;
+    bind[3].buffer = &pos_y;
+    bind[3].length = &length[3];
+    bind[3].is_null = &is_null[3];
+    bind[3].error = &error[3];
+    bind[4].buffer_type = MYSQL_TYPE_LONG;
+    bind[4].buffer = &pos_z;
+    bind[4].length = &length[4];
+    bind[4].is_null = &is_null[4];
+    bind[4].error = &error[4];
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_store_result(stmt);
+    while (mysql_stmt_fetch(stmt) == 0)
     {
-        while ((row = mysql_fetch_row(res)) != NULL)
+        //Geometry *geom = new Geometry();
+        GameObject *go = new GameObject(NULL, NULL, objid);
+
+        go->position[0] = pos_x / 100.0;
+        go->position[1] = pos_y / 100.0;
+        go->position[2] = pos_z / 100.0;
+        if (charid != 0LL)
         {
-            uint64_t objid = strtoull(row[0], NULL, 10);
-            uint64_t charid = strtoull(row[1], NULL, 10);
-
-            //Geometry *geom = new Geometry();
-            GameObject *go = new GameObject(NULL, NULL, objid);
-
-            go->position[0] = atol(row[2]) / 100.0;
-            go->position[1] = atol(row[3]) / 100.0;
-            go->position[2] = atol(row[4]) / 100.0;
-            if (charid != 0LL)
-            {
-                /* All characters first rez invisible and non-interactive */
-                go->natures.insert("invisible");
-                go->natures.insert("non-interactive");
-            }
-            gomap[objid] = go;
-            ++count;
+            /* All characters first rez invisible and non-interactive */
+            go->natures.insert("invisible");
+            go->natures.insert("non-interactive");
         }
-        mysql_free_result(res);
+        gomap[objid] = go;
+        ++count;
     }
-    mysql_close(&(this->db_handle));
+    mysql_stmt_close(stmt);
+    mysql_close(db_handle);
     return count;
 }
 
@@ -302,154 +516,129 @@ int MySQL::get_player_server_skills(uint64_t userid,
                                     uint64_t charid,
                                     std::map<uint16_t, action_level>& actions)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[420];
+    MYSQL *db_handle;
+    MYSQL_STMT *stmt;
+    MYSQL_BIND bind[4];
+    uint64_t skillid;
+    int level, improvement;
+    MYSQL_TIME last_increase;
+    unsigned long length[4];
+    my_bool is_null[4], error[4];
     int count = 0;
 
-    snprintf(str, sizeof(str),
-             "SELECT e.skillid, e.level, e.improvement, "
-             "UNIX_TIMESTAMP(e.last_increase) "
-             "FROM players AS a, characters AS b, servers AS c, "
-             "server_skills AS d, character_skills AS e "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=b.owner "
-             "AND b.characterid=%" PRIu64 " "
-             "AND b.characterid=e.characterid "
-             "AND c.ip='%s' "
-             "AND c.serverid=d.serverid "
-             "AND d.skillid=e.skillid",
-             userid, charid, this->host_ip);
-    this->db_connect();
+    db_handle = this->db_connect();
+    stmt = mysql_stmt_init(db_handle);
+    mysql_stmt_prepare(stmt,
+                       MySQL::get_player_server_skills_query,
+                       strlen(MySQL::get_player_server_skills_query));
 
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL)
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &userid;
+    bind[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[1].is_unsigned = true;
+    bind[1].buffer = &charid;
+    bind[2].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[2].is_unsigned = true;
+    bind[2].buffer = &this->host_id;
+
+    mysql_stmt_bind_param(stmt, bind);
+    mysql_stmt_execute(stmt);
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind[0].is_unsigned = true;
+    bind[0].buffer = &skillid;
+    bind[0].length = &length[0];
+    bind[0].is_null = &is_null[0];
+    bind[0].error = &error[0];
+    bind[1].buffer_type = MYSQL_TYPE_LONG;
+    bind[1].buffer = &level;
+    bind[1].length = &length[1];
+    bind[1].is_null = &is_null[1];
+    bind[1].error = &error[1];
+    bind[2].buffer_type = MYSQL_TYPE_LONG;
+    bind[2].buffer = &improvement;
+    bind[2].length = &length[2];
+    bind[2].is_null = &is_null[2];
+    bind[2].error = &error[2];
+    bind[3].buffer_type = MYSQL_TYPE_TIMESTAMP;
+    bind[3].buffer = &last_increase;
+    bind[3].length = &length[3];
+    bind[3].is_null = &is_null[3];
+    bind[3].error = &error[3];
+
+    mysql_stmt_bind_result(stmt, bind);
+    mysql_stmt_store_result(stmt);
+    while (mysql_stmt_fetch(stmt) == 0)
     {
-        while ((row = mysql_fetch_row(res)) != NULL)
-        {
-            uint64_t id = strtoull(row[0], NULL, 10);
-
-            actions[id].level = atoi(row[1]);
-            actions[id].improvement = atoi(row[2]);
-            actions[id].last_level = (time_t)atol(row[3]);
-            ++count;
-        }
-        mysql_free_result(res);
+        actions[skillid].level = level;
+        actions[skillid].improvement = improvement;
+        actions[skillid].last_level = MYSQL_TIME_to_time_t(&last_increase);
+        ++count;
     }
-    mysql_close(&(this->db_handle));
+    mysql_stmt_close(stmt);
+    mysql_close(db_handle);
     return count;
 }
 
-int MySQL::open_new_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
+MYSQL *MySQL::db_connect(void)
 {
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
-    int retval = 0;
+    MYSQL *db_handle;
 
-    this->db_connect();
-    snprintf(str, sizeof(str),
-             "INSERT INTO player_logins "
-             "(playerid, characterid, serverid, src_ip, src_port) "
-             "VALUES (%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",'%s',%d)",
-             userid, charid, this->host_id, sa->hostname(), sa->port());
-
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0)
-        retval = mysql_affected_rows(&(this->db_handle));
-    mysql_close(&(this->db_handle));
-    return retval;
-}
-
-/* Returns count of open logins for the given player/char on this server */
-int MySQL::check_open_login(uint64_t userid, uint64_t charid)
-{
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[400];
-    int retval = 0;
-
-    snprintf(str, sizeof(str),
-             "SELECT COUNT(d.logout_time) "
-             "FROM players AS a, characters AS b, servers AS c, "
-             "player_logins AS d "
-             "WHERE a.playerid=%" PRIu64 " "
-             "AND a.playerid=d.playerid "
-             "AND a.playerid=b.owner "
-             "AND b.characterid=%" PRIu64 " "
-             "AND b.characterid=d.characterid "
-             "AND c.ip='%s' "
-             "AND c.serverid=d.serverid "
-             "AND d.logout_time IS NULL",
-             userid, charid, this->host_ip);
-    this->db_connect();
-
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-        && (res = mysql_use_result(&(this->db_handle))) != NULL
-        && (row = mysql_fetch_row(res)) != NULL)
-    {
-        retval = atoi(row[0]);
-        mysql_free_result(res);
-    }
-    mysql_close(&(this->db_handle));
-    return retval;
-}
-
-int MySQL::close_open_login(uint64_t userid, uint64_t charid, Sockaddr *sa)
-{
-    MYSQL_RES *res;
-    MYSQL_ROW row;
-    char str[256];
-    int retval = 0;
-
-    this->db_connect();
-    snprintf(str, sizeof(str),
-             "UPDATE player_logins SET logout_time=NOW() "
-             "WHERE playerid=%" PRIu64 " "
-             "AND characterid=%" PRIu64 " "
-             "AND serverid=%" PRIu64 " "
-             "AND src_ip='%s' "
-             "AND src_port=%d "
-             "AND logout_time IS NULL",
-             userid, charid, this->host_id, sa->hostname(), sa->port());
-
-    if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0)
-        retval = mysql_affected_rows(&(this->db_handle));
-    mysql_close(&(this->db_handle));
-    return retval;
-}
-
-void MySQL::db_connect(void)
-{
-    mysql_init(&(this->db_handle));
-    if (mysql_real_connect(&(this->db_handle), this->dbhost.c_str(),
-                           this->dbuser.c_str(), this->dbpass.c_str(),
-                           this->dbname.c_str(), 0, NULL, 0) == NULL)
+    if ((db_handle = mysql_init(NULL)) == NULL
+        || mysql_real_connect(db_handle, this->dbhost.c_str(),
+                              this->dbuser.c_str(), this->dbpass.c_str(),
+                              this->dbname.c_str(), 0, NULL, 0) == NULL)
     {
         std::ostringstream s;
-        s << "couldn't connect to MySQL server: "
-          << mysql_error(&(this->db_handle));
+        if (db_handle == NULL)
+            s << "couldn't allocate MySQL handle";
+        else
+        {
+            s << "couldn't connect to MySQL server: "
+              << mysql_error(db_handle);
+            mysql_close(db_handle);
+        }
         throw std::runtime_error(s.str());
     }
 
     /* Retrieve our server id if we haven't already gotten it. */
     if (this->host_id == 0LL)
     {
-        MYSQL_RES *res;
-        MYSQL_ROW row;
-        char str[256];
+        MYSQL_STMT *stmt;
+        MYSQL_BIND bind[1];
+        unsigned long length = strlen(this->host_ip);
+        my_bool is_null, error;
 
-        snprintf(str, sizeof(str),
-                 "SELECT serverid FROM servers WHERE ip='%s'",
-                 this->host_ip);
+        stmt = mysql_stmt_init(db_handle);
+        mysql_stmt_prepare(stmt,
+                           MySQL::get_serverid_query,
+                           strlen(MySQL::get_serverid_query));
 
-        if (mysql_real_query(&(this->db_handle), str, strlen(str)) == 0
-            && (res = mysql_use_result(&(this->db_handle))) != NULL
-            && (row = mysql_fetch_row(res)) != NULL)
-        {
-            this->host_id = strtoull(row[1], NULL, 10);
-            mysql_free_result(res);
-        }
+        memset(bind, 0, sizeof(bind));
+        bind[0].buffer_type = MYSQL_TYPE_STRING;
+        bind[0].buffer = this->host_ip;
+        bind[0].buffer_length = INET6_ADDRSTRLEN;
+        bind[0].length = &length;
+
+        mysql_stmt_bind_param(stmt, bind);
+        mysql_stmt_execute(stmt);
+
+        memset(bind, 0, sizeof(bind));
+        bind[0].buffer_type = MYSQL_TYPE_LONGLONG;
+        bind[0].is_unsigned = true;
+        bind[0].buffer = &this->host_id;
+        bind[0].length = &length;
+        bind[0].is_null = &is_null;
+        bind[0].error = &error;
+
+        mysql_stmt_bind_result(stmt, bind);
+        mysql_stmt_fetch(stmt);
+        mysql_stmt_close(stmt);
     }
+    return db_handle;
 }
 
 extern "C" DB *db_create(const std::string& a, const std::string& b,

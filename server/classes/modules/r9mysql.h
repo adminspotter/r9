@@ -1,6 +1,6 @@
 /* r9mysql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2019, 08:08:07 tquirk
+ *   last updated 20 Sep 2019, 09:07:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -38,7 +38,15 @@
 class MySQL : public DB
 {
   private:
-    MYSQL db_handle;
+    static const char check_authentication_query[239];
+    static const char check_authorization_id_query[187];
+    static const char check_authorization_name_query[189];
+    static const char get_characterid_query[120];
+    static const char get_character_objectid_query[187];
+    static const char get_server_skills_query[141];
+    static const char get_server_objects_query[87];
+    static const char get_player_server_skills_query[271];
+    static const char get_serverid_query[40];
 
   public:
     MySQL(const std::string&, const std::string&,
@@ -51,9 +59,6 @@ class MySQL : public DB
     int check_authorization(uint64_t, const std::string&);
     uint64_t get_characterid(uint64_t, const std::string&);
     uint64_t get_character_objectid(uint64_t, const std::string&);
-    int open_new_login(uint64_t, uint64_t, Sockaddr *);
-    int check_open_login(uint64_t, uint64_t);
-    int close_open_login(uint64_t, uint64_t, Sockaddr *);
     int get_player_server_skills(uint64_t, uint64_t,
                                  std::map<uint16_t,
                                  action_level>&);
@@ -63,7 +68,7 @@ class MySQL : public DB
     int get_server_objects(std::map<uint64_t, GameObject *> &);
 
   private:
-    void db_connect(void);
+    MYSQL *db_connect(void);
 };
 
 #endif /* __INC_R9MYSQL_H__ */

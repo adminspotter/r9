@@ -1,6 +1,6 @@
 /* db.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Jul 2019, 14:45:02 tquirk
+ *   last updated 20 Sep 2019, 09:07:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -25,6 +25,15 @@
  * without a specific database context.
  *
  * Things to do
+ *   - Add a method to save server object positions.  Perhaps also a
+ *     method to save a single object, such as when somebody logs out.
+ *   - Add a method to add or increase a character's skill and last
+ *     updated time.
+ *   - Add methods to add/change/remove server skills.  These changes
+ *     could be initiated from the server console.
+ *   - Add methods for suspending/unsuspending users?  Could also be
+ *     done via the server console.
+ *   - Consider how login/logout tracking should be done.
  *
  */
 
@@ -43,11 +52,11 @@ class DB
     const std::string dbhost, dbuser, dbpass, dbname;
 
   public:
-    /* A couple of maximum lengths */
+    /* Some maximum field lengths */
     static const int MAX_USERNAME = 64;
     static const int MAX_CHARNAME = 64;
+    static const int MAX_SKILLNAME = 64;
 
-  protected:
     /* IPv6 addresses can be a lot longer than IPv4, so we'll just use
      * the IPv6 max length to ensure that everything will fit.
      */
@@ -68,9 +77,6 @@ class DB
     virtual int check_authorization(uint64_t, const std::string&) = 0;
     virtual uint64_t get_characterid(uint64_t, const std::string&) = 0;
     virtual uint64_t get_character_objectid(uint64_t, const std::string&) = 0;
-    virtual int open_new_login(uint64_t, uint64_t, Sockaddr *) = 0;
-    virtual int check_open_login(uint64_t, uint64_t) = 0;
-    virtual int close_open_login(uint64_t, uint64_t, Sockaddr *) = 0;
     virtual int get_player_server_skills(uint64_t, uint64_t,
                                          std::map<uint16_t,
                                          action_level>&) = 0;

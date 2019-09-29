@@ -1,6 +1,6 @@
 /* r9pgsql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jul 2019, 08:09:35 tquirk
+ *   last updated 28 Sep 2019, 10:08:10 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -39,7 +39,15 @@
 class PgSQL : public DB
 {
   private:
-    PGconn *db_handle;
+    static const char check_authentication_query[242];
+    static const char check_authorization_id_query[191];
+    static const char check_authorization_name_query[193];
+    static const char get_characterid_query[123];
+    static const char get_character_objectid_query[191];
+    static const char get_server_skills_query[143];
+    static const char get_server_objects_query[89];
+    static const char get_serverid_query[42];
+    static const char get_player_server_skills_query[295];
 
   public:
     PgSQL(const std::string&, const std::string&,
@@ -52,9 +60,6 @@ class PgSQL : public DB
     int check_authorization(uint64_t, const std::string&);
     uint64_t get_characterid(uint64_t, const std::string&);
     uint64_t get_character_objectid(uint64_t, const std::string&);
-    int open_new_login(uint64_t, uint64_t, Sockaddr *);
-    int check_open_login(uint64_t, uint64_t);
-    int close_open_login(uint64_t, uint64_t, Sockaddr *);
     int get_player_server_skills(uint64_t, uint64_t,
                                  std::map<uint16_t,
                                  action_level>&);
@@ -64,8 +69,8 @@ class PgSQL : public DB
     int get_server_objects(std::map<uint64_t, GameObject *> &);
 
   private:
-    void db_connect(void);
-    void db_close(void);
+    PGconn *db_connect(void);
+    void db_close(PGconn *);
 };
 
 #endif /* __INC_R9PGSQL_H__ */

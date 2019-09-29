@@ -1,6 +1,6 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Feb 2018, 07:51:03 tquirk
+ *   last updated 20 Sep 2019, 09:08:04 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
