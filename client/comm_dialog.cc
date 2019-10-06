@@ -1,6 +1,6 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jul 2019, 08:40:50 tquirk
+ *   last updated 06 Oct 2019, 15:48:34 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -61,57 +61,65 @@ void create_login_dialog(ui::context *ctx)
 
     dialog_font = new ui::font(config.font_name, 10, config.font_paths);
 
-    dialog = new ui::row_column(ctx, 0, 0);
-    dialog->set(ui::element::border, ui::side::all, border,
-                ui::element::order, 0, ui::order::row,
-                ui::element::child_spacing, ui::size::width, 10,
-                ui::element::child_spacing, ui::size::height, 10,
-                ui::element::size, ui::size::columns, 2);
+    dialog = new ui::row_column(ctx,
+                                ui::element::border, ui::side::all, border,
+                                ui::element::order, 0, ui::order::row,
+                                ui::element::child_spacing, ui::size::width, 10,
+                                ui::element::child_spacing,
+                                ui::size::height,
+                                10,
+                                ui::element::size, ui::size::columns, 2);
 
-    l = new ui::label(dialog, 0, 0);
     str = _("Username");
-    l->set(ui::element::font, ui::ownership::shared, dialog_font,
-           ui::element::string, 0, str);
-    user = new ui::text_field(dialog, 0, 0);
+    l = new ui::label(dialog,
+                      ui::element::font, ui::ownership::shared, dialog_font,
+                      ui::element::string, 0, str);
     str = config.username;
-    user->set(ui::element::font, ui::ownership::shared, dialog_font,
-              ui::element::size, ui::size::max_width, max_sz,
-              ui::element::border, ui::side::all, border,
-              ui::element::string, 0, str);
+    user = new ui::text_field(dialog,
+                              ui::element::font,
+                              ui::ownership::shared,
+                              dialog_font,
+                              ui::element::size, ui::size::max_width, max_sz,
+                              ui::element::border, ui::side::all, border,
+                              ui::element::string, 0, str);
 
-    l = new ui::label(dialog, 0, 0);
     str = _("Password");
-    l->set(ui::element::font, ui::ownership::shared, dialog_font,
-           ui::element::string, 0, str);
-    pass = new ui::password(dialog, 0, 0);
-    pass->set(ui::element::font, ui::ownership::shared, dialog_font,
-              ui::element::size, ui::size::max_width, max_sz,
-              ui::element::border, ui::side::all, border);
+    l = new ui::label(dialog,
+                      ui::element::font, ui::ownership::shared, dialog_font,
+                      ui::element::string, 0, str);
+    pass = new ui::password(dialog,
+                            ui::element::font,
+                            ui::ownership::shared,
+                            dialog_font,
+                            ui::element::size, ui::size::max_width, max_sz,
+                            ui::element::border, ui::side::all, border);
 
-    l = new ui::label(dialog, 0, 0);
     str = _("Server");
-    l->set(ui::element::font, ui::ownership::shared, dialog_font,
-           ui::element::string, 0, str);
-    host = new ui::text_field(dialog, 0, 0);
+    l = new ui::label(dialog,
+                      ui::element::font, ui::ownership::shared, dialog_font,
+                      ui::element::string, 0, str);
     str = config.server_addr;
-    host->set(ui::element::font, ui::ownership::shared, dialog_font,
-              ui::element::size, ui::size::max_width, max_sz,
-              ui::element::border, ui::side::all, border,
-              ui::element::string, 0, str);
+    host = new ui::text_field(dialog,
+                              ui::element::font,
+                              ui::ownership::shared,
+                              dialog_font,
+                              ui::element::size, ui::size::max_width, max_sz,
+                              ui::element::border, ui::side::all, border,
+                              ui::element::string, 0, str);
 
-    b = new ui::button(dialog, 0, 0);
     str = _("OK");
-    b->set(ui::element::font, ui::ownership::shared, dialog_font,
-           ui::element::border, ui::side::all, border,
-           ui::element::string, 0, str);
+    b = new ui::button(dialog,
+                       ui::element::font, ui::ownership::shared, dialog_font,
+                       ui::element::border, ui::side::all, border,
+                       ui::element::string, 0, str);
     b->add_callback(ui::callback::btn_up, setup_comm_callback, NULL);
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 
-    b = new ui::button(dialog, 0, 0);
     str = _("Cancel");
-    b->set(ui::element::font, ui::ownership::shared, dialog_font,
-           ui::element::border, ui::side::all, border,
-           ui::element::string, 0, str);
+    b = new ui::button(dialog,
+                       ui::element::font, ui::ownership::shared, dialog_font,
+                       ui::element::border, ui::side::all, border,
+                       ui::element::string, 0, str);
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 
     dialog->manage_children();
@@ -153,7 +161,7 @@ void setup_comm_callback(ui::active *t, void *call, void *client)
 
 void close_dialog_callback(ui::active *t, void *call, void *client)
 {
-    ui::manager *dialog = (ui::manager *)client;
+    ui::row_column *dialog = (ui::row_column *)client;
 
     dialog->close();
     delete dialog_font;

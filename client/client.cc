@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Jul 2019, 08:36:48 tquirk
+ *   last updated 06 Oct 2019, 08:22:07 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -102,13 +102,18 @@ int main(int argc, char **argv)
     }
 
     glfwMakeContextCurrent(w);
-    ctx = new ui::context(800, 600);
+    ctx = new ui::context(ui::element::size,
+                          ui::size::all,
+                          glm::ivec2(800, 600));
     ui_connect_glfw(ctx, w);
     ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
     ctx->add_callback(ui::callback::key_down, move_key_callback, NULL);
     ctx->add_callback(ui::callback::key_up, move_key_callback, NULL);
 
-    log_disp = new log_display(ctx, 0, 0);
+    log_disp = new log_display(ctx,
+                               ui::element::position,
+                               ui::position::all,
+                               glm::ivec2(10, -10));
     init_client_core();
 
     glfwSetWindowSizeCallback(w, resize_callback);

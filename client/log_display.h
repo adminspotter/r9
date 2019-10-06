@@ -1,6 +1,6 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Nov 2018, 10:24:29 tquirk
+ *   last updated 06 Oct 2019, 08:24:13 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -69,6 +69,8 @@ class log_display : public ui::row_column,
     entry;
     typedef std::deque<entry>::iterator ld_iter;
 
+    static const int ENTRY_LIFETIME;
+
   protected:
     std::deque<entry> entries;
     std::deque<entry>::iterator created;
@@ -84,8 +86,18 @@ class log_display : public ui::row_column,
     void create_log_labels(void);
     static void *cleanup_entries(void *);
 
+    void init(void);
+
   public:
-    log_display(ui::composite *, GLuint, GLuint);
+    explicit log_display(ui::composite *);
+    template<typename... Args>
+    log_display(ui::composite *c, Args... args)
+        : ui::rect(0, 0), ui::active(0, 0), ui::row_column(c),
+          buf(), fname(), entries(), entry_lifetime(ENTRY_LIFETIME)
+        {
+            this->init();
+            this->set(args...);
+        };
     virtual ~log_display();
 
     virtual void draw(GLuint, const glm::mat4&) override;
@@ -93,8 +105,6 @@ class log_display : public ui::row_column,
   protected:
     int sync(void) override;
     int overflow(int) override;
-
-    static void resize_pos_callback(ui::active *, void *, void *);
 };
 
 #endif /* __INC_R9CLIENT_LOG_DISPLAY_H__ */
