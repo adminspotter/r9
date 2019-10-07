@@ -1,6 +1,6 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Dec 2018, 08:07:14 tquirk
+ *   last updated 06 Oct 2019, 22:41:17 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -47,10 +47,7 @@
 #include "log_display.h"
 #include "cuddly-gl/label.h"
 
-#define DISTANCE_FROM_EDGE 10
-#define ENTRY_LIFETIME 10
-
-static void resize_pos_callback(ui::active *, void *, void *);
+const int log_display::ENTRY_LIFETIME = 10;
 
 void log_display::sync_to_file(void)
 {
@@ -87,15 +84,15 @@ void log_display::create_log_labels(void)
     while (this->created != this->entries.end() - 1)
     {
         ++this->created;
-        GLuint orig_pos = this->pos.y, orig_height = this->dim.y;
-        this->created->label = new ui::label(this, 0, 0);
-        this->created->label->set(
+        this->created->label = new ui::label(this,
             ui::element::font, ui::ownership::shared, this->log_font,
             ui::element::string, 0, this->created->log_entry,
             ui::element::border, ui::side::all, 1);
+        GLuint x, y;
+        this->created->label->get(ui::element::size, ui::size::width, &x,
+                                  ui::element::size, ui::size::height, &y);
         this->manage_children();
-        orig_pos -= this->dim.y - orig_height;
-        this->set_position(ui::position::y, orig_pos);
+        this->reposition(dynamic_cast<ui::active *>(this), NULL, NULL);
     }
 }
 
@@ -116,7 +113,7 @@ void *log_display::cleanup_entries(void *arg)
         if (last_closed != ld->entries.end()
             && next_closed == ld->entries.end())
         {
-            sleep(ENTRY_LIFETIME);
+            sleep(log_display::ENTRY_LIFETIME);
             continue;
         }
         else
@@ -156,9 +153,7 @@ void *log_display::cleanup_entries(void *arg)
     }
 }
 
-log_display::log_display(ui::composite *p, GLuint w, GLuint h)
-    : ui::row_column(p, w, h), ui::active::active(w, h), ui::rect(w, h),
-      buf(), fname(), entries(), entry_lifetime(ENTRY_LIFETIME)
+void log_display::init(void)
 {
     int border = 1, ret;
     entry e;
@@ -176,16 +171,8 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
 
     this->log_font = new ui::font(config.font_name, 13, config.font_paths);
 
-    this->pos.x = DISTANCE_FROM_EDGE;
-    this->composite::parent->get(ui::element::size,
-                                 ui::size::height,
-                                 &this->pos.y);
-    this->pos.y -= DISTANCE_FROM_EDGE;
-
     this->background = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
-    this->add_callback(ui::callback::resize,
-                       log_display::resize_pos_callback, NULL);
     this->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 
     if ((ret = pthread_create(&(this->cleanup_thread), NULL,
@@ -201,6 +188,13 @@ log_display::log_display(ui::composite *p, GLuint w, GLuint h)
     }
 
     this->orig_rdbuf = std::clog.rdbuf(this);
+}
+
+log_display::log_display(ui::composite *c)
+    : ui::rect(0, 0), ui::active(0, 0), ui::row_column(c),
+      buf(), fname(), entries(), entry_lifetime(log_display::ENTRY_LIFETIME)
+{
+    this->init();
 }
 
 log_display::~log_display()
@@ -283,22 +277,4 @@ int log_display::overflow(int c)
     else
         this->sync();
     return c;
-}
-
-/* ARGSUSED */
-void log_display::resize_pos_callback(ui::active *a, void *call, void *client)
-{
-    ui::resize_call_data *call_data = (ui::resize_call_data *)call;
-    log_display *ld = dynamic_cast<log_display *>(a);
-
-    if (ld != NULL)
-    {
-        GLuint log_pos;
-
-        ld->composite::parent->get(ui::element::size,
-                                   ui::size::height,
-                                   &log_pos);
-        ld->set(ui::element::position, ui::position::y,
-                log_pos - DISTANCE_FROM_EDGE);
-    }
 }
