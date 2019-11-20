@@ -410,7 +410,7 @@ then
         [GLM_INCLUDES="-I$with_glm_includes $GLM_INCLUDES"])
   CXXFLAGS="$CXXFLAGS $GLM_INCLUDES"
   CPPFLAGS="$CXXFLAGS"
-  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtx/quaternion.hpp], [], [AC_MSG_ERROR([no valid GLM installation found, can not continue])])
+  AC_CHECK_HEADERS([glm/vec3.hpp glm/mat4x4.hpp glm/gtc/matrix_transform.hpp glm/gtc/type_ptr.hpp glm/gtc/quaternion.hpp], [], [AC_MSG_ERROR([no valid GLM installation found, can not continue])])
   CPPFLAGS="$GLM_CPPFLAGS_SAVE"
 fi
 
