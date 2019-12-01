@@ -1,9 +1,9 @@
 /* motion_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2017, 08:07:20 tquirk
+ *   last updated 01 Dec 2019, 14:32:26 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,6 +38,9 @@
 
 #include "motion_pool.h"
 #include "../server.h"
+
+static glm::dvec3 no_movement(0.0, 0.0, 0.0);
+static glm::dquat no_rotation(1.0, 0.0, 0.0, 0.0);
 
 MotionPool::MotionPool(const char *pool_name, unsigned int pool_size)
     : ThreadPool<GameObject *>(pool_name, pool_size)
@@ -81,19 +84,13 @@ void *MotionPool::motion_pool_worker(void *arg)
                + (req->last_updated.tv_usec / 1000000.0));
         memcpy(&req->last_updated, &current, sizeof(struct timeval));
         zone->sector_contains(req->position)->remove(req);
-        req->position += req->movement * interval;
-        /*req->orient += req->rotation * interval;*/
+        req->move_and_rotate(interval);
         sector = zone->sector_contains(req->position);
         sector->insert(req);
         /*mot->physics->collide(sector, req);*/
         update_pool->push(req);
 
-        if ((req->movement[0] != 0.0
-             || req->movement[1] != 0.0
-             || req->movement[2] != 0.0)
-            || (req->rotation[0] != 0.0
-                || req->rotation[1] != 0.0
-                || req->rotation[2] != 0.0))
+        if (req->movement != no_movement || req->rotation != no_rotation)
             mot->push(req);
     }
     return NULL;

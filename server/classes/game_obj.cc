@@ -1,9 +1,9 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jun 2017, 09:16:54 tquirk
+ *   last updated 01 Dec 2019, 14:26:33 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -50,7 +50,8 @@ uint64_t GameObject::reset_max_id(void)
 }
 
 GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
-    : position(), movement(), rotation(), look(), orient()
+    : position(), movement(), look(0.0, 1.0, 0.0),
+      orient(1.0, 0.0, 0.0, 0.0), rotation(1.0, 0.0, 0.0, 0.0)
 {
     this->default_master = this->master = c;
     this->default_geometry = this->geometry = g;
@@ -109,4 +110,10 @@ void GameObject::disconnect(Control *con)
      */
     if (this->master == con)
         master = default_master;
+}
+
+void GameObject::move_and_rotate(double interval)
+{
+    this->position += this->movement * interval;
+    this->orient = glm::mix(this->orient, this->rotation, interval);
 }

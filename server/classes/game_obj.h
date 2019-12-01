@@ -1,9 +1,9 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 10:23:42 tquirk
+ *   last updated 15 Nov 2019, 08:20:10 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -64,9 +64,8 @@ class GameObject
     Geometry *geometry;
     Control *master;
     struct timeval last_updated;
-    /* These vectors are in meters/degrees per second */
-    glm::dvec3 position, movement, rotation, look;
-    glm::dquat orient;
+    glm::dvec3 position, movement, look;
+    glm::dquat orient, rotation;
 
   public:
     static uint64_t reset_max_id(void);
@@ -85,6 +84,8 @@ class GameObject
         {
             return glm::distance(pt, this->position);
         };
+
+    void move_and_rotate(double);
 };
 
 #endif /* __INC_GAME_OBJ_H__ */

@@ -1,9 +1,9 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Feb 2018, 08:40:29 tquirk
+ *   last updated 02 Dec 2019, 05:23:54 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,8 +28,6 @@
  */
 
 #include <sys/time.h>
-
-#include <glm/vec3.hpp>
 
 #include <algorithm>
 
@@ -62,10 +60,8 @@ int action_stop(GameObject *source,
                 GameObject *target,
                 glm::dvec3& direction)
 {
-    glm::dvec3 stop(0.0, 0.0, 0.0);
-
-    source->movement = stop;
-    source->rotation = stop;
+    source->movement = glm::dvec3(0.0, 0.0, 0.0);
+    source->rotation = glm::dquat(1.0, 0.0, 0.0, 0.0);
     return 1;
 }
 
