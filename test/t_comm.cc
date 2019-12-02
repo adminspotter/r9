@@ -738,6 +738,16 @@ void test_recv_ack(void)
          std::string::npos,
          test + st + "bad access: expected log entry");
 
+    st = "actreq response: ";
+
+    expected_packet.ack.request = TYPE_ACTREQ;
+    expected_packet.ack.misc[0] = ACCESS_NONE;
+
+    comm->handle_ackpkt(expected_packet);
+    isnt(new_clog.str().find("Acked action request"),
+         std::string::npos,
+         test + st + "expected log entry");
+
     st = "unknown response: ";
 
     expected_packet.ack.request = 123;
@@ -887,7 +897,7 @@ void test_recv_unsupported(void)
 
 int main(int argc, char **argv)
 {
-    plan(47);
+    plan(48);
 
     std::clog.rdbuf(new_clog.rdbuf());
 
