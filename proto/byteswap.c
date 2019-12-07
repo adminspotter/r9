@@ -1,6 +1,6 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2019, 08:59:13 tquirk
+ *   last updated 07 Dec 2019, 14:19:39 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -199,7 +199,7 @@ static int hton_position_update(packet *pu, size_t s)
     pu->pos.x_orient = htonl(pu->pos.x_orient);
     pu->pos.y_orient = htonl(pu->pos.y_orient);
     pu->pos.z_orient = htonl(pu->pos.z_orient);
-    pu->pos.w_orient = htonl(pu->pos.z_orient);
+    pu->pos.w_orient = htonl(pu->pos.w_orient);
     pu->pos.x_look = htonl(pu->pos.x_look);
     pu->pos.y_look = htonl(pu->pos.y_look);
     pu->pos.z_look = htonl(pu->pos.z_look);
@@ -220,7 +220,7 @@ static int ntoh_position_update(packet *pu, size_t s)
     pu->pos.x_orient = ntohl(pu->pos.x_orient);
     pu->pos.y_orient = ntohl(pu->pos.y_orient);
     pu->pos.z_orient = ntohl(pu->pos.z_orient);
-    pu->pos.w_orient = ntohl(pu->pos.z_orient);
+    pu->pos.w_orient = ntohl(pu->pos.w_orient);
     pu->pos.x_look = ntohl(pu->pos.x_look);
     pu->pos.y_look = ntohl(pu->pos.y_look);
     pu->pos.z_look = ntohl(pu->pos.z_look);
