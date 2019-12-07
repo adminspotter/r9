@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Nov 2019, 09:13:05 tquirk
+ *   last updated 07 Dec 2019, 14:32:42 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -176,7 +176,7 @@ void draw_objects(void)
 
 void move_object(uint64_t objectid, uint16_t frame,
                  float xpos, float ypos, float zpos,
-                 float xori, float yori, float zori, float wori)
+                 float wori, float xori, float yori, float zori)
 {
     object& oref = (*obj)[objectid];
 
@@ -191,13 +191,13 @@ void move_object(uint64_t objectid, uint16_t frame,
     }
 
     /* Update the object's position */
-    oref.position[0] = xpos;
-    oref.position[1] = ypos;
-    oref.position[2] = zpos;
-    oref.orientation[0] = xori;
-    oref.orientation[1] = yori;
-    oref.orientation[2] = zori;
-    oref.orientation[3] = wori;
+    oref.position.x = xpos;
+    oref.position.y = ypos;
+    oref.position.z = zpos;
+    oref.orientation.w = wori;
+    oref.orientation.x = xori;
+    oref.orientation.y = yori;
+    oref.orientation.z = zori;
 
     oref.dirty = true;
 }

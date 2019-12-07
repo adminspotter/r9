@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2019, 14:22:47 tquirk
+ *   last updated 07 Dec 2019, 14:31:23 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -143,7 +143,7 @@ typedef struct position_update_tag
     uint16_t frame_number;
     /* We may consider adding the sector vector back in here */
     uint64_t x_pos, y_pos, z_pos;
-    int32_t x_orient, y_orient, z_orient, w_orient;
+    int32_t w_orient, x_orient, y_orient, z_orient;
     int32_t x_look, y_look, z_look;
 } __attribute__ ((__packed__))
 position_update;

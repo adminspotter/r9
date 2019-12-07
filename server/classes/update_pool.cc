@@ -1,6 +1,6 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2019, 14:24:30 tquirk
+ *   last updated 07 Dec 2019, 14:34:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -68,10 +68,10 @@ void *UpdatePool::update_pool_worker(void *arg)
         pkt.buf.pos.x_pos = (uint64_t)(req->position.x * POSUPD_POS_SCALE);
         pkt.buf.pos.y_pos = (uint64_t)(req->position.y * POSUPD_POS_SCALE);
         pkt.buf.pos.z_pos = (uint64_t)(req->position.z * POSUPD_POS_SCALE);
+        pkt.buf.pos.w_orient = (uint32_t)(req->orient.w * POSUPD_ORIENT_SCALE);
         pkt.buf.pos.x_orient = (uint32_t)(req->orient.x * POSUPD_ORIENT_SCALE);
         pkt.buf.pos.y_orient = (uint32_t)(req->orient.y * POSUPD_ORIENT_SCALE);
         pkt.buf.pos.z_orient = (uint32_t)(req->orient.z * POSUPD_ORIENT_SCALE);
-        pkt.buf.pos.w_orient = (uint32_t)(req->orient.w * POSUPD_ORIENT_SCALE);
         pkt.buf.pos.x_look = (uint32_t)(req->look.x * POSUPD_LOOK_SCALE);
         pkt.buf.pos.y_look = (uint32_t)(req->look.y * POSUPD_LOOK_SCALE);
         pkt.buf.pos.z_look = (uint32_t)(req->look.z * POSUPD_LOOK_SCALE);

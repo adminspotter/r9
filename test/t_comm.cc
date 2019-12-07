@@ -29,15 +29,14 @@ struct dh_message msg = { dh_msg, sizeof(dh_msg) };
 
 void move_object(uint64_t a, uint16_t b,
                  float c, float d, float e,
-                 float f, float g, float h, float i)
 {
     is(c, 0.12, "move: expected x pos");
     is(d, 0.34, "move: expected y pos");
     is(e, 0.56, "move: expected z pos");
-    is(f, 7.89, "move: expected x orientation");
-    is(g, 1.23, "move: expected y orientation");
-    is(h, 4.56, "move: expected z orientation");
-    is(i, 7.89, "move: expected w orientation");
+    is(f, 0.7890, "move: expected w orientation");
+    is(g, 0.1234, "move: expected x orientation");
+    is(h, 0.5678, "move: expected y orientation");
+    is(i, 0.9012, "move: expected z orientation");
 }
 
 ssize_t recvfrom(int a,
@@ -773,10 +772,10 @@ void test_recv_pos_update(void)
     expected_packet.pos.x_pos = 12;
     expected_packet.pos.y_pos = 34;
     expected_packet.pos.z_pos = 56;
-    expected_packet.pos.x_orient = 789;
-    expected_packet.pos.y_orient = 123;
-    expected_packet.pos.z_orient = 456;
-    expected_packet.pos.w_orient = 789;
+    expected_packet.pos.w_orient = 7890;
+    expected_packet.pos.x_orient = 1234;
+    expected_packet.pos.y_orient = 5678;
+    expected_packet.pos.z_orient = 9012;
 
     try
     {
