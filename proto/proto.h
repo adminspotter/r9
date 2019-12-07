@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 07:54:24 tquirk
+ *   last updated 07 Dec 2019, 14:22:47 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -128,8 +128,12 @@ action_request;
  * could be the wrong way to go, but we'll see how it works for now.
  *
  * The position fields are to the nearest centimeter, and the orient and
- * look fields are to the nearest 0.01 degree.
+ * look fields are to the nearest 0.0001.
  */
+#define POSUPD_POS_SCALE     100
+#define POSUPD_ORIENT_SCALE  10000
+#define POSUPD_LOOK_SCALE    10000
+
 typedef struct position_update_tag
 {
     uint8_t type;

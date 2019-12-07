@@ -1,9 +1,9 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Jul 2019, 07:19:44 tquirk
+ *   last updated 07 Dec 2019, 14:24:30 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -65,16 +65,16 @@ void *UpdatePool::update_pool_worker(void *arg)
         pkt.buf.pos.type = TYPE_POSUPD;
         pkt.buf.pos.version = 1;
         pkt.buf.pos.object_id = req->get_object_id();
-        pkt.buf.pos.x_pos = (uint64_t)(req->position.x * 100);
-        pkt.buf.pos.y_pos = (uint64_t)(req->position.y * 100);
-        pkt.buf.pos.z_pos = (uint64_t)(req->position.z * 100);
-        pkt.buf.pos.x_orient = (uint32_t)(req->orient.x * 100);
-        pkt.buf.pos.y_orient = (uint32_t)(req->orient.y * 100);
-        pkt.buf.pos.z_orient = (uint32_t)(req->orient.z * 100);
-        pkt.buf.pos.w_orient = (uint32_t)(req->orient.w * 100);
-        pkt.buf.pos.x_look = (uint32_t)(req->look.x * 100);
-        pkt.buf.pos.y_look = (uint32_t)(req->look.y * 100);
-        pkt.buf.pos.z_look = (uint32_t)(req->look.z * 100);
+        pkt.buf.pos.x_pos = (uint64_t)(req->position.x * POSUPD_POS_SCALE);
+        pkt.buf.pos.y_pos = (uint64_t)(req->position.y * POSUPD_POS_SCALE);
+        pkt.buf.pos.z_pos = (uint64_t)(req->position.z * POSUPD_POS_SCALE);
+        pkt.buf.pos.x_orient = (uint32_t)(req->orient.x * POSUPD_ORIENT_SCALE);
+        pkt.buf.pos.y_orient = (uint32_t)(req->orient.y * POSUPD_ORIENT_SCALE);
+        pkt.buf.pos.z_orient = (uint32_t)(req->orient.z * POSUPD_ORIENT_SCALE);
+        pkt.buf.pos.w_orient = (uint32_t)(req->orient.w * POSUPD_ORIENT_SCALE);
+        pkt.buf.pos.x_look = (uint32_t)(req->look.x * POSUPD_LOOK_SCALE);
+        pkt.buf.pos.y_look = (uint32_t)(req->look.y * POSUPD_LOOK_SCALE);
+        pkt.buf.pos.z_look = (uint32_t)(req->look.z * POSUPD_LOOK_SCALE);
 
         /* Figure out who to send it to */
         /* Send to EVERYONE (for now) */
