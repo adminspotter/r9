@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2019, 14:32:42 tquirk
+ *   last updated 07 Dec 2019, 21:52:35 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -122,11 +122,7 @@ struct draw_object
 {
     void operator()(object& o)
         {
-            /* We don't get a valid quaternion just yet */
-            glm::mat4 rot = /*glm::rotate(*/glm::mat4(1.0f)/*,
-                                        glm::angle(o.orientation),
-                                        glm::axis(o.orientation))*/;
-            model = glm::translate(rot, o.position);
+            model = glm::translate(glm::mat4(1.0), o.position);
             glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
 
             if (o.vbo == -1)
