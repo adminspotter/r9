@@ -1,6 +1,6 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2019, 21:52:35 tquirk
+ *   last updated 08 Dec 2019, 10:35:45 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -57,6 +57,7 @@ struct object *self_obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
 GLuint model_loc, view_loc, proj_loc;
 GLint position_attr, color_attr;
+glm::vec3 up(0.0f, 0.0f, 1.0f), cam_pos(0.0f, -5.0f, 1.0f);
 glm::mat4 model, view, projection;
 unsigned int rand_seed;
 
@@ -166,6 +167,16 @@ void draw_objects(void)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    if (self_obj != NULL)
+    {
+        glm::vec3 cam_up = self_obj->orientation * up;
+        glm::vec3 aim_pt = self_obj->position + cam_up;
+        glm::vec3 cam = self_obj->position + (self_obj->orientation * cam_pos);
+
+        view = glm::lookAt(cam, aim_pt, cam_up);
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+    }
+
     std::function<void(object&)> draw = draw_object();
     obj->each(draw);
 }
@@ -198,6 +209,7 @@ void move_object(uint64_t objectid, uint16_t frame,
     oref.look.x = xlook;
     oref.look.y = ylook;
     oref.look.z = zlook;
+    oref.look = glm::normalize(oref.look);
 
     oref.dirty = true;
 }
