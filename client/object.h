@@ -1,6 +1,6 @@
 /* object.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Dec 2019, 22:37:11 tquirk
+ *   last updated 07 Dec 2019, 21:57:07 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -45,7 +45,7 @@
 
 struct object
 {
-    glm::vec3 position, color;
+    glm::vec3 position, color, look;
     glm::quat orientation;
     GLuint vao, vbo;
     bool dirty;

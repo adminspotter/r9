@@ -19,7 +19,8 @@ int cond_destroy_calls, mutex_destroy_calls;
 
 void move_object(uint64_t a, uint16_t b,
                  float c, float d, float e,
-                 float f, float g, float h, float i)
+                 float f, float g, float h, float i,
+                 float j, float k, float l)
 {
     return;
 }

@@ -29,6 +29,8 @@ struct dh_message msg = { dh_msg, sizeof(dh_msg) };
 
 void move_object(uint64_t a, uint16_t b,
                  float c, float d, float e,
+                 float f, float g, float h, float i,
+                 float j, float k, float l)
 {
     is(c, 0.12, "move: expected x pos");
     is(d, 0.34, "move: expected y pos");
@@ -37,6 +39,9 @@ void move_object(uint64_t a, uint16_t b,
     is(g, 0.1234, "move: expected x orientation");
     is(h, 0.5678, "move: expected y orientation");
     is(i, 0.9012, "move: expected z orientation");
+    is(j, 0.3456, "move: expected x look");
+    is(k, 0.7890, "move: expected y look");
+    is(l, 0.1234, "move: expected z look");
 }
 
 ssize_t recvfrom(int a,
@@ -776,6 +781,9 @@ void test_recv_pos_update(void)
     expected_packet.pos.x_orient = 1234;
     expected_packet.pos.y_orient = 5678;
     expected_packet.pos.z_orient = 9012;
+    expected_packet.pos.x_look = 3456;
+    expected_packet.pos.y_look = 7890;
+    expected_packet.pos.z_look = 1234;
 
     try
     {
@@ -896,7 +904,7 @@ void test_recv_unsupported(void)
 
 int main(int argc, char **argv)
 {
-    plan(48);
+    plan(51);
 
     std::clog.rdbuf(new_clog.rdbuf());
 

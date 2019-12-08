@@ -172,7 +172,8 @@ void draw_objects(void)
 
 void move_object(uint64_t objectid, uint16_t frame,
                  float xpos, float ypos, float zpos,
-                 float wori, float xori, float yori, float zori)
+                 float wori, float xori, float yori, float zori,
+                 float xlook, float ylook, float zlook)
 {
     object& oref = (*obj)[objectid];
 
@@ -194,6 +195,9 @@ void move_object(uint64_t objectid, uint16_t frame,
     oref.orientation.x = xori;
     oref.orientation.y = yori;
     oref.orientation.z = zori;
+    oref.look.x = xlook;
+    oref.look.y = ylook;
+    oref.look.z = zlook;
 
     oref.dirty = true;
 }
