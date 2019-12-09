@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2019, 14:31:23 tquirk
+ *   last updated 08 Dec 2019, 14:06:45 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -117,7 +117,7 @@ typedef struct action_request_tag
     uint8_t power_level;
     uint64_t x_pos_source, y_pos_source, z_pos_source;
     uint64_t dest_object_id;
-    uint64_t x_pos_dest, y_pos_dest, z_pos_dest;
+    int64_t x_pos_dest, y_pos_dest, z_pos_dest;
 } __attribute__ ((__packed__))
 action_request;
 
