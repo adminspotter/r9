@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2019, 21:39:23 tquirk
+ *   last updated 14 Nov 2019, 22:36:06 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -171,17 +171,16 @@ GameObject *Zone::find_game_object(uint64_t objid)
 void Zone::send_nearby_objects(uint64_t objid)
 {
     GameObject *go = this->find_game_object(objid);
-    Zone::objects_iterator gi;
 
     update_pool->push(go);
 
     /* Send updates on all objects within visual range */
-    for (gi = this->game_objects.begin(); gi != this->game_objects.end(); ++gi)
+    for (auto gi : this->game_objects)
     {
         /* We've already sent go, so no need to send it again. */
         /* Figure out how to send only to specific users */
-        if (gi->second != go
-            && go->distance_from(gi->second->position) < 1000.0)
-            update_pool->push(gi->second);
+        if (gi.second != go
+            && go->distance_from(gi.second->position) < 1000.0)
+            update_pool->push(gi.second);
     }
 }
