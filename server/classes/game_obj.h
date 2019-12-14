@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 10:23:42 tquirk
+ *   last updated 14 Dec 2019, 08:40:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -59,6 +59,8 @@ class GameObject
     Control *default_master;
 
   public:
+    typedef int attribute;
+
     std::map<std::string, attribute> attributes;
     std::set<std::string> natures;
     Geometry *geometry;

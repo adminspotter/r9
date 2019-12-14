@@ -1,9 +1,9 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2017, 10:11:44 tquirk
+ *   last updated 14 Dec 2019, 08:40:30 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,7 +23,6 @@
  * Some basic definitions and typedefs for the server classes.
  *
  * Things to do
- *   - Flesh out the attribute and nature as needed.
  *   - If we can get rid of this file entirely, that would probably be
  *     a good thing.
  *
@@ -107,7 +106,6 @@ class action_rec
         {
         };
 };
-typedef int attribute;
 typedef struct action_level_tag
 {
     uint16_t index, level, improvement;
