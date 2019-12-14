@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Dec 2019, 05:23:54 tquirk
+ *   last updated 09 Dec 2019, 07:47:52 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -68,7 +68,19 @@ int action_stop(GameObject *source,
 int action_rotate(GameObject *source,
                   int intensity,
                   GameObject *target,
-                  glm::dvec3& direction)
+                  glm::dvec3& axis)
 {
-    return -1;
+    if (glm::length(axis) == 0)
+        return 0;
+
+    glm::dvec3 rot = glm::normalize(axis);
+
+    double inten = std::min(intensity, 100) / 100.0;
+
+    source->rotation = glm::mix(source->rotation,
+                                glm::angleAxis(inten, rot),
+                                inten);
+    gettimeofday(&source->last_updated, NULL);
+    motion->push(source);
+    return 1;
 }
