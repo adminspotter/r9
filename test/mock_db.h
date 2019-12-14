@@ -76,7 +76,7 @@ class fake_DB : public DB
             ++get_server_skills_count;
             return get_server_skills_result;
         };
-    virtual int get_server_objects(std::map<uint64_t, GameObject *>& a)
+    virtual int get_server_objects(GameObject::objects_map& a)
         {
             ++get_server_objects_count;
             return get_server_objects_result;

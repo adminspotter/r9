@@ -91,7 +91,7 @@ class fake_DB : public DB
         {
             return 0;
         };
-    virtual int get_server_objects(std::map<uint64_t, GameObject *>& a)
+    virtual int get_server_objects(GameObject::objects_map& a)
         {
             return 0;
         };

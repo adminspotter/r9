@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 08:40:58 tquirk
+ *   last updated 14 Dec 2019, 12:26:26 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -36,6 +36,7 @@
 #include <cstdint>
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <set>
 
 #include <glm/vec3.hpp>
@@ -50,6 +51,12 @@ class GameObject;
 
 class GameObject
 {
+  public:
+    typedef std::unordered_map<uint64_t, GameObject *> objects_map;
+    typedef objects_map::iterator objects_iterator;
+
+    typedef int attribute;
+
   private:
     static pthread_mutex_t max_mutex;
     static uint64_t max_id_value;
@@ -59,8 +66,6 @@ class GameObject
     Control *default_master;
 
   public:
-    typedef int attribute;
-
     std::map<std::string, attribute> attributes;
     std::set<std::string> natures;
     Geometry *geometry;

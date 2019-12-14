@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 04 Dec 2017, 08:00:39 tquirk
+ *   last updated 14 Dec 2019, 11:57:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -58,9 +58,7 @@ class Zone
     std::vector< std::vector< std::vector<Octree *> > > sectors;
 
   public:
-    std::map<uint64_t, GameObject *> game_objects;
-
-    typedef std::map<uint64_t, GameObject *>::iterator objects_iterator;
+    GameObject::objects_map game_objects;
 
   protected:
     virtual void init(DB *);

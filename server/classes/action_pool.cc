@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2018, 05:41:21 tquirk
+ *   last updated 14 Dec 2019, 10:21:39 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk
@@ -59,7 +59,7 @@ void ActionPool::load_actions(void)
 }
 
 ActionPool::ActionPool(unsigned int pool_size,
-                       std::map<uint64_t, GameObject *>& game_obj,
+                       GameObject::objects_map& game_obj,
                        Library *lib,
                        DB *database)
     : ThreadPool<packet_list>("action", pool_size), actions(),
@@ -118,7 +118,7 @@ void ActionPool::execute_action(base_user *user, action_request& req)
 {
     ActionPool::actions_iterator i = this->actions.find(req.action_id);
     Control::skills_iterator j = user->actions.find(req.action_id);
-    std::map<uint64_t, GameObject *>::iterator k =
+    GameObject::objects_iterator k =
         this->game_objects.find(req.dest_object_id);
     glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
     GameObject *target = NULL;

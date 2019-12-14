@@ -65,7 +65,7 @@ struct addrinfo *create_addrinfo(void)
     return addr;
 }
 
-int fake_server_objects(std::map<uint64_t, GameObject *>& gom)
+int fake_server_objects(GameObject::objects_map& gom)
 {
     glm::dvec3 pos(100.0, 100.0, 100.0);
 

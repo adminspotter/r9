@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 09:31:47 tquirk
+ *   last updated 14 Dec 2019, 11:55:44 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -433,7 +433,7 @@ int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
     return count;
 }
 
-int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
+int MySQL::get_server_objects(GameObject::objects_map& gomap)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;

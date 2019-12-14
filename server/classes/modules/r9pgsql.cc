@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Dec 2019, 08:55:15 tquirk
+ *   last updated 14 Dec 2019, 11:55:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -246,7 +246,7 @@ int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
     return count;
 }
 
-int PgSQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
+int PgSQL::get_server_objects(GameObject::objects_map& gomap)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;

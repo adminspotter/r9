@@ -1,6 +1,6 @@
 /* db.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 09:02:04 tquirk
+ *   last updated 14 Dec 2019, 11:54:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -83,7 +83,7 @@ class DB
 
     /* Server functions */
     virtual int get_server_skills(std::map<uint16_t, action_rec>&) = 0;
-    virtual int get_server_objects(std::map<uint64_t, GameObject *> &) = 0;
+    virtual int get_server_objects(GameObject::objects_map&) = 0;
 };
 
 /* Our database types will be dynamically loaded, so these typedefs
