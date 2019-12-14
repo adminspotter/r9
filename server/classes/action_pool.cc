@@ -117,7 +117,7 @@ void *ActionPool::action_pool_worker(void *arg)
 void ActionPool::execute_action(base_user *user, action_request& req)
 {
     ActionPool::actions_iterator i = this->actions.find(req.action_id);
-    Control::actions_iterator j = user->actions.find(req.action_id);
+    Control::skills_iterator j = user->actions.find(req.action_id);
     std::map<uint64_t, GameObject *>::iterator k =
         this->game_objects.find(req.dest_object_id);
     glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);

@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Sep 2019, 09:08:50 tquirk
+ *   last updated 14 Dec 2019, 09:31:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -514,7 +514,7 @@ int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 /* Get the list of a player's skills which are valid on this server */
 int MySQL::get_player_server_skills(uint64_t userid,
                                     uint64_t charid,
-                                    std::map<uint16_t, action_level>& actions)
+                                    Control::skills_map& actions)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;

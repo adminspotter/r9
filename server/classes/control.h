@@ -1,6 +1,6 @@
 /* control.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jul 2019, 07:56:03 tquirk
+ *   last updated 13 Dec 2019, 08:43:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -33,7 +33,7 @@
 #include <sys/types.h>
 
 #include <cstdint>
-#include <map>
+#include <unordered_map>
 #include <string>
 
 class Control;
@@ -43,11 +43,18 @@ class Control;
 class Control
 {
   public:
+    typedef struct skill_level_tag
+    {
+        uint16_t index, level, improvement;
+        time_t last_level;
+    }
+    skill_level;
+    typedef std::unordered_map<uint16_t, skill_level> skills_map;
+    typedef skills_map::iterator skills_iterator;
+
     uint64_t userid;
     GameObject *default_slave, *slave;
-    std::map<uint16_t, action_level> actions;
-
-    typedef std::map<uint16_t, action_level>::iterator actions_iterator;
+    skills_map actions;
 
   public:
     Control(uint64_t, GameObject *);

@@ -1,6 +1,6 @@
 /* r9pgsql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Sep 2019, 10:08:10 tquirk
+ *   last updated 14 Dec 2019, 09:33:13 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -60,9 +60,7 @@ class PgSQL : public DB
     int check_authorization(uint64_t, const std::string&);
     uint64_t get_characterid(uint64_t, const std::string&);
     uint64_t get_character_objectid(uint64_t, const std::string&);
-    int get_player_server_skills(uint64_t, uint64_t,
-                                 std::map<uint16_t,
-                                 action_level>&);
+    int get_player_server_skills(uint64_t, uint64_t, Control::skills_map&);
 
     /* Server functions */
     int get_server_skills(std::map<uint16_t, action_rec>&);

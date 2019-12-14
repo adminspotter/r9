@@ -66,7 +66,7 @@ class fake_DB : public DB
             return get_character_objectid_result;
         };
     virtual int get_player_server_skills(uint64_t a, uint64_t b,
-                                         std::map<uint16_t, action_level>& c)
+                                         Control::skills_map& c)
         {
             ++get_player_server_skills_count;
             return get_player_server_skills_result;

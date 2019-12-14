@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 08:40:30 tquirk
+ *   last updated 14 Dec 2019, 09:24:41 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -106,11 +106,5 @@ class action_rec
         {
         };
 };
-typedef struct action_level_tag
-{
-    uint16_t index, level, improvement;
-    time_t last_level;
-}
-action_level;
 
 #endif /* __INC_DEFS_H__ */
