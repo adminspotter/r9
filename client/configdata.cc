@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 07:51:10 tquirk
+ *   last updated 16 Nov 2019, 07:49:47 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -333,7 +333,9 @@ void ConfigData::parse_config_line(std::string& line)
     for (i = 0; i < ENTRIES(handlers); ++i)
         if (keyword == handlers[i].keyword)
         {
-            (*(handlers[i].rd_func))(keyword, value, ((char *)this) + handlers[i].offset);
+            (*(handlers[i].rd_func))(keyword,
+                                     value,
+                                     ((char *)this) + handlers[i].offset);
             break;
         }
 
