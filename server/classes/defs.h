@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 09:24:41 tquirk
+ *   last updated 14 Dec 2019, 09:42:49 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -46,12 +46,6 @@
 class GameObject;
 class base_user;
 class Sockaddr;
-
-typedef struct sequence_tag
-{
-    int frame_number, duration;
-}
-sequence_element;
 
 typedef struct packet_list_tag
 {
