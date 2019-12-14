@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Dec 2019, 14:06:45 tquirk
+ *   last updated 12 Dec 2019, 08:39:54 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -106,6 +106,8 @@ typedef struct login_request_tag
     uint8_t pubkey[256];    /* in DER format */
 } __attribute__ ((__packed__))
 login_request;
+
+#define ACTREQ_POS_SCALE  100
 
 typedef struct action_request_tag
 {

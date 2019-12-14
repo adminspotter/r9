@@ -1,9 +1,9 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2018, 05:41:21 tquirk
+ *   last updated 14 Dec 2019, 09:18:16 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -120,9 +120,10 @@ void ActionPool::execute_action(base_user *user, action_request& req)
     Control::actions_iterator j = user->actions.find(req.action_id);
     std::map<uint64_t, GameObject *>::iterator k =
         this->game_objects.find(req.dest_object_id);
-    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
+    glm::dvec3 dest((double)req.x_pos_dest / (double)ACTREQ_POS_SCALE,
+                    (double)req.y_pos_dest / (double)ACTREQ_POS_SCALE,
+                    (double)req.z_pos_dest / (double)ACTREQ_POS_SCALE);
     GameObject *target = NULL;
-    int retval;
 
     if (k != this->game_objects.end())
         target = k->second;
@@ -149,10 +150,10 @@ void ActionPool::execute_action(base_user *user, action_request& req)
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
         req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
 
-        retval = (*(i->second.action))(user->slave,
-                                       req.power_level,
-                                       target,
-                                       vec);
-        user->send_ack(TYPE_ACTREQ, (uint8_t)retval);
+        user->send_ack(TYPE_ACTREQ,
+                       (uint8_t)(*(i->second.action))(user->slave,
+                                                      req.power_level,
+                                                      target,
+                                                      dest));
     }
 }

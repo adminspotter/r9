@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2019, 21:54:28 tquirk
+ *   last updated 12 Dec 2019, 08:46:10 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -573,9 +573,9 @@ void Comm::send_action_request(uint16_t actionid,
     req->act.sequence = sequence++;
     req->act.object_id = this->src_object_id;
     req->act.action_id = actionid;
-    req->act.x_pos_dest = (uint64_t)(direction.x * 100.0);
-    req->act.y_pos_dest = (uint64_t)(direction.y * 100.0);
-    req->act.z_pos_dest = (uint64_t)(direction.z * 100.0);
+    req->act.x_pos_dest = (uint64_t)(direction.x * ACTREQ_POS_SCALE);
+    req->act.y_pos_dest = (uint64_t)(direction.y * ACTREQ_POS_SCALE);
+    req->act.z_pos_dest = (uint64_t)(direction.z * ACTREQ_POS_SCALE);
     req->act.power_level = power;
     this->send(req, sizeof(action_request));
 }
