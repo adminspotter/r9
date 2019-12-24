@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 11:55:15 tquirk
+ *   last updated 23 Dec 2019, 19:56:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -37,6 +37,7 @@
 
 #include "r9pgsql.h"
 #include "../game_obj.h"
+#include "../../../proto/proto.h"
 
 const char PgSQL::check_authentication_query[] =
     "SELECT a.playerid "
@@ -215,7 +216,7 @@ uint64_t PgSQL::get_character_objectid(uint64_t userid,
     return retval;
 }
 
-int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
+int PgSQL::get_server_skills(actions_map& actions)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;

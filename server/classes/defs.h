@@ -1,6 +1,6 @@
 /* defs.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 09:42:49 tquirk
+ *   last updated 14 Dec 2019, 10:01:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -33,17 +33,10 @@
 
 #include <cstdint>
 #include <string>
-#include <deque>
-#include <map>
-
-#include <glm/vec3.hpp>
-
-#include <stdlib.h>
 
 #include "../../proto/proto.h"
 
 /* Eliminate the multiple-include problems */
-class GameObject;
 class base_user;
 class Sockaddr;
 
@@ -78,27 +71,5 @@ typedef struct access_list_tag
     what;
 }
 access_list;
-
-class action_rec
-{
-  public:
-    std::string name;
-    int (*action)(GameObject *, int, GameObject *, glm::dvec3 &);
-    uint16_t def;                 /* The "default" skill to use */
-    int lower, upper;             /* The bounds for skill levels */
-    bool valid;                   /* Is this action valid on this server? */
-
-    inline action_rec() : name()
-        {
-            this->action = NULL;
-            this->def = 0;
-            this->lower = 0;
-            this->upper = 0;
-            this->valid = false;
-        };
-    inline ~action_rec()
-        {
-        };
-};
 
 #endif /* __INC_DEFS_H__ */

@@ -1,9 +1,9 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 10:21:39 tquirk
+ *   last updated 23 Dec 2019, 19:43:09 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -31,16 +31,14 @@
  *
  */
 
-#include <glm/vec3.hpp>
-
 #include "action_pool.h"
 #include "listensock.h"
 
 #include "../../proto/proto.h"
 #include "../server.h"
 
-typedef void action_reg_t(std::map<uint16_t, action_rec>&, MotionPool *);
-typedef void action_unreg_t(std::map<uint16_t, action_rec>&);
+typedef void action_reg_t(actions_map&, MotionPool *);
+typedef void action_unreg_t(actions_map&);
 
 void ActionPool::load_actions(void)
 {
@@ -116,7 +114,7 @@ void *ActionPool::action_pool_worker(void *arg)
 
 void ActionPool::execute_action(base_user *user, action_request& req)
 {
-    ActionPool::actions_iterator i = this->actions.find(req.action_id);
+    actions_iterator i = this->actions.find(req.action_id);
     Control::skills_iterator j = user->actions.find(req.action_id);
     GameObject::objects_iterator k =
         this->game_objects.find(req.dest_object_id);

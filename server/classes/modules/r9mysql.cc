@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 11:55:44 tquirk
+ *   last updated 23 Dec 2019, 19:41:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -361,7 +361,7 @@ uint64_t MySQL::get_character_objectid(uint64_t userid,
 }
 
 /* Get the list of skills that are used on this server */
-int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
+int MySQL::get_server_skills(actions_map& actions)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;

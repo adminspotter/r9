@@ -2,7 +2,7 @@ SUBDIRS = actions modules
 
 lib_LTLIBRARIES = libr9_classes.la
 
-libr9_classes_la_SOURCES = action_pool.cc action_pool.h \
+libr9_classes_la_SOURCES = action.h action_pool.cc action_pool.h \
 	basesock.cc basesock.h \
 	config_data.cc config_data.h \
 	control.cc control.h \

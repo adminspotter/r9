@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 12:40:10 tquirk
+ *   last updated 23 Dec 2019, 19:55:23 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -44,7 +44,6 @@
 
 class GameObject;
 
-#include "defs.h"
 #include "control.h"
 #include "geometry.h"
 

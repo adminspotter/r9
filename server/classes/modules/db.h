@@ -1,6 +1,6 @@
 /* db.h                                                    -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 11:54:25 tquirk
+ *   last updated 23 Dec 2019, 19:40:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -43,8 +43,8 @@
 #include <string>
 #include <map>
 
-#include "../defs.h"
 #include "../control.h"
+#include "../action.h"
 #include "../sockaddr.h"
 
 class DB
@@ -82,7 +82,7 @@ class DB
                                          Control::skills_map&) = 0;
 
     /* Server functions */
-    virtual int get_server_skills(std::map<uint16_t, action_rec>&) = 0;
+    virtual int get_server_skills(actions_map&) = 0;
     virtual int get_server_objects(GameObject::objects_map&) = 0;
 };
 

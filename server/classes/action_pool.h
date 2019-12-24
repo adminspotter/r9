@@ -1,6 +1,6 @@
 /* action_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 10:20:24 tquirk
+ *   last updated 28 Dec 2019, 07:57:53 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -30,18 +30,17 @@
 #ifndef __INC_ACTION_POOL_H__
 #define __INC_ACTION_POOL_H__
 
+#include "../../proto/proto.h"
 #include "thread_pool.h"
 #include "library.h"
 #include "defs.h"
 
+#include "action.h"
 #include "modules/db.h"
 
 class ActionPool : public ThreadPool<packet_list>
 {
   private:
-    typedef std::map<uint16_t, action_rec> actions_map;
-    typedef actions_map::iterator actions_iterator;
-
     Library *action_lib;
 
     actions_map actions;

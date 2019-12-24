@@ -1,6 +1,6 @@
 /* r9pgsql.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 11:54:53 tquirk
+ *   last updated 23 Dec 2019, 19:41:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -31,9 +31,6 @@
 
 #include <postgresql/libpq-fe.h>
 
-#include <cstdint>
-#include <string>
-
 #include "db.h"
 
 class PgSQL : public DB
@@ -63,7 +60,7 @@ class PgSQL : public DB
     int get_player_server_skills(uint64_t, uint64_t, Control::skills_map&);
 
     /* Server functions */
-    int get_server_skills(std::map<uint16_t, action_rec>&);
+    int get_server_skills(actions_map&);
     int get_server_objects(GameObject::objects_map&);
 
   private:

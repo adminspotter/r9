@@ -1,9 +1,9 @@
 /* register.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Sep 2017, 14:53:16 tquirk
+ *   last updated 23 Dec 2019, 19:40:34 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,21 +26,17 @@
  *
  */
 
-#include <cstdint>
-#include <map>
-
-#include "../defs.h"
+#include "../action.h"
 #include "../motion_pool.h"
 #include "register.h"
 
 #define ENTRIES(x)  (int)(sizeof(x) / sizeof(x[0]))
 
-MotionPool *motion = NULL;
+static MotionPool *motion = NULL;
 
 extern "C"
 {
-    void actions_register(std::map<uint16_t, action_rec> &am,
-                          MotionPool *mp)
+    void actions_register(actions_map& am, MotionPool *mp)
     {
         int i;
 
@@ -48,7 +44,7 @@ extern "C"
 
         for (i = 0; i < ENTRIES(actions); ++i)
         {
-            action_rec& ar = am[actions[i].action_number];
+            Action& ar = am[actions[i].action_number];
 
             ar.action = actions[i].action_routine;
             if (ar.name.empty())
@@ -56,7 +52,7 @@ extern "C"
         }
     }
 
-    void actions_unregister(std::map<uint16_t, action_rec> &am)
+    void actions_unregister(actions_map& am)
     {
         int i;
 

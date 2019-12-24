@@ -87,7 +87,7 @@ class fake_DB : public DB
         };
 
     /* Server functions */
-    virtual int get_server_skills(std::map<uint16_t, action_rec>& a)
+    virtual int get_server_skills(actions_map& a)
         {
             return 0;
         };
