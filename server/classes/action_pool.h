@@ -1,6 +1,6 @@
 /* action_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Dec 2019, 07:57:53 tquirk
+ *   last updated 29 Dec 2019, 13:57:14 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -33,7 +33,7 @@
 #include "../../proto/proto.h"
 #include "thread_pool.h"
 #include "library.h"
-#include "defs.h"
+#include "listensock.h"
 
 #include "action.h"
 #include "modules/db.h"

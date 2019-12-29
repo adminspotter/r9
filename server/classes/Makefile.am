@@ -18,7 +18,7 @@ libr9_classes_la_SOURCES = action.h action_pool.cc action_pool.h \
 	stream.cc stream.h \
 	update_pool.cc update_pool.h \
 	zone.cc zone.h \
-	defs.h thread_pool.h
+	thread_pool.h
 libr9_classes_la_CXXFLAGS = -DSERVER_ROOT_DIR=\"$(prefix)\" \
 	-DSERVER_PID_FNAME=\"$(localstatedir)/run/r9.pid\"
 libr9_classes_la_LIBADD = ../../proto/libr9_proto.la

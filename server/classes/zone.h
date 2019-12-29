@@ -1,6 +1,6 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 11:57:21 tquirk
+ *   last updated 29 Dec 2019, 14:02:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -44,7 +44,6 @@
 #include <vector>
 #include <map>
 
-#include "defs.h"
 #include "octree.h"
 
 #include "modules/db.h"
