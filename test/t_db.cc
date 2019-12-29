@@ -81,18 +81,17 @@ class fake_DB : public DB
             return 0LL;
         };
     virtual int get_player_server_skills(uint64_t a, uint64_t b,
-                                         std::map<uint16_t,
-                                         action_level>& c)
+                                         Control::skills_map& c)
         {
             return 0;
         };
 
     /* Server functions */
-    virtual int get_server_skills(std::map<uint16_t, action_rec>& a)
+    virtual int get_server_skills(actions_map& a)
         {
             return 0;
         };
-    virtual int get_server_objects(std::map<uint64_t, GameObject *>& a)
+    virtual int get_server_objects(GameObject::objects_map& a)
         {
             return 0;
         };

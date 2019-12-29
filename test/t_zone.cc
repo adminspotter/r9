@@ -16,7 +16,7 @@ class object_DB : public fake_DB
         {};
     virtual ~object_DB() {};
 
-    virtual int get_server_objects(std::map<uint64_t, GameObject *>& a)
+    virtual int get_server_objects(GameObject::objects_map& a)
         {
             glm::dvec3 pos(100.0, 100.0, 100.0);
 
