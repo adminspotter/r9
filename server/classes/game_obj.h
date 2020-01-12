@@ -1,9 +1,9 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Nov 2019, 08:20:10 tquirk
+ *   last updated 11 Jan 2020, 16:53:13 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -54,6 +54,9 @@ class GameObject
     static pthread_mutex_t max_mutex;
     static uint64_t max_id_value;
 
+    static glm::dvec3 no_movement;
+    static glm::dquat no_rotation;
+
     /* const */ uint64_t id_value;
     Geometry *default_geometry;
     Control *default_master;
@@ -85,7 +88,8 @@ class GameObject
             return glm::distance(pt, this->position);
         };
 
-    void move_and_rotate(double);
+    void move_and_rotate(void);
+    bool still_moving(void);
 };
 
 #endif /* __INC_GAME_OBJ_H__ */

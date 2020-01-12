@@ -1,9 +1,9 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Dec 2019, 14:26:33 tquirk
+ *   last updated 11 Jan 2020, 17:00:03 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,6 +37,9 @@
 
 pthread_mutex_t GameObject::max_mutex = PTHREAD_MUTEX_INITIALIZER;
 uint64_t GameObject::max_id_value = 0LL;
+
+glm::dvec3 GameObject::no_movement(0.0, 0.0, 0.0);
+glm::dquat GameObject::no_rotation(1.0, 0.0, 0.0, 0.0);
 
 uint64_t GameObject::reset_max_id(void)
 {
@@ -112,8 +115,29 @@ void GameObject::disconnect(Control *con)
         master = default_master;
 }
 
-void GameObject::move_and_rotate(double interval)
+void GameObject::move_and_rotate(void)
 {
-    this->position += this->movement * interval;
-    this->orient = glm::mix(this->orient, this->rotation, interval);
+    if (this->still_moving())
+    {
+        struct timeval current;
+        double interval;
+
+        gettimeofday(&current, NULL);
+        interval = (current.tv_sec + (current.tv_usec / 1000000.0))
+            - (this->last_updated.tv_sec
+               + (this->last_updated.tv_usec / 1000000.0));
+        if (this->movement != GameObject::no_movement)
+            this->position += this->movement * interval;
+        if (this->rotation != GameObject::no_rotation)
+            this->orient = glm::dquat(glm::eulerAngles(this->rotation)
+                                      * interval)
+                * this->orient;
+        memcpy(&this->last_updated, &current, sizeof(struct timeval));
+    }
+}
+
+bool GameObject::still_moving(void)
+{
+    return (this->movement != GameObject::no_movement
+            || this->rotation != GameObject::no_rotation);
 }
