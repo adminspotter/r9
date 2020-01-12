@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jan 2020, 22:33:58 tquirk
+ *   last updated 12 Jan 2020, 13:33:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -50,6 +50,13 @@ class GameObject;
 
 class GameObject
 {
+  public:
+    typedef enum
+    {
+        invisible, non_interactive
+    }
+    nature;
+
   private:
     static pthread_mutex_t max_mutex;
     static uint64_t max_id_value;
@@ -63,7 +70,7 @@ class GameObject
 
   public:
     std::map<std::string, attribute> attributes;
-    std::set<std::string> natures;
+    std::set<nature> natures;
     Geometry *geometry;
     Control *master;
     struct timeval last_updated;

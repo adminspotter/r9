@@ -216,9 +216,11 @@ void test_base_user_disconnect_on_destroy(void)
 
     delete base;
     is(go->natures.size(), 2, test + "expected natures size");
-    isnt(go->natures.find("invisible"), go->natures.end(),
+    isnt(go->natures.find(GameObject::nature::invisible),
+         go->natures.end(),
          test + "added invisible nature");
-    isnt(go->natures.find("non-interactive"), go->natures.end(),
+    isnt(go->natures.find(GameObject::nature::non_interactive),
+         go->natures.end(),
          test + "added non-interactive nature");
     delete (fake_Zone *)zone;
     delete (fake_DB *)database;

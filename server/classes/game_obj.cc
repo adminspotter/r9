@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jan 2020, 22:41:47 tquirk
+ *   last updated 12 Jan 2020, 13:35:14 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -117,8 +117,8 @@ void GameObject::disconnect(Control *con)
 
 void GameObject::activate(void)
 {
-    this->natures.erase("invisible");
-    this->natures.erase("non-interactive");
+    this->natures.erase(GameObject::nature::invisible);
+    this->natures.erase(GameObject::nature::non_interactive);
 }
 
 void GameObject::deactivate(void)
@@ -130,8 +130,8 @@ void GameObject::deactivate(void)
      */
     this->movement = GameObject::no_movement;
     this->rotation = GameObject::no_rotation;
-    this->natures.insert("invisible");
-    this->natures.insert("non-interactive");
+    this->natures.insert(GameObject::nature::invisible);
+    this->natures.insert(GameObject::nature::non_interactive);
 }
 
 void GameObject::move_and_rotate(void)
