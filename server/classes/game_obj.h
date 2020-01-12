@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jan 2020, 16:53:13 tquirk
+ *   last updated 11 Jan 2020, 22:33:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -82,6 +82,9 @@ class GameObject
 
     bool connect(Control *);
     void disconnect(Control *);
+
+    void activate(void);
+    void deactivate(void);
 
     inline double distance_from(glm::dvec3& pt)
         {

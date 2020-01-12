@@ -1,6 +1,6 @@
 /* control_object.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 11:03:54 tquirk
+ *   last updated 11 Jan 2020, 22:31:27 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -60,8 +60,7 @@ int action_control_object(GameObject *source,
         {
             if (target->connect(src))
             {
-                target->natures.erase("invisible");
-                target->natures.erase("non-interactive");
+                target->activate();
                 src->slave = target;
             }
         }

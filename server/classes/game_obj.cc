@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jan 2020, 17:00:03 tquirk
+ *   last updated 11 Jan 2020, 22:41:47 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -113,6 +113,25 @@ void GameObject::disconnect(Control *con)
      */
     if (this->master == con)
         master = default_master;
+}
+
+void GameObject::activate(void)
+{
+    this->natures.erase("invisible");
+    this->natures.erase("non-interactive");
+}
+
+void GameObject::deactivate(void)
+{
+    /* When a user logs out, and this is their primary slave object,
+     * we'll make the object "go away" entirely.  We'll remove its
+     * movement and rotation, and make it stop interacting with the
+     * rest of the universe.
+     */
+    this->movement = GameObject::no_movement;
+    this->rotation = GameObject::no_rotation;
+    this->natures.insert("invisible");
+    this->natures.insert("non-interactive");
 }
 
 void GameObject::move_and_rotate(void)
