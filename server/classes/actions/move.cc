@@ -1,9 +1,9 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 09 Dec 2019, 07:47:52 tquirk
+ *   last updated 19 Jan 2020, 18:20:28 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,10 +20,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the action routine to move a given game object.
+ * This file contains the action routines to move a given game object.
  *
  * Things to do
- *   - Implement these functions, obviously.
  *
  */
 
@@ -36,6 +35,9 @@
 
 extern MotionPool *motion;
 
+#define AVERAGE_WALKING_SPEED   1.4  /* m/s */
+#define AVERAGE_ROTATION_SPEED  1.0  /* radians/s */
+
 int action_move(GameObject *source,
                 int intensity,
                 GameObject *target,
@@ -47,7 +49,7 @@ int action_move(GameObject *source,
     glm::dvec3 move = glm::normalize(direction);
 
     intensity = std::min(intensity, 100);
-    move *= intensity / 100.0;
+    move *= intensity / 100.0 * AVERAGE_WALKING_SPEED;
 
     source->movement = move;
     gettimeofday(&source->last_updated, NULL);
@@ -75,7 +77,7 @@ int action_rotate(GameObject *source,
 
     glm::dvec3 rot = glm::normalize(axis);
 
-    double inten = std::min(intensity, 100) / 100.0;
+    double inten = std::min(intensity, 100) / 100.0 * AVERAGE_ROTATION_SPEED;
 
     source->rotation = glm::mix(source->rotation,
                                 glm::angleAxis(inten, rot),
