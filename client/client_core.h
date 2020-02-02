@@ -1,9 +1,9 @@
 /* client_core.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Feb 2018, 14:50:37 tquirk
+ *   last updated 07 Dec 2019, 21:53:04 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,7 +44,9 @@ void cleanup_client_core(void);
 
 void draw_objects(void);
 void move_object(uint64_t, uint16_t,
-                 float, float, float, float, float, float, float);
+                 float, float, float,
+                 float, float, float, float,
+                 float, float, float);
 
 void resize_window(int, int);
 

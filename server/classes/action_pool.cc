@@ -118,9 +118,10 @@ void ActionPool::execute_action(base_user *user, action_request& req)
     Control::skills_iterator j = user->actions.find(req.action_id);
     GameObject::objects_iterator k =
         this->game_objects.find(req.dest_object_id);
-    glm::dvec3 vec(req.x_pos_dest, req.y_pos_dest, req.z_pos_dest);
+    glm::dvec3 dest((double)req.x_pos_dest / (double)ACTREQ_POS_SCALE,
+                    (double)req.y_pos_dest / (double)ACTREQ_POS_SCALE,
+                    (double)req.z_pos_dest / (double)ACTREQ_POS_SCALE);
     GameObject *target = NULL;
-    int retval;
 
     if (k != this->game_objects.end())
         target = k->second;
@@ -147,10 +148,10 @@ void ActionPool::execute_action(base_user *user, action_request& req)
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
         req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
 
-        retval = (*(i->second.action))(user->slave,
-                                       req.power_level,
-                                       target,
-                                       vec);
-        user->send_ack(TYPE_ACTREQ, (uint8_t)retval);
+        user->send_ack(TYPE_ACTREQ,
+                       (uint8_t)(*(i->second.action))(user->slave,
+                                                      req.power_level,
+                                                      target,
+                                                      dest));
     }
 }

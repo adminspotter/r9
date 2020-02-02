@@ -58,6 +58,28 @@ std::cout << std::put_time(std::localtime(&t), "%c %Z") << std::endl;
     ],
     [AC_MSG_RESULT([no])])
 
+# Check for a broken std::unordered_set
+AC_MSG_CHECKING([if std::unordered_set is broken])
+AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM(
+        [
+#include <unordered_set>
+
+typedef enum
+{
+  hello, goodbye
+}
+test_enum;
+        ],
+        [
+std::unordered_set<test_enum> foo;
+        ])
+    ],
+    [
+      AC_MSG_RESULT([no])
+      AC_DEFINE(STD_UNORDERED_SET_WORKS, [1], [std::unordered set works properly with enums])
+    ],
+    [AC_MSG_RESULT([yes])])
 
 # Arguments
 AC_ARG_ENABLE([debug],

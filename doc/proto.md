@@ -113,9 +113,9 @@ The `type` field is set to `LGTREQ`.
 * y_pos_source (64-bit unsigned integer)
 * z_pos_source (64-bit unsigned integer)
 * dest_object_id (64-bit unsigned integer)
-* x_pos_dest (64-bit unsigned integer)
-* y_pos_dest (64-bit unsigned integer)
-* z_pos_dest (64-bit unsigned integer)
+* x_pos_dest (64-bit signed integer)
+* y_pos_dest (64-bit signed integer)
+* z_pos_dest (64-bit signed integer)
 
 ## Server-initiated actions ##
 

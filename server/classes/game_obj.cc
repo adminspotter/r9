@@ -1,9 +1,9 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jun 2017, 09:16:54 tquirk
+ *   last updated 12 Jan 2020, 13:35:14 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,6 +38,9 @@
 pthread_mutex_t GameObject::max_mutex = PTHREAD_MUTEX_INITIALIZER;
 uint64_t GameObject::max_id_value = 0LL;
 
+glm::dvec3 GameObject::no_movement(0.0, 0.0, 0.0);
+glm::dquat GameObject::no_rotation(1.0, 0.0, 0.0, 0.0);
+
 uint64_t GameObject::reset_max_id(void)
 {
     uint64_t val;
@@ -50,7 +53,8 @@ uint64_t GameObject::reset_max_id(void)
 }
 
 GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
-    : position(), movement(), rotation(), look(), orient()
+    : position(), movement(), look(0.0, 1.0, 0.0),
+      orient(1.0, 0.0, 0.0, 0.0), rotation(1.0, 0.0, 0.0, 0.0)
 {
     this->default_master = this->master = c;
     this->default_geometry = this->geometry = g;
@@ -109,4 +113,50 @@ void GameObject::disconnect(Control *con)
      */
     if (this->master == con)
         master = default_master;
+}
+
+void GameObject::activate(void)
+{
+    this->natures.erase(GameObject::nature::invisible);
+    this->natures.erase(GameObject::nature::non_interactive);
+}
+
+void GameObject::deactivate(void)
+{
+    /* When a user logs out, and this is their primary slave object,
+     * we'll make the object "go away" entirely.  We'll remove its
+     * movement and rotation, and make it stop interacting with the
+     * rest of the universe.
+     */
+    this->movement = GameObject::no_movement;
+    this->rotation = GameObject::no_rotation;
+    this->natures.insert(GameObject::nature::invisible);
+    this->natures.insert(GameObject::nature::non_interactive);
+}
+
+void GameObject::move_and_rotate(void)
+{
+    if (this->still_moving())
+    {
+        struct timeval current;
+        double interval;
+
+        gettimeofday(&current, NULL);
+        interval = (current.tv_sec + (current.tv_usec / 1000000.0))
+            - (this->last_updated.tv_sec
+               + (this->last_updated.tv_usec / 1000000.0));
+        if (this->movement != GameObject::no_movement)
+            this->position += this->movement * interval;
+        if (this->rotation != GameObject::no_rotation)
+            this->orient = glm::dquat(glm::eulerAngles(this->rotation)
+                                      * interval)
+                * this->orient;
+        memcpy(&this->last_updated, &current, sizeof(struct timeval));
+    }
+}
+
+bool GameObject::still_moving(void)
+{
+    return (this->movement != GameObject::no_movement
+            || this->rotation != GameObject::no_rotation);
 }

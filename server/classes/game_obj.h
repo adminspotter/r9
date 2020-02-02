@@ -1,9 +1,9 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Dec 2019, 19:55:23 tquirk
+ *   last updated 01 Feb 2020, 21:48:49 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -36,7 +36,11 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#if STD_UNORDERED_SET_WORKS
 #include <unordered_set>
+#else
+#include <set>
+#endif /* STD_UNORDERED_SET_WORKS */
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
@@ -50,6 +54,12 @@ class GameObject;
 class GameObject
 {
   public:
+    typedef enum
+    {
+        invisible, non_interactive
+    }
+    nature;
+
     typedef std::unordered_map<uint64_t, GameObject *> objects_map;
     typedef objects_map::iterator objects_iterator;
 
@@ -59,19 +69,25 @@ class GameObject
     static pthread_mutex_t max_mutex;
     static uint64_t max_id_value;
 
+    static glm::dvec3 no_movement;
+    static glm::dquat no_rotation;
+
     /* const */ uint64_t id_value;
     Geometry *default_geometry;
     Control *default_master;
 
   public:
     std::unordered_map<std::string, attribute> attributes;
-    std::unordered_set<std::string> natures;
+#if STD_UNORDERED_SET_WORKS
+    std::unordered_set<nature> natures;
+#else
+    std::set<nature> natures;
+#endif /* STD_UNORDERED_SET_WORKS */
     Geometry *geometry;
     Control *master;
     struct timeval last_updated;
-    /* These vectors are in meters/degrees per second */
-    glm::dvec3 position, movement, rotation, look;
-    glm::dquat orient;
+    glm::dvec3 position, movement, look;
+    glm::dquat orient, rotation;
 
   public:
     static uint64_t reset_max_id(void);
@@ -86,10 +102,16 @@ class GameObject
     bool connect(Control *);
     void disconnect(Control *);
 
+    void activate(void);
+    void deactivate(void);
+
     inline double distance_from(glm::dvec3& pt)
         {
             return glm::distance(pt, this->position);
         };
+
+    void move_and_rotate(void);
+    bool still_moving(void);
 };
 
 #endif /* __INC_GAME_OBJ_H__ */

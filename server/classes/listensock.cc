@@ -1,9 +1,9 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2019, 08:56:12 tquirk
+ *   last updated 11 Jan 2020, 22:20:20 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -100,11 +100,8 @@ base_user::base_user(uint64_t userid,
 base_user::~base_user()
 {
     if (this->slave != NULL)
-    {
         /* Clean up a user who has logged out */
-        this->slave->natures.insert("invisible");
-        this->slave->natures.insert("non-interactive");
-    }
+        this->slave->deactivate();
 }
 
 const base_user& base_user::operator=(const base_user& u)

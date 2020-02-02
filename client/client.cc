@@ -1,9 +1,9 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Oct 2019, 08:22:07 tquirk
+ *   last updated 12 Jan 2020, 17:36:09 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -166,7 +166,8 @@ void move_key_callback(ui::active *a, void *call, void *client)
 {
     ui::key_call_data *call_data = (ui::key_call_data *)call;
 
-    if (call_data->key == ui::key::u_arrow)
+    if (call_data->key == ui::key::u_arrow
+        || call_data->key == ui::key::d_arrow)
     {
         uint16_t action;
 
@@ -179,8 +180,28 @@ void move_key_callback(ui::active *a, void *call, void *client)
 
         if (comm.size() > 0)
         {
-            glm::vec3 dir = self_obj->orientation * glm::vec3(0.0, 1.0, 0.0);
+            float val = (call_data->key == ui::key::u_arrow ? 1.0 : -1.0);
+            glm::vec3 dir = self_obj->orientation * glm::vec3(0.0, val, 0.0);
             comm[0]->send_action_request(action, dir, 100);
+        }
+    }
+    else if (call_data->key == ui::key::l_arrow
+             || call_data->key == ui::key::r_arrow)
+    {
+        uint16_t action;
+
+        if (call_data->state == ui::key::down)
+            action = 4;
+        else if (call_data->state == ui::key::up)
+            action = 5;
+        else
+            return;
+
+        if (comm.size() > 0)
+        {
+            float val = (call_data->key == ui::key::l_arrow ? 1.0 : -1.0);
+            glm::vec3 rot = self_obj->orientation * glm::vec3(0.0, 0.0, val);
+            comm[0]->send_action_request(action, rot, 100);
         }
     }
 }

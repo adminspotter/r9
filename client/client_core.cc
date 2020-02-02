@@ -1,9 +1,9 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Nov 2019, 09:13:05 tquirk
+ *   last updated 01 Feb 2020, 18:07:12 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -57,6 +57,7 @@ struct object *self_obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
 GLuint model_loc, view_loc, proj_loc;
 GLint position_attr, color_attr;
+glm::vec3 up(0.0f, 0.0f, 1.0f), cam_pos(0.0f, -5.0f, 1.0f);
 glm::mat4 model, view, projection;
 unsigned int rand_seed;
 
@@ -122,11 +123,8 @@ struct draw_object
 {
     void operator()(object& o)
         {
-            /* We don't get a valid quaternion just yet */
-            glm::mat4 rot = /*glm::rotate(*/glm::mat4(1.0f)/*,
-                                        glm::angle(o.orientation),
-                                        glm::axis(o.orientation))*/;
-            model = glm::translate(rot, o.position);
+            model = glm::translate(glm::mat4(1.0), o.position)
+                * glm::mat4_cast(o.orientation);
             glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
 
             if (o.vbo == -1)
@@ -170,13 +168,24 @@ void draw_objects(void)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    if (self_obj != NULL)
+    {
+        glm::vec3 cam_up = self_obj->orientation * up;
+        glm::vec3 aim_pt = self_obj->position + cam_up;
+        glm::vec3 cam = self_obj->position + (self_obj->orientation * cam_pos);
+
+        view = glm::lookAt(cam, aim_pt, cam_up);
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+    }
+
     std::function<void(object&)> draw = draw_object();
     obj->each(draw);
 }
 
 void move_object(uint64_t objectid, uint16_t frame,
                  float xpos, float ypos, float zpos,
-                 float xori, float yori, float zori, float wori)
+                 float wori, float xori, float yori, float zori,
+                 float xlook, float ylook, float zlook)
 {
     object& oref = (*obj)[objectid];
 
@@ -191,13 +200,17 @@ void move_object(uint64_t objectid, uint16_t frame,
     }
 
     /* Update the object's position */
-    oref.position[0] = xpos;
-    oref.position[1] = ypos;
-    oref.position[2] = zpos;
-    oref.orientation[0] = xori;
-    oref.orientation[1] = yori;
-    oref.orientation[2] = zori;
-    oref.orientation[3] = wori;
+    oref.position.x = xpos;
+    oref.position.y = ypos;
+    oref.position.z = zpos;
+    oref.orientation.w = wori;
+    oref.orientation.x = xori;
+    oref.orientation.y = yori;
+    oref.orientation.z = zori;
+    oref.look.x = xlook;
+    oref.look.y = ylook;
+    oref.look.z = zlook;
+    oref.look = glm::normalize(oref.look);
 
     oref.dirty = true;
 }

@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 07:54:24 tquirk
+ *   last updated 12 Dec 2019, 08:39:54 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -107,6 +107,8 @@ typedef struct login_request_tag
 } __attribute__ ((__packed__))
 login_request;
 
+#define ACTREQ_POS_SCALE  100
+
 typedef struct action_request_tag
 {
     uint8_t type;
@@ -117,7 +119,7 @@ typedef struct action_request_tag
     uint8_t power_level;
     uint64_t x_pos_source, y_pos_source, z_pos_source;
     uint64_t dest_object_id;
-    uint64_t x_pos_dest, y_pos_dest, z_pos_dest;
+    int64_t x_pos_dest, y_pos_dest, z_pos_dest;
 } __attribute__ ((__packed__))
 action_request;
 
@@ -128,8 +130,12 @@ action_request;
  * could be the wrong way to go, but we'll see how it works for now.
  *
  * The position fields are to the nearest centimeter, and the orient and
- * look fields are to the nearest 0.01 degree.
+ * look fields are to the nearest 0.0001.
  */
+#define POSUPD_POS_SCALE     100
+#define POSUPD_ORIENT_SCALE  10000
+#define POSUPD_LOOK_SCALE    10000
+
 typedef struct position_update_tag
 {
     uint8_t type;
@@ -139,7 +145,7 @@ typedef struct position_update_tag
     uint16_t frame_number;
     /* We may consider adding the sector vector back in here */
     uint64_t x_pos, y_pos, z_pos;
-    int32_t x_orient, y_orient, z_orient, w_orient;
+    int32_t w_orient, x_orient, y_orient, z_orient;
     int32_t x_look, y_look, z_look;
 } __attribute__ ((__packed__))
 position_update;

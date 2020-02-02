@@ -119,6 +119,26 @@ void test_connect_disconnect(void)
     delete con;
 }
 
+void test_activate_deactivate(void)
+{
+    std::string test = "activate/deactivate: ";
+    GameObject *go = NULL;
+    Geometry *geom = new Geometry();
+    Control *con = new Control(1LL, NULL);
+
+    go = new GameObject(geom, con, 45LL);
+    is(go->natures.size(), 0, test + "expected initial natures size");
+
+    go->deactivate();
+    is(go->natures.size(), 2, test + "expected deactivated natures size");
+
+    go->activate();
+    is(go->natures.size(), 0, test + "expected activated natures size");
+
+    delete go;
+    delete con;
+}
+
 void test_reset_id(void)
 {
     std::string test = "reset_max_id: ";
@@ -178,14 +198,45 @@ void test_distance(void)
     delete con;
 }
 
+void test_move_and_rotate(void)
+{
+    std::string test = "move and rotate: ";
+    GameObject *go = NULL;
+    Geometry *geom = new Geometry();
+    Control *con = new Control(1LL, NULL);
+
+    go = new GameObject(geom, con, 45LL);
+    go->move_and_rotate();
+
+    ok(go->position == glm::dvec3(0.0, 0.0, 0.0),
+       test + "expected no movement");
+    ok(go->rotation == glm::dquat(1.0, 0.0, 0.0, 0.0),
+       test + "expected no rotation");
+
+    go->movement = glm::dvec3(1.0, 1.0, 1.0);
+    go->rotation = glm::dquat(1.0, 0.0, 0.0, 1.0);
+
+    go->move_and_rotate();
+
+    ok(go->position != glm::dvec3(0.0, 0.0, 0.0),
+       test + "expected movement");
+    ok(go->rotation != glm::dquat(1.0, 0.0, 0.0, 0.0),
+       test + "expected rotation");
+
+    delete go;
+    delete con;
+}
+
 int main(int argc, char **argv)
 {
-    plan(40);
+    plan(47);
 
     test_create_delete();
     test_clone();
     test_connect_disconnect();
+    test_activate_deactivate();
     test_reset_id();
     test_distance();
+    test_move_and_rotate();
     return exit_status();
 }

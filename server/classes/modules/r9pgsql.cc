@@ -1,9 +1,9 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Dec 2019, 19:56:28 tquirk
+ *   last updated 12 Jan 2020, 13:37:28 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -273,10 +273,7 @@ int PgSQL::get_server_objects(GameObject::objects_map& gomap)
             go->position.y = atol(PQgetvalue(res, count, 3)) / 100.0;
             go->position.z = atol(PQgetvalue(res, count, 4)) / 100.0;
             if (charid != 0LL)
-            {
-                go->natures.insert("invisible");
-                go->natures.insert("non-interactive");
-            }
+                go->deactivate();
             gomap[objid] = go;
         }
     }

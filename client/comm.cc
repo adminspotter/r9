@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 07:50:54 tquirk
+ *   last updated 12 Dec 2019, 08:46:10 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -290,8 +290,13 @@ void Comm::handle_ackpkt(packet& p)
             std::clog << access_type[a.misc[0]] << std::endl;
         break;
 
+      case TYPE_ACTREQ:
+        std::clog << _("Acked action request, result ") << (int)a.misc[0]
+                  << std::endl;
+        break;
+
       default:
-        std::clog << _("Got an unknown ack packet: ") << a.request
+        std::clog << _("Got an unknown ack packet: ") << (int)a.request
                   << std::endl;
         break;
     }
@@ -303,13 +308,16 @@ void Comm::handle_posupd(packet& p)
 
     move_object(u.object_id,
                 u.frame_number,
-                (float)u.x_pos / 100.0,
-                (float)u.y_pos / 100.0,
-                (float)u.z_pos / 100.0,
-                (float)u.x_orient / 100.0,
-                (float)u.y_orient / 100.0,
-                (float)u.z_orient / 100.0,
-                (float)u.w_orient / 100.0);
+                (float)u.x_pos / (float)POSUPD_POS_SCALE,
+                (float)u.y_pos / (float)POSUPD_POS_SCALE,
+                (float)u.z_pos / (float)POSUPD_POS_SCALE,
+                (float)u.w_orient / (float)POSUPD_ORIENT_SCALE,
+                (float)u.x_orient / (float)POSUPD_ORIENT_SCALE,
+                (float)u.y_orient / (float)POSUPD_ORIENT_SCALE,
+                (float)u.z_orient / (float)POSUPD_ORIENT_SCALE,
+                (float)u.x_look / (float)POSUPD_LOOK_SCALE,
+                (float)u.y_look / (float)POSUPD_LOOK_SCALE,
+                (float)u.z_look / (float)POSUPD_LOOK_SCALE);
 }
 
 void Comm::handle_srvnot(packet& p)
@@ -565,9 +573,9 @@ void Comm::send_action_request(uint16_t actionid,
     req->act.sequence = sequence++;
     req->act.object_id = this->src_object_id;
     req->act.action_id = actionid;
-    req->act.x_pos_dest = (uint64_t)(direction.x * 100.0);
-    req->act.y_pos_dest = (uint64_t)(direction.y * 100.0);
-    req->act.z_pos_dest = (uint64_t)(direction.z * 100.0);
+    req->act.x_pos_dest = (uint64_t)(direction.x * ACTREQ_POS_SCALE);
+    req->act.y_pos_dest = (uint64_t)(direction.y * ACTREQ_POS_SCALE);
+    req->act.z_pos_dest = (uint64_t)(direction.z * ACTREQ_POS_SCALE);
     req->act.power_level = power;
     this->send(req, sizeof(action_request));
 }

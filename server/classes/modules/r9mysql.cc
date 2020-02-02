@@ -1,9 +1,9 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Dec 2019, 19:41:08 tquirk
+ *   last updated 12 Jan 2020, 14:17:43 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -498,11 +498,7 @@ int MySQL::get_server_objects(GameObject::objects_map& gomap)
         go->position[1] = pos_y / 100.0;
         go->position[2] = pos_z / 100.0;
         if (charid != 0LL)
-        {
-            /* All characters first rez invisible and non-interactive */
-            go->natures.insert("invisible");
-            go->natures.insert("non-interactive");
-        }
+            go->deactivate();
         gomap[objid] = go;
         ++count;
     }

@@ -1,9 +1,9 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Feb 2018, 08:40:29 tquirk
+ *   last updated 19 Jan 2020, 18:20:28 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,16 +20,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file contains the action routine to move a given game object.
+ * This file contains the action routines to move a given game object.
  *
  * Things to do
- *   - Implement these functions, obviously.
  *
  */
 
 #include <sys/time.h>
-
-#include <glm/vec3.hpp>
 
 #include <algorithm>
 
@@ -37,6 +34,9 @@
 #include "../game_obj.h"
 
 extern MotionPool *motion;
+
+#define AVERAGE_WALKING_SPEED   1.4  /* m/s */
+#define AVERAGE_ROTATION_SPEED  1.0  /* radians/s */
 
 int action_move(GameObject *source,
                 int intensity,
@@ -49,7 +49,7 @@ int action_move(GameObject *source,
     glm::dvec3 move = glm::normalize(direction);
 
     intensity = std::min(intensity, 100);
-    move *= intensity / 100.0;
+    move *= intensity / 100.0 * AVERAGE_WALKING_SPEED;
 
     source->movement = move;
     gettimeofday(&source->last_updated, NULL);
@@ -62,17 +62,27 @@ int action_stop(GameObject *source,
                 GameObject *target,
                 glm::dvec3& direction)
 {
-    glm::dvec3 stop(0.0, 0.0, 0.0);
-
-    source->movement = stop;
-    source->rotation = stop;
+    source->movement = glm::dvec3(0.0, 0.0, 0.0);
+    source->rotation = glm::dquat(1.0, 0.0, 0.0, 0.0);
     return 1;
 }
 
 int action_rotate(GameObject *source,
                   int intensity,
                   GameObject *target,
-                  glm::dvec3& direction)
+                  glm::dvec3& axis)
 {
-    return -1;
+    if (glm::length(axis) == 0)
+        return 0;
+
+    glm::dvec3 rot = glm::normalize(axis);
+
+    double inten = std::min(intensity, 100) / 100.0 * AVERAGE_ROTATION_SPEED;
+
+    source->rotation = glm::mix(source->rotation,
+                                glm::angleAxis(inten, rot),
+                                inten);
+    gettimeofday(&source->last_updated, NULL);
+    motion->push(source);
+    return 1;
 }

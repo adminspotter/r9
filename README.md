@@ -67,7 +67,7 @@ love to collaborate on.
 r9 has been built and tested on:
 
 * CentOS Linux 6/7
-* Debian GNU/Linux Stretch
+* Debian GNU/Linux Stretch - Buster
 * Ubuntu GNU/Linux Trusty Tahr and Xenial Xerus (via [Travis CI](https://travis-ci.org))
 * MacOS X Mavericks - Mojave
 
@@ -99,12 +99,12 @@ along just fine.
 
 Pull requests don't need to be squashed.  In fact, we'd prefer that
 they **not** be squashed.  Some people get twitchy about that, but as
-long as the commit chain makes sense, is documented well by the commit
-messages (no "fixed stuff"), and follows a good logical flow, they'll
-be perfectly acceptable.  Tag relevant commits or issues in your
-commit messages.  Add your name to the AUTHORS file and the comment
-block at the top of the files you change.  It's not amazingly
-important to update the 'last updated' lines at the tops of files, but
-it would be nice. :)
+long as the commit chain makes sense, is documented well by the
+[commit messages](https://chris.beams.io/posts/git-commit/), and
+follows a good logical flow, they'll be perfectly acceptable.  Tag
+relevant commits or issues in your commit messages.  Add your name to
+the AUTHORS file and the comment block at the top of the files you
+change.  It's not amazingly important to update the 'last updated'
+lines at the tops of files, but it would be nice. :)
 
 Code is licensed GPL2.

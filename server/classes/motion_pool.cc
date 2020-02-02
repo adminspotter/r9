@@ -1,9 +1,9 @@
 /* motion_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2017, 08:07:20 tquirk
+ *   last updated 11 Jan 2020, 17:00:24 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -67,33 +67,20 @@ void *MotionPool::motion_pool_worker(void *arg)
 {
     MotionPool *mot = (MotionPool *)arg;
     GameObject *req;
-    struct timeval current;
-    double interval;
     Octree *sector;
 
     for (;;)
     {
         mot->pop(&req);
 
-        gettimeofday(&current, NULL);
-        interval = (current.tv_sec + (current.tv_usec / 1000000.0))
-            - (req->last_updated.tv_sec
-               + (req->last_updated.tv_usec / 1000000.0));
-        memcpy(&req->last_updated, &current, sizeof(struct timeval));
         zone->sector_contains(req->position)->remove(req);
-        req->position += req->movement * interval;
-        /*req->orient += req->rotation * interval;*/
+        req->move_and_rotate();
         sector = zone->sector_contains(req->position);
         sector->insert(req);
         /*mot->physics->collide(sector, req);*/
         update_pool->push(req);
 
-        if ((req->movement[0] != 0.0
-             || req->movement[1] != 0.0
-             || req->movement[2] != 0.0)
-            || (req->rotation[0] != 0.0
-                || req->rotation[1] != 0.0
-                || req->rotation[2] != 0.0))
+        if (req->still_moving())
             mot->push(req);
     }
     return NULL;
