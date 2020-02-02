@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jan 2020, 13:33:11 tquirk
+ *   last updated 01 Feb 2020, 21:48:49 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -36,7 +36,11 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#if STD_UNORDERED_SET_WORKS
 #include <unordered_set>
+#else
+#include <set>
+#endif /* STD_UNORDERED_SET_WORKS */
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
@@ -74,7 +78,11 @@ class GameObject
 
   public:
     std::unordered_map<std::string, attribute> attributes;
+#if STD_UNORDERED_SET_WORKS
     std::unordered_set<nature> natures;
+#else
+    std::set<nature> natures;
+#endif /* STD_UNORDERED_SET_WORKS */
     Geometry *geometry;
     Control *master;
     struct timeval last_updated;
