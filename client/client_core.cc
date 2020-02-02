@@ -1,9 +1,9 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 08 Dec 2019, 10:35:45 tquirk
+ *   last updated 01 Feb 2020, 18:07:12 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -123,7 +123,8 @@ struct draw_object
 {
     void operator()(object& o)
         {
-            model = glm::translate(glm::mat4(1.0), o.position);
+            model = glm::translate(glm::mat4(1.0), o.position)
+                * glm::mat4_cast(o.orientation);
             glUniformMatrix4fv(model_loc, 1, GL_FALSE, glm::value_ptr(model));
 
             if (o.vbo == -1)
