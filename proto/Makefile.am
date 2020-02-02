@@ -1,11 +1,9 @@
 lib_LTLIBRARIES = libr9_proto.la
 
-libr9_proto_la_SOURCES = byteswap.c byteswap.h \
-	dh.c dh.h \
-	ec.c ec.h \
-	encrypt.c encrypt.h \
-	key.c key.h \
-	proto.h
+r9protodir = $(includedir)/r9
+r9proto_HEADERS = byteswap.h dh.h ec.h encrypt.h key.h proto.h
+
+libr9_proto_la_SOURCES = byteswap.c dh.c ec.c encrypt.c key.c
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov

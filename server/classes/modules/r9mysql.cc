@@ -361,7 +361,7 @@ uint64_t MySQL::get_character_objectid(uint64_t userid,
 }
 
 /* Get the list of skills that are used on this server */
-int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
+int MySQL::get_server_skills(actions_map& actions)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
@@ -433,7 +433,7 @@ int MySQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
     return count;
 }
 
-int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
+int MySQL::get_server_objects(GameObject::objects_map& gomap)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
@@ -510,7 +510,7 @@ int MySQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 /* Get the list of a player's skills which are valid on this server */
 int MySQL::get_player_server_skills(uint64_t userid,
                                     uint64_t charid,
-                                    std::map<uint16_t, action_level>& actions)
+                                    Control::skills_map& actions)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;

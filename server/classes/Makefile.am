@@ -2,7 +2,7 @@ SUBDIRS = actions modules
 
 lib_LTLIBRARIES = libr9_classes.la
 
-libr9_classes_la_SOURCES = action_pool.cc action_pool.h \
+libr9_classes_la_SOURCES = action.h action_pool.cc action_pool.h \
 	basesock.cc basesock.h \
 	config_data.cc config_data.h \
 	control.cc control.h \
@@ -18,7 +18,7 @@ libr9_classes_la_SOURCES = action_pool.cc action_pool.h \
 	stream.cc stream.h \
 	update_pool.cc update_pool.h \
 	zone.cc zone.h \
-	defs.h thread_pool.h
+	thread_pool.h
 libr9_classes_la_CXXFLAGS = -DSERVER_ROOT_DIR=\"$(prefix)\" \
 	-DSERVER_PID_FNAME=\"$(localstatedir)/run/r9.pid\"
 libr9_classes_la_LIBADD = ../../proto/libr9_proto.la

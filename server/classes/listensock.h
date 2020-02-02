@@ -1,6 +1,6 @@
 /* listensock.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Jul 2019, 08:56:21 tquirk
+ *   last updated 29 Dec 2019, 14:01:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -33,12 +33,12 @@
 
 #include <map>
 
+#include <proto/proto.h>
 #include <proto/encrypt.h>
 
 #include "basesock.h"
 #include "control.h"
 #include "thread_pool.h"
-#include "defs.h"
 
 class listen_socket;
 
@@ -80,6 +80,38 @@ class base_user : public Control {
                   uint64_t = 0LL, uint64_t = 0LL,
                   uint64_t = 0LL, uint64_t = 0LL);
 };
+
+typedef struct packet_list_tag
+{
+    packet buf;
+    base_user *who;
+}
+packet_list;
+
+typedef struct access_list_tag
+{
+    packet buf;
+    union
+    {
+        struct
+        {
+            union
+            {
+                Sockaddr *dgram;
+                int stream;
+            }
+            who;
+        }
+        login;
+        struct
+        {
+            uint64_t who;
+        }
+        logout;
+    }
+    what;
+}
+access_list;
 
 class listen_socket {
   public:

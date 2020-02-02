@@ -35,8 +35,8 @@
 
 #include <cstdint>
 #include <string>
-#include <map>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
@@ -44,7 +44,6 @@
 
 class GameObject;
 
-#include "defs.h"
 #include "control.h"
 #include "geometry.h"
 
@@ -56,6 +55,11 @@ class GameObject
         invisible, non_interactive
     }
     nature;
+
+    typedef std::unordered_map<uint64_t, GameObject *> objects_map;
+    typedef objects_map::iterator objects_iterator;
+
+    typedef int attribute;
 
   private:
     static pthread_mutex_t max_mutex;
@@ -69,8 +73,8 @@ class GameObject
     Control *default_master;
 
   public:
-    std::map<std::string, attribute> attributes;
-    std::set<nature> natures;
+    std::unordered_map<std::string, attribute> attributes;
+    std::unordered_set<nature> natures;
     Geometry *geometry;
     Control *master;
     struct timeval last_updated;

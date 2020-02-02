@@ -37,6 +37,7 @@
 
 #include "r9pgsql.h"
 #include "../game_obj.h"
+#include "../../../proto/proto.h"
 
 const char PgSQL::check_authentication_query[] =
     "SELECT a.playerid "
@@ -215,7 +216,7 @@ uint64_t PgSQL::get_character_objectid(uint64_t userid,
     return retval;
 }
 
-int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
+int PgSQL::get_server_skills(actions_map& actions)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;
@@ -246,7 +247,7 @@ int PgSQL::get_server_skills(std::map<uint16_t, action_rec>& actions)
     return count;
 }
 
-int PgSQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
+int PgSQL::get_server_objects(GameObject::objects_map& gomap)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;
@@ -283,7 +284,7 @@ int PgSQL::get_server_objects(std::map<uint64_t, GameObject *> &gomap)
 
 int PgSQL::get_player_server_skills(uint64_t userid,
                                     uint64_t charid,
-                                    std::map<uint16_t, action_level>& actions)
+                                    Control::skills_map& actions)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;

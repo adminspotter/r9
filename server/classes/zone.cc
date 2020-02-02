@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2019, 22:36:06 tquirk
+ *   last updated 14 Dec 2019, 15:50:58 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -45,7 +45,6 @@
 void Zone::init(DB *database)
 {
     int i;
-    std::map<uint64_t, GameObject *>::iterator j;
     std::vector<Octree *> z_row;
     std::vector<std::vector<Octree *> > y_row;
 
@@ -65,8 +64,8 @@ void Zone::init(DB *database)
     for (i = 0; i < this->x_steps; ++i)
         this->sectors.push_back(y_row);
 
-    for (j = this->game_objects.begin(); j != this->game_objects.end(); ++j)
-        this->sector_contains(j->second->position)->insert(j->second);
+    for (auto& j : this->game_objects)
+        this->sector_contains(j.second->position)->insert(j.second);
 }
 
 /* Public methods */
@@ -105,11 +104,9 @@ Zone::~Zone()
     /* Delete all the game objects. */
     if (this->game_objects.size())
     {
-        Zone::objects_iterator i;
-
         std::clog << "deleting " << this->game_objects.size()
                   << " game objects" << std::endl;
-        for (auto i : this->game_objects)
+        for (auto& i : this->game_objects)
             delete i.second;
         /* Maybe save the game objects' locations before deleting them? */
         this->game_objects.erase(this->game_objects.begin(),
@@ -151,7 +148,7 @@ glm::ivec3 Zone::which_sector(glm::dvec3& pos)
 GameObject *Zone::find_game_object(uint64_t objid)
 {
     GameObject *go;
-    Zone::objects_iterator gi = this->game_objects.find(objid);
+    GameObject::objects_iterator gi = this->game_objects.find(objid);
 
     /* Hook up to our character object */
     if (gi == this->game_objects.end())
@@ -175,7 +172,7 @@ void Zone::send_nearby_objects(uint64_t objid)
     update_pool->push(go);
 
     /* Send updates on all objects within visual range */
-    for (auto gi : this->game_objects)
+    for (auto& gi : this->game_objects)
     {
         /* We've already sent go, so no need to send it again. */
         /* Figure out how to send only to specific users */

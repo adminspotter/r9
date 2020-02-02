@@ -1,9 +1,9 @@
 /* action_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Sep 2017, 14:37:39 tquirk
+ *   last updated 29 Dec 2019, 13:57:14 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,29 +30,27 @@
 #ifndef __INC_ACTION_POOL_H__
 #define __INC_ACTION_POOL_H__
 
+#include "../../proto/proto.h"
 #include "thread_pool.h"
 #include "library.h"
-#include "defs.h"
+#include "listensock.h"
 
+#include "action.h"
 #include "modules/db.h"
 
 class ActionPool : public ThreadPool<packet_list>
 {
   private:
-    typedef std::map<uint16_t, action_rec> actions_map;
-    typedef actions_map::iterator actions_iterator;
-
     Library *action_lib;
 
     actions_map actions;
 
-    std::map<uint64_t, GameObject *>& game_objects;
+    GameObject::objects_map& game_objects;
 
     void load_actions(void);
 
   public:
-    ActionPool(unsigned int, std::map<uint64_t, GameObject *>&,
-               Library *, DB *);
+    ActionPool(unsigned int, GameObject::objects_map&, Library *, DB *);
     ~ActionPool();
 
     void start(void);

@@ -11,16 +11,16 @@ using namespace TAP;
 #include "mock_server_globals.h"
 #include "mock_zone.h"
 
-void register_actions(std::map<uint16_t, action_rec>&);
-void unregister_actions(std::map<uint16_t, action_rec>&);
+void register_actions(actions_map&);
+void unregister_actions(actions_map&);
 int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 
 fake_Library *lib;
-std::map<uint64_t, GameObject *> *game_objs;
+GameObject::objects_map *game_objs;
 fake_listen_socket *listensock;
 int register_count, unregister_count, action_count;
 
-void register_actions(std::map<uint16_t, action_rec>& a)
+void register_actions(actions_map& a)
 {
     ++register_count;
 
@@ -31,7 +31,7 @@ void register_actions(std::map<uint16_t, action_rec>& a)
     a[789].action = &fake_action;
 }
 
-void unregister_actions(std::map<uint16_t, action_rec>& a)
+void unregister_actions(actions_map& a)
 {
     ++unregister_count;
 
@@ -59,7 +59,7 @@ void setup_fixture(void)
     symbol_count = 0;
     symbol_result = (void *)register_actions;
 
-    game_objs = new std::map<uint64_t, GameObject *>();
+    game_objs = new GameObject::objects_map();
     (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
 
     listensock = new fake_listen_socket(NULL);

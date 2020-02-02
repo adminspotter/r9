@@ -1,9 +1,9 @@
 /* geometry.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 09:48:17 tquirk
+ *   last updated 14 Dec 2019, 09:43:35 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,7 +41,13 @@
 class Geometry
 {
   public:
-    //std::vector< std::vector<sequence_element> > sequences;
+    /*typedef struct sequence_tag
+    {
+        int frame_number, duration;
+    }
+    sequence_element;
+
+    std::vector< std::vector<sequence_element> > sequences;*/
     glm::dvec3 center;
     double radius;
 
