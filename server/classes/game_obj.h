@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Feb 2020, 21:48:49 tquirk
+ *   last updated 10 Feb 2020, 23:10:34 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -76,6 +76,10 @@ class GameObject
     Geometry *default_geometry;
     Control *default_master;
 
+    struct timeval last_updated;
+    glm::dvec3 position, movement, look;
+    glm::dquat orient, rotation;
+
   public:
     std::unordered_map<std::string, attribute> attributes;
 #if STD_UNORDERED_SET_WORKS
@@ -85,9 +89,6 @@ class GameObject
 #endif /* STD_UNORDERED_SET_WORKS */
     Geometry *geometry;
     Control *master;
-    struct timeval last_updated;
-    glm::dvec3 position, movement, look;
-    glm::dquat orient, rotation;
 
   public:
     static uint64_t reset_max_id(void);
@@ -105,10 +106,18 @@ class GameObject
     void activate(void);
     void deactivate(void);
 
-    inline double distance_from(glm::dvec3& pt)
-        {
-            return glm::distance(pt, this->position);
-        };
+    double distance_from(const glm::dvec3& pt);
+
+    glm::dvec3 get_position(void);
+    glm::dvec3 set_position(const glm::dvec3&);
+    glm::dvec3 get_movement(void);
+    glm::dvec3 set_movement(const glm::dvec3&);
+    glm::dvec3 get_look(void);
+    glm::dvec3 set_look(const glm::dvec3&);
+    glm::dquat get_orientation(void);
+    glm::dquat set_orientation(const glm::dquat&);
+    glm::dquat get_rotation(void);
+    glm::dquat set_rotation(const glm::dquat&);
 
     void move_and_rotate(void);
     bool still_moving(void);
