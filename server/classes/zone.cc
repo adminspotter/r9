@@ -114,7 +114,7 @@ Zone::~Zone()
     }
 }
 
-Octree *Zone::sector_contains(glm::dvec3& pos)
+Octree *Zone::sector_contains(const glm::dvec3& pos)
 {
     glm::ivec3 sec = this->which_sector(pos);
     Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
@@ -135,7 +135,7 @@ Octree *Zone::sector_contains(glm::dvec3& pos)
     return oct;
 }
 
-glm::ivec3 Zone::which_sector(glm::dvec3& pos)
+glm::ivec3 Zone::which_sector(const glm::dvec3& pos)
 {
     glm::ivec3 sector;
 
