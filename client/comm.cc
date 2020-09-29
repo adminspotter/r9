@@ -1,9 +1,9 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Dec 2019, 08:46:10 tquirk
+ *   last updated 28 Sep 2020, 22:31:30 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -308,16 +308,16 @@ void Comm::handle_posupd(packet& p)
 
     move_object(u.object_id,
                 u.frame_number,
-                (float)u.x_pos / (float)POSUPD_POS_SCALE,
-                (float)u.y_pos / (float)POSUPD_POS_SCALE,
-                (float)u.z_pos / (float)POSUPD_POS_SCALE,
-                (float)u.w_orient / (float)POSUPD_ORIENT_SCALE,
-                (float)u.x_orient / (float)POSUPD_ORIENT_SCALE,
-                (float)u.y_orient / (float)POSUPD_ORIENT_SCALE,
-                (float)u.z_orient / (float)POSUPD_ORIENT_SCALE,
-                (float)u.x_look / (float)POSUPD_LOOK_SCALE,
-                (float)u.y_look / (float)POSUPD_LOOK_SCALE,
-                (float)u.z_look / (float)POSUPD_LOOK_SCALE);
+                (float)u.x_pos / POSUPD_POS_SCALE,
+                (float)u.y_pos / POSUPD_POS_SCALE,
+                (float)u.z_pos / POSUPD_POS_SCALE,
+                (float)u.w_orient / POSUPD_ORIENT_SCALE,
+                (float)u.x_orient / POSUPD_ORIENT_SCALE,
+                (float)u.y_orient / POSUPD_ORIENT_SCALE,
+                (float)u.z_orient / POSUPD_ORIENT_SCALE,
+                (float)u.x_look / POSUPD_LOOK_SCALE,
+                (float)u.y_look / POSUPD_LOOK_SCALE,
+                (float)u.z_look / POSUPD_LOOK_SCALE);
 }
 
 void Comm::handle_srvnot(packet& p)

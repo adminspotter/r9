@@ -1,9 +1,9 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2019, 14:34:23 tquirk
+ *   last updated 28 Sep 2020, 22:24:31 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -62,19 +62,23 @@ void *UpdatePool::update_pool_worker(void *arg)
     {
         pool->pop(&req);
 
+        glm::dvec3 pos = req->get_position() * POSUPD_POS_SCALE;
+        glm::dquat orient = req->get_orientation() * POSUPD_ORIENT_SCALE;
+        glm::dvec3 look = req->get_look() * POSUPD_LOOK_SCALE;
+
         pkt.buf.pos.type = TYPE_POSUPD;
         pkt.buf.pos.version = 1;
         pkt.buf.pos.object_id = req->get_object_id();
-        pkt.buf.pos.x_pos = (uint64_t)(req->position.x * POSUPD_POS_SCALE);
-        pkt.buf.pos.y_pos = (uint64_t)(req->position.y * POSUPD_POS_SCALE);
-        pkt.buf.pos.z_pos = (uint64_t)(req->position.z * POSUPD_POS_SCALE);
-        pkt.buf.pos.w_orient = (uint32_t)(req->orient.w * POSUPD_ORIENT_SCALE);
-        pkt.buf.pos.x_orient = (uint32_t)(req->orient.x * POSUPD_ORIENT_SCALE);
-        pkt.buf.pos.y_orient = (uint32_t)(req->orient.y * POSUPD_ORIENT_SCALE);
-        pkt.buf.pos.z_orient = (uint32_t)(req->orient.z * POSUPD_ORIENT_SCALE);
-        pkt.buf.pos.x_look = (uint32_t)(req->look.x * POSUPD_LOOK_SCALE);
-        pkt.buf.pos.y_look = (uint32_t)(req->look.y * POSUPD_LOOK_SCALE);
-        pkt.buf.pos.z_look = (uint32_t)(req->look.z * POSUPD_LOOK_SCALE);
+        pkt.buf.pos.x_pos = (uint64_t)pos.x;
+        pkt.buf.pos.y_pos = (uint64_t)pos.y;
+        pkt.buf.pos.z_pos = (uint64_t)pos.z;
+        pkt.buf.pos.w_orient = (uint32_t)orient.w;
+        pkt.buf.pos.x_orient = (uint32_t)orient.x;
+        pkt.buf.pos.y_orient = (uint32_t)orient.y;
+        pkt.buf.pos.z_orient = (uint32_t)orient.z;
+        pkt.buf.pos.x_look = (uint32_t)look.x;
+        pkt.buf.pos.y_look = (uint32_t)look.y;
+        pkt.buf.pos.z_look = (uint32_t)look.z;
 
         /* Figure out who to send it to */
         /* Send to EVERYONE (for now) */
