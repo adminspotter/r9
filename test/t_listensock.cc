@@ -70,11 +70,11 @@ int fake_server_objects(GameObject::objects_map& gom)
     glm::dvec3 pos(100.0, 100.0, 100.0);
 
     gom[1234LL] = new GameObject(NULL, NULL, 1234LL);
-    gom[1234LL]->position = pos;
+    gom[1234LL]->set_position(pos);
 
     gom[1235LL] = new GameObject(NULL, NULL, 1235LL);
     pos.x = 125.0;
-    gom[1235LL]->position = pos;
+    gom[1235LL]->set_position(pos);
 
     return 2;
 }

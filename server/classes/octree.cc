@@ -1,9 +1,9 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Aug 2017, 18:04:35 tquirk
+ *   last updated 10 Feb 2020, 22:52:54 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -201,7 +201,7 @@ void Octree::build(std::list<GameObject *>& objs)
             || objs.size() > Octree::MAX_LEAF_OBJECTS))
     {
         for (i = objs.begin(); i != objs.end(); ++i)
-            obj_list[this->which_octant((*i)->position)].push_back(*i);
+            obj_list[this->which_octant((*i)->get_position())].push_back(*i);
 
         /* Recurse if required for each octant. */
         for (j = 0; j < 8; ++j)
@@ -232,7 +232,7 @@ void Octree::insert(GameObject *gobj)
         && this->objects.size() > Octree::MAX_LEAF_OBJECTS)
     {
         /* Classify it and insert it into the appropriate subtree */
-        int octant = this->which_octant(gobj->position);
+        int octant = this->which_octant(gobj->get_position());
 
         if (this->octants[octant] == NULL)
         {
@@ -250,7 +250,7 @@ void Octree::remove(GameObject *gobj)
 {
     if (this->objects.find(gobj) != this->objects.end())
     {
-        int octant = this->which_octant(gobj->position);
+        int octant = this->which_octant(gobj->get_position());
 
         if (this->octants[octant] != NULL)
             this->octants[octant]->remove(gobj);

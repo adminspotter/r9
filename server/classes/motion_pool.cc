@@ -1,6 +1,6 @@
 /* motion_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jan 2020, 17:00:24 tquirk
+ *   last updated 10 Feb 2020, 08:59:45 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -73,9 +73,9 @@ void *MotionPool::motion_pool_worker(void *arg)
     {
         mot->pop(&req);
 
-        zone->sector_contains(req->position)->remove(req);
+        zone->sector_contains(req->get_position())->remove(req);
         req->move_and_rotate();
-        sector = zone->sector_contains(req->position);
+        sector = zone->sector_contains(req->get_position());
         sector->insert(req);
         /*mot->physics->collide(sector, req);*/
         update_pool->push(req);

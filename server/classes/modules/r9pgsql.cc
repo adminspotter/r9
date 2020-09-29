@@ -1,6 +1,6 @@
 /* r9pgsql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jan 2020, 13:37:28 tquirk
+ *   last updated 28 Sep 2020, 22:38:18 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -268,10 +268,12 @@ int PgSQL::get_server_objects(GameObject::objects_map& gomap)
             uint64_t charid = strtoull(PQgetvalue(res, count, 1), NULL, 10);
 
             GameObject *go = new GameObject(NULL, NULL, objid);
-
-            go->position.x = atol(PQgetvalue(res, count, 2)) / 100.0;
-            go->position.y = atol(PQgetvalue(res, count, 3)) / 100.0;
-            go->position.z = atol(PQgetvalue(res, count, 4)) / 100.0;
+            go->set_position(glm::dvec3(atol(PQgetvalue(res, count, 2))
+                                        / POSUPD_POS_SCALE,
+                                        atol(PQgetvalue(res, count, 3))
+                                        / POSUPD_POS_SCALE,
+                                        atol(PQgetvalue(res, count, 4))
+                                        / POSUPD_POS_SCALE));
             if (charid != 0LL)
                 go->deactivate();
             gomap[objid] = go;
