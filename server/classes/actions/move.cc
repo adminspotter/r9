@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 19 Jan 2020, 18:20:28 tquirk
+ *   last updated 10 Feb 2020, 08:48:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -26,8 +26,6 @@
  *
  */
 
-#include <sys/time.h>
-
 #include <algorithm>
 
 #include "../motion_pool.h"
@@ -49,10 +47,11 @@ int action_move(GameObject *source,
     glm::dvec3 move = glm::normalize(direction);
 
     intensity = std::min(intensity, 100);
-    move *= intensity / 100.0 * AVERAGE_WALKING_SPEED;
 
-    source->movement = move;
-    gettimeofday(&source->last_updated, NULL);
+    source->set_movement(source->get_movement()
+                         + (move
+                            * (double)intensity / 100.0
+                            * AVERAGE_WALKING_SPEED));
     motion->push(source);
     return intensity;
 }
@@ -62,8 +61,8 @@ int action_stop(GameObject *source,
                 GameObject *target,
                 glm::dvec3& direction)
 {
-    source->movement = glm::dvec3(0.0, 0.0, 0.0);
-    source->rotation = glm::dquat(1.0, 0.0, 0.0, 0.0);
+    source->set_movement(glm::dvec3(0.0, 0.0, 0.0));
+    source->set_rotation(glm::dquat(1.0, 0.0, 0.0, 0.0));
     return 1;
 }
 
@@ -79,10 +78,9 @@ int action_rotate(GameObject *source,
 
     double inten = std::min(intensity, 100) / 100.0 * AVERAGE_ROTATION_SPEED;
 
-    source->rotation = glm::mix(source->rotation,
-                                glm::angleAxis(inten, rot),
-                                inten);
-    gettimeofday(&source->last_updated, NULL);
+    source->set_rotation(glm::mix(source->get_rotation(),
+                                  glm::angleAxis(inten, rot),
+                                  inten));
     motion->push(source);
-    return 1;
+    return (int)inten;
 }

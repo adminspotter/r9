@@ -191,8 +191,34 @@ void test_distance(void)
     is(lock_count, unlock_count, test + "all locks unlocked");
 
     glm::dvec3 pt = {0.0, 0.0, 0.0};
-    go->position.x = 1.0;
+    go->set_position(glm::dvec3(1.0, 0.0, 0.0));
     is(go->distance_from(pt), 1.0, test + "expected distance");
+
+    delete go;
+    delete con;
+}
+
+void test_accessors(void)
+{
+    std::string test = "accessors: ";
+    GameObject *go = NULL;
+    Geometry *geom = new Geometry();
+    Control *con = new Control(1LL, NULL);
+    glm::dvec3 test_vec(1.0, 2.0, 3.0);
+    glm::dquat test_quat(1.0, 2.0, 3.0, 4.0);
+
+    go = new GameObject(geom, con, 45LL);
+
+    go->set_position(test_vec);
+    ok(go->get_position() == test_vec, test + "expected position");
+    go->set_look(test_vec);
+    ok(go->get_look() == test_vec, test + "expected look");
+    go->set_movement(test_vec);
+    ok(go->get_movement() == test_vec, test + "expected movement");
+    go->set_orientation(test_quat);
+    ok(go->get_orientation() == test_quat, test + "expected orientation");
+    go->set_rotation(test_quat);
+    ok(go->get_rotation() == test_quat, test + "expected rotation");
 
     delete go;
     delete con;
@@ -208,19 +234,20 @@ void test_move_and_rotate(void)
     go = new GameObject(geom, con, 45LL);
     go->move_and_rotate();
 
-    ok(go->position == glm::dvec3(0.0, 0.0, 0.0),
+    ok(go->get_position() == glm::dvec3(0.0, 0.0, 0.0),
        test + "expected no movement");
-    ok(go->rotation == glm::dquat(1.0, 0.0, 0.0, 0.0),
+    ok(go->get_orientation() == glm::dquat(1.0, 0.0, 0.0, 0.0),
        test + "expected no rotation");
 
-    go->movement = glm::dvec3(1.0, 1.0, 1.0);
-    go->rotation = glm::dquat(1.0, 0.0, 0.0, 1.0);
+    go->set_movement(glm::dvec3(1.0, 1.0, 1.0));
+    go->set_rotation(glm::dquat(1.0, 0.0, 0.0, 1.0));
 
+    sleep(1);
     go->move_and_rotate();
 
-    ok(go->position != glm::dvec3(0.0, 0.0, 0.0),
+    ok(go->get_position() != glm::dvec3(0.0, 0.0, 0.0),
        test + "expected movement");
-    ok(go->rotation != glm::dquat(1.0, 0.0, 0.0, 0.0),
+    ok(go->get_orientation() != glm::dquat(1.0, 0.0, 0.0, 0.0),
        test + "expected rotation");
 
     delete go;
@@ -229,7 +256,7 @@ void test_move_and_rotate(void)
 
 int main(int argc, char **argv)
 {
-    plan(47);
+    plan(52);
 
     test_create_delete();
     test_clone();
@@ -237,6 +264,7 @@ int main(int argc, char **argv)
     test_activate_deactivate();
     test_reset_id();
     test_distance();
+    test_accessors();
     test_move_and_rotate();
     return exit_status();
 }

@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jan 2020, 13:35:14 tquirk
+ *   last updated 10 Feb 2020, 23:11:15 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -70,6 +70,7 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
 
     pthread_mutex_unlock(&GameObject::max_mutex);
     this->id_value = newid;
+    gettimeofday(&this->last_updated, NULL);
 }
 
 GameObject::~GameObject()
@@ -132,6 +133,71 @@ void GameObject::deactivate(void)
     this->rotation = GameObject::no_rotation;
     this->natures.insert(GameObject::nature::invisible);
     this->natures.insert(GameObject::nature::non_interactive);
+}
+
+double GameObject::distance_from(const glm::dvec3& pt)
+{
+    return glm::distance(pt, this->position);
+}
+
+glm::dvec3 GameObject::get_position(void)
+{
+    return this->position;
+}
+
+glm::dvec3 GameObject::set_position(const glm::dvec3& p)
+{
+    this->position = p;
+    gettimeofday(&this->last_updated, NULL);
+    return p;
+}
+
+glm::dvec3 GameObject::get_look(void)
+{
+    return this->look;
+}
+
+glm::dvec3 GameObject::set_look(const glm::dvec3& l)
+{
+    this->look = l;
+    gettimeofday(&this->last_updated, NULL);
+    return l;
+}
+
+glm::dvec3 GameObject::get_movement(void)
+{
+    return this->movement;
+}
+
+glm::dvec3 GameObject::set_movement(const glm::dvec3& m)
+{
+    this->movement = m;
+    gettimeofday(&this->last_updated, NULL);
+    return m;
+}
+
+glm::dquat GameObject::get_orientation(void)
+{
+    return this->orient;
+}
+
+glm::dquat GameObject::set_orientation(const glm::dquat& o)
+{
+    this->orient = o;
+    gettimeofday(&this->last_updated, NULL);
+    return o;
+}
+
+glm::dquat GameObject::get_rotation(void)
+{
+    return this->rotation;
+}
+
+glm::dquat GameObject::set_rotation(const glm::dquat& r)
+{
+    this->rotation = r;
+    gettimeofday(&this->last_updated, NULL);
+    return r;
 }
 
 void GameObject::move_and_rotate(void)

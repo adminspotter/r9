@@ -1,9 +1,9 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Dec 2019, 08:39:54 tquirk
+ *   last updated 28 Sep 2020, 22:31:07 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -132,9 +132,9 @@ action_request;
  * The position fields are to the nearest centimeter, and the orient and
  * look fields are to the nearest 0.0001.
  */
-#define POSUPD_POS_SCALE     100
-#define POSUPD_ORIENT_SCALE  10000
-#define POSUPD_LOOK_SCALE    10000
+#define POSUPD_POS_SCALE     100.0
+#define POSUPD_ORIENT_SCALE  10000.0
+#define POSUPD_LOOK_SCALE    10000.0
 
 typedef struct position_update_tag
 {

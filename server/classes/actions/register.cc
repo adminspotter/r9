@@ -1,9 +1,9 @@
 /* register.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Dec 2019, 19:40:34 tquirk
+ *   last updated 15 Feb 2020, 10:20:17 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,7 +32,7 @@
 
 #define ENTRIES(x)  (int)(sizeof(x) / sizeof(x[0]))
 
-static MotionPool *motion = NULL;
+MotionPool *motion = NULL;
 
 extern "C"
 {

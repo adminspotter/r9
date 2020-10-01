@@ -1,9 +1,9 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Dec 2019, 14:02:51 tquirk
+ *   last updated 10 Feb 2020, 22:53:03 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -67,8 +67,8 @@ class Zone
     Zone(uint64_t, uint64_t, uint64_t, uint16_t, uint16_t, uint16_t, DB *);
     ~Zone();
 
-    Octree *sector_contains(glm::dvec3&);
-    glm::ivec3 which_sector(glm::dvec3&);
+    Octree *sector_contains(const glm::dvec3&);
+    glm::ivec3 which_sector(const glm::dvec3&);
 
     GameObject *find_game_object(uint64_t);
     virtual void send_nearby_objects(uint64_t);

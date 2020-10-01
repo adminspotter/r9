@@ -21,11 +21,11 @@ class object_DB : public fake_DB
             glm::dvec3 pos(100.0, 100.0, 100.0);
 
             a[1234LL] = new GameObject(NULL, NULL, 1234LL);
-            a[1234LL]->position = pos;
+            a[1234LL]->set_position(pos);
 
             a[1235LL] = new GameObject(NULL, NULL, 1235LL);
             pos.x = 125.0;
-            a[1235LL]->position = pos;
+            a[1235LL]->set_position(pos);
 
             ++get_server_objects_count;
             return 2;

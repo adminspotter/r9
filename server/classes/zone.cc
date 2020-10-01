@@ -1,9 +1,9 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2019, 15:50:58 tquirk
+ *   last updated 10 Feb 2020, 23:08:14 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -65,7 +65,7 @@ void Zone::init(DB *database)
         this->sectors.push_back(y_row);
 
     for (auto& j : this->game_objects)
-        this->sector_contains(j.second->position)->insert(j.second);
+        this->sector_contains(j.second->get_position())->insert(j.second);
 }
 
 /* Public methods */
@@ -114,7 +114,7 @@ Zone::~Zone()
     }
 }
 
-Octree *Zone::sector_contains(glm::dvec3& pos)
+Octree *Zone::sector_contains(const glm::dvec3& pos)
 {
     glm::ivec3 sec = this->which_sector(pos);
     Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
@@ -135,7 +135,7 @@ Octree *Zone::sector_contains(glm::dvec3& pos)
     return oct;
 }
 
-glm::ivec3 Zone::which_sector(glm::dvec3& pos)
+glm::ivec3 Zone::which_sector(const glm::dvec3& pos)
 {
     glm::ivec3 sector;
 
@@ -156,8 +156,8 @@ GameObject *Zone::find_game_object(uint64_t objid)
         /* Object doesn't exist, so we'll make it. */
         go = new GameObject(NULL, NULL, objid);
         this->game_objects[objid] = go;
-        go->position = glm::dvec3(0.0, 0.0, 0.0);
-        this->sector_contains(go->position)->insert(go);
+        go->set_position(glm::dvec3(0.0, 0.0, 0.0));
+        this->sector_contains(go->get_position())->insert(go);
     }
     else
         go = gi->second;
@@ -177,7 +177,7 @@ void Zone::send_nearby_objects(uint64_t objid)
         /* We've already sent go, so no need to send it again. */
         /* Figure out how to send only to specific users */
         if (gi.second != go
-            && go->distance_from(gi.second->position) < 1000.0)
+            && go->distance_from(gi.second->get_position()) < 1000.0)
             update_pool->push(gi.second);
     }
 }

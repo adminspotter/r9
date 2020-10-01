@@ -1,6 +1,6 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jan 2020, 14:17:43 tquirk
+ *   last updated 01 Oct 2020, 06:04:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -494,9 +494,9 @@ int MySQL::get_server_objects(GameObject::objects_map& gomap)
         //Geometry *geom = new Geometry();
         GameObject *go = new GameObject(NULL, NULL, objid);
 
-        go->position[0] = pos_x / 100.0;
-        go->position[1] = pos_y / 100.0;
-        go->position[2] = pos_z / 100.0;
+        go->set_position(glm::dvec3(pos_x / POSUPD_POS_SCALE,
+                                    pos_y / POSUPD_POS_SCALE,
+                                    pos_z / POSUPD_POS_SCALE));
         if (charid != 0LL)
             go->deactivate();
         gomap[objid] = go;
