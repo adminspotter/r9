@@ -1,9 +1,9 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Oct 2019, 15:48:34 tquirk
+ *   last updated 01 Nov 2020, 09:16:22 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -36,12 +36,12 @@
 #include "configdata.h"
 #include "l10n.h"
 
-#include "cuddly-gl/ui.h"
-#include "cuddly-gl/row_column.h"
-#include "cuddly-gl/label.h"
-#include "cuddly-gl/text_field.h"
-#include "cuddly-gl/password.h"
-#include "cuddly-gl/button.h"
+#include <cuddly-gl/ui.h>
+#include <cuddly-gl/row_column.h>
+#include <cuddly-gl/label.h>
+#include <cuddly-gl/text_field.h>
+#include <cuddly-gl/password.h>
+#include <cuddly-gl/button.h>
 
 static ui::font *dialog_font;
 static ui::text_field *user, *pass, *host;

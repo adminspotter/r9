@@ -137,9 +137,16 @@ AC_ARG_WITH([client],
 
 AC_ARG_WITH([glm-includes],
             AS_HELP_STRING([--with-glm-includes=<path>], [GLM include path]))
+AC_ARG_WITH([cuddly-gl],
+            AS_HELP_STRING([--with-cuddly-gl=<path>], [Use the system CuddlyGL installation]),
+            [],
+            [with_cuddly="bundled"])
+AC_ARG_WITH([cuddly-gl-includes],
+            AS_HELP_STRING([--with-cuddly-gl-includes=<path>], [CuddlyGL include path]),
+            [], [])
 
 # Development flags (debugging, profiling)
-if test "$enable_debug" == "yes"
+if test "$enable_debug" = "yes"
 then
   AC_MSG_NOTICE([building with debug enabled])
   DEBUG_CFLAGS="-g"
@@ -147,13 +154,13 @@ then
   DEBUG_LDFLAGS="-g"
 fi
 
-if test "$enable_profile" == "yes"
+if test "$enable_profile" = "yes"
 then
-  if test "$CXX" == "clang++"
+  if test "$CXX" = "clang++"
   then
     AC_SEARCH_LIBS([llvm_start_basic_block_tracing], [profile_rt],
         [
-          if test "x$ac_cv_search_llvm_start_basic_block_tracing" == "xnone required"
+          if test "x$ac_cv_search_llvm_start_basic_block_tracing" = "xnone required"
           then
             AC_MSG_NOTICE([libprofile_rt not needed])
           else
@@ -175,7 +182,7 @@ then
 fi
 
 # Client program
-if test "$with_client" == "yes"
+if test "$with_client" = "yes"
 then
   AC_MSG_NOTICE([building with client enabled])
 
@@ -188,7 +195,7 @@ then
 
   AC_SEARCH_LIBS([sqrt], [m],
       [
-          if test "x$ac_cv_search_sqrt" == "xnone required"
+          if test "x$ac_cv_search_sqrt" = "xnone required"
           then
             AC_MSG_NOTICE([libm not needed, skipping])
           else
@@ -215,6 +222,72 @@ then
       ;;
   esac
 
+  if test "$with_cuddly_gl" != "bundled"
+  then
+    if test "x$with_cuddly_gl_includes" != "x"
+    then
+      CUDDLY_INCLUDES="-I$with_cuddly_gl_includes"
+    elif test "x$with_cuddly_gl" != "xyes"
+    then
+      CUDDLY_INCLUDES="-I${with_cuddly_gl}/include"
+    else
+      CUDDLY_INCLUDES="$CPPFLAGS"
+    fi
+    CUDDLY_CPPFLAGS_SAVE="$CPPFLAGS"
+    CPPFLAGS="$CUDDLY_INCLUDES"
+    AC_CHECK_HEADERS([cuddly-gl/ui.h], [],
+        [
+            AC_MSG_NOTICE([no valid CuddlyGL headers found, using bundled])
+            with_cuddly_gl="bundled"
+        ])
+    CPPFLAGS="$CUDDLY_CPPFLAGS_SAVE"
+    if test "$CUDDLY_INCLUDES" = "$CPPFLAGS"
+    then
+      unset CUDDLY_INCLUDES
+    fi
+
+    if test "x$with_cuddly_gl" != "xyes"
+    then
+      CUDDLY_LDFLAGS="-L${with_cuddly_gl}/lib"
+    fi
+    AC_MSG_CHECKING([for library containing ui::context])
+    CUDDLY_LDFLAGS_SAVE="$LDFLAGS"
+    CUDDLY_LIBS_SAVE="$LIBS"
+    LDFLAGS="$CUDDLY_INCLUDES $CUDDLY_LDFLAGS"
+    LIBS="-lcuddly_gl"
+    AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM(
+            [
+#include <cuddly-gl/ui.h>
+            ],
+            [
+ui::context *ui;
+
+ui = new ui::context();
+delete ui;
+            ])
+        ],
+        [
+            AC_MSG_RESULT([$LIBS])
+            CLIENT_LDLIBS="$LIBS $CLIENT_LDLIBS"
+        ],
+        [
+            AC_MSG_RESULT([no, using bundled])
+            with_cuddly_gl="bundled"
+            unset CUDDLY_LDFLAGS
+        ])
+    LIBS="$CUDDLY_LIBS_SAVE"
+    LDFLAGS="$CUDDLY_LDFLAGS_SAVE"
+  else
+    AC_MSG_NOTICE([using bundled CuddlyGL])
+  fi
+
+  if test "x$with_cuddly_gl" = "xbundled"
+  then
+    AC_CONFIG_SUBDIRS([client/cuddly-gl])
+  fi
+  AM_CONDITIONAL([WANT_CUDDLY], [test "x$with_cuddly_gl" = "xbundled"])
+
   # Check for GLFW
   GLFW_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
@@ -228,7 +301,8 @@ then
   AC_CHECK_HEADERS([boost/algorithm/string.hpp], [], [AC_MSG_ERROR(need Boost string algorithm header to build client program)])
 
   CLIENT_CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CLIENT_CXXFLAGS"
-  CLIENT_LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $CLIENT_LDFLAGS"
+  CLIENT_INCLUDES="$CLIENT_INCLUDES $CUDDLY_INCLUDES"
+  CLIENT_LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $CLIENT_LDFLAGS $CUDDLY_LDFLAGS"
   CLIENT_LDLIBS="$CLIENT_LDLIBS $PROFILE_LDLIBS"
 
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
@@ -245,10 +319,10 @@ then
   AC_SUBST(CLIENT_LDFLAGS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
-AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
-AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" == "xyes"])
+AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" = "xyes"])
+AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" = "xyes"])
 
-if test "$with_server" == "yes"
+if test "$with_server" = "yes"
 then
   AC_MSG_NOTICE([building with server enabled])
 
@@ -260,7 +334,7 @@ then
   LIBS=""
   AC_CHECK_HEADERS([tcpd.h], [have_libwrap="yes"])
   AC_SEARCH_LIBS([hosts_ctl], [wrap], [have_libwrap="yes"])
-  if test "x$have_libwrap" == "xyes"
+  if test "x$have_libwrap" = "xyes"
   then
     AC_DEFINE(HAVE_LIBWRAP, [1], [Enable libwrap support])
     WRAP_LDLIBS="$LIBS"
@@ -269,7 +343,7 @@ then
   LIBS="$WRAP_LIBS_SAVE"
 
   # MySQL server module
-  if test "$with_mysql" == "yes"
+  if test "$with_mysql" = "yes"
   then
     if test "x$with_mysql_includes" != "x"
     then
@@ -298,7 +372,7 @@ then
   fi
 
   # PostgreSQL server module
-  if test "$with_pgsql" == "yes"
+  if test "$with_pgsql" = "yes"
   then
     if test "x$with_pgsql_includes" != "x"
     then
@@ -327,7 +401,7 @@ then
   fi
 
   # Lua server module
-  if test "$with_lua" == "yes"
+  if test "$with_lua" = "yes"
   then
     if test "x$with_lua_includes" != "x"
     then
@@ -356,7 +430,7 @@ then
   fi
 
   # Python server module
-  if test "$with_python" == "yes"
+  if test "$with_python" = "yes"
   then
     AC_CHECK_PROG(PYTHON3_CONFIG_CHECK, [python3-config], [yes])
     if test "x$PYTHON3_CONFIG_CHECK" != "xyes"
@@ -371,7 +445,7 @@ then
   fi
 
   # Tcl server module
-  if test "$with_tcl" == "yes"
+  if test "$with_tcl" = "yes"
   then
     if test "x$with_tcl_includes" != "x"
     then
@@ -414,13 +488,13 @@ then
 
   AC_SUBST(SERVER_LDLIBS)
 fi
-AM_CONDITIONAL([WANT_SERVER], [test "x$with_server" == "xyes"])
-AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
-AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
-AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
-AM_CONDITIONAL([WANT_LUA], [test "x$want_lua" == "xyes"])
-AM_CONDITIONAL([WANT_PYTHON], [test "x$want_python" == "xyes"])
-AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
+AM_CONDITIONAL([WANT_SERVER], [test "x$with_server" = "xyes"])
+AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" = "xyes"])
+AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" = "xyes"])
+AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" = "xyes"])
+AM_CONDITIONAL([WANT_LUA], [test "x$want_lua" = "xyes"])
+AM_CONDITIONAL([WANT_PYTHON], [test "x$want_python" = "xyes"])
+AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" = "xyes"])
 
 # We want GLM in either the client or the server
 if test "$with_client" = "yes" -o "$with_server" = "yes"
@@ -463,8 +537,6 @@ CFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CFLAGS"
 CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
 LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
 LIBS="$LIBS $OPENSSL_LIBS $PTHREAD_LIBS $PROFILE_LDLIBS"
-
-AC_CONFIG_SUBDIRS([client/cuddly-gl])
 
 # Checks for various endianness-related header files and functions.
 AC_CHECK_HEADERS([architecture/byte_order.h byteswap.h endian.h])

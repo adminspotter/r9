@@ -1,8 +1,10 @@
-SUBDIRS = cuddly-gl shaders
+SUBDIRS = shaders
+if WANT_CUDDLY
+  SUBDIRS += cuddly-gl
+endif
 
 bin_PROGRAMS = r9client
 
-dtddir = @datadir@/$(PACKAGE)/dtd
 shaderdir = @datadir@/$(PACKAGE)/shaders
 
 r9client_SOURCES = client.cc client.h \
@@ -14,12 +16,14 @@ r9client_SOURCES = client.cc client.h \
 	comm_dialog.cc \
 	object.h l10n.h cuddly-gl/connect_glfw.cc
 r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
-	-DDTD_PATH=\"$(dtddir)/\" \
 	-DSHADER_SRC_PATH=\"$(shaderdir)\" \
-	-DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \
 	-DGL_GLEXT_PROTOTYPES
-r9client_LDADD = cuddly-gl/libcuddly_gl.la \
-	../proto/libr9_proto.la $(CLIENT_LDLIBS)
+r9client_LDFLAGS= $(CLIENT_LDFLAGS)
+r9client_LDADD = $(CLIENT_LDLIBS) ../proto/libr9_proto.la
+if WANT_CUDDLY
+  r9client_CXXFLAGS += -I.
+  r9client_LDADD += cuddly-gl/libcuddly_gl.la
+endif
 
 check: SUBDIRS =
 
