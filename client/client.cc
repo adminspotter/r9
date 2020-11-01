@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2020, 06:48:14 tquirk
+ *   last updated 01 Nov 2020, 14:32:27 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -217,8 +217,6 @@ void cleanup_comm(void)
 {
     while (!comm.empty())
     {
-        comm.back()->send_logout();
-        sleep(1);
         delete comm.back();
         comm.pop_back();
     }
