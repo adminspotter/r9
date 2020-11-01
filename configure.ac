@@ -146,7 +146,7 @@ AC_ARG_WITH([cuddly-gl-includes],
             [], [])
 
 # Development flags (debugging, profiling)
-if test "$enable_debug" == "yes"
+if test "$enable_debug" = "yes"
 then
   AC_MSG_NOTICE([building with debug enabled])
   DEBUG_CFLAGS="-g"
@@ -154,13 +154,13 @@ then
   DEBUG_LDFLAGS="-g"
 fi
 
-if test "$enable_profile" == "yes"
+if test "$enable_profile" = "yes"
 then
-  if test "$CXX" == "clang++"
+  if test "$CXX" = "clang++"
   then
     AC_SEARCH_LIBS([llvm_start_basic_block_tracing], [profile_rt],
         [
-          if test "x$ac_cv_search_llvm_start_basic_block_tracing" == "xnone required"
+          if test "x$ac_cv_search_llvm_start_basic_block_tracing" = "xnone required"
           then
             AC_MSG_NOTICE([libprofile_rt not needed])
           else
@@ -182,7 +182,7 @@ then
 fi
 
 # Client program
-if test "$with_client" == "yes"
+if test "$with_client" = "yes"
 then
   AC_MSG_NOTICE([building with client enabled])
 
@@ -195,7 +195,7 @@ then
 
   AC_SEARCH_LIBS([sqrt], [m],
       [
-          if test "x$ac_cv_search_sqrt" == "xnone required"
+          if test "x$ac_cv_search_sqrt" = "xnone required"
           then
             AC_MSG_NOTICE([libm not needed, skipping])
           else
@@ -319,10 +319,10 @@ delete ui;
   AC_SUBST(CLIENT_LDFLAGS)
   AC_SUBST(CLIENT_LDLIBS)
 fi
-AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" == "xyes"])
-AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" == "xyes"])
+AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" = "xyes"])
+AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" = "xyes"])
 
-if test "$with_server" == "yes"
+if test "$with_server" = "yes"
 then
   AC_MSG_NOTICE([building with server enabled])
 
@@ -334,7 +334,7 @@ then
   LIBS=""
   AC_CHECK_HEADERS([tcpd.h], [have_libwrap="yes"])
   AC_SEARCH_LIBS([hosts_ctl], [wrap], [have_libwrap="yes"])
-  if test "x$have_libwrap" == "xyes"
+  if test "x$have_libwrap" = "xyes"
   then
     AC_DEFINE(HAVE_LIBWRAP, [1], [Enable libwrap support])
     WRAP_LDLIBS="$LIBS"
@@ -343,7 +343,7 @@ then
   LIBS="$WRAP_LIBS_SAVE"
 
   # MySQL server module
-  if test "$with_mysql" == "yes"
+  if test "$with_mysql" = "yes"
   then
     if test "x$with_mysql_includes" != "x"
     then
@@ -372,7 +372,7 @@ then
   fi
 
   # PostgreSQL server module
-  if test "$with_pgsql" == "yes"
+  if test "$with_pgsql" = "yes"
   then
     if test "x$with_pgsql_includes" != "x"
     then
@@ -401,7 +401,7 @@ then
   fi
 
   # Lua server module
-  if test "$with_lua" == "yes"
+  if test "$with_lua" = "yes"
   then
     if test "x$with_lua_includes" != "x"
     then
@@ -430,7 +430,7 @@ then
   fi
 
   # Python server module
-  if test "$with_python" == "yes"
+  if test "$with_python" = "yes"
   then
     AC_CHECK_PROG(PYTHON3_CONFIG_CHECK, [python3-config], [yes])
     if test "x$PYTHON3_CONFIG_CHECK" != "xyes"
@@ -445,7 +445,7 @@ then
   fi
 
   # Tcl server module
-  if test "$with_tcl" == "yes"
+  if test "$with_tcl" = "yes"
   then
     if test "x$with_tcl_includes" != "x"
     then
@@ -488,13 +488,13 @@ then
 
   AC_SUBST(SERVER_LDLIBS)
 fi
-AM_CONDITIONAL([WANT_SERVER], [test "x$with_server" == "xyes"])
-AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" == "xyes"])
-AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" == "xyes"])
-AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" == "xyes"])
-AM_CONDITIONAL([WANT_LUA], [test "x$want_lua" == "xyes"])
-AM_CONDITIONAL([WANT_PYTHON], [test "x$want_python" == "xyes"])
-AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" == "xyes"])
+AM_CONDITIONAL([WANT_SERVER], [test "x$with_server" = "xyes"])
+AM_CONDITIONAL([HAVE_LIBWRAP], [test "x$have_libwrap" = "xyes"])
+AM_CONDITIONAL([WANT_MYSQL], [test "x$want_mysql" = "xyes"])
+AM_CONDITIONAL([WANT_PGSQL], [test "x$want_pgsql" = "xyes"])
+AM_CONDITIONAL([WANT_LUA], [test "x$want_lua" = "xyes"])
+AM_CONDITIONAL([WANT_PYTHON], [test "x$want_python" = "xyes"])
+AM_CONDITIONAL([WANT_TCL], [test "x$want_tcl" = "xyes"])
 
 # We want GLM in either the client or the server
 if test "$with_client" = "yes" -o "$with_server" = "yes"
