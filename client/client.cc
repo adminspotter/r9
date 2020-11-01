@@ -168,6 +168,9 @@ void move_key_callback(ui::active *a, void *call, void *client)
 {
     ui::key_call_data *call_data = (ui::key_call_data *)call;
 
+    if (comm.size() == 0)
+        return;
+
     if (call_data->key == ui::key::u_arrow
         || call_data->key == ui::key::d_arrow)
     {
@@ -180,12 +183,9 @@ void move_key_callback(ui::active *a, void *call, void *client)
         else
             return;
 
-        if (comm.size() > 0)
-        {
-            float val = (call_data->key == ui::key::u_arrow ? 1.0 : -1.0);
-            glm::vec3 dir = self_obj->orientation * glm::vec3(0.0, val, 0.0);
-            comm[0]->send_action_request(action, dir, 100);
-        }
+        float val = (call_data->key == ui::key::u_arrow ? 1.0 : -1.0);
+        glm::vec3 dir = self_obj->orientation * glm::vec3(0.0, val, 0.0);
+        comm[0]->send_action_request(action, dir, 100);
     }
     else if (call_data->key == ui::key::l_arrow
              || call_data->key == ui::key::r_arrow)
@@ -199,12 +199,9 @@ void move_key_callback(ui::active *a, void *call, void *client)
         else
             return;
 
-        if (comm.size() > 0)
-        {
-            float val = (call_data->key == ui::key::l_arrow ? 1.0 : -1.0);
-            glm::vec3 rot = self_obj->orientation * glm::vec3(0.0, 0.0, val);
-            comm[0]->send_action_request(action, rot, 100);
-        }
+        float val = (call_data->key == ui::key::l_arrow ? 1.0 : -1.0);
+        rot = self_obj->orientation * glm::vec3(0.0, 0.0, val);
+        comm[0]->send_action_request(action, rot, 100);
     }
 }
 
