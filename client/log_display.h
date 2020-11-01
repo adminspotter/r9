@@ -1,9 +1,9 @@
 /* log_display.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Oct 2019, 08:24:13 tquirk
+ *   last updated 01 Nov 2020, 09:16:38 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,9 +38,9 @@
 #include <deque>
 #include <string>
 
-#include "cuddly-gl/label.h"
-#include "cuddly-gl/row_column.h"
-#include "cuddly-gl/font.h"
+#include <cuddly-gl/label.h>
+#include <cuddly-gl/row_column.h>
+#include <cuddly-gl/font.h>
 
 class log_display : public ui::row_column,
                     public std::basic_streambuf<char, std::char_traits<char> >

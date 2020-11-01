@@ -13,7 +13,7 @@ r9client_SOURCES = client.cc client.h \
 	log_display.cc log_display.h \
 	comm_dialog.cc \
 	object.h l10n.h cuddly-gl/connect_glfw.cc
-r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
+r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) -I. $(LOCALE_DIR) \
 	-DDTD_PATH=\"$(dtddir)/\" \
 	-DSHADER_SRC_PATH=\"$(shaderdir)\" \
 	-DSTORE_PREFIX=\"@datadir@/$(PACKAGE)\" \

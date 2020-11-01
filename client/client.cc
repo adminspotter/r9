@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Jan 2020, 17:36:09 tquirk
+ *   last updated 01 Nov 2020, 06:48:14 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -42,8 +42,8 @@
 #include "client_core.h"
 #include "l10n.h"
 
-#include "cuddly-gl/ui.h"
-#include "cuddly-gl/connect_glfw.h"
+#include <cuddly-gl/ui.h>
+#include <cuddly-gl/connect_glfw.h>
 #include "log_display.h"
 
 void error_callback(int, const char *);
