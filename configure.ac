@@ -137,6 +137,13 @@ AC_ARG_WITH([client],
 
 AC_ARG_WITH([glm-includes],
             AS_HELP_STRING([--with-glm-includes=<path>], [GLM include path]))
+AC_ARG_WITH([cuddly-gl],
+            AS_HELP_STRING([--with-cuddly-gl=<path>], [Use the system CuddlyGL installation]),
+            [],
+            [with_cuddly="bundled"])
+AC_ARG_WITH([cuddly-gl-includes],
+            AS_HELP_STRING([--with-cuddly-gl-includes=<path>], [CuddlyGL include path]),
+            [], [])
 
 # Development flags (debugging, profiling)
 if test "$enable_debug" == "yes"
@@ -215,6 +222,72 @@ then
       ;;
   esac
 
+  if test "$with_cuddly_gl" != "bundled"
+  then
+    if test "x$with_cuddly_gl_includes" != "x"
+    then
+      CUDDLY_INCLUDES="-I$with_cuddly_gl_includes"
+    elif test "x$with_cuddly_gl" != "xyes"
+    then
+      CUDDLY_INCLUDES="-I${with_cuddly_gl}/include"
+    else
+      CUDDLY_INCLUDES="$CPPFLAGS"
+    fi
+    CUDDLY_CPPFLAGS_SAVE="$CPPFLAGS"
+    CPPFLAGS="$CUDDLY_INCLUDES"
+    AC_CHECK_HEADERS([cuddly-gl/ui.h], [],
+        [
+            AC_MSG_NOTICE([no valid CuddlyGL headers found, using bundled])
+            with_cuddly_gl="bundled"
+        ])
+    CPPFLAGS="$CUDDLY_CPPFLAGS_SAVE"
+    if test "$CUDDLY_INCLUDES" = "$CPPFLAGS"
+    then
+      unset CUDDLY_INCLUDES
+    fi
+
+    if test "x$with_cuddly_gl" != "xyes"
+    then
+      CUDDLY_LDFLAGS="-L${with_cuddly_gl}/lib"
+    fi
+    AC_MSG_CHECKING([for library containing ui::context])
+    CUDDLY_LDFLAGS_SAVE="$LDFLAGS"
+    CUDDLY_LIBS_SAVE="$LIBS"
+    LDFLAGS="$CUDDLY_INCLUDES $CUDDLY_LDFLAGS"
+    LIBS="-lcuddly_gl"
+    AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM(
+            [
+#include <cuddly-gl/ui.h>
+            ],
+            [
+ui::context *ui;
+
+ui = new ui::context();
+delete ui;
+            ])
+        ],
+        [
+            AC_MSG_RESULT([$LIBS])
+            CLIENT_LDLIBS="$LIBS $CLIENT_LDLIBS"
+        ],
+        [
+            AC_MSG_RESULT([no, using bundled])
+            with_cuddly_gl="bundled"
+            unset CUDDLY_LDFLAGS
+        ])
+    LIBS="$CUDDLY_LIBS_SAVE"
+    LDFLAGS="$CUDDLY_LDFLAGS_SAVE"
+  else
+    AC_MSG_NOTICE([using bundled CuddlyGL])
+  fi
+
+  if test "x$with_cuddly_gl" = "xbundled"
+  then
+    AC_CONFIG_SUBDIRS([client/cuddly-gl])
+  fi
+  AM_CONDITIONAL([WANT_CUDDLY], [test "x$with_cuddly_gl" = "xbundled"])
+
   # Check for GLFW
   GLFW_CPPFLAGS_SAVE="$CPPFLAGS"
   CPPFLAGS="$CXXFLAGS"
@@ -228,7 +301,8 @@ then
   AC_CHECK_HEADERS([boost/algorithm/string.hpp], [], [AC_MSG_ERROR(need Boost string algorithm header to build client program)])
 
   CLIENT_CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CLIENT_CXXFLAGS"
-  CLIENT_LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $CLIENT_LDFLAGS"
+  CLIENT_INCLUDES="$CLIENT_INCLUDES $CUDDLY_INCLUDES"
+  CLIENT_LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $CLIENT_LDFLAGS $CUDDLY_LDFLAGS"
   CLIENT_LDLIBS="$CLIENT_LDLIBS $PROFILE_LDLIBS"
 
   AC_MSG_NOTICE([using CLIENT_CXXFLAGS=$CLIENT_CXXFLAGS])
@@ -463,8 +537,6 @@ CFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CFLAGS"
 CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
 LDFLAGS="$DEBUG_LDFLAGS $PROFILE_LDFLAGS $LDFLAGS"
 LIBS="$LIBS $OPENSSL_LIBS $PTHREAD_LIBS $PROFILE_LDLIBS"
-
-AC_CONFIG_SUBDIRS([client/cuddly-gl])
 
 # Checks for various endianness-related header files and functions.
 AC_CHECK_HEADERS([architecture/byte_order.h byteswap.h endian.h])
