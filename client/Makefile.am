@@ -16,6 +16,7 @@ r9client_SOURCES = client.cc client.h \
 	comm_dialog.cc \
 	object.h l10n.h cuddly-gl/connect_glfw.cc
 r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
+	$(X11_DEFS) \
 	-DSHADER_SRC_PATH=\"$(shaderdir)\" \
 	-DGL_GLEXT_PROTOTYPES
 r9client_LDFLAGS= $(CLIENT_LDFLAGS)

@@ -210,6 +210,15 @@ then
       CLIENT_LDLIBS="$CLIENT_LDLIBS -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo"
       ;;
     *)
+      # The Cuddly GLFW connector uses X11's auto-repeat control, if present
+      AC_SEARCH_LIBS([XAutoRepeatOff], [X11],
+          [
+              CLIENT_LDLIBS="$ac_cv_search_XAutoRepeatOff $CLIENT_LDLIBS"
+              X11_DEFS="-DUSING_X11"
+          ],
+          [],
+          [$CLIENT_LDFLAGS])
+      AC_SUBST(X11_DEFS)
       AC_SEARCH_LIBS([glBindVertexArray], [GL],
           [CLIENT_LDLIBS="$ac_cv_search_glBindVertexArray $CLIENT_LDLIBS"],
           [AC_MSG_ERROR([libGL not valid, can not build client program.])],

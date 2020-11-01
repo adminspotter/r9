@@ -136,6 +136,8 @@ int main(int argc, char **argv)
     cleanup_client_core();
     config.write_config_file();
     log_disp->close();
+    ui_disconnect_glfw(ctx, w);
+    delete ctx;
     glfwTerminate();
 
     return 0;
