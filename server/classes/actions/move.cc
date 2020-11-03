@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 08:48:35 tquirk
+ *   last updated 20 Oct 2020, 23:08:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -42,7 +42,10 @@ int action_move(GameObject *source,
                 glm::dvec3& direction)
 {
     if (glm::length(direction) == 0)
+    {
+        source->set_movement(glm::dvec3(0.0, 0.0, 0.0));
         return 0;
+    }
 
     glm::dvec3 move = glm::normalize(direction);
 
@@ -72,7 +75,10 @@ int action_rotate(GameObject *source,
                   glm::dvec3& axis)
 {
     if (glm::length(axis) == 0)
+    {
+        source->set_rotation(glm::dquat(1.0, 0.0, 0.0, 0.0));
         return 0;
+    }
 
     glm::dvec3 rot = glm::normalize(axis);
 
