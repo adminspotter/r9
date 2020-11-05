@@ -1,6 +1,6 @@
 /* octree.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2020, 14:39:39 tquirk
+ *   last updated 05 Nov 2020, 07:26:05 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -48,6 +48,8 @@
 #ifndef __INC_OCTREE_H__
 #define __INC_OCTREE_H__
 
+#include <pthread.h>
+
 #include <cstdint>
 #include <list>
 #include <set>
@@ -63,6 +65,10 @@ class Octree
     static const int MIN_DEPTH;
     static const int MAX_DEPTH;
 
+  private:
+    pthread_rwlock_t lock;
+
+  public:
     glm::dvec3 min_point, center_point, max_point;
     Octree *parent, *octants[8], *neighbor[6];
     uint8_t parent_index;
@@ -71,6 +77,9 @@ class Octree
     std::set<GameObject *> objects;
 
   private:
+    inline void enter_read(void);
+    inline void enter(void);
+    inline void leave(void);
     inline bool in_octant(const glm::dvec3&);
     inline int which_octant(const glm::dvec3&);
     inline Octree *neighbor_test(int neigh, int oct);
