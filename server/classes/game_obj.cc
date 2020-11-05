@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 23:11:15 tquirk
+ *   last updated 03 Nov 2020, 07:07:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -31,6 +31,8 @@
  */
 
 #include <algorithm>
+#include <sstream>
+#include <stdexcept>
 
 #include "game_obj.h"
 #include "zone.h"
@@ -40,6 +42,21 @@ uint64_t GameObject::max_id_value = 0LL;
 
 glm::dvec3 GameObject::no_movement(0.0, 0.0, 0.0);
 glm::dquat GameObject::no_rotation(1.0, 0.0, 0.0, 0.0);
+
+void GameObject::enter_read(void)
+{
+    pthread_rwlock_rdlock(&this->movement_lock);
+}
+
+void GameObject::enter(void)
+{
+    pthread_rwlock_wrlock(&this->movement_lock);
+}
+
+void GameObject::leave(void)
+{
+    pthread_rwlock_unlock(&this->movement_lock);
+}
 
 uint64_t GameObject::reset_max_id(void)
 {
@@ -71,6 +88,23 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
     pthread_mutex_unlock(&GameObject::max_mutex);
     this->id_value = newid;
     gettimeofday(&this->last_updated, NULL);
+
+    pthread_rwlockattr_t lock_init;
+    pthread_rwlockattr_init(&lock_init);
+#ifdef PTHREAD_RWLOCK_PREFER_WRITER_NP
+    pthread_rwlockattr_setkind_np(&lock_init, PTHREAD_RWLOCK_PREFER_WRITER_NP);
+#endif /* PTHREAD_RWLOCK_PREFER_WRITER_NP */
+    if (pthread_rwlock_init(&this->movement_lock, &lock_init))
+    {
+        std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "couldn't init game obj lock for "
+          << this->id_value << ": "
+          << err << " (" << errno << ")";
+        throw std::runtime_error(s.str());
+    }
 }
 
 GameObject::~GameObject()
@@ -79,6 +113,7 @@ GameObject::~GameObject()
         delete this->geometry;
     if (this->default_geometry != NULL)
         delete this->default_geometry;
+    pthread_rwlock_destroy(&this->movement_lock);
 }
 
 GameObject *GameObject::clone(void) const
