@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 22:52:54 tquirk
+ *   last updated 01 Nov 2020, 14:39:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -88,6 +88,49 @@ Neighbor 5: if (index & 1) (parent->neighbor->octant[index + 1])
             else (index - 1)
 
 */
+
+bool Octree::in_octant(const glm::dvec3& p)
+{
+    return p[0] >= this->min_point[0] && p[0] <= this->max_point[0]
+        && p[1] >= this->min_point[1] && p[1] <= this->max_point[1]
+        && p[2] >= this->min_point[2] && p[2] <= this->max_point[2];
+}
+
+int Octree::which_octant(const glm::dvec3& p)
+{
+    return ((p[0] < this->center_point[0] ? 0 : 4)
+            | (p[1] < this->center_point[1] ? 0 : 2)
+            | (p[2] < this->center_point[2] ? 0 : 1));
+}
+
+Octree *Octree::neighbor_test(int neigh, int oct)
+{
+    if (this->parent->neighbor[neigh] == NULL)
+        return NULL;
+    if (this->parent->neighbor[neigh]->octants[oct] == NULL)
+        return this->parent->neighbor[neigh];
+    return this->parent->neighbor[neigh]->octants[oct];
+}
+
+glm::dvec3 Octree::octant_min(int oct)
+{
+    glm::dvec3 mn;
+
+    mn[0] = oct & 4 ? this->center_point[0] : this->min_point[0];
+    mn[1] = oct & 2 ? this->center_point[1] : this->min_point[1];
+    mn[2] = oct & 1 ? this->center_point[2] : this->min_point[2];
+    return mn;
+}
+
+glm::dvec3 Octree::octant_max(int oct)
+{
+    glm::dvec3 mx;
+
+    mx[0] = oct & 4 ? this->max_point[0] : this->center_point[0];
+    mx[1] = oct & 2 ? this->max_point[1] : this->center_point[1];
+    mx[2] = oct & 1 ? this->max_point[2] : this->center_point[2];
+    return mx;
+}
 
 void Octree::compute_neighbors(void)
 {

@@ -1,9 +1,9 @@
 /* octree.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Jul 2016, 09:41:36 tquirk
+ *   last updated 01 Nov 2020, 14:39:39 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -71,38 +71,11 @@ class Octree
     std::set<GameObject *> objects;
 
   private:
-    inline int which_octant(const glm::dvec3& p)
-        {
-            return ((p[0] < this->center_point[0] ? 0 : 4)
-                    | (p[1] < this->center_point[1] ? 0 : 2)
-                    | (p[2] < this->center_point[2] ? 0 : 1));
-        };
-    inline Octree *neighbor_test(int neigh, int oct)
-        {
-            if (this->parent->neighbor[neigh] == NULL)
-                return NULL;
-            if (this->parent->neighbor[neigh]->octants[oct] == NULL)
-                return this->parent->neighbor[neigh];
-            return this->parent->neighbor[neigh]->octants[oct];
-        };
-    inline glm::dvec3 octant_min(int oct)
-        {
-            glm::dvec3 mn;
-
-            mn[0] = oct & 4 ? this->center_point[0] : this->min_point[0];
-            mn[1] = oct & 2 ? this->center_point[1] : this->min_point[1];
-            mn[2] = oct & 1 ? this->center_point[2] : this->min_point[2];
-            return mn;
-        };
-    inline glm::dvec3 octant_max(int oct)
-        {
-            glm::dvec3 mx;
-
-            mx[0] = oct & 4 ? this->max_point[0] : this->center_point[0];
-            mx[1] = oct & 2 ? this->max_point[1] : this->center_point[1];
-            mx[2] = oct & 1 ? this->max_point[2] : this->center_point[2];
-            return mx;
-        };
+    inline bool in_octant(const glm::dvec3&);
+    inline int which_octant(const glm::dvec3&);
+    inline Octree *neighbor_test(int neigh, int oct);
+    inline glm::dvec3 octant_min(int oct);
+    inline glm::dvec3 octant_max(int oct);
     void compute_neighbors(void);
 
   public:
