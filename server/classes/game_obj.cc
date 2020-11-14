@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Nov 2020, 07:07:16 tquirk
+ *   last updated 14 Nov 2020, 13:32:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -279,12 +279,12 @@ void GameObject::move_and_rotate(void)
         interval = (current.tv_sec + (current.tv_usec / 1000000.0))
             - (this->last_updated.tv_sec
                + (this->last_updated.tv_usec / 1000000.0));
-        if (this->movement != GameObject::no_movement)
-            this->position += this->movement * interval;
         if (this->rotation != GameObject::no_rotation)
             this->orient = glm::dquat(glm::eulerAngles(this->rotation)
                                       * interval)
                 * this->orient;
+        if (this->movement != GameObject::no_movement)
+            this->position += this->orient * this->movement * interval;
         memcpy(&this->last_updated, &current, sizeof(struct timeval));
         this->leave();
     }

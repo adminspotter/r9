@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2020, 14:32:27 tquirk
+ *   last updated 14 Nov 2020, 13:35:12 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -176,8 +176,8 @@ void move_key_callback(ui::active *a, void *call, void *client)
     {
         float val = (call_data->state == ui::key::up ? 0.0
                      : (call_data->key == ui::key::u_arrow ? 1.0 : -1.0));
-        glm::vec3 dir = self_obj->orientation * glm::vec3(0.0, val, 0.0);
-        comm[0]->send_action_request(3, dir, 100);
+        glm::vec3 move(0.0, val, 0.0);
+        comm[0]->send_action_request(3, move, 100);
     }
     else if (call_data->key == ui::key::l_arrow
              || call_data->key == ui::key::r_arrow)
