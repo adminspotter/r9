@@ -1,4 +1,4 @@
-SUBDIRS = shaders
+SUBDIRS = shaders control
 if WANT_CUDDLY
   SUBDIRS += cuddly-gl
 endif
@@ -20,7 +20,7 @@ r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
 	-DSHADER_SRC_PATH=\"$(shaderdir)\" \
 	-DGL_GLEXT_PROTOTYPES
 r9client_LDFLAGS= $(CLIENT_LDFLAGS)
-r9client_LDADD = $(CLIENT_LDLIBS) ../proto/libr9_proto.la
+r9client_LDADD = $(CLIENT_LDLIBS) ../proto/libr9_proto.la control/keyboard.la
 if WANT_CUDDLY
   r9client_CXXFLAGS += -I.
   r9client_LDADD += cuddly-gl/libcuddly_gl.la

@@ -620,6 +620,7 @@ CXXFLAGS="$GETNAMEINFO_CXXFLAGS_SAVE"
 AC_CONFIG_FILES([Makefile
                  client/Makefile
                  client/shaders/Makefile
+                 client/control/Makefile
                  po/Makefile.in
                  proto/Makefile
                  server/Makefile

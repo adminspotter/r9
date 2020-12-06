@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2020, 13:35:12 tquirk
+ *   last updated 29 Nov 2020, 20:15:28 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -42,6 +42,8 @@
 #include "client_core.h"
 #include "l10n.h"
 
+#include "control/keyboard.h"
+
 #include <cuddly-gl/ui.h>
 #include <cuddly-gl/connect_glfw.h>
 #include "log_display.h"
@@ -49,13 +51,13 @@
 void error_callback(int, const char *);
 void close_key_callback(ui::active *, void *, void *);
 void resize_callback(GLFWwindow *, int, int);
-void move_key_callback(ui::active *, void *, void *);
 
 std::vector<Comm *> comm;
 ConfigData config;
 GLFWwindow *w;
 ui::context *ctx;
 log_display *log_disp;
+control *controller = NULL;
 
 int main(int argc, char **argv)
 {
@@ -107,8 +109,6 @@ int main(int argc, char **argv)
                           glm::ivec2(800, 600));
     ui_connect_glfw(ctx, w);
     ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
-    ctx->add_callback(ui::callback::key_down, move_key_callback, NULL);
-    ctx->add_callback(ui::callback::key_up, move_key_callback, NULL);
 
     log_disp = new log_display(ctx,
                                ui::element::position,
@@ -164,48 +164,25 @@ void resize_callback(GLFWwindow *w, int width, int height)
     resize_window(width, height);
 }
 
-void move_key_callback(ui::active *a, void *call, void *client)
-{
-    ui::key_call_data *call_data = (ui::key_call_data *)call;
-
-    if (comm.size() == 0)
-        return;
-
-    if (call_data->key == ui::key::u_arrow
-        || call_data->key == ui::key::d_arrow)
-    {
-        float val = (call_data->state == ui::key::up ? 0.0
-                     : (call_data->key == ui::key::u_arrow ? 1.0 : -1.0));
-        glm::vec3 move(0.0, val, 0.0);
-        comm[0]->send_action_request(3, move, 100);
-    }
-    else if (call_data->key == ui::key::l_arrow
-             || call_data->key == ui::key::r_arrow)
-    {
-        glm::vec3 rot(0.0, 0.0, 0.0);
-
-        if (call_data->state == ui::key::down)
-        {
-            float val = (call_data->key == ui::key::l_arrow ? 1.0 : -1.0);
-            rot = self_obj->orientation * glm::vec3(0.0, 0.0, val);
-        }
-        comm[0]->send_action_request(4, rot, 100);
-    }
-}
-
 void setup_comm(struct addrinfo *ai, const char *user, const char *charname)
 {
     Comm *c = new Comm(ai);
     comm.push_back(c);
     c->start();
     c->send_login(user, charname);
+    if (controller == NULL)
+        controller = new keyboard();
+    controller->setup(ctx, c);
 }
 
 void cleanup_comm(void)
 {
     while (!comm.empty())
     {
+        controller->cleanup(ctx, comm.back());
         delete comm.back();
         comm.pop_back();
     }
+    delete controller;
+    controller = NULL;
 }
