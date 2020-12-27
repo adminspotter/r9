@@ -1,9 +1,9 @@
 /* library.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 18 Apr 2018, 16:25:26 tquirk
+ *   last updated 26 Dec 2020, 22:42:01 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,6 +27,7 @@
  */
 
 #include <dlfcn.h>
+#include <glob.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -100,4 +101,37 @@ void Library::close(void)
         }
     }
     dlerror();
+}
+
+void find_libraries(const std::string& glob_path,
+                    std::vector<Library *>& result)
+{
+    glob_t libs;
+    int err;
+
+    if ((err = glob(glob_path.c_str(), 0, NULL, &libs)) != 0)
+    {
+        std::ostringstream s;
+
+        s << "error locating libraries: ";
+        switch (err)
+        {
+          case 1:   s << "Out of memory";             break;
+          case 2:   s << "Read error";                break;
+          case 3:   s << "No match found";            break;
+          case 4:   s << "Function not implemented";  break;
+          default:  s << "Unknown error";             break;
+        }
+        s << " (" << err << ")";
+        throw std::runtime_error(s.str());
+    }
+    while (result.size())
+    {
+        delete result.back();
+        result.pop_back();
+    }
+    result.reserve(libs.gl_pathc);
+    for (int i = 0; i < libs.gl_pathc; ++i)
+        result.push_back(new Library(std::string(libs.gl_pathv[i])));
+    globfree(&libs);
 }
