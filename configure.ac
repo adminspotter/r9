@@ -26,7 +26,7 @@ AM_GNU_GETTEXT_VERSION(0.17)
 AC_LANG(C++)
 
 # Libtool init
-LT_INIT([pic-only])
+LT_INIT([pic-only disable-static])
 LT_LANG([C++])
 LT_SYS_MODULE_EXT
 

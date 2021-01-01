@@ -45,5 +45,8 @@ libr9_tcl_la_SOURCES = r9tcl.cc r9tcl.h language.cc language.h
 libr9_tcl_la_CXXFLAGS = $(TCL_INCLUDES)
 libr9_tcl_la_LIBADD = $(TCL_LDLIBS)
 
+install-data-hook:
+	cd $(serverlibdir) && rm -f $(modules_libs)
+
 clean-local:
 	rm -f *.gcno *.gcda *.gcov
