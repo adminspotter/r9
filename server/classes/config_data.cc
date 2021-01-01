@@ -1,9 +1,9 @@
 /* config_data.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 08:27:08 tquirk
+ *   last updated 13 Dec 2020, 22:02:36 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,7 +25,6 @@
  *
  * Current configuration options include:
  *   AccessThreads <num>    number of access threads to start
- *   ActionLib <libname>    name of library which contains the action routines
  *   ActionThreads <num>    number of action threads to start
  *   Console <port type>    port specification for a console listener
  *   DBDatabase <dbname>    the name of the database to use
@@ -114,7 +113,6 @@ const char config_data::PID_FNAME[]   = SERVER_PID_FNAME;
 const char config_data::DB_TYPE[]     = "MySQL";
 const char config_data::DB_HOST[]     = "localhost";
 const char config_data::DB_NAME[]     = "r9";
-const char config_data::ACTION_LIB[]  = "libr9_actions" LT_MODULE_EXT;
 
 typedef void (*config_elem_t)(const std::string&, const std::string&, void *);
 
@@ -142,7 +140,6 @@ handlers[] =
 {
 #define off(x)  (void *)(&(config.x))
     { "AccessThreads", off(access_threads), &config_integer_element  },
-    { "ActionLib",     off(action_lib),     &config_string_element   },
     { "ActionThreads", off(action_threads), &config_integer_element  },
     { "Console",       off(consoles),       &config_port_element     },
     { "DBDatabase",    off(db_name),        &config_string_element   },
@@ -186,8 +183,7 @@ config_data::config_data()
       server_root(config_data::SERVER_ROOT),
       log_prefix(config_data::LOG_PREFIX), pid_fname(config_data::PID_FNAME),
       db_type(config_data::DB_TYPE), db_host(config_data::DB_HOST),
-      db_user(), db_pass(), db_name(config_data::DB_NAME),
-      action_lib(config_data::ACTION_LIB)
+      db_user(), db_pass(), db_name(config_data::DB_NAME)
 {
     this->set_defaults();
 }
@@ -211,7 +207,6 @@ void config_data::set_defaults(void)
     this->db_user        = "";
     this->db_pass        = "";
     this->db_name        = config_data::DB_NAME;
-    this->action_lib     = config_data::ACTION_LIB;
 
     this->daemonize      = true;
     this->use_keepalive  = false;

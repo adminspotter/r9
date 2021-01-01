@@ -11,11 +11,11 @@ using namespace TAP;
 #include "mock_server_globals.h"
 #include "mock_zone.h"
 
+
 void register_actions(actions_map&);
 void unregister_actions(actions_map&);
 int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 
-fake_Library *lib;
 GameObject::objects_map *game_objs;
 fake_listen_socket *listensock;
 int register_count, unregister_count, action_count;
@@ -46,15 +46,14 @@ int fake_action(GameObject *a, int b, GameObject *c, glm::dvec3& d)
     return 4;
 }
 
+void find_libraries(const std::string& a, std::vector<Library *>& b)
+{
+    b.push_back(new fake_Library("whatever"));
+}
+
 void setup_fixture(void)
 {
     database = new fake_DB("a", "b", "c", "d");
-
-    /* The action pool takes control of this library, and
-     * deletes it when the pool is destroyed.  We don't need
-     * to delete it ourselves.
-     */
-    lib = new fake_Library("doesn't matter");
 
     symbol_count = 0;
     symbol_result = (void *)register_actions;
@@ -90,7 +89,7 @@ void test_create_delete(void)
 
     try
     {
-        action_pool = new ActionPool(1, *game_objs, lib, database);
+        action_pool = new ActionPool(1, *game_objs, database);
     }
     catch (...)
     {
@@ -113,7 +112,7 @@ void test_start_stop(void)
 
     setup_fixture();
 
-    action_pool = new ActionPool(1, *game_objs, lib, database);
+    action_pool = new ActionPool(1, *game_objs, database);
     action_pool->start();
     is(action_pool->startup_arg == action_pool, true,
        test + "expected startup arg");
@@ -138,7 +137,7 @@ void test_no_skill(void)
     get_character_objectid_result = 9876LL;
     base_user *bu = new base_user(123LL, "a", "b", listensock);
 
-    action_pool = new ActionPool(1, *game_objs, lib, database);
+    action_pool = new ActionPool(1, *game_objs, database);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -174,7 +173,7 @@ void test_invalid_skill(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[567] = {567, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs, lib, database);
+    action_pool = new ActionPool(1, *game_objs, database);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -210,7 +209,7 @@ void test_wrong_object_id(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs, lib, database);
+    action_pool = new ActionPool(1, *game_objs, database);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -246,7 +245,7 @@ void test_good_object_id(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs, lib, database);
+    action_pool = new ActionPool(1, *game_objs, database);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -282,7 +281,7 @@ void test_worker(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs, lib, database);
+    action_pool = new ActionPool(1, *game_objs, database);
 
     packet_list pl;
     memset(&pl.buf, 0, sizeof(action_request));

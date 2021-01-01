@@ -1,9 +1,9 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 07:57:25 tquirk
+ *   last updated 13 Dec 2020, 21:38:31 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -359,14 +359,8 @@ static void setup_thread_pools(void)
      */
     motion_pool = new MotionPool("motion", config.motion_threads);
     update_pool = new UpdatePool("update", config.update_threads);
-
-    /* Once this library gets into the hands of the action pool, it
-     * takes ownership, and cleans it up where necessary.
-     */
-    Library *action_lib = new Library(config.action_lib);
     action_pool = new ActionPool(config.action_threads,
                                  zone->game_objects,
-                                 action_lib,
                                  database);
 
     action_pool->start();
