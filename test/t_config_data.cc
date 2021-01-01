@@ -94,7 +94,6 @@ void test_create_delete(void)
     is(conf->db_type, config_data::DB_TYPE, test + "expected db type");
     is(conf->db_host, config_data::DB_HOST, test + "expected db host");
     is(conf->db_name, config_data::DB_NAME, test + "expected db name");
-    is(conf->action_lib, config_data::ACTION_LIB, test + "expected action lib");
     is(conf->daemonize, true, test + "expected daemonize");
     is(conf->use_keepalive, false, test + "expected keepalive");
     is(conf->use_nonblock, false, test + "expected nonblock");
@@ -344,7 +343,7 @@ void test_parse_config_file(void)
 
 int main(int argc, char **argv)
 {
-    plan(85);
+    plan(84);
 
     test_create_delete();
     test_setup_cleanup();

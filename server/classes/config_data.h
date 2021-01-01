@@ -1,9 +1,9 @@
 /* config_data.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Jun 2019, 08:10:02 tquirk
+ *   last updated 13 Dec 2020, 21:59:51 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -81,7 +81,6 @@ class config_data
     static const char DB_TYPE[];
     static const char DB_HOST[];
     static const char DB_NAME[];
-    static const char ACTION_LIB[];
 
     std::vector<std::string> argv;
     std::vector<port> listen_ports, consoles;
