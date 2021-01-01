@@ -1,6 +1,6 @@
 /* library.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Dec 2020, 22:42:01 tquirk
+ *   last updated 27 Dec 2020, 14:14:59 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -56,6 +56,8 @@ void Library::open(void)
 {
     char *err;
 
+    if (this->libname[0] != '/')
+        this->libname.insert(0, std::string(SERVER_LIB_DIR) + "/");
     this->lib = dlopen(this->libname.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     if ((err = dlerror()) != NULL)
     {
