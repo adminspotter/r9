@@ -62,7 +62,7 @@ CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
 if HAVE_LIBWRAP
   CONFIG_DEFS += -DHAVE_LIBWRAP=1
 endif
-LIBDIR_DEFS = -DSERVER_LIB_DIR=\".\"
+LIBDIR_DEFS = -DSERVER_LIB_DIR=\".\" -DACTION_LIB_DIR=\".\"
 
 t_byteswap_SOURCES = t_byteswap.cc ../proto/byteswap.c ../proto/proto.h
 t_byteswap_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
@@ -85,7 +85,7 @@ t_key_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(LIBDIR_DEFS) $(TAP_INCLUDES)
 t_action_pool_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)

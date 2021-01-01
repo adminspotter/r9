@@ -1,9 +1,9 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 23 Dec 2019, 19:43:09 tquirk
+ *   last updated 27 Dec 2020, 22:07:34 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,11 +25,13 @@
  * action routine.
  *
  * This object takes care of loading and unloading the actions from
- * the action library, and handles the dispatch entirely internally.
+ * the action libraries, and handles the dispatch entirely internally.
  *
  * Things to do
  *
  */
+
+#include <config.h>
 
 #include "action_pool.h"
 #include "listensock.h"
@@ -42,12 +44,21 @@ typedef void action_unreg_t(actions_map&);
 
 void ActionPool::load_actions(void)
 {
-    if (this->action_lib != NULL)
+    std::string path(ACTION_LIB_DIR);
+
+    path += "/*" LT_MODULE_EXT;
+    find_libraries(path, this->action_libs);
+    if (this->action_libs.size())
     {
         std::clog << "loading action routines" << std::endl;
-        action_reg_t *reg
-            = (action_reg_t *)this->action_lib->symbol("actions_register");
-        (*reg)(this->actions, motion_pool);
+        for (auto i = this->action_libs.begin();
+             i != this->action_libs.end();
+             ++i)
+        {
+            action_reg_t *reg
+                = (action_reg_t *)(*i)->symbol("actions_register");
+            (*reg)(this->actions, motion_pool);
+        }
         for (auto &i : this->actions)
             std::clog << "  loaded " << i.second.name
                       << " ("
@@ -58,13 +69,12 @@ void ActionPool::load_actions(void)
 
 ActionPool::ActionPool(unsigned int pool_size,
                        GameObject::objects_map& game_obj,
-                       Library *lib,
                        DB *database)
     : ThreadPool<packet_list>("action", pool_size), actions(),
+      action_libs(),
       game_objects(game_obj)
 {
     database->get_server_skills(this->actions);
-    this->action_lib = lib;
     this->load_actions();
 }
 
@@ -72,18 +82,18 @@ ActionPool::~ActionPool()
 {
     this->stop();
 
-    if (this->action_lib != NULL)
+    std::clog << "cleaning up action routines" << std::endl;
+    while (this->action_libs.size())
     {
-        std::clog << "cleaning up action routines" << std::endl;
         try
         {
-            action_unreg_t *unreg
-                = (action_unreg_t *)this->action_lib->symbol("actions_unregister");
+            action_unreg_t *unreg = (action_unreg_t *)this->action_libs.back()
+                ->symbol("actions_unregister");
             (*unreg)(this->actions);
         }
-        catch (std::exception& e) { /* Destructors don't throw exceptions */ }
-
-        delete this->action_lib;
+        catch (std::exception& e) { }
+        delete this->action_libs.back();
+        this->action_libs.pop_back();
     }
     this->actions.clear();
 }
