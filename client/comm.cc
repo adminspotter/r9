@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Sep 2020, 22:31:30 tquirk
+ *   last updated 06 Dec 2020, 14:53:48 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -290,14 +290,7 @@ void Comm::handle_ackpkt(packet& p)
             std::clog << access_type[a.misc[0]] << std::endl;
         break;
 
-      case TYPE_ACTREQ:
-        std::clog << _("Acked action request, result ") << (int)a.misc[0]
-                  << std::endl;
-        break;
-
       default:
-        std::clog << _("Got an unknown ack packet: ") << (int)a.request
-                  << std::endl;
         break;
     }
 }
