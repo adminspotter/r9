@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Nov 2020, 20:15:28 tquirk
+ *   last updated 14 Dec 2020, 07:31:30 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -42,7 +42,7 @@
 #include "client_core.h"
 #include "l10n.h"
 
-#include "control/keyboard.h"
+#include "control/control.h"
 
 #include <cuddly-gl/ui.h>
 #include <cuddly-gl/connect_glfw.h>
@@ -171,7 +171,7 @@ void setup_comm(struct addrinfo *ai, const char *user, const char *charname)
     c->start();
     c->send_login(user, charname);
     if (controller == NULL)
-        controller = new keyboard();
+        controller = control_factory::create(config.controller);
     controller->setup(ctx, c);
 }
 
