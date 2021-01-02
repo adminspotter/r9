@@ -48,7 +48,6 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
 TESTS = $(TC)
 
 check_PROGRAMS = $(TC)
-EXTRA_DIST = t_texture_parser.xml
 
 check: SUBDIRS = tap++ .
 
