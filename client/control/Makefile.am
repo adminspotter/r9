@@ -1,6 +1,8 @@
-pkglib_LTLIBRARIES = keyboard.la
+clientlibdir = $(pkglibdir)/client
 
-AM_LDFLAGS = -module
+clientlib_LTLIBRARIES = keyboard.la
+
+AM_LDFLAGS = -module -avoid-version
 
 keyboard_la_SOURCES = keyboard.cc keyboard.h
 keyboard_la_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES)

@@ -1,6 +1,6 @@
 /* control.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Nov 2020, 20:16:13 tquirk
+ *   last updated 12 Dec 2020, 23:14:58 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -31,6 +31,9 @@
 #ifndef __INC_R9CLIENT_CONTROL_H__
 #define __INC_R9CLIENT_CONTROL_H__
 
+#include <vector>
+#include <string>
+
 #include <cuddly-gl/active.h>
 
 #include "../comm.h"
@@ -43,6 +46,13 @@ class control
 
     virtual void setup(ui::active *, Comm *) {};
     virtual void cleanup(ui::active *, Comm *) {};
+};
+
+class control_factory
+{
+  public:
+    static std::vector<std::string> types(void);
+    static control *create(const std::string&);
 };
 
 #endif /* __INC_R9CLIENT_CONTROL_H__ */
