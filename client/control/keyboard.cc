@@ -1,6 +1,6 @@
 /* keyboard.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Jan 2021, 10:25:09 tquirk
+ *   last updated 16 Jan 2021, 13:34:13 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -34,7 +34,7 @@
 void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
 {
     ui::key_call_data *call_data = (ui::key_call_data *)call;
-    Comm *comm = (Comm *)client;
+    keyboard *kb = (keyboard *)client;
 
     if (call_data->key == ui::key::u_arrow
         || call_data->key == ui::key::d_arrow)
@@ -42,7 +42,7 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
         float val = (call_data->state == ui::key::up ? 0.0
                      : (call_data->key == ui::key::u_arrow ? 1.0 : -1.0));
         glm::vec3 move(0.0, val, 0.0);
-        comm->send_action_request(3, move, 100);
+        kb->comm->send_action_request(3, move, 100);
     }
     else if (call_data->key == ui::key::l_arrow
              || call_data->key == ui::key::r_arrow)
@@ -54,12 +54,13 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
             float val = (call_data->key == ui::key::l_arrow ? 1.0 : -1.0);
             rot = glm::vec3(0.0, 0.0, val);
         }
-        comm->send_action_request(4, rot, 100);
+        kb->comm->send_action_request(3, rot, 100);
     }
 }
 
 keyboard::keyboard()
 {
+    this->comm = NULL;
 }
 
 keyboard::~keyboard()
@@ -68,22 +69,24 @@ keyboard::~keyboard()
 
 void keyboard::setup(ui::active *comp, Comm *comm)
 {
+    this->comm = comm;
     comp->add_callback(ui::callback::key_down,
                        keyboard::keyboard_callback,
-                       comm);
+                       this);
     comp->add_callback(ui::callback::key_up,
                        keyboard::keyboard_callback,
-                       comm);
+                       this);
 }
 
 void keyboard::cleanup(ui::active *comp, Comm *comm)
 {
+    this->comm = NULL;
     comp->remove_callback(ui::callback::key_down,
                           keyboard::keyboard_callback,
-                          comm);
+                          this);
     comp->remove_callback(ui::callback::key_up,
                           keyboard::keyboard_callback,
-                          comm);
+                          this);
 }
 
 extern "C" control *create(void)

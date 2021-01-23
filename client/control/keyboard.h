@@ -1,9 +1,9 @@
 /* keyboard.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Nov 2020, 20:10:38 tquirk
+ *   last updated 10 Jan 2021, 12:34:57 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,6 +34,8 @@
 class keyboard : public control
 {
   private:
+    Comm *comm;
+
     static void keyboard_callback(ui::active *, void *, void *);
 
   public:
