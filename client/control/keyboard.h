@@ -35,10 +35,11 @@ class keyboard : public control
 {
   public:
     /* Default constants */
+    static const int MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT;
     static const int MOVE_FORWARD, MOVE_BACK;
     static const int YAW_LEFT, YAW_RIGHT;
 
-    int move_forward, move_back;
+    int move_up, move_down, move_left, move_right, move_forward, move_back;
     int yaw_left, yaw_right;
 
   private:
