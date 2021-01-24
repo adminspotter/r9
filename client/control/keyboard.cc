@@ -31,27 +31,32 @@
 #include "../comm.h"
 #include "../client_core.h"
 
+const int keyboard::MOVE_FORWARD = ui::key::u_arrow;
+const int keyboard::MOVE_BACK = ui::key::d_arrow;
+const int keyboard::YAW_LEFT = ui::key::l_arrow;
+const int keyboard::YAW_RIGHT = ui::key::r_arrow;
+
 void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
 {
     ui::key_call_data *call_data = (ui::key_call_data *)call;
     keyboard *kb = (keyboard *)client;
 
-    if (call_data->key == ui::key::u_arrow
-        || call_data->key == ui::key::d_arrow)
+    if (call_data->key == kb->move_forward
+        || call_data->key == kb->move_back)
     {
         float val = (call_data->state == ui::key::up ? 0.0
-                     : (call_data->key == ui::key::u_arrow ? 1.0 : -1.0));
+                     : (call_data->key == kb->move_forward ? 1.0 : -1.0));
         glm::vec3 move(0.0, val, 0.0);
         kb->comm->send_action_request(3, move, 100);
     }
-    else if (call_data->key == ui::key::l_arrow
-             || call_data->key == ui::key::r_arrow)
+    else if (call_data->key == kb->yaw_left
+             || call_data->key == kb->yaw_right)
     {
         glm::vec3 rot(0.0, 0.0, 0.0);
 
         if (call_data->state == ui::key::down)
         {
-            float val = (call_data->key == ui::key::l_arrow ? 1.0 : -1.0);
+            float val = (call_data->key == kb->yaw_left ? 1.0 : -1.0);
             rot = glm::vec3(0.0, 0.0, val);
         }
         kb->comm->send_action_request(3, rot, 100);
@@ -61,10 +66,19 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
 keyboard::keyboard()
 {
     this->comm = NULL;
+    this->set_defaults();
 }
 
 keyboard::~keyboard()
 {
+}
+
+void keyboard::set_defaults(void)
+{
+    this->move_forward = keyboard::MOVE_FORWARD;
+    this->move_back = keyboard::MOVE_BACK;
+    this->yaw_left = keyboard::YAW_LEFT;
+    this->yaw_right = keyboard::YAW_RIGHT;
 }
 
 void keyboard::setup(ui::active *comp, Comm *comm)

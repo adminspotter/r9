@@ -33,6 +33,14 @@
 
 class keyboard : public control
 {
+  public:
+    /* Default constants */
+    static const int MOVE_FORWARD, MOVE_BACK;
+    static const int YAW_LEFT, YAW_RIGHT;
+
+    int move_forward, move_back;
+    int yaw_left, yaw_right;
+
   private:
     Comm *comm;
 
@@ -41,6 +49,8 @@ class keyboard : public control
   public:
     keyboard();
     ~keyboard();
+
+    void set_defaults(void);
 
     virtual void setup(ui::active *, Comm *) override;
     virtual void cleanup(ui::active *, Comm *) override;
