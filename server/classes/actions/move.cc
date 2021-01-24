@@ -1,6 +1,6 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Oct 2020, 23:08:28 tquirk
+ *   last updated 08 Jan 2021, 22:10:24 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -51,10 +51,9 @@ int action_move(GameObject *source,
 
     intensity = std::min(intensity, 100);
 
-    source->set_movement(source->get_movement()
-                         + (move
-                            * (double)intensity / 100.0
-                            * AVERAGE_WALKING_SPEED));
+    source->set_movement(move
+                         * (double)intensity / 100.0
+                         * AVERAGE_WALKING_SPEED);
     motion->push(source);
     return intensity;
 }
