@@ -36,11 +36,11 @@ class keyboard : public control
   public:
     /* Default constants */
     static const int MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT;
-    static const int MOVE_FORWARD, MOVE_BACK;
-    static const int YAW_LEFT, YAW_RIGHT;
+    static const int MOVE_FORWARD, MOVE_BACK, PITCH_UP, PITCH_DOWN;
+    static const int ROLL_LEFT, ROLL_RIGHT, YAW_LEFT, YAW_RIGHT;
 
     int move_up, move_down, move_left, move_right, move_forward, move_back;
-    int yaw_left, yaw_right;
+    int pitch_up, pitch_down, roll_left, roll_right, yaw_left, yaw_right;
 
   private:
     Comm *comm;
