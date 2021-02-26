@@ -212,6 +212,15 @@ then
       CLIENT_LDLIBS="$CLIENT_LDLIBS -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo"
       ;;
     *)
+      # The Cuddly GLFW connector uses X11's auto-repeat control, if present
+      AC_SEARCH_LIBS([XAutoRepeatOff], [X11],
+          [
+              CLIENT_LDLIBS="$ac_cv_search_XAutoRepeatOff $CLIENT_LDLIBS"
+              X11_DEFS="-DUSING_X11"
+          ],
+          [],
+          [$CLIENT_LDFLAGS])
+      AC_SUBST(X11_DEFS)
       AC_SEARCH_LIBS([glBindVertexArray], [GL],
           [CLIENT_LDLIBS="$ac_cv_search_glBindVertexArray $CLIENT_LDLIBS"],
           [AC_MSG_ERROR([libGL not valid, can not build client program.])],
@@ -287,6 +296,8 @@ delete ui;
   if test "x$with_cuddly_gl" = "xbundled"
   then
     AC_CONFIG_SUBDIRS([client/cuddly-gl])
+    CUDDLY_INCLUDES="-I${PWD}/client"
+    CUDDLY_LDFLAGS="-L${PWD}/client/cuddly-gl"
   fi
   AM_CONDITIONAL([WANT_CUDDLY], [test "x$with_cuddly_gl" = "xbundled"])
 
@@ -613,6 +624,7 @@ CXXFLAGS="$GETNAMEINFO_CXXFLAGS_SAVE"
 AC_CONFIG_FILES([Makefile
                  client/Makefile
                  client/shaders/Makefile
+                 client/control/Makefile
                  po/Makefile.in
                  proto/Makefile
                  server/Makefile

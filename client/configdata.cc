@@ -1,9 +1,9 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Nov 2019, 07:49:47 tquirk
+ *   last updated 07 Dec 2020, 21:39:00 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -75,6 +75,7 @@ const char *ConfigData::FONT_PATHS[] = {
     "/usr/share/fonts/type1",
     NULL
 };
+const char ConfigData::CONTROLLER[] = "keyboard";
 
 typedef void (*config_read_t)(const std::string&, const std::string&, void *);
 typedef void (*config_write_t)(std::ostream&, void *);
@@ -103,6 +104,7 @@ handlers[] =
     { "Charname",   off(charname),    &read_string,  &write_string  },
     { "FontName",   off(font_name),   &read_string,  &write_string  },
     { "FontPaths",  off(font_paths),  &read_paths,   &write_paths   },
+    { "Controller", off(controller),  &read_string,  &write_string  },
     { "KeyFile",    off(key_fname),   &read_string,  &write_string  }
 #undef off
 };
@@ -134,6 +136,8 @@ void ConfigData::set_defaults(void)
     this->server_port  = ConfigData::SERVER_PORT;
     this->username     = "";
     this->charname     = "";
+
+    this->controller   = ConfigData::CONTROLLER;
 
     this->font_paths.clear();
     while (*ptr != NULL)

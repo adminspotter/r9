@@ -1,9 +1,9 @@
 /* move.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 08:48:35 tquirk
+ *   last updated 26 Feb 2021, 08:30:17 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,16 +42,18 @@ int action_move(GameObject *source,
                 glm::dvec3& direction)
 {
     if (glm::length(direction) == 0)
+    {
+        source->set_movement(glm::dvec3(0.0, 0.0, 0.0));
         return 0;
+    }
 
     glm::dvec3 move = glm::normalize(direction);
 
     intensity = std::min(intensity, 100);
 
-    source->set_movement(source->get_movement()
-                         + (move
-                            * (double)intensity / 100.0
-                            * AVERAGE_WALKING_SPEED));
+    source->set_movement(move
+                         * (double)intensity / 100.0
+                         * AVERAGE_WALKING_SPEED);
     motion->push(source);
     return intensity;
 }
@@ -71,8 +73,20 @@ int action_rotate(GameObject *source,
                   GameObject *target,
                   glm::dvec3& axis)
 {
-    if (glm::length(axis) == 0)
-        return 0;
+    if (intensity == 0)
+    {
+        glm::dquat rot = source->get_rotation();
+        glm::dvec3 euler = glm::eulerAngles(rot);
+
+        if (axis.x != 0.0)
+            euler.x = 0.0;
+        else if (axis.y != 0.0)
+            euler.y = 0.0;
+        else if (axis.z != 0.0)
+            euler.z = 0.0;
+        source->set_rotation(glm::mix(rot, glm::dquat(euler), 1.0));
+        return 1;
+    }
 
     glm::dvec3 rot = glm::normalize(axis);
 

@@ -1,6 +1,6 @@
 /* motion_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 08:59:45 tquirk
+ *   last updated 17 Oct 2020, 22:13:12 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -76,7 +76,9 @@ void *MotionPool::motion_pool_worker(void *arg)
         zone->sector_contains(req->get_position())->remove(req);
         req->move_and_rotate();
         sector = zone->sector_contains(req->get_position());
-        sector->insert(req);
+        if (sector != NULL)
+            sector->insert(req);
+        /* else figure out the neighbor that it needs to go to */
         /*mot->physics->collide(sector, req);*/
         update_pool->push(req);
 

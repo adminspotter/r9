@@ -1,6 +1,6 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 22:52:54 tquirk
+ *   last updated 01 Nov 2020, 14:39:48 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -45,6 +45,10 @@
  */
 
 #include <string.h>
+#include <errno.h>
+
+#include <sstream>
+#include <stdexcept>
 
 #include "octree.h"
 
@@ -88,6 +92,64 @@ Neighbor 5: if (index & 1) (parent->neighbor->octant[index + 1])
             else (index - 1)
 
 */
+
+void Octree::enter_read(void)
+{
+    pthread_rwlock_rdlock(&this->lock);
+}
+
+void Octree::enter(void)
+{
+    pthread_rwlock_wrlock(&this->lock);
+}
+
+void Octree::leave(void)
+{
+    pthread_rwlock_unlock(&this->lock);
+}
+
+bool Octree::in_octant(const glm::dvec3& p)
+{
+    return p[0] >= this->min_point[0] && p[0] <= this->max_point[0]
+        && p[1] >= this->min_point[1] && p[1] <= this->max_point[1]
+        && p[2] >= this->min_point[2] && p[2] <= this->max_point[2];
+}
+
+int Octree::which_octant(const glm::dvec3& p)
+{
+    return ((p[0] < this->center_point[0] ? 0 : 4)
+            | (p[1] < this->center_point[1] ? 0 : 2)
+            | (p[2] < this->center_point[2] ? 0 : 1));
+}
+
+Octree *Octree::neighbor_test(int neigh, int oct)
+{
+    if (this->parent->neighbor[neigh] == NULL)
+        return NULL;
+    if (this->parent->neighbor[neigh]->octants[oct] == NULL)
+        return this->parent->neighbor[neigh];
+    return this->parent->neighbor[neigh]->octants[oct];
+}
+
+glm::dvec3 Octree::octant_min(int oct)
+{
+    glm::dvec3 mn;
+
+    mn[0] = oct & 4 ? this->center_point[0] : this->min_point[0];
+    mn[1] = oct & 2 ? this->center_point[1] : this->min_point[1];
+    mn[2] = oct & 1 ? this->center_point[2] : this->min_point[2];
+    return mn;
+}
+
+glm::dvec3 Octree::octant_max(int oct)
+{
+    glm::dvec3 mx;
+
+    mx[0] = oct & 4 ? this->max_point[0] : this->center_point[0];
+    mx[1] = oct & 2 ? this->max_point[1] : this->center_point[1];
+    mx[2] = oct & 1 ? this->max_point[2] : this->center_point[2];
+    return mx;
+}
 
 void Octree::compute_neighbors(void)
 {
@@ -152,6 +214,22 @@ Octree::Octree(Octree *parent,
         this->depth = this->parent->depth + 1;
     else
         this->depth = 0;
+
+    pthread_rwlockattr_t lock_init;
+    pthread_rwlockattr_init(&lock_init);
+#ifdef PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP
+    pthread_rwlockattr_setkind_np(&lock_init,
+                                  PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+#endif /* PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP */
+    if (pthread_rwlock_init(&this->lock, &lock_init))
+    {
+        std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "couldn't init octree lock: " << err << " (" << errno << ")";
+        throw std::runtime_error(s.str());
+    }
 }
 
 Octree::~Octree()
@@ -181,6 +259,7 @@ Octree::~Octree()
      * the things in the map... not what we want.
      */
     this->objects.clear();
+    pthread_rwlock_destroy(&this->lock);
 }
 
 bool Octree::empty(void)
@@ -227,6 +306,7 @@ void Octree::build(std::list<GameObject *>& objs)
 
 void Octree::insert(GameObject *gobj)
 {
+    this->enter();
     this->objects.insert(gobj);
     if (this->depth < Octree::MAX_DEPTH
         && this->objects.size() > Octree::MAX_LEAF_OBJECTS)
@@ -244,10 +324,12 @@ void Octree::insert(GameObject *gobj)
         }
         this->octants[octant]->insert(gobj);
     }
+    this->leave();
 }
 
 void Octree::remove(GameObject *gobj)
 {
+    this->enter();
     if (this->objects.find(gobj) != this->objects.end())
     {
         int octant = this->which_octant(gobj->get_position());
@@ -256,6 +338,7 @@ void Octree::remove(GameObject *gobj)
             this->octants[octant]->remove(gobj);
         this->objects.erase(gobj);
     }
+    this->leave();
     /* If our subtree doesn't have enough objects to warrant a
      * subtree, delete ourselves.
      */

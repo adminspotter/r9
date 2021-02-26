@@ -1,6 +1,6 @@
 /* action_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Dec 2020, 22:07:34 tquirk
+ *   last updated 02 Feb 2021, 14:11:00 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -156,7 +156,7 @@ void ActionPool::execute_action(base_user *user, action_request& req)
 
         req.power_level = std::max<uint8_t>(req.power_level, i->second.lower);
         req.power_level = std::min<uint8_t>(req.power_level, i->second.upper);
-        req.power_level = std::max<uint8_t>(req.power_level, j->second.level);
+        req.power_level = std::min<uint8_t>(req.power_level, j->second.level);
 
         user->send_ack(TYPE_ACTREQ,
                        (uint8_t)(*(i->second.action))(user->slave,

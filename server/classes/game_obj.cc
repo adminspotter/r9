@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 23:11:15 tquirk
+ *   last updated 14 Nov 2020, 13:32:11 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -31,6 +31,8 @@
  */
 
 #include <algorithm>
+#include <sstream>
+#include <stdexcept>
 
 #include "game_obj.h"
 #include "zone.h"
@@ -40,6 +42,21 @@ uint64_t GameObject::max_id_value = 0LL;
 
 glm::dvec3 GameObject::no_movement(0.0, 0.0, 0.0);
 glm::dquat GameObject::no_rotation(1.0, 0.0, 0.0, 0.0);
+
+void GameObject::enter_read(void)
+{
+    pthread_rwlock_rdlock(&this->movement_lock);
+}
+
+void GameObject::enter(void)
+{
+    pthread_rwlock_wrlock(&this->movement_lock);
+}
+
+void GameObject::leave(void)
+{
+    pthread_rwlock_unlock(&this->movement_lock);
+}
 
 uint64_t GameObject::reset_max_id(void)
 {
@@ -71,6 +88,23 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
     pthread_mutex_unlock(&GameObject::max_mutex);
     this->id_value = newid;
     gettimeofday(&this->last_updated, NULL);
+
+    pthread_rwlockattr_t lock_init;
+    pthread_rwlockattr_init(&lock_init);
+#ifdef PTHREAD_RWLOCK_PREFER_WRITER_NP
+    pthread_rwlockattr_setkind_np(&lock_init, PTHREAD_RWLOCK_PREFER_WRITER_NP);
+#endif /* PTHREAD_RWLOCK_PREFER_WRITER_NP */
+    if (pthread_rwlock_init(&this->movement_lock, &lock_init))
+    {
+        std::ostringstream s;
+        char err[128];
+
+        strerror_r(errno, err, sizeof(err));
+        s << "couldn't init game obj lock for "
+          << this->id_value << ": "
+          << err << " (" << errno << ")";
+        throw std::runtime_error(s.str());
+    }
 }
 
 GameObject::~GameObject()
@@ -79,6 +113,7 @@ GameObject::~GameObject()
         delete this->geometry;
     if (this->default_geometry != NULL)
         delete this->default_geometry;
+    pthread_rwlock_destroy(&this->movement_lock);
 }
 
 GameObject *GameObject::clone(void) const
@@ -118,8 +153,10 @@ void GameObject::disconnect(Control *con)
 
 void GameObject::activate(void)
 {
+    this->enter();
     this->natures.erase(GameObject::nature::invisible);
     this->natures.erase(GameObject::nature::non_interactive);
+    this->leave();
 }
 
 void GameObject::deactivate(void)
@@ -129,74 +166,104 @@ void GameObject::deactivate(void)
      * movement and rotation, and make it stop interacting with the
      * rest of the universe.
      */
+    this->enter();
     this->movement = GameObject::no_movement;
     this->rotation = GameObject::no_rotation;
     this->natures.insert(GameObject::nature::invisible);
     this->natures.insert(GameObject::nature::non_interactive);
+    this->leave();
 }
 
 double GameObject::distance_from(const glm::dvec3& pt)
 {
-    return glm::distance(pt, this->position);
+    this->enter_read();
+    double res = glm::distance(pt, this->position);
+    this->leave();
+    return res;
 }
 
 glm::dvec3 GameObject::get_position(void)
 {
-    return this->position;
+    this->enter_read();
+    glm::dvec3 res = this->position;
+    this->leave();
+    return res;
 }
 
 glm::dvec3 GameObject::set_position(const glm::dvec3& p)
 {
+    this->enter();
     this->position = p;
     gettimeofday(&this->last_updated, NULL);
+    this->leave();
     return p;
 }
 
 glm::dvec3 GameObject::get_look(void)
 {
-    return this->look;
+    this->enter_read();
+    glm::dvec3 res = this->look;
+    this->leave();
+    return res;
 }
 
 glm::dvec3 GameObject::set_look(const glm::dvec3& l)
 {
+    this->enter();
     this->look = l;
     gettimeofday(&this->last_updated, NULL);
+    this->leave();
     return l;
 }
 
 glm::dvec3 GameObject::get_movement(void)
 {
-    return this->movement;
+    this->enter_read();
+    glm::dvec3 res = this->movement;
+    this->leave();
+    return res;
 }
 
 glm::dvec3 GameObject::set_movement(const glm::dvec3& m)
 {
+    this->enter();
     this->movement = m;
     gettimeofday(&this->last_updated, NULL);
+    this->leave();
     return m;
 }
 
 glm::dquat GameObject::get_orientation(void)
 {
-    return this->orient;
+    this->enter_read();
+    glm::dquat res = this->orient;
+    this->leave();
+    return res;
 }
 
 glm::dquat GameObject::set_orientation(const glm::dquat& o)
 {
+    this->enter();
     this->orient = o;
     gettimeofday(&this->last_updated, NULL);
+    this->leave();
     return o;
 }
 
 glm::dquat GameObject::get_rotation(void)
 {
-    return this->rotation;
+    this->enter_read();
+    glm::dquat res = this->rotation;
+    this->leave();
+    return res;
 }
 
 glm::dquat GameObject::set_rotation(const glm::dquat& r)
 {
+    this->enter();
     this->rotation = r;
     gettimeofday(&this->last_updated, NULL);
+    this->leave();
     return r;
 }
 
@@ -207,22 +274,27 @@ void GameObject::move_and_rotate(void)
         struct timeval current;
         double interval;
 
+        this->enter();
         gettimeofday(&current, NULL);
         interval = (current.tv_sec + (current.tv_usec / 1000000.0))
             - (this->last_updated.tv_sec
                + (this->last_updated.tv_usec / 1000000.0));
-        if (this->movement != GameObject::no_movement)
-            this->position += this->movement * interval;
         if (this->rotation != GameObject::no_rotation)
             this->orient = glm::dquat(glm::eulerAngles(this->rotation)
                                       * interval)
                 * this->orient;
+        if (this->movement != GameObject::no_movement)
+            this->position += this->orient * this->movement * interval;
         memcpy(&this->last_updated, &current, sizeof(struct timeval));
+        this->leave();
     }
 }
 
 bool GameObject::still_moving(void)
 {
-    return (this->movement != GameObject::no_movement
-            || this->rotation != GameObject::no_rotation);
+    this->enter_read();
+    bool res = (this->movement != GameObject::no_movement
+                || this->rotation != GameObject::no_rotation);
+    this->leave();
+    return res;
 }

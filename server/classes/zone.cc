@@ -1,6 +1,6 @@
 /* zone.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 23:08:14 tquirk
+ *   last updated 17 Oct 2020, 22:37:02 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -31,9 +31,6 @@
 #include <math.h>
 #include <glob.h>
 #include <errno.h>
-
-#include <sstream>
-#include <stdexcept>
 
 #include "zone.h"
 #include "thread_pool.h"
@@ -117,6 +114,12 @@ Zone::~Zone()
 Octree *Zone::sector_contains(const glm::dvec3& pos)
 {
     glm::ivec3 sec = this->which_sector(pos);
+
+    if (sec[0] < 0 || sec[0] >= x_steps
+        || sec[1] < 0 || sec[1] >= y_steps
+        || sec[2] < 0 || sec[2] >= z_steps)
+        return NULL;
+
     Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
     if (oct == NULL)
     {

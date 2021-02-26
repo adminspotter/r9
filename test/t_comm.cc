@@ -747,19 +747,17 @@ void test_recv_ack(void)
     expected_packet.ack.request = TYPE_ACTREQ;
     expected_packet.ack.misc[0] = ACCESS_NONE;
 
+    int log_len = new_clog.str().size();
+
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Acked action request"),
-         std::string::npos,
-         test + st + "expected log entry");
+    is(new_clog.str().size(), log_len, test + st + "no new log entries");
 
     st = "unknown response: ";
 
     expected_packet.ack.request = 123;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Got an unknown ack packet"),
-         std::string::npos,
-         test + st + "expected log entry");
+    is(new_clog.str().size(), log_len, test + st + "no new log entries");
 
     delete comm;
 
