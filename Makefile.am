@@ -24,3 +24,15 @@ all-local:
 endif
 
 install-recursive: SUBDIRS = $(SD_NO_TEST)
+
+if HAVE_LCOV
+.PHONY: lcov
+
+lcov: check
+	lcov -c -q --directory . --output-file lcov.info --no-external
+	genhtml lcov.info --output-directory lcov
+	@echo "Open file://$$PWD/lcov/index.html in your browser"
+
+clean-local:
+	rm -rf lcov.info lcov
+endif

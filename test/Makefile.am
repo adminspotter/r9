@@ -61,6 +61,7 @@ CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
 if HAVE_LIBWRAP
   CONFIG_DEFS += -DHAVE_LIBWRAP=1
 endif
+LIBDIR_DEFS = -DSERVER_LIB_DIR=\".\" -DACTION_LIB_DIR=\".\"
 
 t_byteswap_SOURCES = t_byteswap.cc ../proto/byteswap.c ../proto/proto.h
 t_byteswap_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
@@ -83,7 +84,7 @@ t_key_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
 t_action_pool_SOURCES = t_action_pool.cc \
 	../server/classes/action_pool.cc ../server/classes/action_pool.h \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h
-t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
+t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(LIBDIR_DEFS) $(TAP_INCLUDES)
 t_action_pool_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
@@ -144,6 +145,7 @@ t_game_obj_LDADD = $(TAP_LDADD)
 
 t_library_SOURCES = t_library.cc \
 	../server/classes/library.cc ../server/classes/library.h
+t_library_CXXFLAGS = $(CONFIG_DEFS) $(LIBDIR_DEFS) $(TAP_INCLUDES)
 t_library_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_listensock_SOURCES = t_listensock.cc \
@@ -226,19 +228,22 @@ t_zone_LDADD = $(TAP_LDADD) \
 
 t_lua_SOURCES = t_lua.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
+t_lua_CXXFLAGS = $(LIBDIR_DEFS) $(TAP_INCLUDES)
 t_lua_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_python_SOURCES = t_python.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
+t_python_CXXFLAGS = $(LIBDIR_DEFS) $(TAP_INCLUDES)
 t_python_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_tcl_SOURCES = t_tcl.cc ../server/classes/modules/language.h \
 	../server/classes/library.h ../server/classes/library.cc
+t_tcl_CXXFLAGS = $(LIBDIR_DEFS) $(TAP_INCLUDES)
 t_tcl_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS)
 
 t_tcl_exception_SOURCES = t_tcl_exception.cc \
 	../server/classes/modules/r9tcl.cc ../server/classes/modules/r9tcl.h
-t_tcl_exception_CXXFLAGS = $(TAP_INCLUDES) $(TCL_INCLUDES)
+t_tcl_exception_CXXFLAGS = $(LIBDIR_DEFS) $(TAP_INCLUDES) $(TCL_INCLUDES)
 t_tcl_exception_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS) \
 	$(TCL_LDLIBS)
 

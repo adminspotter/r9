@@ -1,9 +1,9 @@
 /* library.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Mar 2018, 08:17:21 tquirk
+ *   last updated 24 Dec 2020, 15:39:02 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,6 +30,7 @@
 #define __INC_LIBRARY_H__
 
 #include <string>
+#include <vector>
 
 class Library
 {
@@ -48,5 +49,7 @@ class Library
     virtual void *symbol(const char *);
     virtual void close(void);
 };
+
+void find_libraries(const std::string&, std::vector<Library *>&);
 
 #endif /* __INC_LIBRARY_H__ */

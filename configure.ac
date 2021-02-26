@@ -21,12 +21,11 @@ AC_PROG_INSTALL
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 m4_ifdef([AM_GNU_GETTEXT], [AM_GNU_GETTEXT([external])])
-AM_GNU_GETTEXT_VERSION(0.17)
 
 AC_LANG(C++)
 
 # Libtool init
-LT_INIT([pic-only])
+LT_INIT([pic-only disable-static])
 LT_LANG([C++])
 LT_SYS_MODULE_EXT
 
@@ -179,6 +178,9 @@ then
     PROFILE_LDLIBS="-lgcov"
     AC_MSG_NOTICE([building with profiling enabled])
   fi
+  AC_CHECK_PROGS([lcov_cmd], [lcov])
+  AC_CHECK_PROGS([genhtml_cmd], [genhtml])
+  AM_CONDITIONAL([HAVE_LCOV], [test "x$lcov_cmd" != "x" && test "x$genhtml_cmd" != "x"])
 fi
 
 # Client program
