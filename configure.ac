@@ -294,6 +294,8 @@ delete ui;
   if test "x$with_cuddly_gl" = "xbundled"
   then
     AC_CONFIG_SUBDIRS([client/cuddly-gl])
+    CUDDLY_INCLUDES="-I${PWD}/client"
+    CUDDLY_LDFLAGS="-L${PWD}/client/cuddly-gl"
   fi
   AM_CONDITIONAL([WANT_CUDDLY], [test "x$with_cuddly_gl" = "xbundled"])
 

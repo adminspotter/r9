@@ -1,7 +1,8 @@
-SUBDIRS = shaders control
+SUBDIRS = shaders
 if WANT_CUDDLY
   SUBDIRS += cuddly-gl
 endif
+SUBDIRS += control
 
 bin_PROGRAMS = r9client
 
