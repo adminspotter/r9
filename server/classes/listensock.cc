@@ -1,9 +1,9 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jan 2020, 22:20:20 tquirk
+ *   last updated 03 Mar 2021, 08:59:25 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -484,6 +484,8 @@ void listen_socket::logout_user(uint64_t userid)
 
         bu->send_ack(TYPE_LGTREQ);
         bu->pending_logout = true;
+        if (bu->default_slave != NULL)
+            bu->default_slave->deactivate();
     }
 }
 
@@ -493,7 +495,10 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 
     this->users[bu->userid] = bu;
     if (bu->default_slave != NULL)
+    {
+        bu->default_slave->activate();
         obj_id = bu->default_slave->get_object_id();
+    }
     bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     bu->send_ack(TYPE_LOGREQ, bu->auth_level, obj_id);
 }
