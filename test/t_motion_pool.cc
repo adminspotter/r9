@@ -59,15 +59,16 @@ void test_operate(void)
     motion_pool->push(go3);
     is(motion_pool->queue_size(), 3, test + "expected queue size");
     go4->set_position(glm::dvec3(0.0, 0.0, 0.0));
-    go4->set_rotation(glm::dquat(1.0, 0.0, 0.0, 0.0));
+    go4->set_rotation(glm::angleAxis(1.0, glm::dvec3(1.0, 0.0, 0.0)));
     motion_pool->push(go4);
-    is(motion_pool->queue_size(), 4, test + "expected queue sizer");
+    is(motion_pool->queue_size(), 4, test + "expected queue size");
     go5->set_position(glm::dvec3(1.0, 1.0, 1.0));
-    go5->set_rotation(glm::dquat(0.0, 1.0, 0.0, 0.0));
+    go5->set_rotation(glm::angleAxis(1.0, glm::dvec3(0.0, 1.0, 0.0)));
     motion_pool->push(go5);
     is(motion_pool->queue_size(), 5, test + "expected queue size");
     go6->set_position(glm::dvec3(2.0, 2.0, 2.0));
-    go6->set_rotation(glm::dquat(0.0, 0.0, 1.0, 0.0));
+    go6->set_movement(glm::dvec3(10.0, 0.0, 0.0));
+    go6->deactivate();
     motion_pool->push(go6);
     is(motion_pool->queue_size(), 6, test + "expected queue size");
 
@@ -76,15 +77,17 @@ void test_operate(void)
         ;
     motion_pool->stop();
 
-    is(go1->get_position().x > 234.0, true, test + "x pos increased");
-    is(go1->get_position().y > 234.0, true, test + "y pos increased");
-    is(go1->get_position().z > 234.0, true, test + "z pos increased");
-    is(go2->get_position().y > 123.0, true, test + "y pos increased");
-    is(go2->get_position().z > 123.0, true, test + "z pos increased");
-    is(go3->get_position().z > 12.0, true, test + "z pos increased");
-    /* Nothing happens with rotation yet, so no need to check anything
-     * for go4-6.
-     */
+    ok(go1->get_position().x > 234.0, test + "x pos increased");
+    ok(go1->get_position().y > 234.0, test + "y pos increased");
+    ok(go1->get_position().z > 234.0, test + "z pos increased");
+    ok(go2->get_position().y > 123.0, test + "y pos increased");
+    ok(go2->get_position().z > 123.0, test + "z pos increased");
+    ok(go3->get_position().z > 12.0, test + "z pos increased");
+    ok(glm::eulerAngles(go4->get_orientation()).x != 0.0,
+       test + "x rot changed");
+    ok(glm::eulerAngles(go5->get_orientation()).y != 0.0,
+       test + "y rot changed");
+    ok(go6->get_position().x == 2.0, test + "x pos stayed the same");
 
     delete update_pool;
     delete motion_pool;
@@ -96,7 +99,7 @@ void test_operate(void)
 
 int main(int argc, char **argv)
 {
-    plan(13);
+    plan(16);
 
     test_start_stop();
     test_operate();

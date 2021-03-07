@@ -1,9 +1,9 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Nov 2020, 13:32:11 tquirk
+ *   last updated 02 Mar 2021, 09:07:21 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -75,6 +75,7 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
 {
     this->default_master = this->master = c;
     this->default_geometry = this->geometry = g;
+    this->active = true;
     pthread_mutex_lock(&GameObject::max_mutex);
     if (newid == 0LL)
         newid = GameObject::max_id_value++;
@@ -156,6 +157,7 @@ void GameObject::activate(void)
     this->enter();
     this->natures.erase(GameObject::nature::invisible);
     this->natures.erase(GameObject::nature::non_interactive);
+    this->active = true;
     this->leave();
 }
 
@@ -171,6 +173,7 @@ void GameObject::deactivate(void)
     this->rotation = GameObject::no_rotation;
     this->natures.insert(GameObject::nature::invisible);
     this->natures.insert(GameObject::nature::non_interactive);
+    this->active = false;
     this->leave();
 }
 
@@ -293,8 +296,9 @@ void GameObject::move_and_rotate(void)
 bool GameObject::still_moving(void)
 {
     this->enter_read();
-    bool res = (this->movement != GameObject::no_movement
-                || this->rotation != GameObject::no_rotation);
+    bool res = (this->active == true
+                && (this->movement != GameObject::no_movement
+                    || this->rotation != GameObject::no_rotation));
     this->leave();
     return res;
 }
