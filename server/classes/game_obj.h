@@ -1,9 +1,9 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Nov 2020, 07:06:49 tquirk
+ *   last updated 02 Mar 2021, 09:04:26 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -81,6 +81,8 @@ class GameObject
     struct timeval last_updated;
     glm::dvec3 position, movement, look;
     glm::dquat orient, rotation;
+
+    bool active;
 
   public:
     std::unordered_map<std::string, attribute> attributes;

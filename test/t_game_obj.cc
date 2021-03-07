@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include <tap++.h>
 
 using namespace TAP;
@@ -242,7 +244,7 @@ void test_move_and_rotate(void)
     go->set_movement(glm::dvec3(1.0, 1.0, 1.0));
     go->set_rotation(glm::dquat(1.0, 0.0, 0.0, 1.0));
 
-    sleep(1);
+    usleep(100);
     go->move_and_rotate();
 
     ok(go->get_position() != glm::dvec3(0.0, 0.0, 0.0),
@@ -250,13 +252,23 @@ void test_move_and_rotate(void)
     ok(go->get_orientation() != glm::dquat(1.0, 0.0, 0.0, 0.0),
        test + "expected rotation");
 
+    go->deactivate();
+    glm::dvec3 pos = go->get_position();
+    glm::dquat ori = go->get_orientation();
+
+    usleep(100);
+    go->move_and_rotate();
+
+    ok(go->get_position() == pos, test + "expected inactive movement");
+    ok(go->get_orientation() == ori, test + "expected inactive rotation");
+
     delete go;
     delete con;
 }
 
 int main(int argc, char **argv)
 {
-    plan(52);
+    plan(54);
 
     test_create_delete();
     test_clone();
