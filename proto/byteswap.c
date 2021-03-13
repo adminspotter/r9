@@ -1,9 +1,9 @@
 /* byteswap.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2019, 14:34:52 tquirk
+ *   last updated 13 Mar 2021, 08:20:47 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,6 +44,8 @@ static int hton_server_notice(packet *, size_t);
 static int ntoh_server_notice(packet *, size_t);
 static int hton_server_key(packet *, size_t);
 static int ntoh_server_key(packet *, size_t);
+static int hton_object_delete(packet *, size_t);
+static int ntoh_object_delete(packet *, size_t);
 
 /* Using a lookup table for these saves us what could be quite a large
  * amount of compares per invocation.
@@ -63,26 +65,27 @@ packet_handlers[] =
     { hton_server_notice,    ntoh_server_notice,    sizeof(server_notice)    },
     { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     },
     { hton_basic_packet,     ntoh_basic_packet,     sizeof(basic_packet)     },
-    { hton_server_key,       ntoh_server_key,       sizeof(server_key)       }
+    { hton_server_key,       ntoh_server_key,       sizeof(server_key)       },
+    { hton_object_delete,    ntoh_object_delete,    sizeof(object_delete)    }
 };
 
 int hton_packet(packet *p, size_t s)
 {
-    if (p->basic.type > TYPE_SRVKEY)
+    if (p->basic.type > TYPE_OBJDEL)
         return 0;
     return (packet_handlers[p->basic.type].hton)(p, s);
 }
 
 int ntoh_packet(packet *p, size_t s)
 {
-    if (p->basic.type > TYPE_SRVKEY)
+    if (p->basic.type > TYPE_OBJDEL)
         return 0;
     return (packet_handlers[p->basic.type].ntoh)(p, s);
 }
 
 size_t packet_size(packet *p)
 {
-    if (p->basic.type > TYPE_SRVKEY)
+    if (p->basic.type > TYPE_OBJDEL)
         return 0;
     return (packet_handlers[p->basic.type].packetsize);
 }
@@ -260,5 +263,25 @@ static int ntoh_server_key(packet *sk, size_t s)
     if (s < sizeof(server_key))
         return 0;
     sk->key.sequence = ntohl(sk->key.sequence);
+    return 1;
+}
+
+/* ARGSUSED */
+static int hton_object_delete(packet *od, size_t s)
+{
+    if (s < sizeof(object_delete))
+        return 0;
+    od->del.sequence = htonl(od->del.sequence);
+    od->del.object_id = htonll(od->del.object_id);
+    return 1;
+}
+
+/* ARGSUSED */
+static int ntoh_object_delete(packet *od, size_t s)
+{
+    if (s < sizeof(object_delete))
+        return 0;
+    od->del.sequence = ntohl(od->del.sequence);
+    od->del.object_id = ntohll(od->del.object_id);
     return 1;
 }

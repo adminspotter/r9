@@ -1,9 +1,9 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Sep 2020, 22:31:07 tquirk
+ *   last updated 13 Mar 2021, 08:03:03 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,6 +44,8 @@
  *   LGTREQ:  This packet is a user request to logout.
  *   SRVKEY:  This packet is a server login response which includes
  *            the server key.
+ *   OBJDEL:  This packet notifies a client that an object is no longer
+ *            present, and that the client should delete it.
  *
  * Things to do
  *   - Rethink the removal of in-band geometry and texture fetching.
@@ -65,6 +67,7 @@
 #define TYPE_PNGPKT 5        /* Ping packet */
 #define TYPE_LGTREQ 6        /* Logout request */
 #define TYPE_SRVKEY 7        /* Server key request */
+#define TYPE_OBJDEL 8        /* Object deletion */
 
 /* Access types for the login ACK's misc field.  Are there more types? */
 #define ACCESS_NONE 1        /* No access allowed */
@@ -173,6 +176,15 @@ typedef struct server_key_tag
 } __attribute__ ((__packed__))
 server_key;
 
+typedef struct object_delete_tag
+{
+    uint8_t type;
+    uint8_t version;        /* protocol version number */
+    uint64_t sequence;      /* timestamp / sequence number */
+    uint64_t object_id;
+} __attribute__ ((__packed__))
+object_delete;
+
 /* We can cast unknown packets to this and read basic.type to determine
  * the type, then use the corresponding element of the union to process it.
  * We don't need to convert byte order on a single byte, so this trick will
@@ -187,6 +199,7 @@ typedef union packet_tag
     position_update  pos;
     server_notice    srv;
     server_key       key;
+    object_delete    del;
 }
 packet;
 
@@ -201,6 +214,7 @@ packet;
 #define is_server_notice(x)    (((packet *)(x))->basic.type == TYPE_SRVNOT)
 #define is_ping_packet(x)      (((packet *)(x))->basic.type == TYPE_PNGPKT)
 #define is_server_key(x)       (((packet *)(x))->basic.type == TYPE_SRVKEY)
+#define is_object_delete(x)    (((packet *)(x))->basic.type == TYPE_OBJDEL)
 
 #ifdef __cplusplus
 extern "C"

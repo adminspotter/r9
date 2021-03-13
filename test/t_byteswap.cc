@@ -105,6 +105,7 @@ void test_position_update(void)
     p.pos.type = TYPE_POSUPD;
     p.pos.version = 1;
     p.pos.sequence = 1234LL;
+    p.pos.object_id = 2345LL;
     p.pos.frame_number = 123;
     p.pos.x_pos = 1LL;
     p.pos.y_pos = 2LL;
@@ -195,9 +196,31 @@ void test_server_key(void)
        test + "good size succeeds hton");
 }
 
+void test_object_delete(void)
+{
+    std::string test = "object delete: ";
+    packet p;
+
+    p.del.type = TYPE_OBJDEL;
+    p.del.version = 1;
+    p.del.sequence = 1234LL;
+    p.del.object_id = 2345LL;
+
+    is(is_object_delete(&p), 1, test + "is an objdel");
+
+    is(ntoh_packet(&p, sizeof(object_delete) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(object_delete)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(object_delete) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(object_delete)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(38);
+    plan(43);
 
     test_bad_type();
     test_ack_packet();
@@ -207,5 +230,6 @@ int main(int argc, char **argv)
     test_server_notice();
     test_ping_packet();
     test_server_key();
+    test_object_delete();
     return exit_status();
 }
