@@ -1,9 +1,9 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Sep 2020, 22:24:31 tquirk
+ *   last updated 13 Mar 2021, 09:23:42 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,8 +22,6 @@
  *
  * The minimal implementation of the Update pool.
  */
-
-#include "../../proto/proto.h"
 
 #include "update_pool.h"
 #include "listensock.h"
@@ -62,23 +60,7 @@ void *UpdatePool::update_pool_worker(void *arg)
     {
         pool->pop(&req);
 
-        glm::dvec3 pos = req->get_position() * POSUPD_POS_SCALE;
-        glm::dquat orient = req->get_orientation() * POSUPD_ORIENT_SCALE;
-        glm::dvec3 look = req->get_look() * POSUPD_LOOK_SCALE;
-
-        pkt.buf.pos.type = TYPE_POSUPD;
-        pkt.buf.pos.version = 1;
-        pkt.buf.pos.object_id = req->get_object_id();
-        pkt.buf.pos.x_pos = (uint64_t)pos.x;
-        pkt.buf.pos.y_pos = (uint64_t)pos.y;
-        pkt.buf.pos.z_pos = (uint64_t)pos.z;
-        pkt.buf.pos.w_orient = (uint32_t)orient.w;
-        pkt.buf.pos.x_orient = (uint32_t)orient.x;
-        pkt.buf.pos.y_orient = (uint32_t)orient.y;
-        pkt.buf.pos.z_orient = (uint32_t)orient.z;
-        pkt.buf.pos.x_look = (uint32_t)look.x;
-        pkt.buf.pos.y_look = (uint32_t)look.y;
-        pkt.buf.pos.z_look = (uint32_t)look.z;
+        req->generate_update_packet(pkt.buf);
 
         /* Figure out who to send it to */
         /* Send to EVERYONE (for now) */

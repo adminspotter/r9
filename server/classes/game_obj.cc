@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Mar 2021, 09:07:21 tquirk
+ *   last updated 13 Mar 2021, 09:25:19 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -301,4 +301,36 @@ bool GameObject::still_moving(void)
                     || this->rotation != GameObject::no_rotation));
     this->leave();
     return res;
+}
+
+void GameObject::generate_update_packet(packet& pkt)
+{
+    this->enter_read();
+    if (this->active == false)
+    {
+        pkt.del.type = TYPE_OBJDEL;
+        pkt.del.version = 1;
+        pkt.del.object_id = this->id_value;
+    }
+    else
+    {
+        glm::dvec3 pos = this->position * POSUPD_POS_SCALE;
+        glm::dquat orient = this->orient * POSUPD_ORIENT_SCALE;
+        glm::dvec3 look = this->look * POSUPD_LOOK_SCALE;
+
+        pkt.pos.type = TYPE_POSUPD;
+        pkt.pos.version = 1;
+        pkt.pos.object_id = this->id_value;
+        pkt.pos.x_pos = (uint64_t)pos.x;
+        pkt.pos.y_pos = (uint64_t)pos.y;
+        pkt.pos.z_pos = (uint64_t)pos.z;
+        pkt.pos.w_orient = (uint32_t)orient.w;
+        pkt.pos.x_orient = (uint32_t)orient.x;
+        pkt.pos.y_orient = (uint32_t)orient.y;
+        pkt.pos.z_orient = (uint32_t)orient.z;
+        pkt.pos.x_look = (uint32_t)look.x;
+        pkt.pos.y_look = (uint32_t)look.y;
+        pkt.pos.z_look = (uint32_t)look.z;
+    }
+    this->leave();
 }
