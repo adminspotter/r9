@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Mar 2021, 09:25:19 tquirk
+ *   last updated 14 Mar 2021, 23:22:51 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -309,7 +309,7 @@ void GameObject::generate_update_packet(packet& pkt)
     if (this->active == false)
     {
         pkt.del.type = TYPE_OBJDEL;
-        pkt.del.version = 1;
+        pkt.del.version = R9_PROTO_VER;
         pkt.del.object_id = this->id_value;
     }
     else
@@ -319,7 +319,7 @@ void GameObject::generate_update_packet(packet& pkt)
         glm::dvec3 look = this->look * POSUPD_LOOK_SCALE;
 
         pkt.pos.type = TYPE_POSUPD;
-        pkt.pos.version = 1;
+        pkt.pos.version = R9_PROTO_VER;
         pkt.pos.object_id = this->id_value;
         pkt.pos.x_pos = (uint64_t)pos.x;
         pkt.pos.y_pos = (uint64_t)pos.y;

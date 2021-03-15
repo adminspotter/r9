@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 03 Mar 2021, 08:59:25 tquirk
+ *   last updated 14 Mar 2021, 23:23:08 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -189,7 +189,7 @@ void base_user::send_server_key(uint8_t *pubkey, size_t key_sz)
     packet_list pkt;
 
     pkt.buf.key.type = TYPE_SRVKEY;
-    pkt.buf.key.version = 1;
+    pkt.buf.key.version = R9_PROTO_VER;
     pkt.buf.key.sequence = this->sequence++;
     memset(pkt.buf.key.pubkey, 0, sizeof(pkt.buf.key.pubkey));
     memcpy(pkt.buf.key.pubkey, pubkey, std::min(key_sz,
@@ -204,7 +204,7 @@ void base_user::send_ping(void)
     packet_list pkt;
 
     pkt.buf.basic.type = TYPE_PNGPKT;
-    pkt.buf.basic.version = 1;
+    pkt.buf.basic.version = R9_PROTO_VER;
     pkt.buf.basic.sequence = this->sequence++;
     pkt.who = this;
     this->parent->send_pool->push(pkt);
@@ -217,7 +217,7 @@ void base_user::send_ack(uint8_t req,
     packet_list pkt;
 
     pkt.buf.ack.type = TYPE_ACKPKT;
-    pkt.buf.ack.version = 1;
+    pkt.buf.ack.version = R9_PROTO_VER;
     pkt.buf.ack.sequence = this->sequence++;
     pkt.buf.ack.request = req;
     pkt.buf.ack.misc[0] = misc0;

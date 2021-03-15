@@ -142,7 +142,7 @@ void test_no_skill(void)
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
-    pkt.version = 1;
+    pkt.version = R9_PROTO_VER;
     pkt.object_id = 9876LL;
     pkt.action_id = 12345;
     pkt.power_level = 5;
@@ -178,7 +178,7 @@ void test_invalid_skill(void)
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
-    pkt.version = 1;
+    pkt.version = R9_PROTO_VER;
     pkt.object_id = 9876LL;
     pkt.action_id = 567;
     pkt.power_level = 5;
@@ -214,7 +214,7 @@ void test_wrong_object_id(void)
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
-    pkt.version = 1;
+    pkt.version = R9_PROTO_VER;
     pkt.object_id = 123LL;
     pkt.action_id = 789;
     pkt.power_level = 5;
@@ -250,7 +250,7 @@ void test_good_object_id(void)
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
     pkt.type = TYPE_ACTREQ;
-    pkt.version = 1;
+    pkt.version = R9_PROTO_VER;
     pkt.object_id = 9876LL;
     pkt.action_id = 789;
     pkt.power_level = 5;
@@ -286,7 +286,7 @@ void test_worker(void)
     packet_list pl;
     memset(&pl.buf, 0, sizeof(action_request));
     pl.buf.act.type = TYPE_ACTREQ;
-    pl.buf.act.version = 1;
+    pl.buf.act.version = R9_PROTO_VER;
     pl.buf.act.object_id = 9876LL;
     pl.buf.act.action_id = 789;
     pl.buf.act.power_level = 5;

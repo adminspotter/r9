@@ -1,6 +1,6 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Mar 2021, 08:03:03 tquirk
+ *   last updated 14 Mar 2021, 23:26:22 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -57,6 +57,9 @@
 
 #include <stdint.h>
 #include <arpa/inet.h>
+
+/* The protocol version which we support */
+#define R9_PROTO_VER 1
 
 /* Some defines for packet types. */
 #define TYPE_ACKPKT 0        /* Acknowledgement packet */

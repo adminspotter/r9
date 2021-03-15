@@ -10,7 +10,7 @@ void test_bad_type(void)
     packet p;
 
     p.basic.type = 99;
-    p.basic.version = 1;
+    p.basic.version = R9_PROTO_VER;
     p.basic.sequence = 1234LL;
 
     is(hton_packet(&p, sizeof(basic_packet)), 0,
@@ -26,7 +26,7 @@ void test_ack_packet(void)
     packet p;
 
     p.ack.type = TYPE_ACKPKT;
-    p.ack.version = 1;
+    p.ack.version = R9_PROTO_VER;
     p.ack.sequence = 1234LL;
     p.ack.request = 42;
     p.ack.misc[0] = 2345LL;
@@ -52,7 +52,7 @@ void test_login_request(void)
     packet p;
 
     p.log.type = TYPE_LOGREQ;
-    p.log.version = 1;
+    p.log.version = R9_PROTO_VER;
     p.log.sequence = 1234LL;
 
     is(is_login_request(&p), 1, test + "is a logreq");
@@ -73,7 +73,7 @@ void test_action_request(void)
     packet p;
 
     p.act.type = TYPE_ACTREQ;
-    p.act.version = 1;
+    p.act.version = R9_PROTO_VER;
     p.act.sequence = 1234LL;
     p.act.object_id = 12345LL;
     p.act.action_id = 123;
@@ -103,7 +103,7 @@ void test_position_update(void)
     packet p;
 
     p.pos.type = TYPE_POSUPD;
-    p.pos.version = 1;
+    p.pos.version = R9_PROTO_VER;
     p.pos.sequence = 1234LL;
     p.pos.object_id = 2345LL;
     p.pos.frame_number = 123;
@@ -136,7 +136,7 @@ void test_server_notice(void)
     packet p;
 
     p.srv.type = TYPE_SRVNOT;
-    p.srv.version = 1;
+    p.srv.version = R9_PROTO_VER;
     p.srv.sequence = 1234LL;
     p.srv.ipproto = 6;
     p.srv.port = 123;
@@ -160,7 +160,7 @@ void test_ping_packet(void)
     packet p;
 
     p.basic.type = TYPE_PNGPKT;
-    p.basic.version = 1;
+    p.basic.version = R9_PROTO_VER;
     p.basic.sequence = 1234LL;
 
     is(is_ping_packet(&p), 1, test + "is a pngpkt");
@@ -181,7 +181,7 @@ void test_server_key(void)
     packet p;
 
     p.key.type = TYPE_SRVKEY;
-    p.key.version = 1;
+    p.key.version = R9_PROTO_VER;
     p.key.sequence = 1234LL;
 
     is(is_server_key(&p), 1, test + "is a srvkey");
@@ -202,7 +202,7 @@ void test_object_delete(void)
     packet p;
 
     p.del.type = TYPE_OBJDEL;
-    p.del.version = 1;
+    p.del.version = R9_PROTO_VER;
     p.del.sequence = 1234LL;
     p.del.object_id = 2345LL;
 
