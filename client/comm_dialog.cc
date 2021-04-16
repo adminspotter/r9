@@ -1,9 +1,9 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2020, 09:16:22 tquirk
+ *   last updated 13 Apr 2021, 08:08:49 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -70,7 +70,7 @@ void create_login_dialog(ui::context *ctx)
                                 10,
                                 ui::element::size, ui::size::columns, 2);
 
-    str = _("Username");
+    str = translate("Username");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
                       ui::element::string, 0, str);
@@ -83,7 +83,7 @@ void create_login_dialog(ui::context *ctx)
                               ui::element::border, ui::side::all, border,
                               ui::element::string, 0, str);
 
-    str = _("Password");
+    str = translate("Password");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
                       ui::element::string, 0, str);
@@ -94,7 +94,7 @@ void create_login_dialog(ui::context *ctx)
                             ui::element::size, ui::size::max_width, max_sz,
                             ui::element::border, ui::side::all, border);
 
-    str = _("Server");
+    str = translate("Server");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
                       ui::element::string, 0, str);
@@ -107,7 +107,7 @@ void create_login_dialog(ui::context *ctx)
                               ui::element::border, ui::side::all, border,
                               ui::element::string, 0, str);
 
-    str = _("OK");
+    str = translate("OK");
     b = new ui::button(dialog,
                        ui::element::font, ui::ownership::shared, dialog_font,
                        ui::element::border, ui::side::all, border,
@@ -115,7 +115,7 @@ void create_login_dialog(ui::context *ctx)
     b->add_callback(ui::callback::btn_up, setup_comm_callback, NULL);
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 
-    str = _("Cancel");
+    str = translate("Cancel");
     b = new ui::button(dialog,
                        ui::element::font, ui::ownership::shared, dialog_font,
                        ui::element::border, ui::side::all, border,
@@ -150,8 +150,8 @@ void setup_comm_callback(ui::active *t, void *call, void *client)
     snprintf(portstr, sizeof(portstr), "%d", config.server_port);
     if ((ret = getaddrinfo(host_str.c_str(), portstr, &hints, &ai)) != 0)
     {
-        std::cout << "Couldn't find host " << host_str
-                  << ": " << gai_strerror(ret) << " (" << ret << ')'
+        std::cout << format(translate("Couldn't find host {1}: {2} ({3})"))
+            % host_str % gai_strerror(ret) % ret
                   << std::endl;
         return;
     }

@@ -1,9 +1,9 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Dec 2020, 14:53:48 tquirk
+ *   last updated 16 Apr 2021, 15:52:29 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -68,6 +68,22 @@
 
 uint64_t Comm::sequence = 0LL;
 
+static const std::string access_to_string(int access)
+{
+    const std::string access_type[5] =
+        {
+            translate("unknown"),
+            translate("no"),         /* ACCESS_NONE */
+            translate("view-only"),  /* ACCESS_VIEW */
+            translate("regular"),    /* ACCESS_MOVE */
+            translate("modify")      /* ACCESS_MDFY */
+        };
+
+    if (access < 1 || access > 4)
+        access = 0;
+    return access_type[access];
+}
+
 /* Jump table for protocol handling */
 Comm::pkt_handler Comm::pkt_type[] =
 {
@@ -93,7 +109,7 @@ void Comm::create_socket(struct addrinfo *ai)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << _("Couldn't open socket: ") << err << " (" << errno << ")";
+        s << format(translate("Couldn't open socket: {1} ({2})")) % err % errno;
         throw std::runtime_error(s.str());
     }
     memcpy(&this->remote, ai->ai_addr, sizeof(sockaddr_storage));
@@ -185,8 +201,9 @@ void *Comm::send_worker(void *arg)
             char err[128];
 
             strerror_r(errno, err, sizeof(err));
-            std::clog << _("got a send error: ")
-                      << err << " (" << errno << ')' << std::endl;
+            std::clog << format(translate("Error sending packet: {1} ({2})"))
+                % err % errno
+                      << std::endl;
         }
         comm->send_queue.pop();
         pthread_mutex_unlock(&(comm->send_lock));
@@ -217,32 +234,36 @@ void *Comm::recv_worker(void *arg)
             char err[128];
 
             strerror_r(errno, err, sizeof(err));
-            std::clog << _("Error receiving packet: ")
-                      << err << " (" << errno << ')' << std::endl;
+            std::clog << format(translate("Error receiving packet: {1} ({2})"))
+                % err % errno
+                      << std::endl;
             continue;
         }
         /* Verify that the sender is who we think it should be */
         if (memcmp(&sin, &(comm->remote), fromlen))
         {
-            std::clog << _("Got packet from unknown sender") << std::endl;
+            std::clog << translate("Packet from unknown sender")
+                      << std::endl;
             continue;
         }
         /* Needs to be a real packet type */
         if (buf.basic.type >= sizeof(pkt_type) / sizeof(pkt_handler))
         {
-            std::clog << _("Unknown packet type ") << (int)buf.basic.type
+            std::clog << format(translate("Unknown packet type {1}"))
+                % (int)buf.basic.type
                       << std::endl;
             continue;
         }
         if (!comm->decrypt_packet(buf))
         {
-            std::clog << _("Error while decrypting packet") << std::endl;
+            std::clog << translate("Error decrypting packet")
+                      << std::endl;
             continue;
         }
         /* We should be able to convert to host byte ordering */
         if (!ntoh_packet(&buf, len))
         {
-            std::clog << _("Error while ntoh'ing packet") << std::endl;
+            std::clog << translate("Error ntoh'ing packet") << std::endl;
             continue;
         }
 
@@ -258,36 +279,24 @@ void Comm::handle_pngpkt(packet& p)
 
 void Comm::handle_ackpkt(packet& p)
 {
-    char access_type[5][12] =
-        {
-            "\0",
-            "ACCESS_NONE",
-            "ACCESS_VIEW",
-            "ACCESS_MOVE",
-            "ACCESS_MDFY"
-        };
     ack_packet& a = (ack_packet&)p.ack;
 
     switch (a.request)
     {
       case TYPE_LOGREQ:
         /* The response to our login request */
-        std::clog << _("Login response, access ");
-        if (a.misc[0] < 1 || a.misc[0] >= sizeof(access_type))
-            std::clog << _("unknown") << std::endl;
-        else
-            std::clog << access_type[a.misc[0]] << std::endl;
+        std::clog << format(translate("Login response, {1} access"))
+            % access_to_string(a.misc[0])
+                  << std::endl;
         this->src_object_id = a.misc[1];
         self_obj = &((*obj)[this->src_object_id]);
         break;
 
       case TYPE_LGTREQ:
         /* The response to our logout request */
-        std::clog << _("Logout response, access ");
-        if (a.misc[0] < 1 || a.misc[0] >= sizeof(access_type))
-            std::clog << _("unknown") << std::endl;
-        else
-            std::clog << access_type[a.misc[0]] << std::endl;
+        std::clog << format(translate("Logout response, {1} access"))
+            % access_to_string(a.misc[0])
+                  << std::endl;
         break;
 
       default:
@@ -328,13 +337,13 @@ void Comm::handle_srvkey(packet& p)
      */
     if ((pub = public_key_to_pkey(p.key.pubkey, R9_PUBKEY_SZ)) == NULL)
     {
-        std::clog << _("Got a bad public key") << std::endl;
+        std::clog << translate("Bad public key from server") << std::endl;
         return;
     }
     if ((shared = dh_shared_secret(config.priv_key, pub)) == NULL)
     {
         OPENSSL_free(pub);
-        std::clog << _("Could not derive shared secret") << std::endl;
+        std::clog << translate("Could not derive shared secret") << std::endl;
         return;
     }
     memcpy(this->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
@@ -345,7 +354,8 @@ void Comm::handle_srvkey(packet& p)
 
 void Comm::handle_unsupported(packet& p)
 {
-    std::clog << _("Got an unexpected packet type: ") << (int)p.basic.type
+    std::clog << format(translate("Unexpected packet type: {1}"))
+        % (int)p.basic.type
               << std::endl;
 }
 
@@ -366,7 +376,8 @@ void Comm::init(void)
 
         strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << _("Couldn't init queue mutex: ") << err << " (" << ret << ")";
+        s << format(translate("Couldn't init queue mutex: {1} ({2})"))
+            % err % ret;
         throw std::runtime_error(s.str());
     }
     if ((ret = pthread_cond_init(&send_queue_not_empty, NULL)) != 0)
@@ -375,8 +386,8 @@ void Comm::init(void)
 
         strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << _("Couldn't init queue-not-empty cond: ")
-          << err << " (" << ret << ")";
+        s << format(translate("Couldn't init queue-not-empty cond: {1} ({2})"))
+            % err % ret;
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
@@ -420,7 +431,8 @@ void Comm::start(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << _("Couldn't start send thread: ") << err << " (" << ret << ")";
+        s << format(translate("Couldn't start send thread: {1} ({2})"))
+            % err % ret;
         pthread_cond_destroy(&(this->send_queue_not_empty));
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
@@ -434,7 +446,8 @@ void Comm::start(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << _("Couldn't start recv thread: ") << err << " (" << ret << ")";
+        s << format(translate("Couldn't start receive thread: {1} ({2})"))
+            % err % ret;
         pthread_cancel(this->send_thread);
         sleep(0);
         pthread_join(this->send_thread, NULL);
@@ -461,8 +474,8 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << _("Couldn't wake send thread: ")
-              << err << " (" << ret << ")";
+            s << format(translate("Couldn't wake send thread: {1} ({2})"))
+                % err % ret;
             throw std::runtime_error(s.str());
         }
         sleep(0);
@@ -472,8 +485,8 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << _("Couldn't join send thread: ")
-              << err << " (" << ret << ")";
+            s << format(translate("Couldn't join send thread: {1} ({2})"))
+                % err % ret;
             throw std::runtime_error(s.str());
         }
         if ((ret = pthread_cancel(this->recv_thread)) != 0)
@@ -482,8 +495,8 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << _("Couldn't cancel recv thread: ")
-              << err << " (" << ret << ")";
+            s << format(translate("Couldn't cancel receive thread: {1} ({2})"))
+                % err % ret;
             throw std::runtime_error(s.str());
         }
         sleep(0);
@@ -493,8 +506,8 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << _("Couldn't join recv thread: ")
-              << err << " (" << ret << ")";
+            s << format(translate("Couldn't join receive thread: {1} ({2})"))
+                % err % ret;
             throw std::runtime_error(s.str());
         }
         this->threads_started = false;
@@ -506,12 +519,12 @@ void Comm::send(packet *p, size_t len)
     pthread_mutex_lock(&(this->send_lock));
     if (!hton_packet(p, len))
     {
-        std::clog << _("Error hton'ing packet") << std::endl;
+        std::clog << translate("Error hton'ing packet") << std::endl;
         delete p;
     }
     else if (!this->encrypt_packet(*p))
     {
-        std::clog << _("Error encrypting packet") << std::endl;
+        std::clog << translate("Error encrypting packet") << std::endl;
         delete p;
     }
     else

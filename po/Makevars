@@ -8,7 +8,10 @@ subdir = po
 top_builddir = ..
 
 # These options get passed to xgettext.
-XGETTEXT_OPTIONS = --keyword=_ --keyword=N_
+XGETTEXT_OPTIONS = --keyword=translate:1,1t --keyword=translate:1c,2,2t \
+         --keyword=translate:1,2,3t --keyword=translate:1c,2,3,4t       \
+         --keyword=gettext:1 --keyword=pgettext:1c,2                    \
+         --keyword=ngettext:1,2 --keyword=npgettext:1c,2,3
 
 # This is the copyright holder that gets inserted into the header of the
 # $(DOMAIN).pot file.  Set this to the copyright holder of the surrounding

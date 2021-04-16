@@ -8,20 +8,15 @@ if WANT_CLIENT
 SD += client
 SD_NO_TEST += client
 endif
-if WANT_LOCALES
-SD += po
+SD += po test
 SD_NO_TEST += po
-endif
-SD += test
 
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = $(SD)
 EXTRA_DIST = autogen.sh
 
-if WANT_LOCALES
 all-local:
 	$(MAKE) -C po update-po
-endif
 
 install-recursive: SUBDIRS = $(SD_NO_TEST)
 
