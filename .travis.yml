@@ -23,10 +23,10 @@ addons:
   apt:
     packages:
     - autopoint
-    - gettext
     - cmake
     - tcl8.6-dev
     - libboost-dev
+    - libboost-locale-dev
     - libgl1-mesa-dev
     - libglu1-mesa-dev
     - liblua5.2-dev

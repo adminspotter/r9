@@ -1,9 +1,9 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2020, 21:39:00 tquirk
+ *   last updated 13 Apr 2021, 08:08:26 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -179,7 +179,9 @@ void ConfigData::parse_command_line(int count, const char **args)
             else if ((*j) == "-f")
                 this->config_fname = *(++j);
             else
-                std::clog << _("WARNING: Unknown option ") << *j;
+                std::clog << format(translate("WARNING: Unknown option {1}"))
+                    % *j
+                          << std::endl;
         }
     }
     this->make_config_dirs();
@@ -207,8 +209,9 @@ void ConfigData::read_config_file(void)
         try { this->parse_config_line(str); }
         catch (std::out_of_range& e)
         {
-            std::clog << _("Skipping bad config line: ")
-                      << '"' << pristine_str << '"' << std::endl;
+            std::clog << format(translate("Skipping bad config line: \"{1}\""))
+                % pristine_str
+                      << std::endl;
         }
     }
 }
@@ -263,8 +266,9 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << _("Error creating r9 preferences directory ") << dirname << ": "
-          << err << " (" << errno << ")";
+        s << format(translate("Error creating r9 preferences "
+                              "directory {1}: {2} ({3})"))
+          % dirname % err % errno;
         throw std::runtime_error(s.str());
     }
 
@@ -276,8 +280,8 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << _("Can't make config directory ") << subdirname << ": "
-          << err << " (" << errno << ")";
+        s << format(translate("Can't make config directory {1}: {2} ({3})"))
+            % subdirname % err % errno;
         throw std::runtime_error(s.str());
     }
 
@@ -288,8 +292,8 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << _("Can't make config directory ") << subdirname << ": "
-          << err << " (" << errno << ")";
+        s << format(translate("Can't make config directory {1}: {2} ({3})"))
+            % subdirname % err % errno;
         throw std::runtime_error(s.str());
     }
 
@@ -300,8 +304,8 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << _("Can't make config directory ") << subdirname << ": "
-          << err << " (" << errno << ")";
+        s << format(translate("Can't make config directory {1}: {2} ({3})"))
+            % subdirname % err % errno;
         throw std::runtime_error(s.str());
     }
 }
@@ -376,7 +380,8 @@ static void read_paths(const std::string& key,
             char *home;
 
             if ((home = getenv("HOME")) == NULL)
-                throw std::runtime_error("Could not find home directory");
+                throw std::runtime_error(translate("Could not find "
+                                                   "home directory"));
             path.replace(pos, 1, home);
         }
         if (stat(path.c_str(), &state) != -1)

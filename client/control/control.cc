@@ -1,6 +1,6 @@
 /* control.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Jan 2021, 08:48:37 tquirk
+ *   last updated 13 Apr 2021, 08:21:34 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -40,6 +40,18 @@
 static std::string fname("");
 static void *lib = NULL;
 
+static std::string glob_error_to_string(int err)
+{
+    switch (err)
+    {
+      case 1:   return translate("Out of memory");
+      case 2:   return translate("Read error");
+      case 3:   return translate("No match found");
+      case 4:   return translate("Function not implemented");
+    }
+    return translate("Unknown error");
+}
+
 std::vector<std::string> control_factory::types(void)
 {
     int errno;
@@ -50,16 +62,8 @@ std::vector<std::string> control_factory::types(void)
     {
         std::ostringstream s;
 
-        s << _("Could not find control modules: ");
-        switch (errno)
-        {
-          case 1:   s << "Out of memory";             break;
-          case 2:   s << "Read error";                break;
-          case 3:   s << "No match found";            break;
-          case 4:   s << "Function not implemented";  break;
-          default:  s << "Unknown error";             break;
-        }
-        s << "(" << errno << ")";
+        s << format(translate("Could not find control modules: {1} ({2})"))
+            % glob_error_to_string(errno) % errno;
         throw std::runtime_error(s.str());
     }
     for (int i = 0; i < mods.gl_pathc; ++i)

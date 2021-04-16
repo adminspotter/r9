@@ -333,7 +333,6 @@ delete ui;
   AC_SUBST(CLIENT_LDLIBS)
 fi
 AM_CONDITIONAL([WANT_CLIENT], [test "x$with_client" = "xyes"])
-AM_CONDITIONAL([WANT_LOCALES], [test "x$want_locales" = "xyes"])
 
 if test "$with_server" = "yes"
 then
@@ -535,9 +534,43 @@ CPPFLAGS="$CXXFLAGS"
 AC_CHECK_HEADERS([openssl/evp.h openssl/ec.h], [], [AC_MSG_ERROR([no valid OpenSSL installation found, can not continue])])
 CPPFLAGS="$OPENSSL_CPPFLAGS_SAVE"
 
-# We're doing l10n in the client and the utils, so we'll always check it
-AC_CHECK_HEADERS([libintl.h], [want_locales="yes"])
-AC_CHECK_FUNCS([setlocale])
+# We're using boost::locale for locale handling, which should have an
+# include and a separate library
+LOCALE_CPPFLAGS_SAVE="$CPPFLAGS"
+CPPFLAGS="$CXXFLAGS"
+AC_CHECK_HEADERS([boost/locale.hpp], [], [AC_MSG_ERROR([no boost::locale headers found, can not continue])])
+CPPFLAGS="$LOCALE_CPPFLAGS_SAVE"
+LOCALE_LIBS_SAVE="$LIBS"
+LIBS="-lboost_locale"
+AC_MSG_CHECKING([for library containing boost::locale])
+AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM(
+        [
+#include <boost/locale.hpp>
+#include <iostream>
+        ],
+        [
+    boost::locale::generator gen;
+
+    gen.add_messages_path(".");
+    gen.add_messages_domain("hello");
+
+    std::locale::global(gen(""));
+    std::cout.imbue(std::locale());
+
+    std::cout << boost::locale::translate("Hello World") << std::endl;
+        ])
+    ],
+    [
+        AC_MSG_RESULT([$LIBS])
+        LOCALE_LDLIBS="$LIBS"
+    ],
+    [
+        AC_MSG_RESULT([no])
+        AC_MSG_ERROR([can not build without Boost locale libraries.])
+    ])
+LIBS="$LOCALE_LIBS_SAVE"
+AC_SUBST(LOCALE_LDLIBS)
 
 PTHREAD_LIBS_SAVE="$LIBS"
 LIBS=""

@@ -1,9 +1,9 @@
 /* r9_keygen.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 08:00:38 tquirk
+ *   last updated 13 Apr 2021, 20:30:48 tquirk
  *
  * Revision IX game utility
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -40,14 +40,8 @@
 #include <termios.h>
 #include <errno.h>
 
-#if WANT_LOCALES && HAVE_LIBINTL_H
-#include <libintl.h>
-#define _(x)  maketext(x)
-#else
-#define _(x)  x
-#endif /* WANT_LOCALES && HAVE_LIBINTL_H */
-
 #include <iostream>
+#include <boost/locale.hpp>
 
 #include <proto/key.h>
 #include <proto/ec.h>
@@ -58,6 +52,8 @@
 #ifndef SYSCONFDIR
 #define SYSCONFDIR "/etc"
 #endif /* SYSCONFDIR */
+
+using namespace boost::locale;
 
 bool do_client_key = false, do_server_key = false;
 std::string key_path;
@@ -96,7 +92,7 @@ void process_command_line(int argc, char **argv)
                 do_client_key = true;
             else
             {
-                std::cerr << _("Can't do both server and client keys.")
+                std::cerr << translate("Can't do both server and client keys.")
                           << std::endl;
                 exit(ARGPARSE_RETURN);
             }
@@ -106,7 +102,7 @@ void process_command_line(int argc, char **argv)
                 do_server_key = true;
             else
             {
-                std::cerr << _("Can't do both server and client keys.")
+                std::cerr << translate("Can't do both server and client keys.")
                           << std::endl;
                 exit(ARGPARSE_RETURN);
             }
@@ -116,11 +112,12 @@ void process_command_line(int argc, char **argv)
             break;
           case '?':
 #if !HAVE_GETOPT_LONG
-            std::cerr << _("Unknown option ") << (char)opt << std::endl;
+            std::cerr << format(translate("Unknown option {1}")) % (char)opt
+                      << std::endl;
 #endif /* !HAVE_GETOPT_LONG */
             exit(ARGPARSE_RETURN);
           default:
-            std::cerr << _("Error in argument parsing") << std::endl;
+            std::cerr << translate("Error in argument parsing") << std::endl;
             exit(ARGPARSE_RETURN);
         }
     }
@@ -140,7 +137,7 @@ void generate_key_path(void)
         else
             key_path = "./key";
     }
-    std::cout << _("Writing to ") << key_path << std::endl;
+    std::cout << format(translate("Writing to {1}")) % key_path << std::endl;
 }
 
 std::string ask_for_passphrase(void)
@@ -152,15 +149,15 @@ std::string ask_for_passphrase(void)
         struct termios t_old, t_new;
 
         if (passphrase.size() != 0 && passphrase != passphrase2)
-            std::cout << _("Passphrases do not match!") << std::endl;
-        std::cout << _("Enter passphrase: ");
+            std::cout << translate("Passphrases do not match!") << std::endl;
+        std::cout << translate("Enter passphrase: ");
         std::cout.flush();
         tcgetattr(STDIN_FILENO, &t_old);
         t_new = t_old;
         t_new.c_lflag &= ~(ICANON | ECHO);
         tcsetattr(STDIN_FILENO, TCSANOW, &t_new);
         std::cin >> passphrase;
-        std::cout << std::endl << _("Repeat passphrase: ");
+        std::cout << std::endl << translate("Repeat passphrase: ");
         std::cout.flush();
         std::cin >> passphrase2;
         tcsetattr(STDIN_FILENO, TCSANOW, &t_old);
@@ -186,8 +183,9 @@ void write_key(EVP_PKEY *key, std::string& key_fname, std::string& passphrase)
 
     if (pkey_to_file(key, key_fname.c_str(), pp) == 0)
     {
-        std::cerr << _("Could not write private key file: ")
-                  << strerror(errno) << "(" << errno << ")" << std::endl;
+        std::cerr << format(translate("Could not write private key "
+                                      "file: {1} ({2})"))
+            % strerror(errno) % errno << std::endl;
         exit(KEYGEN_RETURN);
     }
     if (do_client_key == true)

@@ -247,7 +247,7 @@ void test_start_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't start recv thread"), std::string::npos,
+        isnt(err.find("Couldn't start receive thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)
@@ -339,7 +339,7 @@ void test_stop_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't cancel recv thread"), std::string::npos,
+        isnt(err.find("Couldn't cancel receive thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)
@@ -359,7 +359,7 @@ void test_stop_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't join recv thread"), std::string::npos,
+        isnt(err.find("Couldn't join receive thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)

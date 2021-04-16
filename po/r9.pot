@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2019-07-25 09:20-0700\n"
+"POT-Creation-Date: 2021-04-16 15:52-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,170 +17,190 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: client/client.cc:81
-msgid "failed to initialize GLFW"
+#: client/client.cc:83
+msgid "Failed to initialize GLFW"
 msgstr ""
 
-#: client/comm.cc:102
-msgid "Couldn't open socket: "
-msgstr ""
-
-#: client/comm.cc:194
-msgid "got a send error: "
-msgstr ""
-
-#: client/comm.cc:226
-msgid "Error receiving packet: "
-msgstr ""
-
-#: client/comm.cc:233
-msgid "Got packet from unknown sender"
-msgstr ""
-
-#: client/comm.cc:239
-msgid "Unknown packet type "
-msgstr ""
-
-#: client/comm.cc:245
-msgid "Error while decrypting packet"
-msgstr ""
-
-#: client/comm.cc:251
-msgid "Error while ntoh'ing packet"
-msgstr ""
-
-#: client/comm.cc:281
-msgid "Login response, access "
-msgstr ""
-
-#: client/comm.cc:283 client/comm.cc:294
+#: client/comm.cc:75
 msgid "unknown"
 msgstr ""
 
-#: client/comm.cc:292
-msgid "Logout response, access "
+#: client/comm.cc:76
+msgid "no"
 msgstr ""
 
-#: client/comm.cc:300
-msgid "Got an unknown ack packet: "
+#: client/comm.cc:77
+msgid "view-only"
 msgstr ""
 
-#: client/comm.cc:336
-msgid "Got a bad public key"
+#: client/comm.cc:78
+msgid "regular"
 msgstr ""
 
-#: client/comm.cc:342
+#: client/comm.cc:79
+msgid "modify"
+msgstr ""
+
+#: client/comm.cc:112
+msgid "Couldn't open socket: {1} ({2})"
+msgstr ""
+
+#: client/comm.cc:204
+msgid "Error sending packet: {1} ({2})"
+msgstr ""
+
+#: client/comm.cc:237
+msgid "Error receiving packet: {1} ({2})"
+msgstr ""
+
+#: client/comm.cc:245
+msgid "Packet from unknown sender"
+msgstr ""
+
+#: client/comm.cc:252
+msgid "Unknown packet type {1}"
+msgstr ""
+
+#: client/comm.cc:259
+msgid "Error decrypting packet"
+msgstr ""
+
+#: client/comm.cc:266
+msgid "Error ntoh'ing packet"
+msgstr ""
+
+#: client/comm.cc:288
+msgid "Login response, {1} access"
+msgstr ""
+
+#: client/comm.cc:297
+msgid "Logout response, {1} access"
+msgstr ""
+
+#: client/comm.cc:340
+msgid "Bad public key from server"
+msgstr ""
+
+#: client/comm.cc:346
 msgid "Could not derive shared secret"
 msgstr ""
 
-#: client/comm.cc:353
-msgid "Got an unexpected packet type: "
+#: client/comm.cc:357
+msgid "Unexpected packet type: {1}"
 msgstr ""
 
-#: client/comm.cc:374
-msgid "Couldn't init queue mutex: "
+#: client/comm.cc:379
+msgid "Couldn't init queue mutex: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:383
-msgid "Couldn't init queue-not-empty cond: "
+#: client/comm.cc:389
+msgid "Couldn't init queue-not-empty cond: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:428
-msgid "Couldn't start send thread: "
+#: client/comm.cc:434
+msgid "Couldn't start send thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:442
-msgid "Couldn't start recv thread: "
+#: client/comm.cc:449
+msgid "Couldn't start receive thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:469
-msgid "Couldn't wake send thread: "
+#: client/comm.cc:477
+msgid "Couldn't wake send thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:480
-msgid "Couldn't join send thread: "
+#: client/comm.cc:488
+msgid "Couldn't join send thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:490
-msgid "Couldn't cancel recv thread: "
+#: client/comm.cc:498
+msgid "Couldn't cancel receive thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:501
-msgid "Couldn't join recv thread: "
+#: client/comm.cc:509
+msgid "Couldn't join receive thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:514
+#: client/comm.cc:522
 msgid "Error hton'ing packet"
 msgstr ""
 
-#: client/comm.cc:519
+#: client/comm.cc:527
 msgid "Error encrypting packet"
 msgstr ""
 
-#: client/comm_dialog.cc:72
+#: client/comm_dialog.cc:73
 msgid "Username"
 msgstr ""
 
-#: client/comm_dialog.cc:83
+#: client/comm_dialog.cc:86
 msgid "Password"
 msgstr ""
 
-#: client/comm_dialog.cc:92
+#: client/comm_dialog.cc:97
 msgid "Server"
 msgstr ""
 
-#: client/comm_dialog.cc:103
+#: client/comm_dialog.cc:110
 msgid "OK"
 msgstr ""
 
-#: client/comm_dialog.cc:111
+#: client/comm_dialog.cc:118
 msgid "Cancel"
 msgstr ""
 
-#: client/configdata.cc:185
-msgid "WARNING: Unknown option "
+#: client/comm_dialog.cc:153
+msgid "Couldn't find host {1}: {2} ({3})"
 msgstr ""
 
-#: client/configdata.cc:213
-msgid "Skipping bad config line: "
+#: client/configdata.cc:182
+msgid "WARNING: Unknown option {1}"
+msgstr ""
+
+#: client/configdata.cc:212
+msgid "Skipping bad config line: \"{1}\""
 msgstr ""
 
 #: client/configdata.cc:269
-msgid "Error creating r9 preferences directory "
+msgid "Error creating r9 preferences directory {1}: {2} ({3})"
 msgstr ""
 
-#: client/configdata.cc:282 client/configdata.cc:294 client/configdata.cc:306
-msgid "Can't make config directory "
+#: client/configdata.cc:283 client/configdata.cc:295 client/configdata.cc:307
+msgid "Can't make config directory {1}: {2} ({3})"
 msgstr ""
 
-#: util/r9_keygen.cc:113 util/r9_keygen.cc:123
+#: client/configdata.cc:383
+msgid "Could not find home directory"
+msgstr ""
+
+#: util/r9_keygen.cc:95 util/r9_keygen.cc:105
 msgid "Can't do both server and client keys."
 msgstr ""
 
-#: util/r9_keygen.cc:133
-msgid "Unknown option "
+#: util/r9_keygen.cc:115
+msgid "Unknown option {1}"
 msgstr ""
 
-#: util/r9_keygen.cc:137
+#: util/r9_keygen.cc:120
 msgid "Error in argument parsing"
 msgstr ""
 
-#: util/r9_keygen.cc:157
-msgid "Writing to "
+#: util/r9_keygen.cc:140
+msgid "Writing to {1}"
 msgstr ""
 
-#: util/r9_keygen.cc:169
+#: util/r9_keygen.cc:152
 msgid "Passphrases do not match!"
 msgstr ""
 
-#: util/r9_keygen.cc:170
+#: util/r9_keygen.cc:153
 msgid "Enter passphrase: "
 msgstr ""
 
-#: util/r9_keygen.cc:177
+#: util/r9_keygen.cc:160
 msgid "Repeat passphrase: "
 msgstr ""
 
-#: util/r9_keygen.cc:203
-msgid "Could not write private key file: "
+#: util/r9_keygen.cc:186
+msgid "Could not write private key file: {1} ({2})"
 msgstr ""
