@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2021-04-16 15:52-0700\n"
+"POT-Creation-Date: 2021-04-17 08:12-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,32 +17,37 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: client/client.cc:83
+#: client/client.cc:84
 msgid "Failed to initialize GLFW"
 msgstr ""
 
 #: client/comm.cc:75
+msgctxt "Access type"
 msgid "unknown"
 msgstr ""
 
 #: client/comm.cc:76
+msgctxt "Access type"
 msgid "no"
 msgstr ""
 
 #: client/comm.cc:77
+msgctxt "Access type"
 msgid "view-only"
 msgstr ""
 
 #: client/comm.cc:78
+msgctxt "Access type"
 msgid "regular"
 msgstr ""
 
 #: client/comm.cc:79
+msgctxt "Access type"
 msgid "modify"
 msgstr ""
 
 #: client/comm.cc:112
-msgid "Couldn't open socket: {1} ({2})"
+msgid "Error opening socket: {1} ({2})"
 msgstr ""
 
 #: client/comm.cc:204
@@ -57,7 +62,7 @@ msgstr ""
 msgid "Packet from unknown sender"
 msgstr ""
 
-#: client/comm.cc:252
+#: client/comm.cc:252 client/comm.cc:358
 msgid "Unknown packet type {1}"
 msgstr ""
 
@@ -82,50 +87,46 @@ msgid "Bad public key from server"
 msgstr ""
 
 #: client/comm.cc:346
-msgid "Could not derive shared secret"
+msgid "Could not derive shared secret with server"
 msgstr ""
 
-#: client/comm.cc:357
-msgid "Unexpected packet type: {1}"
+#: client/comm.cc:380
+msgid "Error initializing queue mutex: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:379
-msgid "Couldn't init queue mutex: {1} ({2})"
+#: client/comm.cc:390
+msgid "Error initializing queue-not-empty cond: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:389
-msgid "Couldn't init queue-not-empty cond: {1} ({2})"
+#: client/comm.cc:436
+msgid "Error starting send thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:434
-msgid "Couldn't start send thread: {1} ({2})"
+#: client/comm.cc:451
+msgid "Error starting receive thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:449
-msgid "Couldn't start receive thread: {1} ({2})"
+#: client/comm.cc:479
+msgid "Error waking send thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:477
-msgid "Couldn't wake send thread: {1} ({2})"
+#: client/comm.cc:490
+msgid "Error joining send thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:488
-msgid "Couldn't join send thread: {1} ({2})"
+#: client/comm.cc:500
+msgid "Error cancelling receive thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:498
-msgid "Couldn't cancel receive thread: {1} ({2})"
+#: client/comm.cc:511
+msgid "Error joining receive thread: {1} ({2})"
 msgstr ""
 
-#: client/comm.cc:509
-msgid "Couldn't join receive thread: {1} ({2})"
-msgstr ""
-
-#: client/comm.cc:522
+#: client/comm.cc:524
 msgid "Error hton'ing packet"
 msgstr ""
 
-#: client/comm.cc:527
+#: client/comm.cc:529
 msgid "Error encrypting packet"
 msgstr ""
 
@@ -153,32 +154,25 @@ msgstr ""
 msgid "Couldn't find host {1}: {2} ({3})"
 msgstr ""
 
-#: client/configdata.cc:182
-msgid "WARNING: Unknown option {1}"
+#: client/configdata.cc:182 util/r9_keygen.cc:115
+msgid "Unknown option {1}"
 msgstr ""
 
-#: client/configdata.cc:212
-msgid "Skipping bad config line: \"{1}\""
+#: client/configdata.cc:211
+msgid "Skipping bad config line \"{1}\""
 msgstr ""
 
-#: client/configdata.cc:269
-msgid "Error creating r9 preferences directory {1}: {2} ({3})"
+#: client/configdata.cc:268 client/configdata.cc:281 client/configdata.cc:293
+#: client/configdata.cc:305
+msgid "Error creating config directory {1}: {2} ({3})"
 msgstr ""
 
-#: client/configdata.cc:283 client/configdata.cc:295 client/configdata.cc:307
-msgid "Can't make config directory {1}: {2} ({3})"
-msgstr ""
-
-#: client/configdata.cc:383
+#: client/configdata.cc:381
 msgid "Could not find home directory"
 msgstr ""
 
 #: util/r9_keygen.cc:95 util/r9_keygen.cc:105
-msgid "Can't do both server and client keys."
-msgstr ""
-
-#: util/r9_keygen.cc:115
-msgid "Unknown option {1}"
+msgid "Can't do both server and client keys"
 msgstr ""
 
 #: util/r9_keygen.cc:120
@@ -202,5 +196,5 @@ msgid "Repeat passphrase: "
 msgstr ""
 
 #: util/r9_keygen.cc:186
-msgid "Could not write private key file: {1} ({2})"
+msgid "Error writing private key file: {1} ({2})"
 msgstr ""

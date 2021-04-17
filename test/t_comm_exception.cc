@@ -127,7 +127,7 @@ void test_socket_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't open socket"), std::string::npos,
+        isnt(err.find("Error opening socket"), std::string::npos,
              test + "correct error contents");
     }
     catch (...)
@@ -155,7 +155,7 @@ void test_mutex_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't init queue mutex"), std::string::npos,
+        isnt(err.find("Error initializing queue mutex"), std::string::npos,
              test + "correct error contents");
     }
     catch (...)
@@ -183,7 +183,8 @@ void test_cond_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't init queue-not-empty cond"), std::string::npos,
+        isnt(err.find("Error initializing queue-not-empty cond"),
+             std::string::npos,
              test + "correct error contents");
     }
     catch (...)
@@ -222,7 +223,7 @@ void test_start_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't start send thread"), std::string::npos,
+        isnt(err.find("Error starting send thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)
@@ -247,7 +248,7 @@ void test_start_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't start receive thread"), std::string::npos,
+        isnt(err.find("Error starting receive thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)
@@ -300,7 +301,7 @@ void test_stop_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't wake send thread"), std::string::npos,
+        isnt(err.find("Error waking send thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)
@@ -320,7 +321,7 @@ void test_stop_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't join send thread"), std::string::npos,
+        isnt(err.find("Error joining send thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)
@@ -339,7 +340,7 @@ void test_stop_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't cancel receive thread"), std::string::npos,
+        isnt(err.find("Error cancelling receive thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)
@@ -359,7 +360,7 @@ void test_stop_failure(void)
     {
         std::string err(e.what());
 
-        isnt(err.find("Couldn't join receive thread"), std::string::npos,
+        isnt(err.find("Error joining receive thread"), std::string::npos,
              test + st + "correct error contents");
     }
     catch (...)

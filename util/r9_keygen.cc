@@ -1,6 +1,6 @@
 /* r9_keygen.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2021, 20:30:48 tquirk
+ *   last updated 17 Apr 2021, 08:11:56 tquirk
  *
  * Revision IX game utility
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -92,7 +92,7 @@ void process_command_line(int argc, char **argv)
                 do_client_key = true;
             else
             {
-                std::cerr << translate("Can't do both server and client keys.")
+                std::cerr << translate("Can't do both server and client keys")
                           << std::endl;
                 exit(ARGPARSE_RETURN);
             }
@@ -102,7 +102,7 @@ void process_command_line(int argc, char **argv)
                 do_server_key = true;
             else
             {
-                std::cerr << translate("Can't do both server and client keys.")
+                std::cerr << translate("Can't do both server and client keys")
                           << std::endl;
                 exit(ARGPARSE_RETURN);
             }
@@ -183,7 +183,7 @@ void write_key(EVP_PKEY *key, std::string& key_fname, std::string& passphrase)
 
     if (pkey_to_file(key, key_fname.c_str(), pp) == 0)
     {
-        std::cerr << format(translate("Could not write private key "
+        std::cerr << format(translate("Error writing private key "
                                       "file: {1} ({2})"))
             % strerror(errno) % errno << std::endl;
         exit(KEYGEN_RETURN);
@@ -208,6 +208,13 @@ void write_key(EVP_PKEY *key, std::string& key_fname, std::string& passphrase)
 int main(int argc, char **argv)
 {
     std::string passphrase;
+    generator gen;
+
+    gen.add_messages_path(LOCALE_DIR);
+    gen.add_messages_domain(PACKAGE);
+    std::locale::global(gen(""));
+    std::cout.imbue(std::locale());
+    std::cerr.imbue(std::locale());
 
     show_banner();
     process_command_line(argc, argv);

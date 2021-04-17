@@ -269,7 +269,7 @@ void test_parse_command_line(void)
     expected = tmpdir + "/fake.conf";
     is(conf->config_fname, expected, test + "expected config fname");
 
-    is(new_clog.str(), "WARNING: Unknown option -q\n",
+    is(new_clog.str(), "Unknown option -q\n",
        test + "expected warning");
     std::clog.rdbuf(old_clog_rdbuf);
 

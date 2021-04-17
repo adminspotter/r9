@@ -1,6 +1,6 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2021, 08:08:26 tquirk
+ *   last updated 17 Apr 2021, 08:11:19 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -179,8 +179,7 @@ void ConfigData::parse_command_line(int count, const char **args)
             else if ((*j) == "-f")
                 this->config_fname = *(++j);
             else
-                std::clog << format(translate("WARNING: Unknown option {1}"))
-                    % *j
+                std::clog << format(translate("Unknown option {1}")) % *j
                           << std::endl;
         }
     }
@@ -209,7 +208,7 @@ void ConfigData::read_config_file(void)
         try { this->parse_config_line(str); }
         catch (std::out_of_range& e)
         {
-            std::clog << format(translate("Skipping bad config line: \"{1}\""))
+            std::clog << format(translate("Skipping bad config line \"{1}\""))
                 % pristine_str
                       << std::endl;
         }
@@ -266,8 +265,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << format(translate("Error creating r9 preferences "
-                              "directory {1}: {2} ({3})"))
+        s << format(translate("Error creating config directory {1}: {2} ({3})"))
           % dirname % err % errno;
         throw std::runtime_error(s.str());
     }
@@ -280,7 +278,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << format(translate("Can't make config directory {1}: {2} ({3})"))
+        s << format(translate("Error creating config directory {1}: {2} ({3})"))
             % subdirname % err % errno;
         throw std::runtime_error(s.str());
     }
@@ -292,7 +290,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << format(translate("Can't make config directory {1}: {2} ({3})"))
+        s << format(translate("Error creating config directory {1}: {2} ({3})"))
             % subdirname % err % errno;
         throw std::runtime_error(s.str());
     }
@@ -304,7 +302,7 @@ void ConfigData::make_config_dirs(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << format(translate("Can't make config directory {1}: {2} ({3})"))
+        s << format(translate("Error creating config directory {1}: {2} ({3})"))
             % subdirname % err % errno;
         throw std::runtime_error(s.str());
     }

@@ -1,6 +1,6 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Apr 2021, 15:52:29 tquirk
+ *   last updated 17 Apr 2021, 08:09:34 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -72,11 +72,11 @@ static const std::string access_to_string(int access)
 {
     const std::string access_type[5] =
         {
-            translate("unknown"),
-            translate("no"),         /* ACCESS_NONE */
-            translate("view-only"),  /* ACCESS_VIEW */
-            translate("regular"),    /* ACCESS_MOVE */
-            translate("modify")      /* ACCESS_MDFY */
+            translate("Access type", "unknown"),
+            translate("Access type", "no"),         /* ACCESS_NONE */
+            translate("Access type", "view-only"),  /* ACCESS_VIEW */
+            translate("Access type", "regular"),    /* ACCESS_MOVE */
+            translate("Access type", "modify")      /* ACCESS_MDFY */
         };
 
     if (access < 1 || access > 4)
@@ -109,7 +109,7 @@ void Comm::create_socket(struct addrinfo *ai)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << format(translate("Couldn't open socket: {1} ({2})")) % err % errno;
+        s << format(translate("Error opening socket: {1} ({2})")) % err % errno;
         throw std::runtime_error(s.str());
     }
     memcpy(&this->remote, ai->ai_addr, sizeof(sockaddr_storage));
@@ -343,7 +343,8 @@ void Comm::handle_srvkey(packet& p)
     if ((shared = dh_shared_secret(config.priv_key, pub)) == NULL)
     {
         OPENSSL_free(pub);
-        std::clog << translate("Could not derive shared secret") << std::endl;
+        std::clog << translate("Could not derive shared secret with server")
+                  << std::endl;
         return;
     }
     memcpy(this->key, shared->message, R9_SYMMETRIC_KEY_BUF_SZ);
@@ -354,7 +355,7 @@ void Comm::handle_srvkey(packet& p)
 
 void Comm::handle_unsupported(packet& p)
 {
-    std::clog << format(translate("Unexpected packet type: {1}"))
+    std::clog << format(translate("Unknown packet type {1}"))
         % (int)p.basic.type
               << std::endl;
 }
@@ -376,7 +377,7 @@ void Comm::init(void)
 
         strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << format(translate("Couldn't init queue mutex: {1} ({2})"))
+        s << format(translate("Error initializing queue mutex: {1} ({2})"))
             % err % ret;
         throw std::runtime_error(s.str());
     }
@@ -386,7 +387,8 @@ void Comm::init(void)
 
         strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << format(translate("Couldn't init queue-not-empty cond: {1} ({2})"))
+        s << format(translate("Error initializing queue-not-empty cond: "
+                              "{1} ({2})"))
             % err % ret;
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
@@ -431,7 +433,7 @@ void Comm::start(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << format(translate("Couldn't start send thread: {1} ({2})"))
+        s << format(translate("Error starting send thread: {1} ({2})"))
             % err % ret;
         pthread_cond_destroy(&(this->send_queue_not_empty));
         pthread_mutex_destroy(&(this->send_lock));
@@ -446,7 +448,7 @@ void Comm::start(void)
         char err[128];
 
         strerror_r(errno, err, sizeof(err));
-        s << format(translate("Couldn't start receive thread: {1} ({2})"))
+        s << format(translate("Error starting receive thread: {1} ({2})"))
             % err % ret;
         pthread_cancel(this->send_thread);
         sleep(0);
@@ -474,7 +476,7 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << format(translate("Couldn't wake send thread: {1} ({2})"))
+            s << format(translate("Error waking send thread: {1} ({2})"))
                 % err % ret;
             throw std::runtime_error(s.str());
         }
@@ -485,7 +487,7 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << format(translate("Couldn't join send thread: {1} ({2})"))
+            s << format(translate("Error joining send thread: {1} ({2})"))
                 % err % ret;
             throw std::runtime_error(s.str());
         }
@@ -495,7 +497,7 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << format(translate("Couldn't cancel receive thread: {1} ({2})"))
+            s << format(translate("Error cancelling receive thread: {1} ({2})"))
                 % err % ret;
             throw std::runtime_error(s.str());
         }
@@ -506,7 +508,7 @@ void Comm::stop(void)
             char err[128];
 
             strerror_r(ret, err, sizeof(err));
-            s << format(translate("Couldn't join receive thread: {1} ({2})"))
+            s << format(translate("Error joining receive thread: {1} ({2})"))
                 % err % ret;
             throw std::runtime_error(s.str());
         }
