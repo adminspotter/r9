@@ -72,11 +72,11 @@ static const std::string access_to_string(int access)
 {
     const std::string access_type[5] =
         {
-            translate("unknown"),
-            translate("no"),         /* ACCESS_NONE */
-            translate("view-only"),  /* ACCESS_VIEW */
-            translate("regular"),    /* ACCESS_MOVE */
-            translate("modify")      /* ACCESS_MDFY */
+            translate("Access type", "unknown"),
+            translate("Access type", "no"),         /* ACCESS_NONE */
+            translate("Access type", "view-only"),  /* ACCESS_VIEW */
+            translate("Access type", "regular"),    /* ACCESS_MOVE */
+            translate("Access type", "modify")      /* ACCESS_MDFY */
         };
 
     if (access < 1 || access > 4)

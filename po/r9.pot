@@ -22,22 +22,27 @@ msgid "Failed to initialize GLFW"
 msgstr ""
 
 #: client/comm.cc:75
+msgctxt "Access type"
 msgid "unknown"
 msgstr ""
 
 #: client/comm.cc:76
+msgctxt "Access type"
 msgid "no"
 msgstr ""
 
 #: client/comm.cc:77
+msgctxt "Access type"
 msgid "view-only"
 msgstr ""
 
 #: client/comm.cc:78
+msgctxt "Access type"
 msgid "regular"
 msgstr ""
 
 #: client/comm.cc:79
+msgctxt "Access type"
 msgid "modify"
 msgstr ""
 
