@@ -278,7 +278,7 @@ void test_send_bad_send(void)
         ;
     delete comm;
 
-    isnt(new_clog.str().find("got a send error:"),
+    isnt(new_clog.str().find("Error sending packet:"),
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());
@@ -484,7 +484,7 @@ void test_recv_bad_sender(void)
         ;
     delete comm;
 
-    isnt(new_clog.str().find("Got packet from unknown sender"),
+    isnt(new_clog.str().find("Packet from unknown sender"),
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());
@@ -571,7 +571,7 @@ void test_recv_no_decrypt(void)
         ;
     delete comm;
 
-    isnt(new_clog.str().find("Error while decrypting packet"),
+    isnt(new_clog.str().find("Error decrypting packet"),
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());
@@ -615,7 +615,7 @@ void test_recv_no_ntoh(void)
         ;
     delete comm;
 
-    isnt(new_clog.str().find("Error while ntoh'ing packet"),
+    isnt(new_clog.str().find("Error ntoh'ing packet"),
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());
@@ -714,14 +714,14 @@ void test_recv_ack(void)
     expected_packet.ack.misc[1] = 12345;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Login response, access ACCESS_NONE"),
+    isnt(new_clog.str().find("Login response, no access"),
          std::string::npos,
          test + st + "good access: expected log entry");
 
     expected_packet.ack.misc[0] = 12345;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Login response, access unknown"),
+    isnt(new_clog.str().find("Login response, unknown access"),
          std::string::npos,
          test + st + "bad access: expected log entry");
 
@@ -731,14 +731,14 @@ void test_recv_ack(void)
     expected_packet.ack.misc[0] = ACCESS_NONE;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Logout response, access ACCESS_NONE"),
+    isnt(new_clog.str().find("Logout response, no access"),
          std::string::npos,
          test + st + "good access: expected log entry");
 
     expected_packet.ack.misc[0] = 12345;
 
     comm->handle_ackpkt(expected_packet);
-    isnt(new_clog.str().find("Logout response, access unknown"),
+    isnt(new_clog.str().find("Logout response, unknown access"),
          std::string::npos,
          test + st + "bad access: expected log entry");
 
@@ -847,7 +847,7 @@ void test_recv_server_key(void)
 
     comm->handle_srvkey(expected_packet);
 
-    isnt(new_clog.str().find("Got a bad public key"),
+    isnt(new_clog.str().find("Bad public key from server"),
          std::string::npos,
          test + st + "expected log entry");
     new_clog.str(std::string());
@@ -894,7 +894,7 @@ void test_recv_unsupported(void)
     comm->handle_unsupported(expected_packet);
     delete comm;
 
-    isnt(new_clog.str().find("Got an unexpected packet type: 123"),
+    isnt(new_clog.str().find("Unexpected packet type: 123"),
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());

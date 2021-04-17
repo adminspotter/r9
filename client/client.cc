@@ -1,9 +1,9 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Dec 2020, 07:31:30 tquirk
+ *   last updated 12 Apr 2021, 22:26:16 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 
     if (glfwInit() == GL_FALSE)
     {
-        std::cout << _("failed to initialize GLFW") << std::endl;
+        std::cout << translate("Failed to initialize GLFW") << std::endl;
         return -1;
     }
     glfwSetErrorCallback(error_callback);

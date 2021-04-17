@@ -1,9 +1,9 @@
 /* l10n.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Nov 2015, 10:11:13 tquirk
+ *   last updated 12 Apr 2021, 22:07:13 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2014  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,13 +30,8 @@
 #ifndef __INC_L10N_H__
 #define __INC_L10N_H__
 
-#include <config.h>
+#include <boost/locale.hpp>
 
-#if WANT_LOCALES && HAVE_LIBINTL_H
-#include <libintl.h>
-#define _(x)  maketext(x)
-#else
-#define _(x)  x
-#endif /* WANT_LOCALES && HAVE_LIBINTL_H */
+using namespace boost::locale;
 
 #endif /* __INC_L10N_H__ */

@@ -1,20 +1,16 @@
 language: cpp
-matrix:
+jobs:
   include:
     - os: linux
-      sudo: required
       dist: trusty
       compiler: clang
     - os: linux
-      sudo: required
       dist: trusty
       compiler: gcc
     - os: linux
-      sudo: required
       dist: xenial
       compiler: clang
     - os: linux
-      sudo: required
       dist: xenial
       compiler: gcc
 addons:
@@ -23,10 +19,10 @@ addons:
   apt:
     packages:
     - autopoint
-    - gettext
     - cmake
     - tcl8.6-dev
     - libboost-dev
+    - libboost-locale-dev
     - libgl1-mesa-dev
     - libglu1-mesa-dev
     - liblua5.2-dev

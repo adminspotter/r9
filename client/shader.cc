@@ -1,9 +1,9 @@
 /* shader.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 26 Nov 2017, 10:39:29 tquirk
+ *   last updated 13 Apr 2021, 08:05:36 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -51,7 +51,7 @@ GLuint load_shader(GLenum type, const std::string& file)
     {
         std::ostringstream s;
 
-        s << _("could not open file ") << file;
+        s << format(translate("could not open file {1}")) % file;
         throw std::runtime_error(s.str());
     }
     infile.seekg(0, std::ios::end);
@@ -74,7 +74,8 @@ GLuint create_shader(GLenum type, const std::string& src)
 
     if (shader == 0)
     {
-        s << _("could not create shader: ") << GLenum_to_string(glGetError());
+        s << format(translate("Could not create shader: {1}"))
+            % GLenum_to_string(glGetError());
         throw std::runtime_error(s.str());
     }
 
@@ -117,8 +118,8 @@ GLuint create_program(GLuint vert, GLuint geom, GLuint frag, const char *out)
 
     if (pgm == 0)
     {
-        s << _("could not create GL program: ")
-          << GLenum_to_string(glGetError());
+        s << format(translate("Could not create GL program: {1}"))
+            % GLenum_to_string(glGetError());
         throw std::runtime_error(s.str());
     }
 
@@ -131,8 +132,8 @@ GLuint create_program(GLuint vert, GLuint geom, GLuint frag, const char *out)
         glAttachShader(pgm, frag);
     if ((err = glGetError()) != GL_NO_ERROR)
     {
-        s << _("Could not attach shaders to the shader program: ")
-          << GLenum_to_string(err);
+        s << format(translate("Could not attach shaders to program: {1}"))
+            % GLenum_to_string(err);
         glDeleteProgram(pgm);
         throw std::runtime_error(s.str());
     }
