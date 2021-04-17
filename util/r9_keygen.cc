@@ -92,7 +92,7 @@ void process_command_line(int argc, char **argv)
                 do_client_key = true;
             else
             {
-                std::cerr << translate("Can't do both server and client keys.")
+                std::cerr << translate("Can't do both server and client keys")
                           << std::endl;
                 exit(ARGPARSE_RETURN);
             }
@@ -102,7 +102,7 @@ void process_command_line(int argc, char **argv)
                 do_server_key = true;
             else
             {
-                std::cerr << translate("Can't do both server and client keys.")
+                std::cerr << translate("Can't do both server and client keys")
                           << std::endl;
                 exit(ARGPARSE_RETURN);
             }
@@ -183,7 +183,7 @@ void write_key(EVP_PKEY *key, std::string& key_fname, std::string& passphrase)
 
     if (pkey_to_file(key, key_fname.c_str(), pp) == 0)
     {
-        std::cerr << format(translate("Could not write private key "
+        std::cerr << format(translate("Error writing private key "
                                       "file: {1} ({2})"))
             % strerror(errno) % errno << std::endl;
         exit(KEYGEN_RETURN);

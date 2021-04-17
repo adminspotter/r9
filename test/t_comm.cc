@@ -894,7 +894,7 @@ void test_recv_unsupported(void)
     comm->handle_unsupported(expected_packet);
     delete comm;
 
-    isnt(new_clog.str().find("Unexpected packet type: 123"),
+    isnt(new_clog.str().find("Unknown packet type 123"),
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());
