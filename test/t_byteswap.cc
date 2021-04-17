@@ -10,7 +10,7 @@ void test_bad_type(void)
     packet p;
 
     p.basic.type = 99;
-    p.basic.version = 1;
+    p.basic.version = R9_PROTO_VER;
     p.basic.sequence = 1234LL;
 
     is(hton_packet(&p, sizeof(basic_packet)), 0,
@@ -26,7 +26,7 @@ void test_ack_packet(void)
     packet p;
 
     p.ack.type = TYPE_ACKPKT;
-    p.ack.version = 1;
+    p.ack.version = R9_PROTO_VER;
     p.ack.sequence = 1234LL;
     p.ack.request = 42;
     p.ack.misc[0] = 2345LL;
@@ -52,7 +52,7 @@ void test_login_request(void)
     packet p;
 
     p.log.type = TYPE_LOGREQ;
-    p.log.version = 1;
+    p.log.version = R9_PROTO_VER;
     p.log.sequence = 1234LL;
 
     is(is_login_request(&p), 1, test + "is a logreq");
@@ -73,7 +73,7 @@ void test_action_request(void)
     packet p;
 
     p.act.type = TYPE_ACTREQ;
-    p.act.version = 1;
+    p.act.version = R9_PROTO_VER;
     p.act.sequence = 1234LL;
     p.act.object_id = 12345LL;
     p.act.action_id = 123;
@@ -103,8 +103,9 @@ void test_position_update(void)
     packet p;
 
     p.pos.type = TYPE_POSUPD;
-    p.pos.version = 1;
+    p.pos.version = R9_PROTO_VER;
     p.pos.sequence = 1234LL;
+    p.pos.object_id = 2345LL;
     p.pos.frame_number = 123;
     p.pos.x_pos = 1LL;
     p.pos.y_pos = 2LL;
@@ -135,7 +136,7 @@ void test_server_notice(void)
     packet p;
 
     p.srv.type = TYPE_SRVNOT;
-    p.srv.version = 1;
+    p.srv.version = R9_PROTO_VER;
     p.srv.sequence = 1234LL;
     p.srv.ipproto = 6;
     p.srv.port = 123;
@@ -159,7 +160,7 @@ void test_ping_packet(void)
     packet p;
 
     p.basic.type = TYPE_PNGPKT;
-    p.basic.version = 1;
+    p.basic.version = R9_PROTO_VER;
     p.basic.sequence = 1234LL;
 
     is(is_ping_packet(&p), 1, test + "is a pngpkt");
@@ -180,7 +181,7 @@ void test_server_key(void)
     packet p;
 
     p.key.type = TYPE_SRVKEY;
-    p.key.version = 1;
+    p.key.version = R9_PROTO_VER;
     p.key.sequence = 1234LL;
 
     is(is_server_key(&p), 1, test + "is a srvkey");
@@ -195,9 +196,31 @@ void test_server_key(void)
        test + "good size succeeds hton");
 }
 
+void test_object_delete(void)
+{
+    std::string test = "object delete: ";
+    packet p;
+
+    p.del.type = TYPE_OBJDEL;
+    p.del.version = R9_PROTO_VER;
+    p.del.sequence = 1234LL;
+    p.del.object_id = 2345LL;
+
+    is(is_object_delete(&p), 1, test + "is an objdel");
+
+    is(ntoh_packet(&p, sizeof(object_delete) - 1), 0,
+       test + "bad size fails ntoh");
+    is(ntoh_packet(&p, sizeof(object_delete)), 1,
+       test + "good size succeeds ntoh");
+    is(hton_packet(&p, sizeof(object_delete) - 1), 0,
+       test + "bad size fails hton");
+    is(hton_packet(&p, sizeof(object_delete)), 1,
+       test + "good size succeeds hton");
+}
+
 int main(int argc, char **argv)
 {
-    plan(38);
+    plan(43);
 
     test_bad_type();
     test_ack_packet();
@@ -207,5 +230,6 @@ int main(int argc, char **argv)
     test_server_notice();
     test_ping_packet();
     test_server_key();
+    test_object_delete();
     return exit_status();
 }

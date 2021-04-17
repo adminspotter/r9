@@ -542,7 +542,7 @@ void Comm::send_login(const std::string& user,
 
     memset(req, 0, sizeof(packet));
     req->log.type = TYPE_LOGREQ;
-    req->log.version = 1;
+    req->log.version = R9_PROTO_VER;
     req->log.sequence = this->sequence++;
     strncpy(req->log.username, user.c_str(), sizeof(req->log.username));
     strncpy(req->log.charname, character.c_str(), sizeof(req->log.charname));
@@ -558,7 +558,7 @@ void Comm::send_action_request(uint16_t actionid,
 
     memset(req, 0, sizeof(packet));
     req->act.type = TYPE_ACTREQ;
-    req->act.version = 1;
+    req->act.version = R9_PROTO_VER;
     req->act.sequence = sequence++;
     req->act.object_id = this->src_object_id;
     req->act.action_id = actionid;
@@ -575,7 +575,7 @@ void Comm::send_action_request(uint16_t actionid,
 
     memset(req, 0, sizeof(packet));
     req->act.type = TYPE_ACTREQ;
-    req->act.version = 1;
+    req->act.version = R9_PROTO_VER;
     req->act.sequence = sequence++;
     req->act.object_id = this->src_object_id;
     req->act.action_id = actionid;
@@ -592,7 +592,7 @@ void Comm::send_logout(void)
 
     memset(req, 0, sizeof(packet));
     req->basic.type = TYPE_LGTREQ;
-    req->basic.version = 1;
+    req->basic.version = R9_PROTO_VER;
     req->basic.sequence = sequence++;
     this->send(req, sizeof(basic_packet));
 }
@@ -603,7 +603,7 @@ void Comm::send_ack(uint8_t type)
 
     memset(req, 0, sizeof(packet));
     req->ack.type = TYPE_ACKPKT;
-    req->ack.version = 1;
+    req->ack.version = R9_PROTO_VER;
     req->ack.sequence = sequence++;
     req->ack.request = type;
     this->send(req, sizeof(ack_packet));

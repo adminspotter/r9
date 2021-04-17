@@ -182,7 +182,7 @@ void test_send_bad_hton(void)
 
     memset((void *)pkt, 0, sizeof(packet));
     pkt->basic.type = TYPE_PNGPKT;
-    pkt->basic.version = 1;
+    pkt->basic.version = R9_PROTO_VER;
 
     bad_hton = true;
     bad_encrypt = false;
@@ -219,7 +219,7 @@ void test_send_bad_encrypt(void)
 
     memset((void *)pkt, 0, sizeof(packet));
     pkt->basic.type = TYPE_ACTREQ;
-    pkt->basic.version = 1;
+    pkt->basic.version = R9_PROTO_VER;
 
     bad_hton = false;
     bad_encrypt = true;
@@ -256,7 +256,7 @@ void test_send_bad_send(void)
 
     memset((void *)pkt, 0, sizeof(packet));
     pkt->basic.type = TYPE_PNGPKT;
-    pkt->basic.version = 1;
+    pkt->basic.version = R9_PROTO_VER;
 
     bad_hton = false;
     bad_encrypt = false;
@@ -293,7 +293,7 @@ void test_send_packet(void)
 
     memset((void *)pkt, 0, sizeof(packet));
     pkt->basic.type = TYPE_PNGPKT;
-    pkt->basic.version = 1;
+    pkt->basic.version = R9_PROTO_VER;
 
     try
     {
@@ -428,7 +428,7 @@ void test_recv_bad_result(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     recvfrom_error = true;
     bad_sender = false;
@@ -462,7 +462,7 @@ void test_recv_bad_sender(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     recvfrom_error = false;
     bad_sender = true;
@@ -506,7 +506,7 @@ void test_recv_bad_packet(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     recvfrom_error = false;
     bad_sender = false;
@@ -549,7 +549,7 @@ void test_recv_no_decrypt(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_ACKPKT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     recvfrom_error = false;
     bad_sender = false;
@@ -593,7 +593,7 @@ void test_recv_no_ntoh(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_ACKPKT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     recvfrom_error = false;
     bad_sender = false;
@@ -637,7 +637,7 @@ void test_recv_packet(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_SRVNOT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     recvfrom_error = false;
     bad_sender = false;
@@ -672,7 +672,7 @@ void test_recv_ping(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     try
     {
@@ -696,7 +696,7 @@ void test_recv_ack(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_ACKPKT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     try
     {
@@ -771,7 +771,7 @@ void test_recv_pos_update(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_POSUPD;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
     expected_packet.pos.x_pos = 12;
     expected_packet.pos.y_pos = 34;
     expected_packet.pos.z_pos = 56;
@@ -804,7 +804,7 @@ void test_recv_server_notice(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_SRVNOT;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     try
     {
@@ -830,7 +830,7 @@ void test_recv_server_key(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_SRVKEY;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     try
     {
@@ -881,7 +881,7 @@ void test_recv_unsupported(void)
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = 123;
-    expected_packet.basic.version = 1;
+    expected_packet.basic.version = R9_PROTO_VER;
 
     try
     {

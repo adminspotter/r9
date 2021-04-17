@@ -1,6 +1,6 @@
 /* game_obj.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Mar 2021, 09:04:26 tquirk
+ *   last updated 13 Mar 2021, 09:24:35 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -45,6 +45,8 @@
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/quaternion.hpp>
+
+#include "../../proto/proto.h"
 
 class GameObject;
 
@@ -130,6 +132,8 @@ class GameObject
 
     void move_and_rotate(void);
     bool still_moving(void);
+
+    void generate_update_packet(packet& pkt);
 };
 
 #endif /* __INC_GAME_OBJ_H__ */
