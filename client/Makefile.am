@@ -6,6 +6,7 @@ SUBDIRS += control
 
 bin_PROGRAMS = r9client
 
+localedir = @datadir@/locale
 shaderdir = @datadir@/$(PACKAGE)/shaders
 
 r9client_SOURCES = client.cc client.h \
@@ -16,8 +17,9 @@ r9client_SOURCES = client.cc client.h \
 	log_display.cc log_display.h \
 	comm_dialog.cc \
 	object.h l10n.h cuddly-gl/connect_glfw.cc control/control.cc
-r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) $(LOCALE_DIR) \
+r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \
 	$(X11_DEFS) \
+	-DLOCALE_DIR=\"$(localedir)\" \
 	-DCLIENT_LIB_DIR=\"$(pkglibdir)/client\" \
 	-DSHADER_SRC_PATH=\"$(shaderdir)\" \
 	-DGL_GLEXT_PROTOTYPES

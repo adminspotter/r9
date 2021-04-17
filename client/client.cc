@@ -1,6 +1,6 @@
 /* client.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Apr 2021, 22:26:16 tquirk
+ *   last updated 16 Apr 2021, 23:27:16 tquirk
  *
  * Revision IX game client
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -61,11 +61,12 @@ control *controller = NULL;
 
 int main(int argc, char **argv)
 {
-#if WANT_LOCALES && HAVE_LIBINTL_H
-    setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE, LOCALE_DIR);
-    textdomain(PACKAGE);
-#endif /* WANT_LOCALES && HAVE_LIBINTL_H */
+    generator gen;
+
+    gen.add_messages_path(LOCALE_DIR);
+    gen.add_messages_domain(PACKAGE);
+    std::locale::global(gen(""));
+    std::cerr.imbue(std::locale());
 
 #if OPENSSL_API_COMPAT < 0x10100000
     /* If our OpenSSL is old enough, it does not automatically
