@@ -1,9 +1,9 @@
 /* db.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 20 Sep 2019, 09:08:04 tquirk
+ *   last updated 02 Oct 2021, 09:06:23 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -40,6 +40,7 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <system_error>
 
 #include "db.h"
 
@@ -51,12 +52,9 @@ void DB::get_host_address(void)
 
     if ((ret = gethostname(hostname, sizeof(hostname))) != 0)
     {
-        std::ostringstream s;
-        char err[128];
+        std::string s("couldn't get hostname");
 
-        strerror_r(errno, err, sizeof(err));
-        s << "couldn't get hostname: " << err << " (" << errno << ")";
-        throw std::runtime_error(s.str());
+        throw std::system_error(ret, std::generic_category(), s);
     }
     if ((ret = getaddrinfo(hostname, NULL, NULL, &info)) != 0)
     {
@@ -72,12 +70,9 @@ void DB::get_host_address(void)
                   this->host_ip, INET6_ADDRSTRLEN) == NULL)
     {
         std::ostringstream s;
-        char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << "couldn't convert IP for " << hostname << " into a string: "
-          << err << " (" << errno << ")";
-        throw std::runtime_error(s.str());
+        s << "couldn't convert IP for " << hostname << " into a string";
+        throw std::system_error(errno, std::generic_category(), s.str());
     }
     freeaddrinfo(info);
 }

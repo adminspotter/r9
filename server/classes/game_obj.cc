@@ -1,6 +1,6 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Mar 2021, 23:22:51 tquirk
+ *   last updated 29 Sep 2021, 22:37:16 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -32,7 +32,7 @@
 
 #include <algorithm>
 #include <sstream>
-#include <stdexcept>
+#include <system_error>
 
 #include "game_obj.h"
 #include "zone.h"
@@ -98,13 +98,9 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
     if (pthread_rwlock_init(&this->movement_lock, &lock_init))
     {
         std::ostringstream s;
-        char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << "couldn't init game obj lock for "
-          << this->id_value << ": "
-          << err << " (" << errno << ")";
-        throw std::runtime_error(s.str());
+        s << "couldn't init game obj lock for " << this->id_value;
+        throw std::system_error(errno, std::generic_category(), s.str());
     }
 }
 

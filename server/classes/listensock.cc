@@ -1,6 +1,6 @@
 /* listensock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Mar 2021, 23:23:08 tquirk
+ *   last updated 27 Sep 2021, 08:52:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2021  Trinity Annabelle Quirk
@@ -30,15 +30,12 @@
  *
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-
 #include <openssl/crypto.h>
 #include <proto/dh.h>
 #include <proto/ec.h>
 
 #include <sstream>
+#include <system_error>
 
 #include "listensock.h"
 #include "zone.h"
@@ -279,14 +276,11 @@ void listen_socket::start(void)
                                  reaper_worker, (void *)this)) != 0)
     {
         std::ostringstream s;
-        char err[128];
 
-        strerror_r(retval, err, sizeof(err));
         s << "couldn't create reaper thread for "
           << this->port_type() << " port "
-          << this->sock.sa->port() << ": "
-          << err << " (" << retval << ")";
-        throw std::runtime_error(s.str());
+          << this->sock.sa->port();
+        throw std::system_error(retval, std::generic_category(), s.str());
     }
     this->reaper_running = true;
 
@@ -304,25 +298,19 @@ void listen_socket::stop(void)
         if ((retval = pthread_cancel(this->reaper)) != 0)
         {
             std::ostringstream s;
-            char err[128];
 
-            strerror_r(retval, err, sizeof(err));
             s << "couldn't cancel reaper thread for " << this->port_type()
-              << " port " << this->sock.sa->port() << ": "
-              << err << " (" << retval << ")";
-            throw std::runtime_error(s.str());
+              << " port " << this->sock.sa->port();
+            throw std::system_error(retval, std::generic_category(), s.str());
         }
         sleep(0);
         if ((retval = pthread_join(this->reaper, NULL)) != 0)
         {
             std::ostringstream s;
-            char err[128];
 
-            strerror_r(retval, err, sizeof(err));
             s << "couldn't join reaper thread for " << this->port_type()
-              << " port " << this->sock.sa->port() << ": "
-              << err << " (" << retval << ")";
-            throw std::runtime_error(s.str());
+              << " port " << this->sock.sa->port();
+            throw std::system_error(retval, std::generic_category(), s.str());
         }
         this->reaper_running = false;
     }
