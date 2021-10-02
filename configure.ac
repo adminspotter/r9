@@ -180,8 +180,8 @@ then
   fi
   AC_CHECK_PROGS([lcov_cmd], [lcov])
   AC_CHECK_PROGS([genhtml_cmd], [genhtml])
-  AM_CONDITIONAL([HAVE_LCOV], [test "x$lcov_cmd" != "x" && test "x$genhtml_cmd" != "x"])
 fi
+AM_CONDITIONAL([HAVE_LCOV], [test "x$lcov_cmd" != "x" && test "x$genhtml_cmd" != "x"])
 
 # Client program
 if test "$with_client" = "yes"
