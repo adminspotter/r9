@@ -1,9 +1,9 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2018, 07:46:36 tquirk
+ *   last updated 02 Oct 2021, 08:49:12 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -83,10 +83,10 @@ basesock::~basesock()
             {
                 char err[128];
 
-                strerror_r(errno, err, sizeof(err));
                 std::clog << syslogWarn << "could not unlink path "
-                          << sun->sun_path
-                          << ": " << err << " (" << errno << ')'
+                          << sun->sun_path << ": "
+                          << strerror_r(errno, err, sizeof(err))
+                          << " (" << errno << ')'
                           << std::endl;
             }
         }

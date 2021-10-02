@@ -1,6 +1,6 @@
 /* signals.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Sep 2019, 07:57:49 tquirk
+ *   last updated 30 Sep 2021, 09:06:28 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2019  Trinity Annabelle Quirk
@@ -68,9 +68,9 @@ void setup_signals(void)
     {
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
         std::clog << syslogErr << "couldn't set SIGHUP handler: "
-                  << err << " (" << errno << ")" << std::endl;
+                  << strerror_r(errno, err, sizeof(err))
+                  << " (" << errno << ")" << std::endl;
     }
     /* SIGUSR1 - reread the configuration files. */
     sa.sa_handler = sigusr1_handler;
@@ -78,9 +78,9 @@ void setup_signals(void)
     {
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
         std::clog << syslogErr << "couldn't set SIGUSR1 handler: "
-                  << err << " (" << errno << ")" << std::endl;
+                  << strerror_r(errno, err, sizeof(err))
+                  << " (" << errno << ")" << std::endl;
     }
     /* SIGUSR2 - recreate the zone. */
     sa.sa_handler = sigusr2_handler;
@@ -88,9 +88,9 @@ void setup_signals(void)
     {
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
         std::clog << syslogErr << "couldn't set SIGUSR2 handler: "
-                  << err << " (" << errno << ")" << std::endl;
+                  << strerror_r(errno, err, sizeof(err))
+                  << " (" << errno << ")" << std::endl;
     }
     /* SIGTERM - terminate the process normally. */
     sa.sa_handler = sigterm_handler;
@@ -100,9 +100,9 @@ void setup_signals(void)
     {
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
         std::clog << syslogErr << "couldn't set SIGTERM handler: "
-                  << err << " (" << errno << ")" << std::endl;
+                  << strerror_r(errno, err, sizeof(err))
+                  << " (" << errno << ")" << std::endl;
     }
     /* SIGINT - terminate the process normally. */
     sa.sa_handler = sigint_handler;
@@ -112,9 +112,9 @@ void setup_signals(void)
     {
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
         std::clog << syslogErr << "couldn't set SIGINT handler: "
-                  << err << " (" << errno << ")" << std::endl;
+                  << strerror_r(errno, err, sizeof(err))
+                  << " (" << errno << ")" << std::endl;
     }
 }
 
