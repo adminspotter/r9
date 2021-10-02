@@ -1,9 +1,9 @@
 /* dgram.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jul 2019, 23:04:40 tquirk
+ *   last updated 02 Oct 2021, 08:52:50 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -203,11 +203,11 @@ void *dgram_socket::dgram_send_worker(void *arg)
             {
                 char err[128];
 
-                strerror_r(errno, err, sizeof(err));
                 std::clog << syslogErr
                           << "error sending packet out datagram port "
                           << dgs->sock.sa->port() << ": "
-                          << err << " (" << errno << ")"
+                          << strerror_r(errno, err, sizeof(err))
+                          << " (" << errno << ")"
                           << std::endl;
             }
         }

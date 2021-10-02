@@ -1,6 +1,6 @@
 /* server.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Dec 2020, 21:38:31 tquirk
+ *   last updated 02 Oct 2021, 09:00:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2020  Trinity Annabelle Quirk
@@ -36,7 +36,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -49,6 +48,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <system_error>
 
 #include "server.h"
 #include "signals.h"
@@ -159,12 +159,9 @@ static void setup_daemon(void)
         /* Start up like a proper daemon */
         if ((pid = fork()) < 0)
         {
-            std::ostringstream s;
-            char err[128];
+            std::string s("failed to fork");
 
-            strerror_r(errno, err, sizeof(err));
-            s << "failed to fork: " << err << " (" << errno << ")";
-            throw std::runtime_error(s.str());
+            throw std::system_error(errno, std::generic_category(), s);
         }
         else if (pid != 0)
             exit(0);
@@ -187,12 +184,9 @@ static void setup_daemon(void)
     else
     {
         /* Apparently another invocation is running, so we can't. */
-        std::ostringstream s;
-        char err[128];
+        std::string s("couldn't create lock file");
 
-        strerror_r(errno, err, sizeof(err));
-        s << "couldn't create lock file: " << err << " (" << errno << ")";
-        throw std::runtime_error(s.str());
+        throw std::system_error(errno, std::generic_category(), s);
     }
     if (config.daemonize)
     {

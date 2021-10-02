@@ -13,9 +13,13 @@ jobs:
     - os: linux
       dist: xenial
       compiler: gcc
+    - os: linux
+      dist: bionic
+      compiler: clang
+    - os: linux
+      dist: bionic
+      compiler: gcc
 addons:
-  code_climate:
-    repo_token: a9c9c35be3c4efac3ab63a3c4927af7c079ec3b8e8fd9addba101f9c932272d9
   apt:
     packages:
     - autopoint
@@ -31,14 +35,12 @@ addons:
     - libglm-dev
     - libfreetype6-dev
     - libwrap0-dev
-    - python3-pip
     - x11proto-randr-dev
     - xorg-dev
 before_script:
 - wget https://github.com/glfw/glfw/releases/download/3.2/glfw-3.2.zip -O /tmp/glfw-3.2.zip
 - unzip /tmp/glfw-3.2.zip
 - pushd glfw-3.2 && cmake -DBUILD_SHARED_LIBS=ON -DLIB_SUFFIX=64 -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF && make && sudo make install && popd && rm -rf glfw-3.2
-- sudo pip3 install --allow-external codecov --allow-external coverage --allow-external chardet --allow-external urllib3 --allow-external idna --allow-external certifi --allow-external requests codecov
 script:
 - ./autogen.sh
 - CXXFLAGS='-I/usr/include/freetype2' ./configure --prefix=$HOME --with-server --with-lua --with-lua-includes=/usr/include/lua5.2 --with-python --with-tcl --with-tcl-includes=/usr/include/tcl8.6 --with-mysql --with-mysql-includes=/usr/include/mysql --with-pgsql --with-client --enable-profile
@@ -46,5 +48,3 @@ script:
 - make check
 after_script:
 - for file in $(grep -l FAIL test/*.trs | sed -e 's/trs$/log/') ; do echo "$file" ; echo ; cat $file ; echo ; done
-after_success:
-- codecov

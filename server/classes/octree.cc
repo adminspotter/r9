@@ -1,9 +1,9 @@
 /* octree.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2020, 14:39:48 tquirk
+ *   last updated 02 Oct 2021, 09:20:56 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -47,8 +47,8 @@
 #include <string.h>
 #include <errno.h>
 
-#include <sstream>
-#include <stdexcept>
+#include <string>
+#include <system_error>
 
 #include "octree.h"
 
@@ -223,12 +223,9 @@ Octree::Octree(Octree *parent,
 #endif /* PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP */
     if (pthread_rwlock_init(&this->lock, &lock_init))
     {
-        std::ostringstream s;
-        char err[128];
+        std::string s("couldn't init octree lock");
 
-        strerror_r(errno, err, sizeof(err));
-        s << "couldn't init octree lock: " << err << " (" << errno << ")";
-        throw std::runtime_error(s.str());
+        throw std::system_error(errno, std::generic_category(), s);
     }
 }
 

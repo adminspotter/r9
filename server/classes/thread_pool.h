@@ -1,9 +1,9 @@
 /* thread_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Feb 2018, 07:43:46 tquirk
+ *   last updated 02 Oct 2021, 09:02:12 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -66,12 +66,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pthread.h>
-#include <errno.h>
 #include <vector>
 #include <queue>
 #include <string>
 #include <sstream>
-#include <stdexcept>
+#include <system_error>
 
 #include "log.h"
 
@@ -105,23 +104,17 @@ class ThreadPool
             if ((ret = pthread_mutex_init(&(this->queue_lock), NULL)) != 0)
             {
                 std::ostringstream s;
-                char err[128];
 
-                strerror_r(ret, err, sizeof(err));
-                s << "couldn't init " << this->name << " queue mutex: "
-                  << err << " (" << ret << ")";
-                throw std::runtime_error(s.str());
+                s << "couldn't init " << this->name << " queue mutex";
+                throw std::system_error(ret, std::generic_category(), s.str());
             }
             if ((ret = pthread_cond_init(&(this->queue_not_empty), NULL)) != 0)
             {
                 std::ostringstream s;
-                char err[128];
 
-                strerror_r(ret, err, sizeof(err));
-                s << "couldn't init " << this->name << " queue not-empty cond: "
-                  << err << " (" << ret << ")";
+                s << "couldn't init " << this->name << " queue not-empty cond";
                 pthread_mutex_destroy(&(this->queue_lock));
-                throw std::runtime_error(s.str());
+                throw std::system_error(ret, std::generic_category(), s.str());
             }
         };
 
@@ -154,15 +147,14 @@ class ThreadPool
                                           this->startup_arg)) != 0)
                 {
                     std::ostringstream s;
-                    char err[128];
 
-                    strerror_r(ret, err, sizeof(err));
-                    s << "couldn't start a " << this->name << " thread: "
-                      << err << " (" << ret << ")";
+                    s << "couldn't start a " << this->name << " thread";
                     /* Something's messed up; stop all the threads */
                     pthread_mutex_unlock(&(this->queue_lock));
                     this->stop();
-                    throw std::runtime_error(s.str());
+                    throw std::system_error(ret,
+                                            std::generic_category(),
+                                            s.str());
                 }
                 this->thread_pool.push_back(thread);
             }

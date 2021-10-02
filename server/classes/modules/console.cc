@@ -1,9 +1,9 @@
 /* console.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 27 Feb 2018, 07:47:47 tquirk
+ *   last updated 02 Oct 2021, 08:54:42 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2018  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,13 +29,11 @@
 
 #include <config.h>
 
-#include <string.h>
 #include <unistd.h>
-#include <errno.h>
 #include <pthread.h>
 
-#include <sstream>
-#include <stdexcept>
+#include <string>
+#include <system_error>
 
 #include "console.h"
 #include "fdstreambuf.h"
@@ -61,12 +59,9 @@ ConsoleSession::ConsoleSession(int sock)
                               ConsoleSession::session_listener,
                               (void *)this)) != 0)
     {
-        std::ostringstream s;
-        char err[128];
+        std::string s("error creating console thread");
 
-        strerror_r(ret, err, sizeof(err));
-        s << "error creating console thread: " << err << " (" << ret << ")";
-        throw std::runtime_error(s.str());
+        throw std::system_error(ret, std::generic_category(), s);
     }
 }
 
