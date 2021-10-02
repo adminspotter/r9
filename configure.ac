@@ -367,6 +367,24 @@ then
     CPPFLAGS="$MYSQL_INCLUDES"
     AC_CHECK_HEADERS([mysql.h], [],
         [AC_MSG_ERROR([no valid MySQL headers found, can not continue])])
+    AC_MSG_CHECKING([if my_bool type is defined])
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [
+#include <mysql.h>
+            ],
+            [
+my_bool some_var;
+            ])
+        ],
+        [
+            AC_MSG_RESULT([yes])
+            AC_DEFINE(HAVE_MY_BOOL, [1], [Define to 1 if the my_bool type exists])
+        ],
+        [
+            AC_MSG_RESULT([no])
+            unset have_my_bool
+        ])
     CXXFLAGS="$MYSQL_SAVE_CXXFLAGS"
     CPPFLAGS="$MYSQL_SAVE_CPPFLAGS"
     AC_SUBST(MYSQL_INCLUDES)
