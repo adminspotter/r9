@@ -475,7 +475,7 @@ then
 
     TCL_LIBS_SAVE="$LIBS"
     LIBS=""
-    AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
+    AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl tcl8.6],
         [
             TCL_LDLIBS="$ac_cv_search_Tcl_CreateInterp"
             AC_SUBST(TCL_LDLIBS)
