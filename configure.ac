@@ -180,8 +180,8 @@ then
   fi
   AC_CHECK_PROGS([lcov_cmd], [lcov])
   AC_CHECK_PROGS([genhtml_cmd], [genhtml])
-  AM_CONDITIONAL([HAVE_LCOV], [test "x$lcov_cmd" != "x" && test "x$genhtml_cmd" != "x"])
 fi
+AM_CONDITIONAL([HAVE_LCOV], [test "x$lcov_cmd" != "x" && test "x$genhtml_cmd" != "x"])
 
 # Client program
 if test "$with_client" = "yes"
@@ -367,6 +367,24 @@ then
     CPPFLAGS="$MYSQL_INCLUDES"
     AC_CHECK_HEADERS([mysql.h], [],
         [AC_MSG_ERROR([no valid MySQL headers found, can not continue])])
+    AC_MSG_CHECKING([if my_bool type is defined])
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [
+#include <mysql.h>
+            ],
+            [
+my_bool some_var;
+            ])
+        ],
+        [
+            AC_MSG_RESULT([yes])
+            AC_DEFINE(HAVE_MY_BOOL, [1], [Define to 1 if the my_bool type exists])
+        ],
+        [
+            AC_MSG_RESULT([no])
+            unset have_my_bool
+        ])
     CXXFLAGS="$MYSQL_SAVE_CXXFLAGS"
     CPPFLAGS="$MYSQL_SAVE_CPPFLAGS"
     AC_SUBST(MYSQL_INCLUDES)
@@ -475,7 +493,7 @@ then
 
     TCL_LIBS_SAVE="$LIBS"
     LIBS=""
-    AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl],
+    AC_SEARCH_LIBS([Tcl_CreateInterp], [tcl tcl8.6],
         [
             TCL_LDLIBS="$ac_cv_search_Tcl_CreateInterp"
             AC_SUBST(TCL_LDLIBS)

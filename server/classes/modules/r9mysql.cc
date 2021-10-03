@@ -1,9 +1,9 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Oct 2020, 06:04:24 tquirk
+ *   last updated 02 Oct 2021, 22:16:40 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,6 +26,8 @@
  *
  */
 
+#include <config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,6 +43,11 @@
 #include "r9mysql.h"
 #include "../game_obj.h"
 #include "../../../proto/proto.h"
+
+/* MySQL 8 dropped the my_bool type, so we'll reinstate it if it's missing */
+#ifndef HAVE_MY_BOOL
+typedef bool my_bool;
+#endif
 
 const char MySQL::check_authentication_query[] =
     "SELECT a.playerid "
