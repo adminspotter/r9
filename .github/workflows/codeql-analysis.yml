@@ -68,8 +68,9 @@ jobs:
        sudo apt-get install autopoint tcl8.6-dev libglfw3-dev libboost-dev libboost-locale-dev libmysqlclient-dev libpq-dev libglm-dev libfreetype6-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev x11proto-randr-dev python3-dev liblua5.2-dev libpython3-dev
        git submodule update --init --recursive
        ./autogen.sh
-       CXXFLAGS='-I/usr/include/freetype2' ./configure --prefix=/usr --with-server --with-lua --with-lua-includes=/usr/include/lua5.2 --with-python --with-tcl --with-tcl-includes=/usr/include/tcl8.6 --with-mysql --with-mysql-includes=/usr/include/mysql --with-pgsql --with-client
+       CXXFLAGS='-I/usr/include/freetype2' ./configure --prefix=/usr --with-server --with-lua --with-lua-includes=/usr/include/lua5.2 --with-python --with-tcl --with-tcl-includes=/usr/include/tcl8.6 --with-mysql --with-mysql-includes=/usr/include/mysql --with-pgsql --with-client --enable-debug --enable-profile
        make
+       make check || for file in $(grep -l FAIL test/*.trs | sed -e 's/trs$/log/') ; do echo "$file" ; cat $file ; echo ; done
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
