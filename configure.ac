@@ -170,6 +170,13 @@ then
 fi
 AM_CONDITIONAL([HAVE_LCOV], [test "x$lcov_cmd" != "x" && test "x$genhtml_cmd" != "x"])
 
+PTHREAD_LIBS_SAVE="$LIBS"
+LIBS=""
+AC_SEARCH_LIBS([pthread_create], [pthread],
+    [test "$ac_cv_search_pthread_create" = "none required" || PTHREAD_LIBS="$ac_cv_search_pthread_create"],
+    [AC_MSG_ERROR([can not build without pthreads.])])
+LIBS="$PTHREAD_LIBS_SAVE"
+
 # Client program
 if test "$with_client" = "yes"
 then
@@ -252,7 +259,7 @@ then
     CUDDLY_LDFLAGS_SAVE="$LDFLAGS"
     CUDDLY_LIBS_SAVE="$LIBS"
     LDFLAGS="$CUDDLY_INCLUDES $CUDDLY_LDFLAGS"
-    LIBS="-lcuddly_gl"
+    LIBS="-lcuddly_gl $PTHREAD_LIBS"
     AC_LINK_IFELSE(
         [AC_LANG_PROGRAM(
             [
@@ -455,7 +462,7 @@ my_bool some_var;
       AC_MSG_ERROR([No python3-config script found, can not continue])
     fi
     PYTHON_CFLAGS=$(python3-config --cflags)
-    PYTHON_LDFLAGS=$(python3-config --ldflags)
+    PYTHON_LDFLAGS=$(python3-config --ldflags --embed 2>/dev/null || python3-config --ldflags)
     AC_SUBST(PYTHON_CFLAGS)
     AC_SUBST(PYTHON_LDFLAGS)
     want_python="yes"
@@ -576,13 +583,6 @@ AC_LINK_IFELSE(
     ])
 LIBS="$LOCALE_LIBS_SAVE"
 AC_SUBST(LOCALE_LDLIBS)
-
-PTHREAD_LIBS_SAVE="$LIBS"
-LIBS=""
-AC_SEARCH_LIBS([pthread_create], [pthread],
-    [test "$ac_cv_search_pthread_create" = "none required" || PTHREAD_LIBS="$ac_cv_search_pthread_create"],
-    [AC_MSG_ERROR([can not build without pthreads.])])
-LIBS="$PTHREAD_LIBS_SAVE"
 
 CFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CFLAGS"
 CXXFLAGS="$DEBUG_CXXFLAGS $PROFILE_CXXFLAGS $CXXFLAGS"
