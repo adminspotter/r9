@@ -1,9 +1,9 @@
 /* shader.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2021, 08:05:36 tquirk
+ *   last updated 15 Apr 2025, 07:33:47 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -51,7 +51,7 @@ GLuint load_shader(GLenum type, const std::string& file)
     {
         std::ostringstream s;
 
-        s << format(translate("could not open file {1}")) % file;
+        s << format(translate("Error opening file {1,name}")) % file;
         throw std::runtime_error(s.str());
     }
     infile.seekg(0, std::ios::end);
@@ -74,8 +74,9 @@ GLuint create_shader(GLenum type, const std::string& src)
 
     if (shader == 0)
     {
-        s << format(translate("Could not create shader: {1}"))
-            % GLenum_to_string(glGetError());
+        s << format(
+            translate("Error creating shader {1,name}: {2,errmsg}")
+        ) % GLenum_to_string(type) % GLenum_to_string(glGetError());
         throw std::runtime_error(s.str());
     }
 
@@ -118,7 +119,7 @@ GLuint create_program(GLuint vert, GLuint geom, GLuint frag, const char *out)
 
     if (pgm == 0)
     {
-        s << format(translate("Could not create GL program: {1}"))
+        s << format(translate("Error creating GL program: {1,errmsg}"))
             % GLenum_to_string(glGetError());
         throw std::runtime_error(s.str());
     }
@@ -132,7 +133,7 @@ GLuint create_program(GLuint vert, GLuint geom, GLuint frag, const char *out)
         glAttachShader(pgm, frag);
     if ((err = glGetError()) != GL_NO_ERROR)
     {
-        s << format(translate("Could not attach shaders to program: {1}"))
+        s << format(translate("Error attaching shaders to program: {1,errmsg}"))
             % GLenum_to_string(err);
         glDeleteProgram(pgm);
         throw std::runtime_error(s.str());
@@ -177,6 +178,7 @@ std::string GLenum_to_string(GLenum e)
       case GL_STACK_UNDERFLOW:   s = "GL_STACK_UNDERFLOW"; break;
       case GL_OUT_OF_MEMORY:     s = "GL_OUT_OF_MEMORY"; break;
       case GL_TABLE_TOO_LARGE:   s = "GL_TABLE_TOO_LARGE"; break;
+
       case GL_VERTEX_SHADER:     s = "GL_VERTEX_SHADER"; break;
       case GL_GEOMETRY_SHADER:   s = "GL_GEOMETRY_SHADER"; break;
       case GL_FRAGMENT_SHADER:   s = "GL_FRAGMENT_SHADER"; break;

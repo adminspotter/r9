@@ -1,9 +1,9 @@
 /* log_display.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Nov 2020, 09:16:32 tquirk
+ *   last updated 15 Apr 2025, 08:01:15 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -46,6 +46,8 @@
 #include <cuddly-gl/ui_defs.h>
 #include "log_display.h"
 #include <cuddly-gl/label.h>
+
+#include "l10n.h"
 
 const int log_display::ENTRY_LIFETIME = 10;
 
@@ -181,9 +183,12 @@ void log_display::init(void)
         std::ostringstream s;
         char err[128];
 
-        strerror_r(ret, err, sizeof(err));
-        s << "Couldn't start log display cleanup thread: "
-          << err << " (" << ret << ")";
+        s << format(
+            translate(
+                "Error starting log display cleanup thread: "
+                "{1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(ret, err, sizeof(err)) % ret;
         throw std::runtime_error(s.str());
     }
 
@@ -210,26 +215,34 @@ log_display::~log_display()
     {
         char err[128];
 
-        strerror_r(ret, err, sizeof(err));
-        std::clog << "Couldn't cancel log display cleanup thread: "
-                  << err << " (" << ret << ")" << std::endl;
+        std::clog << format(
+            translate(
+                "Error cancelling log display cleanup thread: "
+                "{1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
     }
     sleep(0);
     if ((ret = pthread_join(this->cleanup_thread, NULL)) != 0)
     {
         char err[128];
 
-        strerror_r(ret, err, sizeof(err));
-        std::clog << "Couldn't reap log display cleanup thread: "
-                  << err << " (" << ret << ")" << std::endl;
+        std::clog << format(
+            translate(
+                "Error joining log display cleanup thread: "
+                "{1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
     }
     if ((ret = pthread_mutex_destroy(&this->queue_mutex)) != 0)
     {
         char err[128];
 
-        strerror_r(ret, err, sizeof(err));
-        std::clog << "Couldn't destroy log display mutex: "
-                  << err << " (" << ret << ")" << std::endl;
+        std::clog << format(
+            translate(
+                "Error destroying log display mutex: {1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
     }
 
     this->sync_to_file();

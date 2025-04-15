@@ -1,9 +1,9 @@
 /* configdata.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2021, 08:11:19 tquirk
+ *   last updated 15 Apr 2025, 08:13:16 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -179,7 +179,7 @@ void ConfigData::parse_command_line(int count, const char **args)
             else if ((*j) == "-f")
                 this->config_fname = *(++j);
             else
-                std::clog << format(translate("Unknown option {1}")) % *j
+                std::clog << format(translate("Unknown option {1,name}")) % *j
                           << std::endl;
         }
     }
@@ -208,9 +208,9 @@ void ConfigData::read_config_file(void)
         try { this->parse_config_line(str); }
         catch (std::out_of_range& e)
         {
-            std::clog << format(translate("Skipping bad config line \"{1}\""))
-                % pristine_str
-                      << std::endl;
+            std::clog << format(
+                translate("Skipping bad config line \"{1,content}\"")
+            ) % pristine_str << std::endl;
         }
     }
 }
@@ -264,9 +264,12 @@ void ConfigData::make_config_dirs(void)
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << format(translate("Error creating config directory {1}: {2} ({3})"))
-          % dirname % err % errno;
+        s << format(
+            translate(
+                "Error creating config directory {1,name}: "
+                "{2,errmsg} ({3,errno})"
+            )
+        ) % dirname % strerror_r(errno, err, sizeof(err)) % errno;
         throw std::runtime_error(s.str());
     }
 
@@ -277,9 +280,12 @@ void ConfigData::make_config_dirs(void)
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << format(translate("Error creating config directory {1}: {2} ({3})"))
-            % subdirname % err % errno;
+        s << format(
+            translate(
+                "Error creating config directory {1,name}: "
+                "{2,errmsg} ({3,errno})"
+            )
+        ) % subdirname % strerror_r(errno, err, sizeof(err)) % errno;
         throw std::runtime_error(s.str());
     }
 
@@ -289,9 +295,12 @@ void ConfigData::make_config_dirs(void)
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << format(translate("Error creating config directory {1}: {2} ({3})"))
-            % subdirname % err % errno;
+        s << format(
+            translate(
+                "Error creating config directory {1,name}: "
+                "{2,errmsg} ({3,errno})"
+            )
+        ) % subdirname % strerror_r(errno, err, sizeof(err)) % errno;
         throw std::runtime_error(s.str());
     }
 
@@ -301,9 +310,12 @@ void ConfigData::make_config_dirs(void)
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << format(translate("Error creating config directory {1}: {2} ({3})"))
-            % subdirname % err % errno;
+        s << format(
+            translate(
+                "Error creating config directory {1,name}: "
+                "{2,errmsg} ({3,errno})"
+            )
+        ) % subdirname % strerror_r(errno, err, sizeof(err)) % errno;
         throw std::runtime_error(s.str());
     }
 }
@@ -378,8 +390,9 @@ static void read_paths(const std::string& key,
             char *home;
 
             if ((home = getenv("HOME")) == NULL)
-                throw std::runtime_error(translate("Could not find "
-                                                   "home directory"));
+                throw std::runtime_error(
+                    translate("Could not find home directory")
+                );
             path.replace(pos, 1, home);
         }
         if (stat(path.c_str(), &state) != -1)

@@ -1,9 +1,9 @@
 /* comm.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2021, 08:09:34 tquirk
+ *   last updated 15 Apr 2025, 08:37:36 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -108,8 +108,9 @@ void Comm::create_socket(struct addrinfo *ai)
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << format(translate("Error opening socket: {1} ({2})")) % err % errno;
+        s << format(
+            translate("Error opening socket: {1,errstr} ({2,errno})")
+        ) % strerror_r(errno, err, sizeof(err)) % errno;
         throw std::runtime_error(s.str());
     }
     memcpy(&this->remote, ai->ai_addr, sizeof(sockaddr_storage));
@@ -200,10 +201,9 @@ void *Comm::send_worker(void *arg)
         {
             char err[128];
 
-            strerror_r(errno, err, sizeof(err));
-            std::clog << format(translate("Error sending packet: {1} ({2})"))
-                % err % errno
-                      << std::endl;
+            std::clog << format(
+                translate("Error sending packet: {1,errstr} ({2,errno})")
+            ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
         }
         comm->send_queue.pop();
         pthread_mutex_unlock(&(comm->send_lock));
@@ -233,10 +233,9 @@ void *Comm::recv_worker(void *arg)
         {
             char err[128];
 
-            strerror_r(errno, err, sizeof(err));
-            std::clog << format(translate("Error receiving packet: {1} ({2})"))
-                % err % errno
-                      << std::endl;
+            std::clog << format(
+                translate("Error receiving packet: {1,errstr} ({2,errno})")
+            ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
             continue;
         }
         /* Verify that the sender is who we think it should be */
@@ -249,7 +248,7 @@ void *Comm::recv_worker(void *arg)
         /* Needs to be a real packet type */
         if (buf.basic.type >= sizeof(pkt_type) / sizeof(pkt_handler))
         {
-            std::clog << format(translate("Unknown packet type {1}"))
+            std::clog << format(translate("Unknown packet type {1,type}"))
                 % (int)buf.basic.type
                       << std::endl;
             continue;
@@ -263,7 +262,7 @@ void *Comm::recv_worker(void *arg)
         /* We should be able to convert to host byte ordering */
         if (!ntoh_packet(&buf, len))
         {
-            std::clog << translate("Error ntoh'ing packet") << std::endl;
+            std::clog << translate("Error reordering packet") << std::endl;
             continue;
         }
 
@@ -285,18 +284,18 @@ void Comm::handle_ackpkt(packet& p)
     {
       case TYPE_LOGREQ:
         /* The response to our login request */
-        std::clog << format(translate("Login response, {1} access"))
-            % access_to_string(a.misc[0])
-                  << std::endl;
+        std::clog << format(
+            translate("Login response, {1,Access type} access")
+        ) % access_to_string(a.misc[0]) << std::endl;
         this->src_object_id = a.misc[1];
         self_obj = &((*obj)[this->src_object_id]);
         break;
 
       case TYPE_LGTREQ:
         /* The response to our logout request */
-        std::clog << format(translate("Logout response, {1} access"))
-            % access_to_string(a.misc[0])
-                  << std::endl;
+        std::clog << format(
+            translate("Logout response, {1,Access type} access")
+        ) % access_to_string(a.misc[0]) << std::endl;
         break;
 
       default:
@@ -355,7 +354,7 @@ void Comm::handle_srvkey(packet& p)
 
 void Comm::handle_unsupported(packet& p)
 {
-    std::clog << format(translate("Unknown packet type {1}"))
+    std::clog << format(translate("Unknown packet type {1,type}"))
         % (int)p.basic.type
               << std::endl;
 }
@@ -375,21 +374,23 @@ void Comm::init(void)
     {
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << format(translate("Error initializing queue mutex: {1} ({2})"))
-            % err % ret;
+        s << format(
+            translate("Error initializing queue mutex: {1,errmsg} ({2,errno})")
+        ) % strerror_r(errno, err, sizeof(err)) % ret;
         throw std::runtime_error(s.str());
     }
     if ((ret = pthread_cond_init(&send_queue_not_empty, NULL)) != 0)
     {
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
         std::ostringstream s;
-        s << format(translate("Error initializing queue-not-empty cond: "
-                              "{1} ({2})"))
-            % err % ret;
+        s << format(
+            translate(
+                "Error initializing queue-not-empty cond: "
+                "{1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(errno, err, sizeof(err)) % ret;
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
     }
@@ -432,9 +433,9 @@ void Comm::start(void)
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << format(translate("Error starting send thread: {1} ({2})"))
-            % err % ret;
+        s << format(
+            translate("Error starting send thread: {1,errmsg} ({2,errno})")
+        ) % strerror_r(errno, err, sizeof(err)) % ret;
         pthread_cond_destroy(&(this->send_queue_not_empty));
         pthread_mutex_destroy(&(this->send_lock));
         throw std::runtime_error(s.str());
@@ -447,9 +448,9 @@ void Comm::start(void)
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << format(translate("Error starting receive thread: {1} ({2})"))
-            % err % ret;
+        s << format(
+            translate("Error starting receive thread: {1,errmsg} ({2,errno})")
+        ) % strerror_r(errno, err, sizeof(err)) % ret;
         pthread_cancel(this->send_thread);
         sleep(0);
         pthread_join(this->send_thread, NULL);
@@ -475,9 +476,9 @@ void Comm::stop(void)
             std::ostringstream s;
             char err[128];
 
-            strerror_r(ret, err, sizeof(err));
-            s << format(translate("Error waking send thread: {1} ({2})"))
-                % err % ret;
+            s << format(
+                translate("Error waking send thread: {1,errmsg} ({2,errno})")
+            ) % strerror_r(ret, err, sizeof(err)) % ret;
             throw std::runtime_error(s.str());
         }
         sleep(0);
@@ -486,9 +487,9 @@ void Comm::stop(void)
             std::ostringstream s;
             char err[128];
 
-            strerror_r(ret, err, sizeof(err));
-            s << format(translate("Error joining send thread: {1} ({2})"))
-                % err % ret;
+            s << format(
+                translate("Error joining send thread: {1,errmsg} ({2,errno})")
+            ) % strerror_r(ret, err, sizeof(err)) % ret;
             throw std::runtime_error(s.str());
         }
         if ((ret = pthread_cancel(this->recv_thread)) != 0)
@@ -496,9 +497,11 @@ void Comm::stop(void)
             std::ostringstream s;
             char err[128];
 
-            strerror_r(ret, err, sizeof(err));
-            s << format(translate("Error cancelling receive thread: {1} ({2})"))
-                % err % ret;
+            s << format(
+                translate(
+                    "Error cancelling receive thread: {1,errmsg} ({2,errno})"
+                )
+            ) % strerror_r(ret, err, sizeof(err)) % ret;
             throw std::runtime_error(s.str());
         }
         sleep(0);
@@ -507,9 +510,11 @@ void Comm::stop(void)
             std::ostringstream s;
             char err[128];
 
-            strerror_r(ret, err, sizeof(err));
-            s << format(translate("Error joining receive thread: {1} ({2})"))
-                % err % ret;
+            s << format(
+                translate(
+                    "Error joining receive thread: {1,errmsg} ({2,errno})"
+                )
+            ) % strerror_r(ret, err, sizeof(err)) % ret;
             throw std::runtime_error(s.str());
         }
         this->threads_started = false;
@@ -521,7 +526,7 @@ void Comm::send(packet *p, size_t len)
     pthread_mutex_lock(&(this->send_lock));
     if (!hton_packet(p, len))
     {
-        std::clog << translate("Error hton'ing packet") << std::endl;
+        std::clog << translate("Error reordering packet") << std::endl;
         delete p;
     }
     else if (!this->encrypt_packet(*p))
