@@ -24,7 +24,7 @@ if HAVE_LCOV
 .PHONY: lcov
 
 lcov: check
-	lcov -c -q --directory . --output-file lcov.info --no-external
+	lcov -c -q --directory . --output-file lcov.info --no-external --exclude '*/test/*' --exclude '*/client/cuddly-gl/*'
 	genhtml lcov.info --output-directory lcov
 	@echo "Open file://$$PWD/lcov/index.html in your browser"
 
