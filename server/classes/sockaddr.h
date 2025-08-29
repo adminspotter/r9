@@ -1,6 +1,6 @@
 /* sockaddr.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Mar 2018, 09:14:47 tquirk
+ *   last updated 29 Aug 2025, 08:02:09 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk
@@ -46,6 +46,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <cstdint>
 #include <sstream>
 #include <stdexcept>
 
