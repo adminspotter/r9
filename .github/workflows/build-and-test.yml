@@ -1,0 +1,22 @@
+name: "Build and test"
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  build:
+    name: Plain build and test without any extra analysis
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Build and test
+      uses: ./.github/actions/build-and-test
+
+    - name Print test failures
+      if: ${{ failure() }}
+      run: |
+        for file in $(grep -l FAIL test/*.trs | sed -e 's/trs$/log/') ; do echo "$file" ; cat $file ; echo ; done
