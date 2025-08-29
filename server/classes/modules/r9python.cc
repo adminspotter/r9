@@ -1,9 +1,9 @@
 /* r9python.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Mar 2018, 23:48:12 tquirk
+ *   last updated 24 Feb 2023, 07:48:38 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2023  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -39,59 +39,47 @@ int count = 0;
 
 PythonLanguage::PythonLanguage()
 {
-    PyGILState_STATE lock = PyGILState_Ensure();
-    PyThreadState *tmp = PyThreadState_Get();
-    this->sub_interp = Py_NewInterpreter();
-    PyThreadState_Swap(tmp);
+    auto lock = PyGILState_Ensure();
+    this->sub_interp = PyInterpreterState_New();
     PyGILState_Release(lock);
 }
 
 PythonLanguage::~PythonLanguage()
 {
-    PyGILState_STATE lock = PyGILState_Ensure();
-    PyThreadState *tmp = PyThreadState_Swap(this->sub_interp);
-    Py_EndInterpreter(this->sub_interp);
-    PyThreadState_Swap(tmp);
+    auto lock = PyGILState_Ensure();
+    PyInterpreterState_Clear(this->sub_interp);
+    PyInterpreterState_Delete(this->sub_interp);
     PyGILState_Release(lock);
 }
 
 std::string PythonLanguage::execute(const std::string &s)
 {
-    PyThreadState *thread = PyThreadState_New(this->sub_interp->interp);
-    if (!PyGILState_Check())
-        PyGILState_Ensure();
+    auto lock = PyGILState_Ensure();
+    auto thread = PyThreadState_New(this->sub_interp);
     PyThreadState_Swap(thread);
 
     PyObject *globals = PyModule_GetDict(PyImport_AddModule("__main__"));
-    PyObject *result = PyRun_StringFlags(s.c_str(),
-                                         Py_file_input,
-                                         globals, globals, NULL);
+    PyObject *program = PyBytes_FromString(s.c_str());
+    int result = PyCFunction_GetFlags(program);
     PyObject *retval = PyDict_GetItemString(globals, "retval");
     PyObject *repr = PyObject_Repr(retval);
     PyObject *str = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
-    std::string response(PyBytes_AS_STRING(str));
+    std::string response(PyBytes_AsString(str));
     Py_XDECREF(str);
     Py_XDECREF(repr);
-    Py_XDECREF(result);
+    Py_XDECREF(program);
 
     PyThreadState_Clear(thread);
     PyEval_ReleaseThread(thread);
     PyThreadState_Delete(thread);
+    PyGILState_Release(lock);
     return response;
 }
 
 extern "C" Language *create_language(void)
 {
     if (!Py_IsInitialized())
-    {
         Py_InitializeEx(0);
-        PyEval_InitThreads();
-
-        /* The GIL is held at this point.  Not sure how to release it
-         * without having previously gotten a PyGILState_STATE
-         * object.
-         */
-    }
     ++count;
     return new PythonLanguage();
 }

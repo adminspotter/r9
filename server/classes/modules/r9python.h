@@ -1,6 +1,6 @@
 /* r9python.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 28 Mar 2018, 07:31:29 tquirk
+ *   last updated 12 Jun 2022, 12:44:25 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2017  Trinity Annabelle Quirk
@@ -29,6 +29,7 @@
 #ifndef __INC_R9PYTHON_H__
 #define __INC_R9PYTHON_H__
 
+#define Py_LIMITED_API 3
 #include <Python.h>
 
 #include "language.h"
@@ -36,7 +37,7 @@
 class PythonLanguage : public Language
 {
   private:
-    PyThreadState *sub_interp;
+    PyInterpreterState *sub_interp;
 
   public:
     PythonLanguage();
