@@ -1,11 +1,9 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches:
-      - '**'
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   analyze:
@@ -30,13 +28,13 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-    - run: |
-       sudo apt-get install autopoint libboost-dev libboost-locale-dev libfreetype6-dev libgl1-mesa-dev libglfw3-dev libglm-dev libglu1-mesa-dev libltdl-dev liblua5.2-dev libmysqlclient-dev libpq-dev libpython3-dev python3-dev tcl8.6-dev x11proto-randr-dev xorg-dev
-       git submodule update --init --recursive
-       ./autogen.sh
-       CXXFLAGS='-I/usr/include/freetype2' ./configure --prefix=/usr --with-server --with-lua --with-lua-includes=/usr/include/lua5.2 --with-python --with-tcl --with-tcl-includes=/usr/include/tcl8.6 --with-mysql --with-mysql-includes=/usr/include/mysql --with-pgsql --with-client --enable-debug --enable-profile
-       make
-       make check || for file in $(grep -l FAIL test/*.trs | sed -e 's/trs$/log/') ; do echo "$file" ; cat $file ; echo ; done
+    - name: Build and test
+      uses: ./.github/actions/build-and-test
+
+    - name: Print test failures
+      if: ${{ failure() }}
+      run: |
+        for file in $(grep -l FAIL test/*.trs | sed -e 's/trs$/log/') ; do echo "$file" ; cat $file ; echo ; done
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
