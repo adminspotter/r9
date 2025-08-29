@@ -157,20 +157,7 @@ if test "$enable_profile" = "yes"
 then
   if test "$CXX" = "clang++"
   then
-    AC_SEARCH_LIBS([llvm_start_basic_block_tracing], [profile_rt],
-        [
-          if test "x$ac_cv_search_llvm_start_basic_block_tracing" = "xnone required"
-          then
-            AC_MSG_NOTICE([libprofile_rt not needed])
-          else
-            PROFILE_LDLIBS="$ac_cv_search_llvm_start_basic_block_tracing"
-          fi
-          PROFILE_CFLAGS="-fprofile-arcs -ftest-coverage"
-          PROFILE_CXXFLAGS="-fprofile-arcs -ftest-coverage"
-          PROFILE_LDFLAGS="--coverage"
-          AC_MSG_NOTICE([building with profiling enabled])
-        ],
-        [AC_MSG_NOTICE([no libprofile_rt available, not enabling profiling])])
+    AC_MSG_NOTICE([clang profiling is not working, not enabling profiling])
   else
     PROFILE_CFLAGS="-fprofile-arcs -ftest-coverage"
     PROFILE_CXXFLAGS="-fprofile-arcs -ftest-coverage"
