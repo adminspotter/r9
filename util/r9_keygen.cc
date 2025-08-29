@@ -1,9 +1,9 @@
 /* r9_keygen.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 17 Apr 2021, 08:11:56 tquirk
+ *   last updated 15 Apr 2025, 08:47:26 tquirk
  *
  * Revision IX game utility
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -112,8 +112,9 @@ void process_command_line(int argc, char **argv)
             break;
           case '?':
 #if !HAVE_GETOPT_LONG
-            std::cerr << format(translate("Unknown option {1}")) % (char)opt
-                      << std::endl;
+            std::cerr << format(
+                translate("Unknown option {1,name}")
+            ) % (char)opt << std::endl;
 #endif /* !HAVE_GETOPT_LONG */
             exit(ARGPARSE_RETURN);
           default:
@@ -137,7 +138,9 @@ void generate_key_path(void)
         else
             key_path = "./key";
     }
-    std::cout << format(translate("Writing to {1}")) % key_path << std::endl;
+    std::cout << format(
+        translate("Writing to {1,name}")
+    ) % key_path << std::endl;
 }
 
 std::string ask_for_passphrase(void)
@@ -183,9 +186,9 @@ void write_key(EVP_PKEY *key, std::string& key_fname, std::string& passphrase)
 
     if (pkey_to_file(key, key_fname.c_str(), pp) == 0)
     {
-        std::cerr << format(translate("Error writing private key "
-                                      "file: {1} ({2})"))
-            % strerror(errno) % errno << std::endl;
+        std::cerr << format(
+            translate("Error writing private key file: {1,errmsg} ({2,errno})")
+        ) % strerror(errno) % errno << std::endl;
         exit(KEYGEN_RETURN);
     }
     if (do_client_key == true)

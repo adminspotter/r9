@@ -1,9 +1,9 @@
 /* control.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2021, 08:21:34 tquirk
+ *   last updated 15 Apr 2025, 09:03:01 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,12 +44,12 @@ static std::string glob_error_to_string(int err)
 {
     switch (err)
     {
-      case 1:   return translate("Out of memory");
-      case 2:   return translate("Read error");
-      case 3:   return translate("No match found");
-      case 4:   return translate("Function not implemented");
+      case 1:   return translate("Error message", "Out of memory");
+      case 2:   return translate("Error message", "Read error");
+      case 3:   return translate("Error message", "No match found");
+      case 4:   return translate("Error message", "Function not implemented");
     }
-    return translate("Unknown error");
+    return translate("Error message", "Unknown error");
 }
 
 std::vector<std::string> control_factory::types(void)
@@ -62,8 +62,9 @@ std::vector<std::string> control_factory::types(void)
     {
         std::ostringstream s;
 
-        s << format(translate("Could not find control modules: {1} ({2})"))
-            % glob_error_to_string(errno) % errno;
+        s << format(
+            translate("Could not find control modules: {1,errmsg} ({2,errno})")
+        ) % glob_error_to_string(errno) % errno;
         throw std::runtime_error(s.str());
     }
     for (int i = 0; i < mods.gl_pathc; ++i)
@@ -92,7 +93,9 @@ control *control_factory::create(const std::string& control_type)
         if ((err = dlerror()) != NULL)
         {
             std::ostringstream s;
-            s << "Could not close library " << fname << ": " << err;
+            s << format(
+                translate("Could not close library {1,name}: {2,errmsg}")
+            ) % fname % err;
             throw std::runtime_error(s.str());
         }
     }
@@ -101,7 +104,9 @@ control *control_factory::create(const std::string& control_type)
     if ((err = dlerror()) != NULL)
     {
         std::ostringstream s;
-        s << "Could not open library " << fname << ": " << err;
+        s << format(
+            translate("Could not open library {1,name}: {2,errmsg}")
+        ) % fname % err;
         throw std::runtime_error(s.str());
     }
     dlerror();
@@ -109,7 +114,9 @@ control *control_factory::create(const std::string& control_type)
     if ((err = dlerror()) != NULL)
     {
         std::ostringstream s;
-        s << "Could not find create symbol: " << err;
+        s << format(
+            translate("Could not find create symbol: {1,errmsg}")
+        ) % err;
         throw std::runtime_error(s.str());
     }
     dlerror();
