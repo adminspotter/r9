@@ -204,7 +204,7 @@ void test_send_bad_hton(void)
         ;
     delete comm;
 
-    isnt(new_clog.str().find("Error hton'ing packet"),
+    isnt(new_clog.str().find("Error reordering packet"),
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());
@@ -615,7 +615,7 @@ void test_recv_no_ntoh(void)
         ;
     delete comm;
 
-    isnt(new_clog.str().find("Error ntoh'ing packet"),
+    isnt(new_clog.str().find("Error reordering packet"),
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());
