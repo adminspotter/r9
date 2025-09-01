@@ -1,9 +1,8 @@
 /* keyboard.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 25 Feb 2021, 08:49:15 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2019-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

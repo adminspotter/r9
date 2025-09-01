@@ -1,9 +1,8 @@
 /* key.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Apr 2019, 14:28:25 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2018-2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

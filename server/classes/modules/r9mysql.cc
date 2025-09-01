@@ -1,9 +1,8 @@
 /* r9mysql.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2021, 22:16:40 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 1999-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

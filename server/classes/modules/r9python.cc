@@ -1,9 +1,8 @@
 /* r9python.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Feb 2023, 07:48:38 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2023  Trinity Annabelle Quirk
+ * Copyright (C) 2017-2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

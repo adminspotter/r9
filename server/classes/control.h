@@ -1,9 +1,8 @@
 /* control.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Dec 2019, 08:43:02 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2019  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2019  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

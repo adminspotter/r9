@@ -1,9 +1,8 @@
 /* zone.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Feb 2020, 22:53:03 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

@@ -1,9 +1,8 @@
 /* console.h                                               -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Dec 2015, 08:39:44 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

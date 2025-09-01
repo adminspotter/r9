@@ -1,9 +1,8 @@
 /* comm_dialog.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Apr 2025, 08:07:47 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2025  Trinity Annabelle Quirk
+ * Copyright (C) 2016-2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

@@ -1,6 +1,5 @@
 /* encrypt.c
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 16 Jul 2019, 21:58:24 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk

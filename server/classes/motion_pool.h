@@ -1,9 +1,8 @@
 /* motion_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 21 Jun 2017, 07:45:35 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2017  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

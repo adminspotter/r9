@@ -1,9 +1,8 @@
 /* r9tcl.h                                                 -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 10 Aug 2015, 07:44:38 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2015  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

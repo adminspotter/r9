@@ -1,9 +1,8 @@
 /* proto.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 14 Mar 2021, 23:26:22 tquirk
  *
  * Revision IX game protocol
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

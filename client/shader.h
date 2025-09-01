@@ -1,9 +1,8 @@
 /* shader.h                                                -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Mar 2016, 10:34:49 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2016  Trinity Annabelle Quirk
+ * Copyright (C) 2017  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

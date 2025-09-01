@@ -1,9 +1,8 @@
 /* client_core.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 01 Feb 2020, 18:07:12 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

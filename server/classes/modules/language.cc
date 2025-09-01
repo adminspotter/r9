@@ -1,6 +1,5 @@
 /* language.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Sep 2015, 12:03:55 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2015  Trinity Annabelle Quirk

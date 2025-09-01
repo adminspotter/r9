@@ -1,9 +1,8 @@
 /* update_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 13 Mar 2021, 09:23:42 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

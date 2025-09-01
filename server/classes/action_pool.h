@@ -1,9 +1,8 @@
 /* action_pool.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 24 Dec 2020, 15:28:52 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
