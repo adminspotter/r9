@@ -1,9 +1,8 @@
 /* basesock.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 02 Oct 2021, 08:49:12 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

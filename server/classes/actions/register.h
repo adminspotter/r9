@@ -1,9 +1,8 @@
 /* register.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 07 Aug 2024, 09:15:49 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2024  Trinity Annabelle Quirk
+ * Copyright (C) 2006-2024  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

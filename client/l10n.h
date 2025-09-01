@@ -1,9 +1,8 @@
 /* l10n.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 12 Apr 2021, 22:07:13 tquirk
  *
  * Revision IX game client
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

@@ -1,9 +1,8 @@
 /* register.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 15 Feb 2020, 10:20:17 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2006-2020  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

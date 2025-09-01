@@ -1,6 +1,5 @@
 /* log.h                                                   -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jul 2014, 10:50:48 trinityquirk
  *
  * Revision IX game server
  * Copyright (C) 2014  Trinity Annabelle Quirk

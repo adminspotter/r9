@@ -1,6 +1,5 @@
 /* byteswap.h
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 11 Jun 2019, 08:31:04 tquirk
  *
  * Revision IX game protocol
  * Copyright (C) 2019  Trinity Annabelle Quirk

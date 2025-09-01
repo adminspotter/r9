@@ -1,9 +1,8 @@
 /* motion_pool.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 06 Mar 2021, 16:30:25 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2020  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

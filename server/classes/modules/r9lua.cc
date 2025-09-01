@@ -1,6 +1,5 @@
 /* r9lua.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 31 Mar 2018, 08:54:21 tquirk
  *
  * Revision IX game server
  * Copyright (C) 2018  Trinity Annabelle Quirk

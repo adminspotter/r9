@@ -104,7 +104,6 @@ long as the commit chain makes sense, is documented well by the
 follows a good logical flow, they'll be perfectly acceptable.  Tag
 relevant commits or issues in your commit messages.  Add your name to
 the AUTHORS file and the comment block at the top of the files you
-change.  It's not amazingly important to update the 'last updated'
-lines at the tops of files, but it would be nice. :)
+change.
 
 Code is licensed GPL2.

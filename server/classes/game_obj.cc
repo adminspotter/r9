@@ -1,9 +1,8 @@
 /* game_obj.cc
  *   by Trinity Quirk <tquirk@ymb.net>
- *   last updated 29 Sep 2021, 22:37:16 tquirk
  *
  * Revision IX game server
- * Copyright (C) 2021  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2021  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
