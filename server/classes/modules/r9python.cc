@@ -38,47 +38,59 @@ int count = 0;
 
 PythonLanguage::PythonLanguage()
 {
-    auto lock = PyGILState_Ensure();
-    this->sub_interp = PyInterpreterState_New();
+    PyGILState_STATE lock = PyGILState_Ensure();
+    PyThreadState *tmp = PyThreadState_Get();
+    this->sub_interp = Py_NewInterpreter();
+    PyThreadState_Swap(tmp);
     PyGILState_Release(lock);
 }
 
 PythonLanguage::~PythonLanguage()
 {
-    auto lock = PyGILState_Ensure();
-    PyInterpreterState_Clear(this->sub_interp);
-    PyInterpreterState_Delete(this->sub_interp);
+    PyGILState_STATE lock = PyGILState_Ensure();
+    PyThreadState *tmp = PyThreadState_Swap(this->sub_interp);
+    Py_EndInterpreter(this->sub_interp);
+    PyThreadState_Swap(tmp);
     PyGILState_Release(lock);
 }
 
 std::string PythonLanguage::execute(const std::string &s)
 {
-    auto lock = PyGILState_Ensure();
-    auto thread = PyThreadState_New(this->sub_interp);
+    PyThreadState *thread = PyThreadState_New(this->sub_interp->interp);
+    if (!PyGILState_Check())
+        PyGILState_Ensure();
     PyThreadState_Swap(thread);
 
     PyObject *globals = PyModule_GetDict(PyImport_AddModule("__main__"));
-    PyObject *program = PyBytes_FromString(s.c_str());
-    int result = PyCFunction_GetFlags(program);
+    PyObject *result = PyRun_StringFlags(s.c_str(),
+                                         Py_file_input,
+                                         globals, globals, NULL);
     PyObject *retval = PyDict_GetItemString(globals, "retval");
     PyObject *repr = PyObject_Repr(retval);
     PyObject *str = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
-    std::string response(PyBytes_AsString(str));
+    std::string response(PyBytes_AS_STRING(str));
     Py_XDECREF(str);
     Py_XDECREF(repr);
-    Py_XDECREF(program);
+    Py_XDECREF(result);
 
     PyThreadState_Clear(thread);
     PyEval_ReleaseThread(thread);
     PyThreadState_Delete(thread);
-    PyGILState_Release(lock);
     return response;
 }
 
 extern "C" Language *create_language(void)
 {
     if (!Py_IsInitialized())
+    {
         Py_InitializeEx(0);
+        PyEval_InitThreads();
+
+        /* The GIL is held at this point.  Not sure how to release it
+         * without having previously gotten a PyGILState_STATE
+         * object.
+         */
+    }
     ++count;
     return new PythonLanguage();
 }
