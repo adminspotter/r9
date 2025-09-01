@@ -28,7 +28,6 @@
 #ifndef __INC_R9PYTHON_H__
 #define __INC_R9PYTHON_H__
 
-#define Py_LIMITED_API 3
 #include <Python.h>
 
 #include "language.h"
@@ -36,7 +35,7 @@
 class PythonLanguage : public Language
 {
   private:
-    PyInterpreterState *sub_interp;
+    PyThreadState *sub_interp;
 
   public:
     PythonLanguage();
