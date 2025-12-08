@@ -29,6 +29,13 @@
  * each leaf.  This may cause some consternation when moving an object
  * around in the tree, so we may need to revisit this at some point.
  *
+ * If we run into problems allocating new r/w locks in subtrees, the
+ * tree will be truncated at a depth less than our max.  This is
+ * likely to cause degraded performance, since octants will have more
+ * objects than we like, and collision calculations will have to take
+ * excess object pairs into account.  We'll at least get logs, so we
+ * can know when the truncation is happening.
+ *
  * Things to do
  *   - Make the neighbor-finder breadth-first, not depth-first as it
  *     is now.  Half the neighbors are going to end up NULL the way it
@@ -50,6 +57,7 @@
 #include <system_error>
 
 #include "octree.h"
+#include "log.h"
 
 const int Octree::MAX_LEAF_OBJECTS = 3;
 const int Octree::MIN_DEPTH = 5;
@@ -285,7 +293,18 @@ void Octree::build(std::list<GameObject *>& objs)
             {
                 glm::dvec3 mn = this->octant_min(j);
                 glm::dvec3 mx = this->octant_max(j);
-                this->octants[j] = new Octree(this, mn, mx, j);
+                try
+                {
+                    this->octants[j] = new Octree(this, mn, mx, j);
+                }
+                catch (std::system_error& e)
+                {
+                    std::clog << syslogErr
+                              << "couldn't create octree subtree at depth "
+                              << this->depth + 1 << ": " << e.code().message()
+                              << " (" << e.code().value() << ")" << std::endl;
+                    continue;
+                }
                 this->octants[j]->build(obj_list[j]);
             }
         }
@@ -315,7 +334,19 @@ void Octree::insert(GameObject *gobj)
             glm::dvec3 mn = this->octant_min(octant);
             glm::dvec3 mx = this->octant_max(octant);
 
-            this->octants[octant] = new Octree(this, mn, mx, octant);
+            try
+            {
+                this->octants[octant] = new Octree(this, mn, mx, octant);
+            }
+            catch (std::system_error& e)
+            {
+                this->leave();
+                std::clog << syslogErr
+                          << "couldn't create octree subtree at depth "
+                          << this->depth + 1 << ": " << e.code().message()
+                          << " (" << e.code().value() << ")" << std::endl;
+                return;
+            }
             this->octants[octant]->compute_neighbors();
         }
         this->octants[octant]->insert(gobj);
