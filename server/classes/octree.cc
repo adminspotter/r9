@@ -364,21 +364,19 @@ void Octree::remove(GameObject *gobj)
         if (this->octants[octant] != NULL)
             this->octants[octant]->remove(gobj);
         this->objects.erase(gobj);
-    }
-    /* If our subtree doesn't have enough objects to warrant a
-     * subtree, delete ourselves.
-     */
-    if (this->objects.size() < Octree::MAX_LEAF_OBJECTS
-        && this->depth > Octree::MIN_DEPTH)
-    {
-        if (this->parent != NULL)
+
+        /* If our subtree doesn't have enough objects to warrant a
+         * subtree, delete ourselves.
+         */
+        if (this->objects.size() < Octree::MAX_LEAF_OBJECTS
+            && this->depth > Octree::MIN_DEPTH)
         {
-            this->parent->enter();
-            this->parent->octants[this->parent_index] = NULL;
-            this->parent->leave();
+            this->leave();
+            if (this->parent != NULL)
+                this->parent->octants[this->parent_index] = NULL;
+            delete this;
+            return;
         }
-        delete this;
-        return;
     }
     this->leave();
 }
