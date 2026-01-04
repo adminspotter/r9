@@ -210,7 +210,7 @@ Octree::Octree(Octree *parent,
                glm::dvec3& min,
                glm::dvec3& max,
                uint8_t index)
-    : min_point(min), center_point((max - min) * 0.5), max_point(max),
+    : min_point(min), center_point((max - min) * 0.5 + min), max_point(max),
       objects()
 {
     this->parent = parent;
