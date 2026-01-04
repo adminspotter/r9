@@ -62,6 +62,13 @@ base_user::base_user(uint64_t userid)
     this->auth_level = ACCESS_NONE;
     this->slave = this->default_slave = NULL;
     this->characterid = 0LL;
+    this->prep_iv();
+}
+
+void base_user::prep_iv(void)
+{
+    memset(this->key, 0, sizeof(this->key));
+    rand_bytes(this->iv, R9_SYMMETRIC_IV_BUF_SZ);
 }
 
 base_user::base_user(uint64_t userid,
@@ -89,8 +96,7 @@ base_user::base_user(uint64_t userid,
     database->get_player_server_skills(this->userid,
                                        this->characterid,
                                        this->actions);
-
-    rand_bytes(this->iv, R9_SYMMETRIC_IV_BUF_SZ);
+    this->prep_iv();
 }
 
 base_user::~base_user()
