@@ -40,7 +40,7 @@
 /* Private methods */
 void Zone::init(DB *database)
 {
-    int i;
+    int i, j, k;
     std::vector<Octree *> z_row;
     std::vector<std::vector<Octree *> > y_row;
 
@@ -60,8 +60,27 @@ void Zone::init(DB *database)
     for (i = 0; i < this->x_steps; ++i)
         this->sectors.push_back(y_row);
 
-    for (auto& j : this->game_objects)
-        this->sector_contains(j.second->get_position())->insert(j.second);
+    /* If we have any memory problems in creating the octree roots, it
+     * will be best to happen upon creation, so the blowups can cause
+     * the zone to not construct.
+     */
+    for (i = 0; i < this->x_steps; ++i)
+        for (j = 0; j < this->y_steps; ++j)
+            for (k = 0; k < this->z_steps; ++k)
+            {
+                glm::dvec3 mn, mx;
+
+                mn.x = i * this->x_dim;
+                mn.y = j * this->y_dim;
+                mn.z = k * this->z_dim;
+                mx.x = mn.x + this->x_dim;
+                mx.y = mn.y + this->y_dim;
+                mx.z = mn.z + this->z_dim;
+                this->sectors[i][j][k] = new Octree(NULL, mn, mx, 0);
+            }
+
+    for (auto& go : this->game_objects)
+        this->sector_contains(go.second->get_position())->insert(go.second);
 }
 
 /* Public methods */
@@ -119,22 +138,7 @@ Octree *Zone::sector_contains(const glm::dvec3& pos)
         || sec[2] < 0 || sec[2] >= z_steps)
         return NULL;
 
-    Octree *oct = this->sectors[sec[0]][sec[1]][sec[2]];
-    if (oct == NULL)
-    {
-        glm::ivec3 sec = this->which_sector(pos);
-        glm::dvec3 mn, mx;
-
-        mn.x = sec.x * this->x_dim;
-        mn.y = sec.y * this->y_dim;
-        mn.z = sec.z * this->z_dim;
-        mx.x = mn.x + this->x_dim;
-        mx.y = mn.y + this->y_dim;
-        mx.z = mn.z + this->z_dim;
-        oct = new Octree(NULL, mn, mx, 0);
-        this->sectors[sec[0]][sec[1]][sec[2]] = oct;
-    }
-    return oct;
+    return this->sectors[sec[0]][sec[1]][sec[2]];
 }
 
 glm::ivec3 Zone::which_sector(const glm::dvec3& pos)
