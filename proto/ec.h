@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game protocol
- * Copyright (C) 2018-2019  Trinity Annabelle Quirk
+ * Copyright (C) 2018-2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -44,8 +44,8 @@ extern "C"
 #endif /* __cplusplus */
 
 EVP_PKEY *generate_ecdh_key(void);
-int pkey_to_public_key(EVP_PKEY *, uint8_t *, size_t);
-EVP_PKEY *public_key_to_pkey(uint8_t *, size_t);
+int pkey_to_public_key(const EVP_PKEY *, uint8_t *, size_t);
+EVP_PKEY *public_key_to_pkey(const uint8_t *, size_t);
 
 #ifdef __cplusplus
 }

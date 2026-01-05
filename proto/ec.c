@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game protocol
- * Copyright (C) 2018-2019  Trinity Annabelle Quirk
+ * Copyright (C) 2018-2025  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -60,7 +60,7 @@ EVP_PKEY *generate_ecdh_key(void)
     return key;
 }
 
-int pkey_to_public_key(EVP_PKEY *pkey, uint8_t *keybuf, size_t keybuf_sz)
+int pkey_to_public_key(const EVP_PKEY *pkey, uint8_t *keybuf, size_t keybuf_sz)
 {
     EC_KEY *key = NULL;
     int keylen = 0;
@@ -75,7 +75,7 @@ int pkey_to_public_key(EVP_PKEY *pkey, uint8_t *keybuf, size_t keybuf_sz)
     return 0;
 }
 
-EVP_PKEY *public_key_to_pkey(uint8_t *keybuf, size_t keybuf_sz)
+EVP_PKEY *public_key_to_pkey(const uint8_t *keybuf, size_t keybuf_sz)
 {
     EC_KEY *key = NULL;
     EC_GROUP *grp = NULL;

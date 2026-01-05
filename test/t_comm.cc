@@ -125,7 +125,7 @@ int r9_decrypt(const unsigned char *a, int b,
     return 1;
 }
 
-EVP_PKEY *public_key_to_pkey(uint8_t *a, size_t b)
+EVP_PKEY *public_key_to_pkey(const uint8_t *a, size_t b)
 {
     if (bad_pubkey == true)
         return NULL;
