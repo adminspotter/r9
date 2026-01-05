@@ -56,6 +56,7 @@ class base_user : public Control {
     listen_socket *parent;
 
     base_user(uint64_t);
+    void prep_iv(void);
 
   public:
     base_user(uint64_t,

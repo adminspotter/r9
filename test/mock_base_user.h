@@ -9,6 +9,8 @@ class fake_base_user : public base_user
     fake_base_user(uint64_t a) : base_user(a) {};
     virtual ~fake_base_user() {};
 
+    void set_shared_key(EVP_PKEY *a, uint8_t *b, size_t c) {};
+
     using base_user::parent;
 };
 
