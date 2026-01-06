@@ -35,7 +35,6 @@
 
 #if OPENSSL_VERSION_MAJOR >= 3
 #include <openssl/core_names.h>
-#include <openssl/err.h>
 #endif /* OPENSSL_VERSION_MAJOR */
 
 EVP_PKEY *generate_ecdh_key(void)
@@ -72,19 +71,7 @@ int pkey_to_public_key(const EVP_PKEY *pkey, uint8_t *keybuf, size_t keybuf_sz)
     int expected = i2d_PublicKey(pkey, NULL);
     if (keybuf_sz >= expected)
         return i2d_PublicKey(pkey, &keybuf);
-    else
-        return 0;
-    if (expected == 0)
-    {
-        unsigned long err;
-        char buf[1024];
-        while ((err = ERR_get_error()) != 0)
-        {
-            ERR_error_string_n(err, buf, sizeof(buf));
-            fprintf(stderr, "%s (%d)\n", buf, err);
-        }
-    }
-    return expected;
+    return 0;
 #else
     EC_KEY *key = NULL;
     int keylen = 0;
