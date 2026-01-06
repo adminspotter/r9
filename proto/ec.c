@@ -28,9 +28,15 @@
 
 #include <string.h>
 
+#include <openssl/opensslv.h>
 #include <openssl/ec.h>
 
 #include "ec.h"
+
+#if OPENSSL_VERSION_MAJOR >= 3
+#include <openssl/core_names.h>
+#include <openssl/err.h>
+#endif /* OPENSSL_VERSION_MAJOR */
 
 EVP_PKEY *generate_ecdh_key(void)
 {
@@ -62,6 +68,24 @@ EVP_PKEY *generate_ecdh_key(void)
 
 int pkey_to_public_key(const EVP_PKEY *pkey, uint8_t *keybuf, size_t keybuf_sz)
 {
+#if OPENSSL_VERSION_MAJOR >= 3
+    int expected = i2d_PublicKey(pkey, NULL);
+    if (keybuf_sz >= expected)
+        return i2d_PublicKey(pkey, &keybuf);
+    else
+        return 0;
+    if (expected == 0)
+    {
+        unsigned long err;
+        char buf[1024];
+        while ((err = ERR_get_error()) != 0)
+        {
+            ERR_error_string_n(err, buf, sizeof(buf));
+            fprintf(stderr, "%s (%d)\n", buf, err);
+        }
+    }
+    return expected;
+#else
     EC_KEY *key = NULL;
     int keylen = 0;
 
@@ -73,10 +97,34 @@ int pkey_to_public_key(const EVP_PKEY *pkey, uint8_t *keybuf, size_t keybuf_sz)
             return keylen;
         }
     return 0;
+#endif /* OPENSSL_VERSION_MAJOR */
 }
 
 EVP_PKEY *public_key_to_pkey(const uint8_t *keybuf, size_t keybuf_sz)
 {
+#if OPENSSL_VERSION_MAJOR >= 3
+    EVP_PKEY_CTX *pkey_ctx = EVP_PKEY_CTX_new_from_name(NULL, "ec", NULL);
+    OSSL_PARAM params[3];
+    EVP_PKEY *key = NULL;
+
+    if (EVP_PKEY_fromdata_init(pkey_ctx) != 1)
+        goto CLEANUP;
+
+    params[0] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME,
+                                                 R9_CURVE_NAME,
+                                                 0);
+    params[1] = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY,
+                                                  (void*)keybuf,
+                                                  keybuf_sz);
+    params[2] = OSSL_PARAM_construct_end();
+
+    /* If this blows up, key should still be NULL. */
+    EVP_PKEY_fromdata(pkey_ctx, &key, EVP_PKEY_PUBLIC_KEY, params);
+
+  CLEANUP:
+    EVP_PKEY_CTX_free(pkey_ctx);
+    return key;
+#else
     EC_KEY *key = NULL;
     EC_GROUP *grp = NULL;
     EVP_PKEY *pkey = NULL;
@@ -103,4 +151,5 @@ EVP_PKEY *public_key_to_pkey(const uint8_t *keybuf, size_t keybuf_sz)
   BAILOUT1:
     EC_KEY_free(key);
     return NULL;
+#endif /* OPENSSL_VERSION_MAJOR */
 }

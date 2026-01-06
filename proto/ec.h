@@ -34,8 +34,8 @@
 #include <openssl/evp.h>
 #include <openssl/ec.h>
 
+#define R9_CURVE_NAME  SN_sect571r1
 #define R9_CURVE  NID_sect571r1
-
 #define R9_PUBKEY_SZ  145
 
 #ifdef __cplusplus
