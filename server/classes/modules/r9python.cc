@@ -82,15 +82,7 @@ std::string PythonLanguage::execute(const std::string &s)
 extern "C" Language *create_language(void)
 {
     if (!Py_IsInitialized())
-    {
         Py_InitializeEx(0);
-        PyEval_InitThreads();
-
-        /* The GIL is held at this point.  Not sure how to release it
-         * without having previously gotten a PyGILState_STATE
-         * object.
-         */
-    }
     ++count;
     return new PythonLanguage();
 }
