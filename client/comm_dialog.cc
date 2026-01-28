@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2016-2025  Trinity Annabelle Quirk
+ * Copyright (C) 2016-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -69,7 +69,7 @@ void create_login_dialog(ui::context *ctx)
                                 10,
                                 ui::element::size, ui::size::columns, 2);
 
-    str = translate("Username");
+    str = translate("Input field label", "Username");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
                       ui::element::string, 0, str);
@@ -82,7 +82,7 @@ void create_login_dialog(ui::context *ctx)
                               ui::element::border, ui::side::all, border,
                               ui::element::string, 0, str);
 
-    str = translate("Password");
+    str = translate("Input field label", "Password");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
                       ui::element::string, 0, str);
@@ -93,7 +93,7 @@ void create_login_dialog(ui::context *ctx)
                             ui::element::size, ui::size::max_width, max_sz,
                             ui::element::border, ui::side::all, border);
 
-    str = translate("Server");
+    str = translate("Input field label", "Server");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
                       ui::element::string, 0, str);
@@ -106,7 +106,7 @@ void create_login_dialog(ui::context *ctx)
                               ui::element::border, ui::side::all, border,
                               ui::element::string, 0, str);
 
-    str = translate("OK");
+    str = translate("Button label", "OK");
     b = new ui::button(dialog,
                        ui::element::font, ui::ownership::shared, dialog_font,
                        ui::element::border, ui::side::all, border,
@@ -114,7 +114,7 @@ void create_login_dialog(ui::context *ctx)
     b->add_callback(ui::callback::btn_up, setup_comm_callback, NULL);
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 
-    str = translate("Cancel");
+    str = translate("Button label", "Cancel");
     b = new ui::button(dialog,
                        ui::element::font, ui::ownership::shared, dialog_font,
                        ui::element::border, ui::side::all, border,

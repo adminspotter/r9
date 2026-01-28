@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2025-04-15 09:03-0700\n"
+"POT-Creation-Date: 2026-01-28 09:48-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,253 +17,258 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: client/client.cc:84
+#: client/client.cc:83
 msgid "Failed to initialize GLFW"
 msgstr ""
 
-#: client/comm.cc:75
+#: client/comm.cc:74
 msgctxt "Access type"
 msgid "unknown"
 msgstr ""
 
-#: client/comm.cc:76
+#: client/comm.cc:75
 msgctxt "Access type"
 msgid "no"
 msgstr ""
 
-#: client/comm.cc:77
+#: client/comm.cc:76
 msgctxt "Access type"
 msgid "view-only"
 msgstr ""
 
-#: client/comm.cc:78
+#: client/comm.cc:77
 msgctxt "Access type"
 msgid "regular"
 msgstr ""
 
-#: client/comm.cc:79
+#: client/comm.cc:78
 msgctxt "Access type"
 msgid "modify"
 msgstr ""
 
-#: client/comm.cc:112
+#: client/comm.cc:111
 msgid "Error opening socket: {1,errstr} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:205
+#: client/comm.cc:204
 msgid "Error sending packet: {1,errstr} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:237
+#: client/comm.cc:236
 msgid "Error receiving packet: {1,errstr} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:244
+#: client/comm.cc:243
 msgid "Packet from unknown sender"
 msgstr ""
 
-#: client/comm.cc:251 client/comm.cc:357
+#: client/comm.cc:250 client/comm.cc:356
 msgid "Unknown packet type {1,type}"
 msgstr ""
 
-#: client/comm.cc:258
+#: client/comm.cc:257
 msgid "Error decrypting packet"
 msgstr ""
 
-#: client/comm.cc:265 client/comm.cc:529
+#: client/comm.cc:264 client/comm.cc:528
 msgid "Error reordering packet"
 msgstr ""
 
-#: client/comm.cc:288
+#: client/comm.cc:287
 msgid "Login response, {1,Access type} access"
 msgstr ""
 
-#: client/comm.cc:297
+#: client/comm.cc:296
 msgid "Logout response, {1,Access type} access"
 msgstr ""
 
-#: client/comm.cc:339
+#: client/comm.cc:338
 msgid "Bad public key from server"
 msgstr ""
 
-#: client/comm.cc:345
+#: client/comm.cc:344
 msgid "Could not derive shared secret with server"
 msgstr ""
 
-#: client/comm.cc:379
+#: client/comm.cc:378
 msgid "Error initializing queue mutex: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:390
+#: client/comm.cc:389
 msgid "Error initializing queue-not-empty cond: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:437
+#: client/comm.cc:436
 msgid "Error starting send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:452
+#: client/comm.cc:451
 msgid "Error starting receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:480
+#: client/comm.cc:479
 msgid "Error waking send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:491
+#: client/comm.cc:490
 msgid "Error joining send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:502
+#: client/comm.cc:501
 msgid "Error cancelling receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:515
+#: client/comm.cc:514
 msgid "Error joining receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:534
+#: client/comm.cc:533
 msgid "Error encrypting packet"
 msgstr ""
 
-#: client/comm_dialog.cc:73
+#: client/comm_dialog.cc:72
+msgctxt "Input field label"
 msgid "Username"
 msgstr ""
 
-#: client/comm_dialog.cc:86
+#: client/comm_dialog.cc:85
+msgctxt "Input field label"
 msgid "Password"
 msgstr ""
 
-#: client/comm_dialog.cc:97
+#: client/comm_dialog.cc:96
+msgctxt "Input field label"
 msgid "Server"
 msgstr ""
 
-#: client/comm_dialog.cc:110
+#: client/comm_dialog.cc:109
+msgctxt "Button label"
 msgid "OK"
 msgstr ""
 
-#: client/comm_dialog.cc:118
+#: client/comm_dialog.cc:117
+msgctxt "Button label"
 msgid "Cancel"
 msgstr ""
 
-#: client/comm_dialog.cc:154
+#: client/comm_dialog.cc:153
 msgid "Error finding host {1,name}: {2,errmsg} ({3,errno})"
 msgstr ""
 
-#: client/configdata.cc:182 util/r9_keygen.cc:116
+#: client/configdata.cc:181 util/r9_keygen.cc:115
 msgid "Unknown option {1,name}"
 msgstr ""
 
-#: client/configdata.cc:212
+#: client/configdata.cc:211
 msgid "Skipping bad config line \"{1,content}\""
 msgstr ""
 
-#: client/configdata.cc:269 client/configdata.cc:285 client/configdata.cc:300
-#: client/configdata.cc:315
+#: client/configdata.cc:268 client/configdata.cc:284 client/configdata.cc:299
+#: client/configdata.cc:314
 msgid "Error creating config directory {1,name}: {2,errmsg} ({3,errno})"
 msgstr ""
 
-#: client/configdata.cc:394
+#: client/configdata.cc:393
 msgid "Could not find home directory"
 msgstr ""
 
-#: client/control/control.cc:47
+#: client/control/control.cc:46
 msgctxt "Error message"
 msgid "Out of memory"
 msgstr ""
 
-#: client/control/control.cc:48
+#: client/control/control.cc:47
 msgctxt "Error message"
 msgid "Read error"
 msgstr ""
 
-#: client/control/control.cc:49
+#: client/control/control.cc:48
 msgctxt "Error message"
 msgid "No match found"
 msgstr ""
 
-#: client/control/control.cc:50
+#: client/control/control.cc:49
 msgctxt "Error message"
 msgid "Function not implemented"
 msgstr ""
 
-#: client/control/control.cc:52
+#: client/control/control.cc:51
 msgctxt "Error message"
 msgid "Unknown error"
 msgstr ""
 
-#: client/control/control.cc:66
+#: client/control/control.cc:65
 msgid "Could not find control modules: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:97
+#: client/control/control.cc:96
 msgid "Could not close library {1,name}: {2,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:108
+#: client/control/control.cc:107
 msgid "Could not open library {1,name}: {2,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:118
+#: client/control/control.cc:117
 msgid "Could not find create symbol: {1,errmsg}"
 msgstr ""
 
-#: client/log_display.cc:188
+#: client/log_display.cc:187
 msgid "Error starting log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:220
+#: client/log_display.cc:219
 msgid "Error cancelling log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:232
+#: client/log_display.cc:231
 msgid "Error joining log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:243
+#: client/log_display.cc:242
 msgid "Error destroying log display mutex: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/shader.cc:54
+#: client/shader.cc:53
 msgid "Error opening file {1,name}"
 msgstr ""
 
-#: client/shader.cc:78
+#: client/shader.cc:77
 msgid "Error creating shader {1,name}: {2,errmsg}"
 msgstr ""
 
-#: client/shader.cc:122
+#: client/shader.cc:121
 msgid "Error creating GL program: {1,errmsg}"
 msgstr ""
 
-#: client/shader.cc:136
+#: client/shader.cc:135
 msgid "Error attaching shaders to program: {1,errmsg}"
 msgstr ""
 
-#: util/r9_keygen.cc:95 util/r9_keygen.cc:105
+#: util/r9_keygen.cc:94 util/r9_keygen.cc:104
 msgid "Can't do both server and client keys"
 msgstr ""
 
-#: util/r9_keygen.cc:121
+#: util/r9_keygen.cc:120
 msgid "Error in argument parsing"
 msgstr ""
 
-#: util/r9_keygen.cc:142
+#: util/r9_keygen.cc:141
 msgid "Writing to {1,name}"
 msgstr ""
 
-#: util/r9_keygen.cc:155
+#: util/r9_keygen.cc:154
 msgid "Passphrases do not match!"
 msgstr ""
 
-#: util/r9_keygen.cc:156
+#: util/r9_keygen.cc:155
 msgid "Enter passphrase: "
 msgstr ""
 
-#: util/r9_keygen.cc:163
+#: util/r9_keygen.cc:162
 msgid "Repeat passphrase: "
 msgstr ""
 
-#: util/r9_keygen.cc:190
+#: util/r9_keygen.cc:189
 msgid "Error writing private key file: {1,errmsg} ({2,errno})"
 msgstr ""
