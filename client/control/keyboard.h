@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2019-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2019-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,7 +42,7 @@ class keyboard : public control
     int pitch_up, pitch_down, roll_left, roll_right, yaw_left, yaw_right;
 
   private:
-    Comm *comm;
+    Comm **comm;
 
     static void keyboard_callback(ui::active *, void *, void *);
 
@@ -52,8 +52,8 @@ class keyboard : public control
 
     void set_defaults(void);
 
-    virtual void setup(ui::active *, Comm *) override;
-    virtual void cleanup(ui::active *, Comm *) override;
+    virtual void setup(ui::active *, Comm **) override;
+    virtual void cleanup(ui::active *, Comm **) override;
 };
 
 #endif /* __INC_R9CLIENT_KEYBOARD_H__ */

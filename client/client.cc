@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2016-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2016-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -52,6 +52,7 @@ void close_key_callback(ui::active *, void *, void *);
 void resize_callback(GLFWwindow *, int, int);
 
 std::vector<Comm *> comm;
+Comm *primary_comm = NULL;
 ConfigData config;
 GLFWwindow *w;
 ui::context *ctx;
@@ -168,18 +169,21 @@ void setup_comm(struct addrinfo *ai, const char *user, const char *charname)
 {
     Comm *c = new Comm(ai);
     comm.push_back(c);
+    if (primary_comm == NULL)
+        primary_comm = c;
     c->start();
     c->send_login(user, charname);
     if (controller == NULL)
         controller = control_factory::create(config.controller);
-    controller->setup(ctx, c);
+    controller->setup(ctx, &primary_comm);
 }
 
 void cleanup_comm(void)
 {
+    primary_comm = NULL;
     while (!comm.empty())
     {
-        controller->cleanup(ctx, comm.back());
+        controller->cleanup(ctx, &primary_comm);
         delete comm.back();
         comm.pop_back();
     }

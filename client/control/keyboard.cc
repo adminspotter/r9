@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2019-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2019-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -55,21 +55,21 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
     {
         move.x = (!key_down ? 0.0
                   : (call_data->key == kb->move_right ? 1.0 : -1.0));
-        kb->comm->send_action_request(3, move, 100);
+        (*(kb->comm))->send_action_request(3, move, 100);
     }
     else if (call_data->key == kb->move_forward
         || call_data->key == kb->move_back)
     {
         move.y = (!key_down ? 0.0
                   : (call_data->key == kb->move_forward ? 1.0 : -1.0));
-        kb->comm->send_action_request(3, move, 100);
+        (*(kb->comm))->send_action_request(3, move, 100);
     }
     else if (call_data->key == kb->move_up
              || call_data->key == kb->move_down)
     {
         move.z = (!key_down ? 0.0
                   : (call_data->key == kb->move_up ? 1.0 : -1.0));
-        kb->comm->send_action_request(3, move, 100);
+        (*(kb->comm))->send_action_request(3, move, 100);
     }
     else if (call_data->key == kb->pitch_up
              || call_data->key == kb->pitch_down)
@@ -77,7 +77,7 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
         glm::vec3 rot((call_data->key == kb->pitch_up ? 1.0 : -1.0),
                       0.0,
                       0.0);
-        kb->comm->send_action_request(4, rot, (key_down ? 100 : 0));
+        (*(kb->comm))->send_action_request(4, rot, (key_down ? 100 : 0));
     }
     else if (call_data->key == kb->roll_left
              || call_data->key == kb->roll_right)
@@ -85,7 +85,7 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
         glm::vec3 rot(0.0,
                       (call_data->key == kb->roll_right ? 1.0 : -1.0),
                       0.0);
-        kb->comm->send_action_request(4, rot, (key_down ? 100 : 0));
+        (*(kb->comm))->send_action_request(4, rot, (key_down ? 100 : 0));
     }
     else if (call_data->key == kb->yaw_left
              || call_data->key == kb->yaw_right)
@@ -93,7 +93,7 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
         glm::vec3 rot(0.0,
                       0.0,
                       (call_data->key == kb->yaw_left ? 1.0 : -1.0));
-        kb->comm->send_action_request(4, rot, (key_down ? 100 : 0));
+        (*(kb->comm))->send_action_request(4, rot, (key_down ? 100 : 0));
     }
 }
 
@@ -123,7 +123,7 @@ void keyboard::set_defaults(void)
     this->yaw_right = keyboard::YAW_RIGHT;
 }
 
-void keyboard::setup(ui::active *comp, Comm *comm)
+void keyboard::setup(ui::active *comp, Comm **comm)
 {
     this->comm = comm;
     comp->add_callback(ui::callback::key_down,
@@ -134,7 +134,7 @@ void keyboard::setup(ui::active *comp, Comm *comm)
                        this);
 }
 
-void keyboard::cleanup(ui::active *comp, Comm *comm)
+void keyboard::cleanup(ui::active *comp, Comm **comm)
 {
     this->comm = NULL;
     comp->remove_callback(ui::callback::key_down,

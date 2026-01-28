@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2019-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2019-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -43,8 +43,8 @@ class control
     control() {};
     virtual ~control() {};
 
-    virtual void setup(ui::active *, Comm *) {};
-    virtual void cleanup(ui::active *, Comm *) {};
+    virtual void setup(ui::active *, Comm **) {};
+    virtual void cleanup(ui::active *, Comm **) {};
 };
 
 class control_factory
