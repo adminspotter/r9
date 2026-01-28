@@ -145,7 +145,15 @@ void keyboard::cleanup(ui::active *comp, Comm **comm)
                           this);
 }
 
-extern "C" control *create(void)
+/* ARGSUSED */
+extern "C" bool can_use(const char *device)
 {
+    return true;
+}
+
+/* ARGSUSED */
+extern "C" control *create(const char *device)
+{
+    /* We wouldn't have multiple keyboards, so the dev name doesn't matter. */
     return (control *)new keyboard();
 }

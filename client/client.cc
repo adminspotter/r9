@@ -51,13 +51,16 @@ void error_callback(int, const char *);
 void close_key_callback(ui::active *, void *, void *);
 void resize_callback(GLFWwindow *, int, int);
 
+void setup_controllers(void);
+void cleanup_controllers(void);
+
 std::vector<Comm *> comm;
 Comm *primary_comm = NULL;
 ConfigData config;
 GLFWwindow *w;
 ui::context *ctx;
 log_display *log_disp;
-control *controller = NULL;
+control_factory *control = NULL;
 
 int main(int argc, char **argv)
 {
@@ -117,6 +120,8 @@ int main(int argc, char **argv)
                                glm::ivec2(10, -10));
     init_client_core();
 
+    setup_controllers();
+
     glfwSetWindowSizeCallback(w, resize_callback);
 
     /* Set the initial projection matrix */
@@ -133,6 +138,7 @@ int main(int argc, char **argv)
         glfwPollEvents();
     }
 
+    cleanup_controllers();
     cleanup_comm();
     cleanup_client_core();
     config.write_config_file();
@@ -173,9 +179,23 @@ void setup_comm(struct addrinfo *ai, const char *user, const char *charname)
         primary_comm = c;
     c->start();
     c->send_login(user, charname);
-    if (controller == NULL)
-        controller = control_factory::create(config.controller);
-    controller->setup(ctx, &primary_comm);
+}
+
+void setup_controllers(void)
+{
+    if (control == NULL)
+        control = new control_factory();
+    control->start(ctx, &primary_comm);
+}
+
+void cleanup_controllers(void)
+{
+    if (control != NULL)
+    {
+        control->stop(ctx, &primary_comm);
+        delete control;
+        control = NULL;
+    }
 }
 
 void cleanup_comm(void)
@@ -183,10 +203,7 @@ void cleanup_comm(void)
     primary_comm = NULL;
     while (!comm.empty())
     {
-        controller->cleanup(ctx, &primary_comm);
         delete comm.back();
         comm.pop_back();
     }
-    delete controller;
-    controller = NULL;
 }

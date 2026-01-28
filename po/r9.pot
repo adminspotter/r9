@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-01-28 10:51-0800\n"
+"POT-Creation-Date: 2026-01-28 13:27-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: client/client.cc:84
+#: client/client.cc:87
 msgid "Failed to initialize GLFW"
 msgstr ""
 
@@ -172,45 +172,53 @@ msgstr ""
 msgid "Could not find home directory"
 msgstr ""
 
-#: client/control/control.cc:46
+#: client/control/control.cc:45
 msgctxt "Error message"
 msgid "Out of memory"
 msgstr ""
 
-#: client/control/control.cc:47
+#: client/control/control.cc:46
 msgctxt "Error message"
 msgid "Read error"
 msgstr ""
 
-#: client/control/control.cc:48
+#: client/control/control.cc:47
 msgctxt "Error message"
 msgid "No match found"
 msgstr ""
 
-#: client/control/control.cc:49
+#: client/control/control.cc:48
 msgctxt "Error message"
 msgid "Function not implemented"
 msgstr ""
 
-#: client/control/control.cc:51
+#: client/control/control.cc:50
 msgctxt "Error message"
 msgid "Unknown error"
 msgstr ""
 
-#: client/control/control.cc:65
-msgid "Could not find control modules: {1,errmsg} ({2,errno})"
+#: client/control/control.cc:70
+msgid "Error opening library {1,name}: {2,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:96
-msgid "Could not close library {1,name}: {2,errmsg}"
+#: client/control/control.cc:80
+msgid "Error finding can_use symbol: {1,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:107
-msgid "Could not open library {1,name}: {2,errmsg}"
+#: client/control/control.cc:90
+msgid "Error finding create symbol: {1,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:117
-msgid "Could not find create symbol: {1,errmsg}"
+#: client/control/control.cc:120
+msgid "Error closing library {1,name}: {2,errmsg}"
+msgstr ""
+
+#: client/control/control.cc:137
+msgid "Error finding control modules: {1,errmsg} ({2,errno})"
+msgstr ""
+
+#: client/control/control.cc:178
+msgid "Error finding devices: {1,errmsg} ({2,errno})"
 msgstr ""
 
 #: client/log_display.cc:187

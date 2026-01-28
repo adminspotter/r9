@@ -32,6 +32,8 @@
 
 #include <vector>
 #include <string>
+#include <tuple>
+#include <map>
 
 #include <cuddly-gl/active.h>
 
@@ -49,9 +51,30 @@ class control
 
 class control_factory
 {
+  private:
+    typedef bool (*can_use_func_t)(const char *);
+    typedef control *(*create_func_t)(const char *);
+    typedef std::tuple<void *, can_use_func_t, create_func_t> lib_funcs_t;
+    typedef std::map<std::string, lib_funcs_t> lib_map_t;
+    typedef lib_map_t::iterator lib_iter_t;
+
+    lib_map_t lib_map;
+    std::map<std::string, control *> device_map;
+
+    lib_iter_t find_lib_entry(const std::string&);
+
   public:
-    static std::vector<std::string> types(void);
-    static control *create(const std::string&);
+    control_factory();
+    ~control_factory();
+
+    std::vector<std::string> types(void);
+    const std::vector<std::string> devices(void);
+
+    void start(ui::active *, Comm **);
+    void stop(ui::active *, Comm **);
+
+    void new_device(const char *, ui::active *, Comm **);
+    control *create(const std::string&, const char *);
 };
 
 #endif /* __INC_R9CLIENT_CONTROL_H__ */
