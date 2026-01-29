@@ -5,6 +5,8 @@ client/comm.cc
 client/comm_dialog.cc
 client/configdata.cc
 client/control/control.cc
+client/control/joystick.cc
+client/control/keyboard.cc
 client/log_display.cc
 client/shader.cc
 util/r9_keygen.cc

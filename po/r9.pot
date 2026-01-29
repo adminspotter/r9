@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-01-28 16:21-0800\n"
+"POT-Creation-Date: 2026-01-28 16:25-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -271,6 +271,38 @@ msgstr ""
 
 #: client/control/control.cc:444
 msgid "notify connection closed"
+msgstr ""
+
+#: client/control/joystick.cc:173
+msgid "Error opening joystick device {1,name}: {2,errmsg} ({3,errno})"
+msgstr ""
+
+#: client/control/joystick.cc:185
+msgid "Error fetching joystick axis count: {1,errmsg} ({2,errno})"
+msgstr ""
+
+#: client/control/joystick.cc:200
+msgid "Error fetching joystick button count: {1,errmsg} ({2,errno})"
+msgstr ""
+
+#: client/control/joystick.cc:218
+msgid "Error starting joystick worker thread: {1,errmsg} ({2,errno})"
+msgstr ""
+
+#: client/control/joystick.cc:226
+msgid "Initialized {1,devicename}"
+msgstr ""
+
+#: client/control/joystick.cc:237
+msgid "Could not find any joystick devices"
+msgstr ""
+
+#: client/control/joystick.cc:260
+msgid "Error cancelling joystick worker: {1,errmsg} ({2,errno})"
+msgstr ""
+
+#: client/control/joystick.cc:270
+msgid "Error joining joystick worker: {1,errmsg} ({2,errno})"
 msgstr ""
 
 #: client/log_display.cc:187
