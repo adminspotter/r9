@@ -7,6 +7,7 @@ client/configdata.cc
 client/control/control.cc
 client/control/joystick.cc
 client/control/keyboard.cc
+client/control/spacemouse.cc
 client/log_display.cc
 client/shader.cc
 util/r9_keygen.cc

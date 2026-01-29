@@ -1,4 +1,4 @@
-client_libs = keyboard.la joystick.la
+client_libs = keyboard.la joystick.la spacemouse.la
 
 clientlibdir = $(pkglibdir)/client
 
@@ -13,6 +13,10 @@ keyboard_la_LIBADD = -lcuddly_gl
 joystick_la_SOURCES = joystick.cc joystick.h
 joystick_la_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES)
 joystick_la_LIBADD = -lcuddly_gl
+
+spacemouse_la_SOURCES = spacemouse.cc spacemouse.h
+spacemouse_la_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES)
+spacemouse_la_LIBADD = -lcuddly_gl
 
 install-data-hook:
 	cd $(clientlibdir) && rm -f $(client_libs)
