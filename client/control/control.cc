@@ -30,6 +30,13 @@
 #include <glob.h>
 #include <dlfcn.h>
 
+#ifdef HAVE_INOTIFY
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/inotify.h>
+#include <pthread.h>
+#endif /* HAVE_INOTIFY */
+
 #include <sstream>
 #include <stdexcept>
 
@@ -97,6 +104,97 @@ control_factory::lib_iter_t control_factory::find_lib_entry(
     }
     return entry;
 }
+
+#ifdef HAVE_INOTIFY
+
+void control_factory::startup_inotify(ui::active *active, Comm **comm)
+{
+    int ret;
+
+    worker_args args = std::make_tuple(this, active, comm);
+    if ((ret = pthread_create(
+             &this->device_thread, NULL, this->device_worker, &args)
+        ) != 0)
+    {
+        char err[128];
+
+        std::clog << format(
+            translate(
+                "Error starting device notify thread: {1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
+
+        /* Try not to leak.  Instead of throwing, we'll just log and
+         * ignore, and keep the static data we've already got.
+         */
+        this->shutdown_inotify();
+    }
+}
+
+void control_factory::shutdown_inotify(void)
+{
+    int ret;
+
+    if ((ret = pthread_cancel(this->device_thread)) != 0)
+    {
+        char err[128];
+
+        std::clog << format(
+            translate(
+                "Error cancelling device notify thread: {1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
+    }
+    else if ((ret = pthread_join(this->device_thread, NULL)) != 0)
+    {
+        char err[128];
+
+        std::clog << format(
+            translate(
+                "Error joining device notify thread: {1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
+    }
+}
+
+void *control_factory::device_worker(void *args)
+{
+    control_factory *factory = std::get<0>(*(worker_args *)args);
+    ui::active *active = std::get<1>(*(worker_args *)args);
+    Comm **comm = std::get<2>(*(worker_args *)args);
+    std::map<std::string, control *>& dev_map = factory->device_map;
+    std::map<std::string, control *>::iterator iter;
+    inotify_watcher notifier;
+    inotify_watcher::watcher_map_t watch_map;
+
+    /* Make sure we can be cancelled as we expect. */
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+    watch_map[IN_MOVED_TO] = [&](const std::string& str)
+        {
+            factory->new_device(str.c_str(), active, comm);
+        };
+    watch_map[IN_DELETE] = [&](const std::string& str)
+        {
+            if ((iter = dev_map.find(str)) != dev_map.end())
+            {
+                iter->second->cleanup(active, comm);
+                delete iter->second;
+                dev_map.erase(iter);
+                std::clog << format(
+                    translate("Removed device {1,name}")
+                ) % str << std::endl;
+            }
+        };
+
+    notifier.watch(DEVICE_PATH, watch_map);
+
+    std::clog << translate("notify watcher terminated") << std::endl;
+    return NULL;
+}
+
+#endif /* HAVE_INOTIFY */
 
 control_factory::control_factory()
 {
@@ -183,10 +281,20 @@ void control_factory::start(ui::active *a, Comm **c)
     for (int i = 0; i < device_glob.gl_pathc; ++i)
         this->new_device(device_glob.gl_pathv[i], a, c);
     globfree(&device_glob);
+
+#ifdef HAVE_INOTIFY
+    std::clog << translate("Starting inotify") << std::endl;
+    this->startup_inotify(a, c);
+#endif /* HAVE_INOTIFY */
 }
 
 void control_factory::stop(ui::active *a, Comm **c)
 {
+#ifdef HAVE_INOTIFY
+    std::clog << translate("Stopping inotify") << std::endl;
+    this->shutdown_inotify();
+#endif /* HAVE_INOTIFY */
+
     for (auto& dev : this->device_map)
     {
         dev.second->cleanup(a, c);
@@ -224,3 +332,132 @@ control *control_factory::create(const std::string& control_type,
         return (std::get<2>(entry->second))(dev);
     return NULL;
 }
+
+#ifdef HAVE_INOTIFY
+
+void inotify_watcher::setup_watch(const std::string& path,
+                                  const watcher_map_t& watchers)
+{
+    uint32_t watch_mask = 0;
+
+    if (this->notify_watch != 0)
+        this->cleanup_watch();
+
+    for (auto& w : watchers)
+        watch_mask |= w.first;
+
+    if ((this->notify_watch = inotify_add_watch(
+             this->notify_fd, path.c_str(), watch_mask
+         )) < 0)
+    {
+        std::ostringstream s;
+        char err[128];
+
+        s << format(
+            translate(
+                "Error creating notify watch descriptor: "
+                "{1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
+        throw std::runtime_error(s.str());
+    }
+}
+
+void inotify_watcher::cleanup_watch(void)
+{
+    if (this->notify_watch == 0)
+        return;
+
+    if (inotify_rm_watch(this->notify_fd, this->notify_watch) != 0)
+    {
+        char err[128];
+
+        std::clog << format(
+            translate(
+                "Error removing notify watch descriptor: "
+                "{1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
+    }
+    this->notify_watch = 0;
+}
+
+inotify_watcher::inotify_watcher()
+{
+    this->notify_watch = 0;
+    if ((this->notify_fd = inotify_init()) < 0)
+    {
+        std::ostringstream s;
+        char err[128];
+
+        s << format(
+            translate(
+                "Error creating notify file descriptor: "
+                "{1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
+        throw std::runtime_error(s.str());
+    }
+}
+
+inotify_watcher::~inotify_watcher()
+{
+    if (close(this->notify_fd) != 0)
+    {
+        char err[128];
+
+        std::clog << format(
+            translate(
+                "Error closing notify file descriptor: "
+                "{1,errmsg} ({2,errno})"
+            )
+        ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
+    }
+}
+
+void inotify_watcher::watch(const std::string& watch_path,
+                            watcher_map_t& watches)
+{
+    unsigned char read_buf[sizeof(struct inotify_event) + NAME_MAX + 1];
+    struct inotify_event *event = (struct inotify_event *)read_buf;
+    int len;
+    uint32_t watch_mask;
+
+    this->setup_watch(watch_path, watches);
+    for (;;)
+    {
+        memset(read_buf, 0, sizeof(read_buf));
+        if ((len = read(this->notify_fd, &read_buf, sizeof(read_buf))) < 0)
+        {
+            char err[128];
+
+            std::clog << format(
+                translate(
+                    "Error reading notification: {1,errmsg} ({2,errno})"
+                )
+            ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
+
+            continue;
+        }
+        else if (len == 0)
+        {
+            std::clog << translate("notify connection closed") << std::endl;
+            break;
+        }
+
+        while (len >= sizeof(struct inotify_event) + event->len)
+        {
+            if (event->len > 0)
+            {
+                std::string path = watch_path + "/" + event->name;
+                for (auto& watch : watches)
+                    if (event->mask & watch.first)
+                        watch.second(path);
+            }
+            len -= sizeof(struct inotify_event) + event->len;
+        }
+    }
+    this->cleanup_watch();
+}
+
+#endif /* HAVE_INOTIFY */

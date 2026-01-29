@@ -30,10 +30,17 @@
 #ifndef __INC_R9CLIENT_CONTROL_H__
 #define __INC_R9CLIENT_CONTROL_H__
 
+#include <config.h>
+
+#ifdef HAVE_INOTIFY
+#include <pthread.h>
+#endif /* HAVE_INOTIFY */
+
 #include <vector>
 #include <string>
 #include <tuple>
 #include <map>
+#include <functional>
 
 #include <cuddly-gl/active.h>
 
@@ -49,6 +56,10 @@ class control
     virtual void cleanup(ui::active *, Comm **) {};
 };
 
+#ifdef HAVE_INOTIFY
+class inotify_watcher;
+#endif /* HAVE_INOTIFY */
+
 class control_factory
 {
   private:
@@ -63,6 +74,17 @@ class control_factory
 
     lib_iter_t find_lib_entry(const std::string&);
 
+#ifdef HAVE_INOTIFY
+    pthread_t device_thread;
+
+    typedef std::tuple<control_factory *, ui::active *, Comm **> worker_args;
+
+    void startup_inotify(ui::active *, Comm **);
+    void shutdown_inotify(void);
+    static void *device_worker(void *);
+
+#endif /* HAVE_INOTIFY */
+
   public:
     control_factory();
     ~control_factory();
@@ -76,5 +98,31 @@ class control_factory
     void new_device(const char *, ui::active *, Comm **);
     control *create(const std::string&, const char *);
 };
+
+#ifdef HAVE_INOTIFY
+class inotify_watcher
+{
+  public:
+    typedef std::map<
+        uint32_t,
+        std::function<void(const std::string&)>
+    > watcher_map_t;
+
+  private:
+    std::string watch_path;
+    uint32_t watch_mask;
+
+    int notify_fd, notify_watch;
+
+    void setup_watch(const std::string&, const watcher_map_t&);
+    void cleanup_watch(void);
+
+  public:
+    inotify_watcher();
+    ~inotify_watcher();
+
+    void watch(const std::string&, watcher_map_t&);
+};
+#endif /* HAVE_INOTIFY */
 
 #endif /* __INC_R9CLIENT_CONTROL_H__ */

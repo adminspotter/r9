@@ -200,6 +200,15 @@ then
       ],
       [AC_MSG_ERROR([libm not valid, can not build client program.])])
 
+  # Check for inotify, for dynamic game controller handling
+  AC_CHECK_HEADERS([sys/inotify.h], [break])
+  AC_CHECK_FUNCS([inotify_init inotify_add_watch inotify_rm_watch])
+  if test "x$ac_cv_func_inotify_init" != "x" && test "x$ac_cv_func_inotify_add_watch" != "x" && test "x$ac_cv_func_inotify_rm_watch" != "x"
+  then
+    AC_MSG_NOTICE([all inotify functions present, enabling])
+    AC_DEFINE(HAVE_INOTIFY, [1], [Enable inotify support])
+  fi
+
   # OpenGL libs
   case $host_os in
     darwin*)
