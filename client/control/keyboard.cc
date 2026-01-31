@@ -25,6 +25,8 @@
  *
  */
 
+#include <string.h>
+
 #include "keyboard.h"
 
 #include "../comm.h"
@@ -145,15 +147,21 @@ void keyboard::cleanup(ui::active *comp, Comm **comm)
                           this);
 }
 
+/* We only ever want a single keyboard driver, since it is handled via
+ * CuddlyGL, rather than the actual device file.
+ */
+static keyboard *keyboard_driver = NULL;
+
 /* ARGSUSED */
 extern "C" bool can_use(const char *device)
 {
-    return true;
+    return keyboard_driver == NULL && strstr(device, "event-kbd") != NULL;
 }
 
 /* ARGSUSED */
 extern "C" control *create(const char *device)
 {
-    /* We wouldn't have multiple keyboards, so the dev name doesn't matter. */
-    return (control *)new keyboard();
+    if (keyboard_driver == NULL)
+        keyboard_driver = new keyboard();
+    return keyboard_driver;
 }
