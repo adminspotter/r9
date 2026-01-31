@@ -106,7 +106,7 @@ void test_access_worker(void)
     config.send_threads = 1;
     config.access_threads = 1;
 
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authentication_count = 0;
     check_authentication_result = 0LL;

@@ -10,9 +10,9 @@ using namespace TAP;
 class object_DB : public fake_DB
 {
   public:
-    object_DB(const std::string& a, const std::string& b,
-              const std::string& c, const std::string& d)
-        : fake_DB(a, b, c, d)
+    object_DB(const std::string& a, int b, const std::string& c,
+              const std::string& d, const std::string& e)
+        : fake_DB(a, b, c, d, e)
         {};
     virtual ~object_DB() {};
 
@@ -36,7 +36,7 @@ void test_create_simple(void)
 {
     std::string test = "create simple: ";
 
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     get_server_objects_count = 0;
 
@@ -59,7 +59,7 @@ void test_create_complex(void)
 {
     std::string test = "create complex: ";
 
-    database = new object_DB("a", "b", "c", "d");
+    database = new object_DB("a", 0, "b", "c", "d");
 
     get_server_objects_count = 0;
 
@@ -82,7 +82,7 @@ void test_sector_methods(void)
 {
     std::string test = "sector methods: ";
 
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     zone = new Zone(1000, 1000, 1000, 1, 1, 3, database);
 
@@ -109,7 +109,7 @@ void test_send_objects(void)
     std::string test = "send_objects: ";
     int obj_size, queue_size;
 
-    database = new object_DB("a", "b", "c", "d");
+    database = new object_DB("a", 0, "b", "c", "d");
 
     zone = new Zone(1000, 1, database);
     obj_size = zone->game_objects.size();

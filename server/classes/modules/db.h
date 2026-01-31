@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2014-2019  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -50,6 +50,7 @@ class DB
 {
   protected:
     const std::string dbhost, dbuser, dbpass, dbname;
+    const int dbport;
 
   public:
     /* Some maximum field lengths */
@@ -66,7 +67,7 @@ class DB
     void get_host_address(void);
 
   public:
-    DB(const std::string&, const std::string&,
+    DB(const std::string&, int, const std::string&,
        const std::string&, const std::string&);
     virtual ~DB();
 
@@ -88,7 +89,7 @@ class DB
 /* Our database types will be dynamically loaded, so these typedefs
  * will simplify loading the symbols from the library.
  */
-typedef DB *db_create_t(const std::string&, const std::string&,
+typedef DB *db_create_t(const std::string&, int, const std::string&,
                         const std::string&, const std::string&);
 typedef void db_destroy_t(DB *);
 

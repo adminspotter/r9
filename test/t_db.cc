@@ -53,8 +53,8 @@ const char *inet_ntop(int a, const void *b, char *c, socklen_t d)
 class fake_DB : public DB
 {
   public:
-    fake_DB(const std::string& a, const std::string& b,
-            const std::string& c, const std::string& d) : DB(a, b, c, d) {};
+    fake_DB(const std::string& a, int b, const std::string& c,
+            const std::string& d, const std::string& e) : DB(a, b, c, d, e) {};
     virtual ~fake_DB() {};
 
     /* Player functions */
@@ -105,7 +105,7 @@ void test_bad_gethostbyname(void)
     gethostname_failure = true;
     try
     {
-        database = new fake_DB("a", "b", "c", "d");
+        database = new fake_DB("a", 0, "b", "c", "d");
     }
     catch (std::runtime_error& e)
     {
@@ -129,7 +129,7 @@ void test_bad_getaddrinfo(void)
     getaddrinfo_failure = true;
     try
     {
-        database = new fake_DB("a", "b", "c", "d");
+        database = new fake_DB("a", 0, "b", "c", "d");
     }
     catch (std::runtime_error& e)
     {
@@ -153,7 +153,7 @@ void test_bad_ntop(void)
     ntop_failure = true;
     try
     {
-        database = new fake_DB("a", "b", "c", "d");
+        database = new fake_DB("a", 0, "b", "c", "d");
     }
     catch (std::runtime_error& e)
     {
@@ -176,7 +176,7 @@ void test_success(void)
 
     try
     {
-        database = new fake_DB("a", "b", "c", "d");
+        database = new fake_DB("a", 0, "b", "c", "d");
     }
     catch (...)
     {
