@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 1999-2021  Trinity Annabelle Quirk
+ * Copyright (C) 1999-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -124,9 +124,9 @@ static time_t MYSQL_TIME_to_time_t(MYSQL_TIME *mt)
     return mktime(&timeinfo);
 }
 
-MySQL::MySQL(const std::string& host, const std::string& user,
+MySQL::MySQL(const std::string& host, int port, const std::string& user,
              const std::string& pass, const std::string& db)
-    : DB(host, user, pass, db)
+    : DB(host, port, user, pass, db)
 {
 }
 
@@ -592,7 +592,8 @@ MYSQL *MySQL::db_connect(void)
     if ((db_handle = mysql_init(NULL)) == NULL
         || mysql_real_connect(db_handle, this->dbhost.c_str(),
                               this->dbuser.c_str(), this->dbpass.c_str(),
-                              this->dbname.c_str(), 0, NULL, 0) == NULL)
+                              this->dbname.c_str(), this->dbport,
+                              NULL, 0) == NULL)
     {
         std::ostringstream s;
         if (db_handle == NULL)
@@ -643,11 +644,11 @@ MYSQL *MySQL::db_connect(void)
     return db_handle;
 }
 
-extern "C" DB *db_create(const std::string& a, const std::string& b,
-                         const std::string& c, const std::string& d)
+extern "C" DB *db_create(const std::string& a, int b, const std::string& c,
+                         const std::string& d, const std::string& e)
 {
     mysql_library_init(0, NULL, NULL);
-    return new MySQL(a, b, c, d);
+    return new MySQL(a, b, c, d, e);
 }
 
 extern "C" void db_destroy(DB *db)

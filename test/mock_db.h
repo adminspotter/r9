@@ -34,8 +34,8 @@ int get_server_objects_count = 0, get_server_objects_result = 0;
 class fake_DB : public DB
 {
   public:
-    fake_DB(const std::string& a, const std::string& b,
-            const std::string& c, const std::string& d) : DB(a, b, c, d) {};
+    fake_DB(const std::string& a, int b, const std::string& c,
+            const std::string& d, const std::string& e) : DB(a, b, c, d, e) {};
     virtual ~fake_DB() {};
 
     virtual uint64_t check_authentication(const std::string& a,

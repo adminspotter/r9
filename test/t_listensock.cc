@@ -89,7 +89,7 @@ class fake_listen_socket : public listen_socket
 void test_base_user_create_delete(void)
 {
     std::string test = "base_user create/delete: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
     base_user *base = NULL;
 
     check_authorization_count = 0;
@@ -123,7 +123,7 @@ void test_base_user_create_delete(void)
 void test_base_user_no_access(void)
 {
     std::string test = "base_user no access: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authorization_count = 0;
     check_authorization_result = ACCESS_NONE;
@@ -145,7 +145,7 @@ void test_base_user_no_access(void)
 void test_base_user_less_than(void)
 {
     std::string test = "base_user less: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authorization_result = ACCESS_VIEW;
 
@@ -162,7 +162,7 @@ void test_base_user_less_than(void)
 void test_base_user_equal_to(void)
 {
     std::string test = "base_user equal: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authorization_result = ACCESS_VIEW;
 
@@ -179,7 +179,7 @@ void test_base_user_equal_to(void)
 void test_base_user_assignment(void)
 {
     std::string test = "base_user assign: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authorization_result = ACCESS_VIEW;
 
@@ -200,7 +200,7 @@ void test_base_user_assignment(void)
 void test_base_user_disconnect_on_destroy(void)
 {
     std::string test = "base_user disconnect: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
     zone = new fake_Zone(1000, 1, database);
     GameObject *go = new GameObject(NULL, NULL, 1234LL);
     zone->game_objects[1234LL] = go;
@@ -229,7 +229,7 @@ void test_base_user_disconnect_on_destroy(void)
 void test_base_user_encrypt_decrypt(void)
 {
     std::string test = "base_user encrypt/decrypt: ", st;
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authorization_result = ACCESS_VIEW;
 
@@ -303,7 +303,7 @@ void test_base_user_send_key(void)
     std::string test = "base_user send_server_key: ";
     fake_listen_socket *listen = new fake_listen_socket();
 
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authorization_result = ACCESS_VIEW;
 
@@ -327,7 +327,7 @@ void test_base_user_send_ping(void)
     std::string test = "base_user send_ping: ";
     fake_listen_socket *listen = new fake_listen_socket();
 
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authorization_result = ACCESS_VIEW;
 
@@ -350,7 +350,7 @@ void test_base_user_send_ack(void)
     std::string test = "base_user send_ack: ";
     fake_listen_socket *listen = new fake_listen_socket();
 
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authorization_result = ACCESS_VIEW;
 
@@ -584,7 +584,7 @@ void test_listen_socket_handle_logout(void)
 void test_listen_socket_login_no_user(void)
 {
     std::string test = "listen_socket no user: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authentication_count = 0;
     check_authentication_result = 0LL;
@@ -613,7 +613,7 @@ void test_listen_socket_login_no_user(void)
 void test_listen_socket_login_already(void)
 {
     std::string test = "listen_socket already logged in: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authentication_count = 0;
     check_authentication_result = 123LL;
@@ -646,7 +646,7 @@ void test_listen_socket_login_already(void)
 void test_listen_socket_login_no_access(void)
 {
     std::string test = "listen_socket no access: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authentication_count = 0;
     check_authentication_result = 123LL;
@@ -679,7 +679,7 @@ void test_listen_socket_login_no_access(void)
 void test_listen_socket_login(void)
 {
     std::string test = "listen_socket login: ";
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     check_authentication_result = 123LL;
     check_authorization_result = ACCESS_VIEW;

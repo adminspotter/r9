@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2014-2019  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,6 +35,8 @@
 class PgSQL : public DB
 {
   private:
+    char port_str[10];
+
     static const char check_authentication_query[242];
     static const char check_authorization_id_query[191];
     static const char check_authorization_name_query[193];
@@ -46,7 +48,7 @@ class PgSQL : public DB
     static const char get_player_server_skills_query[295];
 
   public:
-    PgSQL(const std::string&, const std::string&,
+    PgSQL(const std::string&, int, const std::string&,
           const std::string&, const std::string&);
     ~PgSQL();
 

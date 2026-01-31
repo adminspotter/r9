@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 1998-2020  Trinity Annabelle Quirk
+ * Copyright (C) 1998-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -101,10 +101,14 @@ const char PgSQL::get_player_server_skills_query[] =
 const char PgSQL::get_serverid_query[] =
     "SELECT serverid FROM servers WHERE ip=$1;";
 
-PgSQL::PgSQL(const std::string& host, const std::string& user,
+PgSQL::PgSQL(const std::string& host, int port, const std::string& user,
              const std::string& pass, const std::string& db)
-    : DB(host, user, pass, db)
+    : DB(host, port, user, pass, db)
 {
+    if (this->dbport != 0)
+        snprintf(this->port_str, sizeof(this->port_str), "%d", this->dbport);
+    else
+        this->port_str[0] = '\0';
 }
 
 PgSQL::~PgSQL()
@@ -319,7 +323,7 @@ int PgSQL::get_player_server_skills(uint64_t userid,
 PGconn *PgSQL::db_connect(void)
 {
     PGconn *db_handle = PQsetdbLogin(this->dbhost.c_str(),
-                                     NULL,
+                                     this->port_str,
                                      NULL,
                                      NULL,
                                      this->dbname.c_str(),
@@ -353,10 +357,10 @@ void PgSQL::db_close(PGconn *db_handle)
     PQfinish(db_handle);
 }
 
-extern "C" DB *db_create(const std::string& a, const std::string& b,
-                         const std::string& c, const std::string& d)
+extern "C" DB *db_create(const std::string& a, int b, const std::string& c,
+                         const std::string& d, const std::string& e)
 {
-    return new PgSQL(a, b, c, d);
+    return new PgSQL(a, b, c, d, e);
 }
 
 extern "C" void db_destroy(DB *db)

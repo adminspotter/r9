@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 1998-2021  Trinity Annabelle Quirk
+ * Copyright (C) 1998-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -90,6 +90,7 @@ class config_data
     int update_threads;
     location size, spawn;
     std::string db_type, db_host, db_user, db_pass, db_name;
+    int db_port;
     std::string action_lib;
 
     crypto_key key;

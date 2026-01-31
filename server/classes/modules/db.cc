@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2014-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -76,9 +76,9 @@ void DB::get_host_address(void)
     freeaddrinfo(info);
 }
 
-DB::DB(const std::string& host, const std::string& user,
+DB::DB(const std::string& host, int port, const std::string& user,
        const std::string& pass, const std::string& name)
-    : dbhost(host), dbuser(user), dbpass(pass), dbname(name)
+    : dbhost(host), dbuser(user), dbpass(pass), dbname(name), dbport(port)
 {
     this->host_id = 0LL;
     this->get_host_address();
@@ -87,4 +87,3 @@ DB::DB(const std::string& host, const std::string& user,
 DB::~DB()
 {
 }
-

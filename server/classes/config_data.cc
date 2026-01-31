@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 1998-2021  Trinity Annabelle Quirk
+ * Copyright (C) 1998-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,6 +29,7 @@
  *   DBDatabase <dbname>    the name of the database to use
  *   DBHost <host>          database server hostname
  *   DBPassword <password>  the unencrypted password to get into the database
+ *   DBPort <port>          database server port
  *   DBType <type>          which database to use - mysql, pgsql, etc.
  *   DBUser <username>      the database username
  *   KeyFile <fname>        the file that contains the server crypto key
@@ -144,6 +145,7 @@ handlers[] =
     { "DBDatabase",    off(db_name),        &config_string_element   },
     { "DBHost",        off(db_host),        &config_string_element   },
     { "DBPassword",    off(db_pass),        &config_string_element   },
+    { "DBPort",        off(db_port),        &config_integer_element  },
     { "DBType",        off(db_type),        &config_string_element   },
     { "DBUser",        off(db_user),        &config_string_element   },
     { "KeyFile",       off(key),            &config_key_element      },
@@ -205,6 +207,7 @@ void config_data::set_defaults(void)
     this->db_host        = config_data::DB_HOST;
     this->db_user        = "";
     this->db_pass        = "";
+    this->db_port        = 0;
     this->db_name        = config_data::DB_NAME;
 
     this->daemonize      = true;

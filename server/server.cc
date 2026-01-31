@@ -333,8 +333,9 @@ static void setup_zone(void)
     db_lib = new Library("libr9_" + config.db_type + LT_MODULE_EXT);
     db_create = (db_create_t *)db_lib->symbol("db_create");
 
-    database = db_create(config.db_host, config.db_user,
+    database = db_create(config.db_host, config.db_port, config.db_user,
                          config.db_pass, config.db_name);
+    std::clog << "created database" << std::endl;
 
     zone = new Zone(config.size.dim[0], config.size.dim[1],
                     config.size.dim[2], config.size.steps[0],

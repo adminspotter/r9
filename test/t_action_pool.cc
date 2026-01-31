@@ -53,7 +53,7 @@ void find_libraries(const std::string& a, std::vector<Library *>& b)
 
 void setup_fixture(void)
 {
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     symbol_count = 0;
     symbol_result = (void *)register_actions;

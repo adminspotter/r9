@@ -31,7 +31,7 @@ void test_operate(void)
     std::streambuf *orig_rdbuf = std::clog.rdbuf(new Log("blah", LOG_DAEMON));
     glm::dvec3 min(0.0, 0.0, 0.0), max(1000.0, 1000.0, 1000.0);
     sector = new Octree(NULL, min, max, 1);
-    database = new fake_DB("a", "b", "c", "d");
+    database = new fake_DB("a", 0, "b", "c", "d");
 
     zone = new fake_Zone(1000LL, 1, database);
 
