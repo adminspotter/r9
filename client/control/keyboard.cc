@@ -31,6 +31,7 @@
 
 #include "../comm.h"
 #include "../client_core.h"
+#include "../l10n.h"
 
 const int keyboard::MOVE_UP = ui::key::e;
 const int keyboard::MOVE_DOWN = ui::key::c;
@@ -103,6 +104,9 @@ keyboard::keyboard()
 {
     this->comm = NULL;
     this->set_defaults();
+    std::clog << format(
+        translate("Initialized {1,devicename}")
+    ) % "keyboard" << std::endl;
 }
 
 keyboard::~keyboard()
