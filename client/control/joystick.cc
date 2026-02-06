@@ -60,6 +60,12 @@ void *joystick::joystick_worker(void *arg)
         read_size /= sizeof(struct js_event);
         for (int i = 0; i < read_size; ++i)
         {
+            if (*(js->comm) == NULL)
+            {
+                send_move = false;
+                continue;
+            }
+
             if ((ev[i].type & ~JS_EVENT_INIT) == JS_EVENT_AXIS)
             {
                 if (js->axes[ev[i].number].func == joystick::axis_func::NO_AXIS)

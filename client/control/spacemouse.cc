@@ -72,6 +72,13 @@ void *spacemouse::spacemouse_worker(void *arg)
         read_size /= sizeof(struct input_event);
         for (int i = 0; i < read_size; ++i)
         {
+            if (*(sm->comm) == NULL)
+            {
+                send_move = send_rotate = false;
+                move = null_move;
+                continue;
+            }
+
             if (ev[i].type == EV_SYN && ev[i].code == SYN_REPORT)
             {
                 if (send_move)

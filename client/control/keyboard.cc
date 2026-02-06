@@ -53,6 +53,9 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
     glm::vec3 move(0.0, 0.0, 0.0);
     bool key_down = call_data->state == ui::key::down;
 
+    if (*(kb->comm) == NULL)
+        return;
+
     if (call_data->key == kb->move_left
              || call_data->key == kb->move_right)
     {
