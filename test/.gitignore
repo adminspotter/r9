@@ -30,6 +30,7 @@ t_lua
 t_motion_pool
 t_octree
 t_python
+t_shader
 t_sockaddr
 t_socket
 t_stream

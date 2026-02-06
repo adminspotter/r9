@@ -40,7 +40,8 @@ endif
 if WANT_CLIENT
   TC += t_comm \
 	t_comm_exception \
-	t_configdata
+	t_configdata \
+	t_shader
 endif
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
@@ -259,6 +260,10 @@ t_comm_exception_LDADD = $(TAP_LDADD) $(LOCALE_LDLIBS) ../proto/libr9_proto.la
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc
 t_configdata_LDADD = $(TAP_LDADD) $(LOCALE_LDLIBS) ../proto/libr9_proto.la
+
+t_shader_SOURCES = t_shader.cc ../client/shader.h ../client/shader.cc
+t_shader_CXXFLAGS = $(TAP_INCLUDES) -DGL_GLEXT_PROTOTYPES
+t_shader_LDADD = $(TAP_LDADD) $(CLIENT_LDLIBS) $(LOCALE_LDLIBS)
 
 clean-local:
 	rm -f *.gcno *.gcda *.gcov
