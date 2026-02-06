@@ -47,7 +47,7 @@ class keyboard : public control
     static void keyboard_callback(ui::active *, void *, void *);
 
   public:
-    keyboard();
+    explicit keyboard(const std::string&);
     ~keyboard();
 
     void set_defaults(void);

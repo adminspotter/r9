@@ -209,20 +209,8 @@ void spacemouse::init(const char *device)
     ) % device << std::endl;
 }
 
-spacemouse::spacemouse()
-{
-    glob_t devices;
-
-    glob("/dev/input/by-id/*SpaceMouse*", 0, NULL, &devices);
-    if (devices.gl_pathc == 0)
-        throw std::runtime_error(
-            translate("Could not find any SpaceMouse devices")
-        );
-    this->init(devices.gl_pathv[0]);
-    globfree(&devices);
-}
-
-spacemouse::spacemouse(std::string& device)
+spacemouse::spacemouse(const std::string& device)
+    : control(device)
 {
     this->init(device.c_str());
 }

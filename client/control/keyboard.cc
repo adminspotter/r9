@@ -103,7 +103,8 @@ void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
     }
 }
 
-keyboard::keyboard()
+keyboard::keyboard(const std::string& unused)
+    : control(unused)
 {
     this->comm = NULL;
     this->set_defaults();
@@ -169,6 +170,6 @@ extern "C" bool can_use(const char *device)
 extern "C" control *create(const char *device)
 {
     if (keyboard_driver == NULL)
-        keyboard_driver = new keyboard();
+        keyboard_driver = new keyboard(device);
     return keyboard_driver;
 }

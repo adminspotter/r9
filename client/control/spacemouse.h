@@ -52,8 +52,7 @@ class spacemouse : public control
     void init(const char *);
 
   public:
-    spacemouse();
-    explicit spacemouse(std::string&);
+    explicit spacemouse(const std::string&);
     virtual ~spacemouse();
 
     virtual void setup(ui::active *, Comm **) override;

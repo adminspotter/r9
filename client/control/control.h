@@ -49,7 +49,7 @@
 class control
 {
   public:
-    control() {};
+    explicit control(const std::string&) {};
     virtual ~control() {};
 
     virtual void setup(ui::active *, Comm **) {};

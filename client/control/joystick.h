@@ -74,8 +74,7 @@ class joystick : public control
     void init(const char *);
 
   public:
-    joystick();
-    explicit joystick(std::string&);
+    explicit joystick(const std::string&);
     virtual ~joystick();
 
     void set_defaults(void);

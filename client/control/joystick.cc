@@ -233,21 +233,8 @@ void joystick::init(const char *device)
     ) % device << std::endl;
 }
 
-joystick::joystick()
-{
-    glob_t devices;
-
-    glob("/dev/input/js*", 0, NULL, &devices);
-    if (devices.gl_pathc == 0)
-        throw std::runtime_error(
-            translate("Could not find any joystick devices")
-        );
-    this->init(devices.gl_pathv[0]);
-    this->set_defaults();
-    globfree(&devices);
-}
-
-joystick::joystick(std::string& device)
+joystick::joystick(const std::string& device)
+    : control(device)
 {
     this->init(device.c_str());
     this->set_defaults();
