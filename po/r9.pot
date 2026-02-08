@@ -21,108 +21,108 @@ msgstr ""
 msgid "Failed to initialize GLFW"
 msgstr ""
 
-#: client/comm.cc:74
+#: client/comm.cc:77
 msgctxt "Access type"
 msgid "unknown"
 msgstr ""
 
-#: client/comm.cc:75
+#: client/comm.cc:78
 msgctxt "Access type"
 msgid "no"
 msgstr ""
 
-#: client/comm.cc:76
+#: client/comm.cc:79
 msgctxt "Access type"
 msgid "view-only"
 msgstr ""
 
-#: client/comm.cc:77
+#: client/comm.cc:80
 msgctxt "Access type"
 msgid "regular"
 msgstr ""
 
-#: client/comm.cc:78
+#: client/comm.cc:81
 msgctxt "Access type"
 msgid "modify"
 msgstr ""
 
-#: client/comm.cc:111
+#: client/comm.cc:114
 msgid "Error opening socket: {1,errstr} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:204
+#: client/comm.cc:207
 msgid "Error sending packet: {1,errstr} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:236
+#: client/comm.cc:239
 msgid "Error receiving packet: {1,errstr} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:243
+#: client/comm.cc:246
 msgid "Packet from unknown sender"
 msgstr ""
 
-#: client/comm.cc:250 client/comm.cc:356
+#: client/comm.cc:253 client/comm.cc:359
 msgid "Unknown packet type {1,type}"
 msgstr ""
 
-#: client/comm.cc:257
+#: client/comm.cc:260
 msgid "Error decrypting packet"
 msgstr ""
 
-#: client/comm.cc:264 client/comm.cc:528
+#: client/comm.cc:267 client/comm.cc:531
 msgid "Error reordering packet"
 msgstr ""
 
-#: client/comm.cc:287
+#: client/comm.cc:290
 msgid "Login response, {1,Access type} access"
 msgstr ""
 
-#: client/comm.cc:296
+#: client/comm.cc:299
 msgid "Logout response, {1,Access type} access"
 msgstr ""
 
-#: client/comm.cc:338
+#: client/comm.cc:341
 msgid "Bad public key from server"
 msgstr ""
 
-#: client/comm.cc:344
+#: client/comm.cc:347
 msgid "Could not derive shared secret with server"
 msgstr ""
 
-#: client/comm.cc:378
+#: client/comm.cc:381
 msgid "Error initializing queue mutex: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:389
+#: client/comm.cc:392
 msgid "Error initializing queue-not-empty cond: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:436
+#: client/comm.cc:439
 msgid "Error starting send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:451
+#: client/comm.cc:454
 msgid "Error starting receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:479
+#: client/comm.cc:482
 msgid "Error waking send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:490
+#: client/comm.cc:493
 msgid "Error joining send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:501
+#: client/comm.cc:504
 msgid "Error cancelling receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:514
+#: client/comm.cc:517
 msgid "Error joining receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:533
+#: client/comm.cc:536
 msgid "Error encrypting packet"
 msgstr ""
 
