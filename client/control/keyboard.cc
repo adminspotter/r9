@@ -41,10 +41,10 @@ const int keyboard::MOVE_FORWARD = ui::key::w;
 const int keyboard::MOVE_BACK = ui::key::s;
 const int keyboard::PITCH_UP = ui::key::i;
 const int keyboard::PITCH_DOWN = ui::key::k;
-const int keyboard::ROLL_LEFT = ui::key::j;
-const int keyboard::ROLL_RIGHT = ui::key::l;
-const int keyboard::YAW_LEFT = ui::key::u;
-const int keyboard::YAW_RIGHT = ui::key::o;
+const int keyboard::ROLL_LEFT = ui::key::u;
+const int keyboard::ROLL_RIGHT = ui::key::o;
+const int keyboard::YAW_LEFT = ui::key::j;
+const int keyboard::YAW_RIGHT = ui::key::l;
 
 static glm::vec3 move_vec(0.0f, 0.0f, 0.0f);
 
