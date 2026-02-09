@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-02-09 11:58-0800\n"
+"POT-Creation-Date: 2026-02-09 11:59-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -290,7 +290,7 @@ msgid "Error starting joystick worker thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
 #: client/control/joystick.cc:218 client/control/keyboard.cc:100
-#: client/control/spacemouse.cc:208
+#: client/control/spacemouse.cc:168
 msgid "Initialized {1,devicename}"
 msgstr ""
 
@@ -302,19 +302,19 @@ msgstr ""
 msgid "Error joining joystick worker: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/spacemouse.cc:182
+#: client/control/spacemouse.cc:142
 msgid "Error opening SpaceMouse device {1,name}: {2,errmsg} ({3,errno})"
 msgstr ""
 
-#: client/control/spacemouse.cc:198
+#: client/control/spacemouse.cc:158
 msgid "Error starting SpaceMouse worker thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/spacemouse.cc:229
+#: client/control/spacemouse.cc:189
 msgid "Error cancelling SpaceMouse worker: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/spacemouse.cc:239
+#: client/control/spacemouse.cc:199
 msgid "Error joining SpaceMouse worker: {1,errmsg} ({2,errno})"
 msgstr ""
 

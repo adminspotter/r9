@@ -62,8 +62,8 @@ void *spacemouse::spacemouse_worker(void *arg)
     int read_size;
     bool send_move = false, send_rotate = false;
     glm::vec3 move(0.0f, 0.0f, 0.0f), null_move(0.0f, 0.0f, 0.0f);
-    glm::vec3 rot(0.0f, 0.0f, 0.0f), rot_x(0.0f, 0.0f, 0.0f);
-    glm::vec3 rot_y(0.0f, 0.0f, 0.0f), rot_z(0.0f, 0.0f, 0.0f);
+    glm::vec3 rot(0.0f, 0.0f, 0.0f), rot_x(1.0f, 0.0f, 0.0f);
+    glm::vec3 rot_y(0.0f, 1.0f, 0.0f), rot_z(0.0f, 0.0f, 1.0f);
     float scale;
 
     for (;;)
@@ -83,31 +83,14 @@ void *spacemouse::spacemouse_worker(void *arg)
             {
                 if (send_move)
                 {
-                    (*(sm->comm))->send_action_request(
-                        3,
-                        move,
-                        move.length() * 100
-                    );
+                    (*(sm->comm))->send_move(move);
                     send_move = false;
-                    move = null_move;
                 }
                 if (send_rotate)
                 {
-                    (*(sm->comm))->send_action_request(
-                        4,
-                        rot_x,
-                        rot_x.length() * 100
-                    );
-                    (*(sm->comm))->send_action_request(
-                        4,
-                        rot_y,
-                        rot_y.length() * 100
-                    );
-                    (*(sm->comm))->send_action_request(
-                        4,
-                        rot_z,
-                        rot_z.length() * 100
-                    );
+                    (*(sm->comm))->send_rotate(rot_x, rot.x);
+                    (*(sm->comm))->send_rotate(rot_y, rot.y);
+                    (*(sm->comm))->send_rotate(rot_z, rot.z);
                     send_rotate = false;
                 }
             }
@@ -115,52 +98,29 @@ void *spacemouse::spacemouse_worker(void *arg)
             {
                 if (ev[i].value <= sm->deadzone
                     && ev[i].value >= -sm->deadzone)
-                {
-                    send_move = send_rotate = true;
-                    continue;
-                }
-
-                /* Max values seem to be ±350 */
-                scale = (ev[i].value < 0
-                         ? ev[i].value + sm->deadzone
-                         : ev[i].value - sm->deadzone)
-                    / (350.0f - sm->deadzone);
+                    scale = 0.0f;
+                else
+                    /* Max values seem to be ±350 */
+                    scale = (ev[i].value < 0
+                             ? ev[i].value + sm->deadzone
+                             : ev[i].value - sm->deadzone)
+                        / (350.0f - sm->deadzone);
                 switch (ev[i].code)
                 {
                   case REL_X:
-                    move += glm::vec3(1.0, 0.0, 0.0) * scale;
-                    send_move = true;
-                    break;
+                    move.x = scale;  send_move = true;  break;
                   case REL_Y:
-                    move += glm::vec3(0.0, -1.0, 0.0) * scale;
-                    send_move = true;
-                    break;
+                    move.y = -scale;  send_move = true;  break;
                   case REL_Z:
-                    move += glm::vec3(0.0, 0.0, -1.0) * scale;
-                    send_move = true;
-                    break;
+                    move.z = -scale;  send_move = true;  break;
                   case REL_RX:
-                    rot_x = glm::vec3(1.0, 0.0, 0.0) * scale;
-                    send_rotate = true;
-                    break;
+                    rot.x = scale;  send_rotate = true;  break;
                   case REL_RY:
-                    rot_y = glm::vec3(0.0, 1.0, 0.0) * scale;
-                    send_rotate = true;
-                    break;
+                    rot.y = scale;  send_rotate = true;  break;
                   case REL_RZ:
-                    rot_z = glm::vec3(0.0, 0.0, 1.0) * scale;
-                    send_rotate = true;
+                    rot.z = scale;  send_rotate = true;  break;
+                  default:
                     break;
-                }
-            }
-            else if (ev[i].type == EV_KEY)
-            {
-                switch (ev[i].code)
-                {
-                  case BTN_0:
-                    (*(sm->comm))->send_action_request(5, null_move, 100);
-                    break;
-                  case BTN_1:  break;
                 }
             }
         }
