@@ -50,8 +50,10 @@ void *joystick::joystick_worker(void *arg)
     joystick *js = (joystick *)arg;
     struct js_event ev[64];
     int read_size;
-    bool dir, flip, send_move = false;
+    bool flip, send_move = false;
     glm::vec3 move(0.0f, 0.0f, 0.0f), rot(0.0, 0.0, 0.0);
+    glm::vec3 rot_x(1.0f, 0.0f, 0.0f), rot_y(0.0f, 1.0f, 0.0f);
+    glm::vec3 rot_z(0.0f, 0.0f, 1.0f);
     float scale;
 
     for (;;)
@@ -78,7 +80,6 @@ void *joystick::joystick_worker(void *arg)
                              : ev[i].value - js->deadzone)
                         / (32768.0f - js->deadzone);
                 flip = js->axes[ev[i].number].flip;
-                dir = scale >= 0.0 || flip;
                 switch (js->axes[ev[i].number].func)
                 {
                   case joystick::axis_func::HORIZONTAL:
@@ -94,16 +95,13 @@ void *joystick::joystick_worker(void *arg)
                     send_move = true;
                     break;
                   case joystick::axis_func::PITCH:
-                    rot = glm::vec3((dir ? -1.0 : 1.0), 0.0, 0.0);
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
+                    (*(js->comm))->send_rotate(flip ? -rot_x : rot_x, scale);
                     break;
                   case joystick::axis_func::ROLL:
-                    rot = glm::vec3(0.0, (dir ? -1.0 : 1.0), 0.0);
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
+                    (*(js->comm))->send_rotate(flip ? -rot_y : rot_y, scale);
                     break;
                   case joystick::axis_func::YAW:
-                    rot = glm::vec3(0.0, 0.0, (dir ? -1.0 : 1.0));
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
+                    (*(js->comm))->send_rotate(flip ? -rot_z : rot_z, scale);
                     break;
                 }
             }
@@ -127,35 +125,23 @@ void *joystick::joystick_worker(void *arg)
                   case joystick::btn_func::MOVE_DOWN:
                     move.z = -scale;  send_move = true;  break;
                   case joystick::btn_func::PITCH_UP:
-                    rot = glm::vec3(1.0, 0.0, 0.0);
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
-                    break;
+                    (*(js->comm))->send_rotate(rot_x, scale);  break;
                   case joystick::btn_func::PITCH_DOWN:
-                    rot = glm::vec3(-1.0, 0.0, 0.0);
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
-                    break;
+                    (*(js->comm))->send_rotate(-rot_x, scale);  break;
                   case joystick::btn_func::ROLL_LEFT:
-                    rot = glm::vec3(0.0, -1.0, 0.0);
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
-                    break;
+                    (*(js->comm))->send_rotate(-rot_y, scale);  break;
                   case joystick::btn_func::ROLL_RIGHT:
-                    rot = glm::vec3(0.0, 1.0, 0.0);
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
-                    break;
+                    (*(js->comm))->send_rotate(rot_y, scale);  break;
                   case joystick::btn_func::YAW_LEFT:
-                    rot = glm::vec3(0.0, 0.0, 1.0);
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
-                    break;
+                    (*(js->comm))->send_rotate(rot_z, scale);  break;
                   case joystick::btn_func::YAW_RIGHT:
-                    rot = glm::vec3(0.0, 0.0, -1.0);
-                    (*(js->comm))->send_action_request(4, rot, scale * 100);
-                    break;
+                    (*(js->comm))->send_rotate(-rot_z, scale);  break;
                 }
             }
         }
         if (send_move == true)
         {
-            (*(js->comm))->send_action_request(3, move, move.length() * 100);
+            (*(js->comm))->send_move(move);
             send_move = false;
         }
     }

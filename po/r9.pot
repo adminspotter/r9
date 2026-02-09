@@ -273,32 +273,32 @@ msgstr ""
 msgid "notify connection closed"
 msgstr ""
 
-#: client/control/joystick.cc:179
+#: client/control/joystick.cc:165
 msgid "Error opening joystick device {1,name}: {2,errmsg} ({3,errno})"
 msgstr ""
 
-#: client/control/joystick.cc:191
+#: client/control/joystick.cc:177
 msgid "Error fetching joystick axis count: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/joystick.cc:206
+#: client/control/joystick.cc:192
 msgid "Error fetching joystick button count: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/joystick.cc:224
+#: client/control/joystick.cc:210
 msgid "Error starting joystick worker thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/joystick.cc:232 client/control/keyboard.cc:100
+#: client/control/joystick.cc:218 client/control/keyboard.cc:100
 #: client/control/spacemouse.cc:208
 msgid "Initialized {1,devicename}"
 msgstr ""
 
-#: client/control/joystick.cc:253
+#: client/control/joystick.cc:239
 msgid "Error cancelling joystick worker: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/joystick.cc:263
+#: client/control/joystick.cc:249
 msgid "Error joining joystick worker: {1,errmsg} ({2,errno})"
 msgstr ""
 
