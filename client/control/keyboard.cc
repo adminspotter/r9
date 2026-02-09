@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2019-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2019-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,10 +25,13 @@
  *
  */
 
+#include <string.h>
+
 #include "keyboard.h"
 
 #include "../comm.h"
 #include "../client_core.h"
+#include "../l10n.h"
 
 const int keyboard::MOVE_UP = ui::key::e;
 const int keyboard::MOVE_DOWN = ui::key::c;
@@ -38,69 +41,64 @@ const int keyboard::MOVE_FORWARD = ui::key::w;
 const int keyboard::MOVE_BACK = ui::key::s;
 const int keyboard::PITCH_UP = ui::key::i;
 const int keyboard::PITCH_DOWN = ui::key::k;
-const int keyboard::ROLL_LEFT = ui::key::j;
-const int keyboard::ROLL_RIGHT = ui::key::l;
-const int keyboard::YAW_LEFT = ui::key::u;
-const int keyboard::YAW_RIGHT = ui::key::o;
+const int keyboard::ROLL_LEFT = ui::key::u;
+const int keyboard::ROLL_RIGHT = ui::key::o;
+const int keyboard::YAW_LEFT = ui::key::j;
+const int keyboard::YAW_RIGHT = ui::key::l;
+
+static glm::vec3 move_vec(0.0f, 0.0f, 0.0f);
 
 void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
 {
     ui::key_call_data *call_data = (ui::key_call_data *)call;
     keyboard *kb = (keyboard *)client;
-    glm::vec3 move(0.0, 0.0, 0.0);
+    glm::vec3 rot_x(1.0, 0.0, 0.0), rot_y(0.0, 1.0, 0.0), rot_z(0.0, 0.0, 1.0);
     bool key_down = call_data->state == ui::key::down;
 
-    if (call_data->key == kb->move_left
-             || call_data->key == kb->move_right)
+    if (*(kb->comm) == NULL)
+        return;
+
+    if (call_data->key == kb->move_left || call_data->key == kb->move_right)
     {
-        move.x = (!key_down ? 0.0
-                  : (call_data->key == kb->move_right ? 1.0 : -1.0));
-        kb->comm->send_action_request(3, move, 100);
+        move_vec.x = (!key_down ? 0.0
+                      : (call_data->key == kb->move_right ? 1.0 : -1.0));
+        (*(kb->comm))->send_move(move_vec);
     }
     else if (call_data->key == kb->move_forward
-        || call_data->key == kb->move_back)
+             || call_data->key == kb->move_back)
     {
-        move.y = (!key_down ? 0.0
-                  : (call_data->key == kb->move_forward ? 1.0 : -1.0));
-        kb->comm->send_action_request(3, move, 100);
+        move_vec.y = (!key_down ? 0.0
+                      : (call_data->key == kb->move_forward ? 1.0 : -1.0));
+        (*(kb->comm))->send_move(move_vec);
     }
-    else if (call_data->key == kb->move_up
-             || call_data->key == kb->move_down)
+    else if (call_data->key == kb->move_up || call_data->key == kb->move_down)
     {
-        move.z = (!key_down ? 0.0
-                  : (call_data->key == kb->move_up ? 1.0 : -1.0));
-        kb->comm->send_action_request(3, move, 100);
+        move_vec.z = (!key_down ? 0.0
+                      : (call_data->key == kb->move_up ? 1.0 : -1.0));
+        (*(kb->comm))->send_move(move_vec);
     }
-    else if (call_data->key == kb->pitch_up
-             || call_data->key == kb->pitch_down)
-    {
-        glm::vec3 rot((call_data->key == kb->pitch_up ? 1.0 : -1.0),
-                      0.0,
-                      0.0);
-        kb->comm->send_action_request(4, rot, (key_down ? 100 : 0));
-    }
-    else if (call_data->key == kb->roll_left
-             || call_data->key == kb->roll_right)
-    {
-        glm::vec3 rot(0.0,
-                      (call_data->key == kb->roll_right ? 1.0 : -1.0),
-                      0.0);
-        kb->comm->send_action_request(4, rot, (key_down ? 100 : 0));
-    }
-    else if (call_data->key == kb->yaw_left
-             || call_data->key == kb->yaw_right)
-    {
-        glm::vec3 rot(0.0,
-                      0.0,
-                      (call_data->key == kb->yaw_left ? 1.0 : -1.0));
-        kb->comm->send_action_request(4, rot, (key_down ? 100 : 0));
-    }
+    else if (call_data->key == kb->pitch_up)
+        (*(kb->comm))->send_rotate(rot_x, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->pitch_down)
+        (*(kb->comm))->send_rotate(-rot_x, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->roll_left)
+        (*(kb->comm))->send_rotate(rot_y, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->roll_right)
+        (*(kb->comm))->send_rotate(-rot_y, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->yaw_left)
+        (*(kb->comm))->send_rotate(rot_z, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->yaw_right)
+        (*(kb->comm))->send_rotate(-rot_z, (key_down ? 1.0f : 0.0f));
 }
 
-keyboard::keyboard()
+keyboard::keyboard(const std::string& unused)
+    : control(unused)
 {
     this->comm = NULL;
     this->set_defaults();
+    std::clog << format(
+        translate("Initialized {1,devicename}")
+    ) % "keyboard" << std::endl;
 }
 
 keyboard::~keyboard()
@@ -123,7 +121,7 @@ void keyboard::set_defaults(void)
     this->yaw_right = keyboard::YAW_RIGHT;
 }
 
-void keyboard::setup(ui::active *comp, Comm *comm)
+void keyboard::setup(ui::active *comp, Comm **comm)
 {
     this->comm = comm;
     comp->add_callback(ui::callback::key_down,
@@ -134,7 +132,7 @@ void keyboard::setup(ui::active *comp, Comm *comm)
                        this);
 }
 
-void keyboard::cleanup(ui::active *comp, Comm *comm)
+void keyboard::cleanup(ui::active *comp, Comm **comm)
 {
     this->comm = NULL;
     comp->remove_callback(ui::callback::key_down,
@@ -145,7 +143,21 @@ void keyboard::cleanup(ui::active *comp, Comm *comm)
                           this);
 }
 
-extern "C" control *create(void)
+/* We only ever want a single keyboard driver, since it is handled via
+ * CuddlyGL, rather than the actual device file.
+ */
+static keyboard *keyboard_driver = NULL;
+
+/* ARGSUSED */
+extern "C" bool can_use(const char *device)
 {
-    return (control *)new keyboard();
+    return keyboard_driver == NULL && strstr(device, "event-kbd") != NULL;
+}
+
+/* ARGSUSED */
+extern "C" control *create(const char *device)
+{
+    if (keyboard_driver == NULL)
+        keyboard_driver = new keyboard(device);
+    return keyboard_driver;
 }

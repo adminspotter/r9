@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 1999-2025  Trinity Annabelle Quirk
+ * Copyright (C) 1999-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -56,6 +56,9 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
+
+#include <glm/geometric.hpp>
 
 #include "client_core.h"
 #include "comm.h"
@@ -574,7 +577,7 @@ void Comm::send_action_request(uint16_t actionid,
 }
 
 void Comm::send_action_request(uint16_t actionid,
-                               glm::vec3& direction,
+                               const glm::vec3& direction,
                                uint8_t power)
 {
     packet *req = new packet;
@@ -613,4 +616,22 @@ void Comm::send_ack(uint8_t type)
     req->ack.sequence = sequence++;
     req->ack.request = type;
     this->send(req, sizeof(ack_packet));
+}
+
+void Comm::send_move(const glm::vec3& dir)
+{
+    this->send_action_request(
+        3,
+        dir,
+        std::min(1.0f, glm::length(dir)) * 100
+    );
+}
+
+void Comm::send_rotate(const glm::vec3& axis, float power)
+{
+    this->send_action_request(
+        4,
+        power < 0.0f ? -axis : axis,
+        std::min(1.0f, fabsf(power)) * 100
+    );
 }

@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2014-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -108,9 +108,12 @@ class Comm
 
     virtual void send_login(const std::string&, const std::string&);
     virtual void send_action_request(uint16_t, uint64_t, uint8_t);
-    virtual void send_action_request(uint16_t, glm::vec3&, uint8_t);
+    virtual void send_action_request(uint16_t, const glm::vec3&, uint8_t);
     virtual void send_logout(void);
     virtual void send_ack(uint8_t);
+
+    virtual void send_move(const glm::vec3&);
+    virtual void send_rotate(const glm::vec3&, float);
 };
 
 #endif /* __INC_R9CLIENT_COMM_H__ */

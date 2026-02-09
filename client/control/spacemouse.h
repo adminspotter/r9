@@ -1,8 +1,8 @@
-/* keyboard.h                                               -*- C++ -*-
+/* spacemouse.h                                            -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2019-2026  Trinity Annabelle Quirk
+ * Copyright (C) 2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,41 +19,44 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *
- * This file declares a class to use the keyboard to control the client.
+ * This file declares a class to use a SpaceMouse to control the client.
  *
  * Things to do
  *
  */
 
-#ifndef __INC_R9CLIENT_KEYBOARD_H__
-#define __INC_R9CLIENT_KEYBOARD_H__
+#ifndef __INC_R9CLIENT_SPACEMOUSE_H__
+#define __INC_R9CLIENT_SPACEMOUSE_H__
+
+#include <pthread.h>
+
+#include <string>
 
 #include "control.h"
 
-class keyboard : public control
+class spacemouse : public control
 {
-  public:
-    /* Default constants */
-    static const int MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT;
-    static const int MOVE_FORWARD, MOVE_BACK, PITCH_UP, PITCH_DOWN;
-    static const int ROLL_LEFT, ROLL_RIGHT, YAW_LEFT, YAW_RIGHT;
+  private:
+    int fd;
+    Comm **comm;
+    pthread_t worker;
 
-    int move_up, move_down, move_left, move_right, move_forward, move_back;
-    int pitch_up, pitch_down, roll_left, roll_right, yaw_left, yaw_right;
+  public:
+    int deadzone;
 
   private:
-    Comm **comm;
+    void switch_led(bool);
 
-    static void keyboard_callback(ui::active *, void *, void *);
+    static void *spacemouse_worker(void *);
+
+    void init(const char *);
 
   public:
-    explicit keyboard(const std::string&);
-    ~keyboard();
-
-    void set_defaults(void);
+    explicit spacemouse(const std::string&);
+    virtual ~spacemouse();
 
     virtual void setup(ui::active *, Comm **) override;
     virtual void cleanup(ui::active *, Comm **) override;
 };
 
-#endif /* __INC_R9CLIENT_KEYBOARD_H__ */
+#endif /* __INC_R9CLIENT_SPACEMOUSE_H__ */
