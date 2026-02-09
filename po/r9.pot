@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-02-09 11:56-0800\n"
+"POT-Creation-Date: 2026-02-09 11:58-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -289,7 +289,7 @@ msgstr ""
 msgid "Error starting joystick worker thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/joystick.cc:232 client/control/keyboard.cc:112
+#: client/control/joystick.cc:232 client/control/keyboard.cc:100
 #: client/control/spacemouse.cc:208
 msgid "Initialized {1,devicename}"
 msgstr ""

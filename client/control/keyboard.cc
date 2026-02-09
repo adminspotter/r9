@@ -46,61 +46,49 @@ const int keyboard::ROLL_RIGHT = ui::key::l;
 const int keyboard::YAW_LEFT = ui::key::u;
 const int keyboard::YAW_RIGHT = ui::key::o;
 
+static glm::vec3 move_vec(0.0f, 0.0f, 0.0f);
+
 void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
 {
     ui::key_call_data *call_data = (ui::key_call_data *)call;
     keyboard *kb = (keyboard *)client;
-    glm::vec3 move(0.0, 0.0, 0.0);
+    glm::vec3 rot_x(1.0, 0.0, 0.0), rot_y(0.0, 1.0, 0.0), rot_z(0.0, 0.0, 1.0);
     bool key_down = call_data->state == ui::key::down;
 
     if (*(kb->comm) == NULL)
         return;
 
-    if (call_data->key == kb->move_left
-             || call_data->key == kb->move_right)
+    if (call_data->key == kb->move_left || call_data->key == kb->move_right)
     {
-        move.x = (!key_down ? 0.0
-                  : (call_data->key == kb->move_right ? 1.0 : -1.0));
-        (*(kb->comm))->send_action_request(3, move, 100);
+        move_vec.x = (!key_down ? 0.0
+                      : (call_data->key == kb->move_right ? 1.0 : -1.0));
+        (*(kb->comm))->send_move(move_vec);
     }
     else if (call_data->key == kb->move_forward
-        || call_data->key == kb->move_back)
+             || call_data->key == kb->move_back)
     {
-        move.y = (!key_down ? 0.0
-                  : (call_data->key == kb->move_forward ? 1.0 : -1.0));
-        (*(kb->comm))->send_action_request(3, move, 100);
+        move_vec.y = (!key_down ? 0.0
+                      : (call_data->key == kb->move_forward ? 1.0 : -1.0));
+        (*(kb->comm))->send_move(move_vec);
     }
-    else if (call_data->key == kb->move_up
-             || call_data->key == kb->move_down)
+    else if (call_data->key == kb->move_up || call_data->key == kb->move_down)
     {
-        move.z = (!key_down ? 0.0
-                  : (call_data->key == kb->move_up ? 1.0 : -1.0));
-        (*(kb->comm))->send_action_request(3, move, 100);
+        move_vec.z = (!key_down ? 0.0
+                      : (call_data->key == kb->move_up ? 1.0 : -1.0));
+        (*(kb->comm))->send_move(move_vec);
     }
-    else if (call_data->key == kb->pitch_up
-             || call_data->key == kb->pitch_down)
-    {
-        glm::vec3 rot((call_data->key == kb->pitch_up ? 1.0 : -1.0),
-                      0.0,
-                      0.0);
-        (*(kb->comm))->send_action_request(4, rot, (key_down ? 100 : 0));
-    }
-    else if (call_data->key == kb->roll_left
-             || call_data->key == kb->roll_right)
-    {
-        glm::vec3 rot(0.0,
-                      (call_data->key == kb->roll_right ? 1.0 : -1.0),
-                      0.0);
-        (*(kb->comm))->send_action_request(4, rot, (key_down ? 100 : 0));
-    }
-    else if (call_data->key == kb->yaw_left
-             || call_data->key == kb->yaw_right)
-    {
-        glm::vec3 rot(0.0,
-                      0.0,
-                      (call_data->key == kb->yaw_left ? 1.0 : -1.0));
-        (*(kb->comm))->send_action_request(4, rot, (key_down ? 100 : 0));
-    }
+    else if (call_data->key == kb->pitch_up)
+        (*(kb->comm))->send_rotate(rot_x, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->pitch_down)
+        (*(kb->comm))->send_rotate(-rot_x, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->roll_left)
+        (*(kb->comm))->send_rotate(rot_y, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->roll_right)
+        (*(kb->comm))->send_rotate(-rot_y, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->yaw_left)
+        (*(kb->comm))->send_rotate(rot_z, (key_down ? 1.0f : 0.0f));
+    else if (call_data->key == kb->yaw_right)
+        (*(kb->comm))->send_rotate(-rot_z, (key_down ? 1.0f : 0.0f));
 }
 
 keyboard::keyboard(const std::string& unused)
