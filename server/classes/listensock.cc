@@ -397,7 +397,9 @@ void listen_socket::handle_action(listen_socket *s, packet& p,
 {
     packet_list pl;
 
-    if (u != NULL)
+    if (u != NULL
+        && u->slave != NULL
+        && zone->sector_contains(u->slave->get_position()) != NULL)
     {
         u->timestamp = time(NULL);
         memcpy(&pl.buf, &p, sizeof(action_request));

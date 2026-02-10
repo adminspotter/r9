@@ -516,14 +516,13 @@ void test_listen_socket_handle_ack(void)
 
 void test_listen_socket_handle_action(void)
 {
-    std::string test = "listen_socket handle_action: ";
+    std::string test = "listen_socket handle_action: ", st;
     struct addrinfo *addr = create_addrinfo();
+    database = new fake_DB("a", 0, "b", "c", "d");
+    zone = new fake_Zone(1000, 1, database);
     listen_socket *listen = new listen_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
-
-    listen->users[bu->userid] = bu;
-
-    bu->timestamp = 0;
+    GameObject *go = new GameObject(NULL, bu);
 
     /* Creating an actual ActionPool will be prohibitive, since it
      * requires so many other objects to make it go.  All we need here
@@ -536,16 +535,38 @@ void test_listen_socket_handle_action(void)
     memset(&p, 0, sizeof(packet));
     p.basic.type = TYPE_ACTREQ;
 
-    is(action_pool->queue_size(), 0, test + "expected queue size");
+    st = "no user: ";
+    listen_socket::handle_action(listen, p, NULL, NULL);
+    is(action_pool->queue_size(), 0, test + st + "expected queue size");
 
+    st = "no slave: ";
+    bu->slave = NULL;
     listen_socket::handle_action(listen, p, bu, NULL);
+    is(action_pool->queue_size(), 0, test + st + "expected queue size");
 
-    isnt(bu->timestamp, 0, test + "expected timestamp");
-    isnt(action_pool->queue_size(), 0, test + "expected queue size");
+    st = "not in zone: ";
+    listen->users[bu->userid] = bu;
+    bu->timestamp = 0;
+    bu->slave = go;
+    go->set_position({50000.0f, 50000.0f, 50000.0f});
+    sector_contains_result = NULL;
+    listen_socket::handle_action(listen, p, bu, NULL);
+    is(action_pool->queue_size(), 0, test + st + "expected queue size");
+
+    st = "working: ";
+    bu->timestamp = 0;
+    go->set_position({50.0f, 50.0f, 50.0f});
+    sector_contains_result = (Octree *)bu;
+    listen_socket::handle_action(listen, p, bu, NULL);
+    isnt(bu->timestamp, 0, test + st + "expected timestamp");
+    isnt(action_pool->queue_size(), 0, test + st + "expected queue size");
 
     delete (ThreadPool<packet_list> *)action_pool;
+    delete go;
     delete bu;
     delete listen;
+    delete zone;
+    delete database;
     freeaddrinfo(addr);
 }
 
@@ -792,7 +813,7 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(79);
+    plan(81);
 
     test_base_user_create_delete();
     test_base_user_no_access();
