@@ -74,7 +74,10 @@ void *MotionPool::motion_pool_worker(void *arg)
 
         if (req->still_moving())
         {
-            zone->sector_contains(req->get_position())->remove(req);
+            sector = zone->sector_contains(req->get_position());
+            if (sector == NULL)
+                continue;
+            sector->remove(req);
             req->move_and_rotate();
             sector = zone->sector_contains(req->get_position());
             if (sector != NULL)
