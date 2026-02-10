@@ -45,6 +45,7 @@ void test_operate(void)
     GameObject *go4 = new GameObject(NULL, NULL, 12345LL);
     GameObject *go5 = new GameObject(NULL, NULL, 12346LL);
     GameObject *go6 = new GameObject(NULL, NULL, 12347LL);
+    GameObject *go7 = new GameObject(NULL, NULL, 12348LL);
 
     go1->set_position(glm::dvec3(234.0, 234.0, 234.0));
     go1->set_movement(glm::dvec3(1.0, 1.0, 1.0));
@@ -71,6 +72,10 @@ void test_operate(void)
     go6->deactivate();
     motion_pool->push(go6);
     is(motion_pool->queue_size(), 6, test + "expected queue size");
+    go7->set_position(glm::dvec3(50000.0, 50000.0, 50000.0));
+    go7->set_movement(glm::dvec3(1.0, 1.0, 1.0));
+    motion_pool->push(go7);
+    is(motion_pool->queue_size(), 7, test + "expected queue size");
 
     motion_pool->start();
     while (go3->get_position().z < 12.25)
@@ -87,7 +92,8 @@ void test_operate(void)
        test + "x rot changed");
     ok(glm::eulerAngles(go5->get_orientation()).y != 0.0,
        test + "y rot changed");
-    ok(go6->get_position().x == 2.0, test + "x pos stayed the same");
+    ok(go6->get_position().x == 2.0, test + "inactive x pos stayed the same");
+    ok(go7->get_position().x == 50000.0, test + "OOB x pos stayed the same");
 
     delete update_pool;
     delete motion_pool;
@@ -99,7 +105,7 @@ void test_operate(void)
 
 int main(int argc, char **argv)
 {
-    plan(16);
+    plan(18);
 
     test_start_stop();
     test_operate();
