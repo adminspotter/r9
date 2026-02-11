@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2015-2020  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -92,6 +92,14 @@ void init_client_core(void)
                        glm::vec3(100.0f, 100.0f, 100.0f),
                        glm::vec3(0.0f, 1.0f, 0.0f));
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+
+    /* Turning on alpha blending can only be done after a context is
+     * created.  This may be later than strictly necessary, but this
+     * file is where most of the down-and-dirty GL stuff happens, so
+     * here is as good a place as any.
+     */
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
 
     std::clog << "rendering core initialized" << std::endl;
 }
