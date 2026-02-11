@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
- * Copyright (C) 2016-2025  Trinity Annabelle Quirk
+ * Copyright (C) 2016-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -85,10 +85,15 @@ void log_display::create_log_labels(void)
     while (this->created != this->entries.end() - 1)
     {
         ++this->created;
-        this->created->label = new ui::label(this,
+        this->created->label = new ui::label(
+            this,
             ui::element::font, ui::ownership::shared, this->log_font,
             ui::element::string, 0, this->created->log_entry,
-            ui::element::border, ui::side::all, 1);
+            ui::element::border, ui::side::all, 1,
+            ui::element::color,
+            ui::color::background,
+            glm::vec4(0.0, 0.0, 0.0, 1.0)
+        );
         GLuint x, y;
         this->created->label->get(ui::element::size, ui::size::width, &x,
                                   ui::element::size, ui::size::height, &y);

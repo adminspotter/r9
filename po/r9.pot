@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-02-09 11:59-0800\n"
+"POT-Creation-Date: 2026-02-09 13:51-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -318,19 +318,19 @@ msgstr ""
 msgid "Error joining SpaceMouse worker: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:187
+#: client/log_display.cc:192
 msgid "Error starting log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:219
+#: client/log_display.cc:224
 msgid "Error cancelling log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:231
+#: client/log_display.cc:236
 msgid "Error joining log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:242
+#: client/log_display.cc:247
 msgid "Error destroying log display mutex: {1,errmsg} ({2,errno})"
 msgstr ""
 
