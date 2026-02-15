@@ -1,4 +1,4 @@
-/* client_core.h
+/* client_core.h                                           -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client

@@ -1,4 +1,4 @@
-/* keyboard.h                                               -*- C++ -*-
+/* keyboard.h                                              -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client

@@ -1,4 +1,4 @@
-/* l10n.h
+/* l10n.h                                                  -*- C++ -*-
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game client
