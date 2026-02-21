@@ -15,6 +15,7 @@ if WANT_SERVER
 	t_dgram \
 	t_dgram_worker \
 	t_game_obj \
+	t_geometry \
 	t_library \
 	t_listensock \
 	t_listensock_worker \
@@ -149,6 +150,10 @@ t_game_obj_SOURCES = t_game_obj.cc \
 	../server/classes/control.cc ../server/classes/control.h \
 	../server/classes/geometry.cc ../server/classes/geometry.h
 t_game_obj_LDADD = $(TAP_LDADD)
+
+t_geometry_SOURCES = t_geometry.cc \
+	../server/classes/geometry.cc ../server/classes/geometry.h
+t_geometry_LDADD = $(TAP_LDADD)
 
 t_library_SOURCES = t_library.cc \
 	../server/classes/library.cc ../server/classes/library.h

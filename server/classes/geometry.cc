@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2002-2017  Trinity Annabelle Quirk
+ * Copyright (C) 2002-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,13 +29,15 @@
 #include "config_data.h"
 
 Geometry::Geometry()
-    : center()
+    : center(0.0, 0.0, 0.0)
 {
+    this->radius = 0.5;
 }
 
 Geometry::Geometry(const Geometry& geo)
+    : center(geo.center)
 {
-    radius = geo.radius;
+    this->radius = geo.radius;
 }
 
 Geometry::~Geometry()
