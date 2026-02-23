@@ -29,9 +29,6 @@
  * Things to do
  *   - The physics library, once we create it, should be a part of this
  *     object, and not the zone as we had originally intended.
- *   - Consider whether passing a struct into the worker, composed of
- *     pointers to the motion pool, update pool, and zone, might be
- *     more appropriate.
  *
  */
 
@@ -47,11 +44,6 @@ MotionPool::~MotionPool()
 {
 }
 
-/* We will only use this thread pool in a very specific way, so making
- * the caller handle stuff that it doesn't need to know about is
- * inappropriate.  We'll set the required arg and start things up with
- * the expected function.
- */
 void MotionPool::start(void)
 {
     this->startup_arg = (void *)this;
