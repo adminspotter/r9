@@ -254,6 +254,25 @@ bool GameObject::still_moving(void)
                 || this->rotation != GameObject::no_rotation));
 }
 
+bool GameObject::collide(GameObject *target)
+{
+    if (target == this)
+        return false;
+
+    const glm::dvec3& target_pos = target->get_position();
+
+    if (this->active == true
+        && this->distance_from(target_pos)
+        <= this->geometry->radius + target->geometry->radius)
+    {
+        std::unique_lock lock(this->movement_lock);
+
+        this->movement = -this->movement;
+        return true;
+    }
+    return false;
+}
+
 void GameObject::generate_update_packet(packet& pkt)
 {
     std::shared_lock lock(this->movement_lock);

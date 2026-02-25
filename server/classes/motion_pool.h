@@ -29,6 +29,7 @@
 
 #include "thread_pool.h"
 #include "game_obj.h"
+#include "octree.h"
 
 class MotionPool : public ThreadPool<GameObject *>
 {
@@ -39,6 +40,8 @@ class MotionPool : public ThreadPool<GameObject *>
     void start(void);
 
     static void motion_pool_worker(void *);
+
+    bool collide(Octree *, GameObject *);
 };
 
 #endif /* __INC_MOTION_POOL_H__ */
