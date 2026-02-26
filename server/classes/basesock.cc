@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2007-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,7 +28,6 @@
  */
 
 #include <string.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -73,24 +72,7 @@ basesock::~basesock()
         this->sock = 0;
     }
     if (this->sa != NULL)
-    {
-        /* If we're a unix domain, unlink the file. */
-        if (this->sa->sockaddr()->sa_family == AF_UNIX)
-        {
-            struct sockaddr_un *sun = (struct sockaddr_un *)this->sa->sockaddr();
-            if (unlink(sun->sun_path))
-            {
-                char err[128];
-
-                std::clog << syslogWarn << "could not unlink path "
-                          << sun->sun_path << ": "
-                          << strerror_r(errno, err, sizeof(err))
-                          << " (" << errno << ')'
-                          << std::endl;
-            }
-        }
         delete this->sa;
-    }
 }
 
 void basesock::create_socket(struct addrinfo *ai)

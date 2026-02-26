@@ -185,8 +185,10 @@ t_octree_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
 
-t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h
-t_sockaddr_LDADD = $(TAP_LDADD)
+t_sockaddr_SOURCES = t_sockaddr.cc ../server/classes/sockaddr.h \
+	../server/classes/log.h ../server/classes/log.cc
+t_sockaddr_LDADD = $(TAP_LDADD) ../server/classes/libr9_classes.la \
+	$(SERVER_LDLIBS)
 
 t_socket_SOURCES = t_socket.cc ../server/classes/socket.cc
 t_socket_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
