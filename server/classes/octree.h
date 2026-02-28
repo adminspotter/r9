@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2000-2020  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -89,6 +89,7 @@ class Octree
     bool empty(void);
 
     void build(std::list<GameObject *>&);
+    void build(std::set<GameObject *>&);
     void insert(GameObject *);
     void remove(GameObject *);
 };
