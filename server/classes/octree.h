@@ -94,6 +94,8 @@ class Octree
     void build(const object_set_t&);
     void insert(GameObject *);
     void remove(GameObject *);
+
+    Octree *find(GameObject *);
 };
 
 #endif /* INC_OCTREE_H__ */

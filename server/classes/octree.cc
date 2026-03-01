@@ -349,3 +349,19 @@ void Octree::remove(GameObject *gobj)
         }
     }
 }
+
+Octree *Octree::find(GameObject *go)
+{
+    std::shared_lock read_lock(this->lock);
+    if (this->objects.find(go) == this->objects.end())
+        return NULL;
+
+    int octant = this->which_octant(go->get_position());
+    if (this->octants[octant] != NULL)
+    {
+        Octree *result = this->octants[octant]->find(go);
+        if (result != NULL)
+            return result;
+    }
+    return this;
+}
