@@ -242,18 +242,17 @@ bool Octree::empty(void)
     return this->objects.empty();
 }
 
-void Octree::build(std::list<GameObject *>& objs)
+void Octree::build(const std::list<GameObject *>& objs)
 {
-    std::set<GameObject *> go_set;
+    Octree::object_set_t go_set;
 
     go_set.insert(objs.begin(), objs.end());
     this->build(go_set);
 }
 
-void Octree::build(std::set<GameObject *>& objs)
+void Octree::build(const Octree::object_set_t& objs)
 {
-    std::set<GameObject *> obj_list[8];
-    std::set<GameObject *>::iterator i;
+    Octree::object_set_t obj_list[8];
     int j;
 
     this->objects.insert(objs.begin(), objs.end());
@@ -262,7 +261,7 @@ void Octree::build(std::set<GameObject *>& objs)
         && (this->depth < Octree::MIN_DEPTH
             || objs.size() > Octree::MAX_LEAF_OBJECTS))
     {
-        for (i = objs.begin(); i != objs.end(); ++i)
+        for (auto i = objs.begin(); i != objs.end(); ++i)
             obj_list[this->which_octant((*i)->get_position())].insert(*i);
 
         for (j = 0; j < 8; ++j)

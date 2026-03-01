@@ -59,6 +59,8 @@
 class Octree
 {
   public:
+    typedef std::set<GameObject *> object_set_t;
+
     static const int MAX_LEAF_OBJECTS;
     static const int MIN_DEPTH;
     static const int MAX_DEPTH;
@@ -72,7 +74,7 @@ class Octree
     uint8_t parent_index;
     int depth;
 
-    std::set<GameObject *> objects;
+    object_set_t objects;
 
   private:
     inline bool in_octant(const glm::dvec3&);
@@ -88,8 +90,8 @@ class Octree
 
     bool empty(void);
 
-    void build(std::list<GameObject *>&);
-    void build(std::set<GameObject *>&);
+    void build(const std::list<GameObject *>&);
+    void build(const object_set_t&);
     void insert(GameObject *);
     void remove(GameObject *);
 };
