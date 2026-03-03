@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2014-2015  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -84,6 +84,8 @@ class Console : public basesock
   public:
     Console(struct addrinfo *);
     virtual ~Console();
+
+    virtual std::string port_type(void) override;
 
     int wrap_request(Sockaddr *);
 

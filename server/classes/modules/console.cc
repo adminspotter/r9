@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2014-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -154,6 +154,11 @@ Console::~Console()
     for (i = this->sessions.begin(); i != this->sessions.end(); ++i)
         delete *i;
     this->sessions.erase(this->sessions.begin(), this->sessions.end());
+}
+
+std::string Console::port_type(void)
+{
+    return "console";
 }
 
 void *Console::console_listener(void *arg)

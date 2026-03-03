@@ -147,6 +147,11 @@ void basesock::create_socket(struct addrinfo *ai)
               << this->sock << " on " << this->get_port_string() << std::endl;
 }
 
+std::string basesock::port_type(void)
+{
+    return "base";
+}
+
 std::string basesock::get_port_string(void)
 {
     std::ostringstream s;

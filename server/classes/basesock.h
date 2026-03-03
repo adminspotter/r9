@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2007-2018  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -63,6 +63,8 @@ class basesock
     basesock();
     basesock(struct addrinfo *);
     virtual ~basesock();
+
+    virtual std::string port_type(void);
 
     void start(void *(*)(void *));
     void stop(void);
