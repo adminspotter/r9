@@ -34,29 +34,14 @@
 
 #include <proto/ec.h>
 
+#include "addrinfo.h"
+
 typedef struct location_struct
 {
     uint64_t dim[3];
     uint16_t steps[3];
 }
 location;
-
-/* We need to be able to represent any kind of port in a single structure */
-typedef enum port_type_tag
-{
-    port_unix = 0,
-    port_dgram,
-    port_stream
-}
-port_type;
-typedef struct port_struct
-{
-    port_type type;
-    std::string addr, port;
-
-    port_struct() : addr(), port() {};
-}
-port;
 
 typedef struct crypto_key_struct
 {
@@ -82,7 +67,7 @@ class config_data
     static const char DB_NAME[];
 
     std::vector<std::string> argv;
-    std::vector<port> listen_ports, consoles;
+    std::vector<Addrinfo *> listen_ports, consoles;
     bool daemonize, use_keepalive, use_nonblock, use_reuse;
     int use_linger, log_facility;
     std::string server_root, log_prefix, pid_fname;

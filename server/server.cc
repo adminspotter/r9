@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 1998-2021  Trinity Annabelle Quirk
+ * Copyright (C) 1998-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,15 +37,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
-#include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <pthread.h>
 
 #include <fstream>
-#include <sstream>
 #include <stdexcept>
 #include <system_error>
 
@@ -55,17 +52,12 @@
 #include "classes/log.h"
 #include "classes/config_data.h"
 #include "classes/library.h"
-#include "classes/basesock.h"
 #include "classes/socket.h"
 #include "classes/modules/console.h"
 
 static void setup_daemon(void);
 static void setup_log(void);
 static void setup_sockets(void);
-static struct addrinfo *get_addr_info(int,
-                                      const std::string&,
-                                      const std::string&);
-static void free_addr_info(struct addrinfo *);
 static void setup_zone(void);
 static void setup_thread_pools(void);
 static void setup_console(void);
@@ -199,10 +191,6 @@ static void setup_log(void)
 
 static void setup_sockets(void)
 {
-    struct addrinfo *ai;
-    std::vector<port>::iterator i;
-    std::vector<listen_socket *>::iterator j;
-    int type_map[] = { 0, SOCK_DGRAM, SOCK_STREAM };
     int created = 0;
 
     if (config.listen_ports.size() == 0)
@@ -216,14 +204,11 @@ static void setup_sockets(void)
               << (config.listen_ports.size() == 1 ? "" : "s")
               << std::endl;
 
-    for (i = config.listen_ports.begin(); i != config.listen_ports.end(); ++i)
+    for (auto& i : config.listen_ports)
     {
-        /* First get an addrinfo struct for the socket */
-        if ((ai = get_addr_info(type_map[i->type], i->addr, i->port)) == NULL)
-            continue;
-        try
-        {
-            sockets.push_back(socket_create(ai));
+        try {
+            sockets.push_back(socket_create(i->ai));
+            ++created;
         }
         catch (std::exception& e)
         {
@@ -234,76 +219,13 @@ static void setup_sockets(void)
             }
             throw;
         }
-        free_addr_info(ai);
-        ++created;
     }
     if (created > 0)
         std::clog << "created " << created << " listening socket"
                   << (created == 1 ? "" : "s") << std::endl;
 
-    for (j = sockets.begin(); j != sockets.end(); ++j)
-        (*j)->start();
-}
-
-static struct addrinfo *get_addr_info(int type,
-                                      const std::string& addr,
-                                      const std::string& port)
-{
-    struct addrinfo hints, *ai = NULL;
-    int ret;
-
-    if (type != SOCK_STREAM && type != SOCK_DGRAM)
-    {
-        struct sockaddr_un *sun = new struct sockaddr_un;
-
-        /* Manufacture an addrinfo that has the unix socket structure
-         * instead of a regular sockaddr_in/in6.  The console creator
-         * understands what to do with it.  The listener creator will
-         * probably blow up, but that would just be weird to do.
-         */
-        ai = new struct addrinfo;
-        memset(ai, 0, sizeof(struct addrinfo));
-        ai->ai_family = AF_UNIX;
-        ai->ai_socktype = SOCK_STREAM;
-        ai->ai_protocol = 0;
-        ai->ai_addrlen = sizeof(struct sockaddr_un);
-        ai->ai_addr = (struct sockaddr *)sun;
-
-        memset(sun, 0, sizeof(struct sockaddr_un));
-        sun->sun_family = AF_UNIX;
-        strncpy(sun->sun_path, addr.c_str(), addr.size());
-        return ai;
-    }
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = type;
-    if ((ret = getaddrinfo(addr.c_str(), port.c_str(), &hints, &ai)) != 0)
-    {
-        std::clog << syslogErr
-                  << "failed to get address info for "
-                  << (type == SOCK_STREAM ? "stream" : "dgram")
-                  << " port " << addr << ':' << port << ": "
-                  << gai_strerror(ret) << " (" << ret << ")" << std::endl;
-        return NULL;
-    }
-    return ai;
-}
-
-void free_addr_info(struct addrinfo *ai)
-{
-    /* It wasn't clear whether freeaddrinfo was properly handling my
-     * AF_UNIX-hacked addrinfo structs, so we'll go ahead and wrap
-     * things to make sure they work correctly.
-     */
-    if (ai->ai_family == AF_UNIX)
-    {
-        delete ai->ai_addr;
-        delete ai;
-    }
-    else
-        freeaddrinfo(ai);
+    for (auto& i : sockets)
+        i->start();
 }
 
 void set_exit_flag(void)
@@ -356,8 +278,6 @@ static void setup_console(void)
 {
     console_create_t *console_create;
     console_destroy_t *console_destroy;
-    std::vector<port>::iterator i;
-    int type_map[] = { 0, SOCK_DGRAM, SOCK_STREAM };
     int created = 0;
 
     if (config.consoles.size() == 0)
@@ -372,15 +292,12 @@ static void setup_console(void)
     console_destroy =
         (console_destroy_t *)console_lib->symbol("console_destroy");
 
-    for (i = config.consoles.begin(); i != config.consoles.end(); ++i)
+    for (auto& i : config.consoles)
     {
-        struct addrinfo *ai;
-
-        if ((ai = get_addr_info(type_map[i->type], i->addr, i->port)) == NULL)
-            continue;
         try
         {
-            consoles.push_back(console_create(ai));
+            consoles.push_back(console_create(i->ai));
+            ++created;
         }
         catch (std::exception& e)
         {
@@ -389,10 +306,10 @@ static void setup_console(void)
                 console_destroy(consoles.back());
                 consoles.pop_back();
             }
+            delete console_lib;
+            console_lib = NULL;
             throw;
         }
-        free_addr_info(ai);
-        ++created;
     }
     if (created > 0)
         std::clog << "created " << created << " console socket"
