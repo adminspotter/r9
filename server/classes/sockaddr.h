@@ -60,32 +60,21 @@ class Sockaddr
     char ip_str[INET6_ADDRSTRLEN], host_str[1024];
 
   public:
-    Sockaddr()
-        {
-            this->ss.ss_family = AF_INET;
-        };
-    Sockaddr(const Sockaddr& s)
-        {
-            this->ss.ss_family = s.ss.ss_family;
-        };
-    Sockaddr(const struct sockaddr& s)
-        {
-            this->ss.ss_family = s.sa_family;
-        };
-    virtual ~Sockaddr()
-        {
-        };
+    Sockaddr() { this->ss.ss_family = AF_INET; }
+    Sockaddr(const Sockaddr& s) { this->ss.ss_family = s.ss.ss_family; }
+    Sockaddr(const struct sockaddr& s) { this->ss.ss_family = s.sa_family; }
+    virtual ~Sockaddr() {}
 
     virtual bool operator==(const Sockaddr& s)
         {
             return !memcmp(&(this->ss),
                            &(s.ss),
                            sizeof(struct sockaddr_storage));
-        };
+        }
     virtual bool operator==(const struct sockaddr *s)
         {
             return !memcmp(&(this->ss), s, sizeof(struct sockaddr_storage));
-        };
+        }
 
     virtual bool operator<(const Sockaddr& s) const = 0;
     virtual bool operator<(const struct sockaddr& s) const = 0;
@@ -94,7 +83,7 @@ class Sockaddr
         {
             memcpy(&(this->ss), &(s.ss), sizeof(sockaddr_storage));
             return *this;
-        };
+        }
     virtual Sockaddr& operator=(const struct sockaddr& s)
         {
             memcpy(&(this->ss), &s, sizeof(sockaddr_storage));
@@ -103,11 +92,12 @@ class Sockaddr
 
     virtual const char *ntop(void) = 0;
     virtual const char *hostname(void) = 0;
-    virtual uint16_t port(void) = 0;
+    virtual int family(void) const = 0;
+    virtual uint16_t port(void) const = 0;
     virtual inline struct sockaddr *sockaddr(void)
         {
             return (struct sockaddr *)&(this->ss);
-        };
+        }
 };
 
 class Sockaddr_in : public Sockaddr
@@ -123,7 +113,7 @@ class Sockaddr_in : public Sockaddr
             this->sin->sin_addr.s_addr = htonl(INADDR_ANY);
             memset(this->ip_str, 0, sizeof(this->ip_str));
             memset(this->host_str, 0, sizeof(this->host_str));
-        };
+        }
     Sockaddr_in(const Sockaddr& s)
         {
             const Sockaddr_in& sin = dynamic_cast<const Sockaddr_in&>(s);
@@ -133,7 +123,7 @@ class Sockaddr_in : public Sockaddr
             this->sin->sin_addr.s_addr = sin.sin->sin_addr.s_addr;
             memcpy(this->ip_str, sin.ip_str, sizeof(this->ip_str));
             memcpy(this->host_str, sin.host_str, sizeof(this->host_str));
-        };
+        }
     Sockaddr_in(const struct sockaddr& s)
         {
             const struct sockaddr_in& sin
@@ -144,10 +134,8 @@ class Sockaddr_in : public Sockaddr
             this->sin->sin_addr.s_addr = sin.sin_addr.s_addr;
             memset(this->ip_str, 0, sizeof(this->ip_str));
             memset(this->host_str, 0, sizeof(this->host_str));
-        };
-    ~Sockaddr_in()
-        {
-        };
+        }
+    ~Sockaddr_in() {}
 
     bool operator==(const Sockaddr& s) const
         {
@@ -156,14 +144,14 @@ class Sockaddr_in : public Sockaddr
                 return false;
             return (this->sin->sin_addr.s_addr == si->sin->sin_addr.s_addr
                     && this->sin->sin_port == si->sin->sin_port);
-        };
+        }
     bool operator==(const struct sockaddr *s)
         {
             const struct sockaddr_in *sin
                 = reinterpret_cast<const struct sockaddr_in *>(s);
             return (this->sin->sin_addr.s_addr == sin->sin_addr.s_addr
                     && this->sin->sin_port == sin->sin_port);
-        };
+        }
 
     bool operator<(const Sockaddr& s) const
         {
@@ -172,21 +160,21 @@ class Sockaddr_in : public Sockaddr
                 return false;
             return (ntohl(this->sin->sin_addr.s_addr) < ntohl(si->sin->sin_addr.s_addr)
                     || ntohs(this->sin->sin_port) < ntohs(si->sin->sin_port));
-        };
+        }
     bool operator<(const struct sockaddr& s) const
         {
             const struct sockaddr_in& sin
                 = reinterpret_cast<const struct sockaddr_in&>(s);
             return (ntohl(this->sin->sin_addr.s_addr) < ntohl(sin.sin_addr.s_addr)
                     || ntohs(this->sin->sin_port) < ntohs(sin.sin_port));
-        };
+        }
 
     const char *ntop(void)
         {
             inet_ntop(this->sin->sin_family, &(this->sin->sin_addr),
                       this->ip_str, sizeof(this->ip_str));
             return this->ip_str;
-        };
+        }
 
     const char *hostname(void)
         {
@@ -195,17 +183,11 @@ class Sockaddr_in : public Sockaddr
                         this->host_str, sizeof(this->host_str),
                         NULL, 0, NI_NOFQDN);
             return this->host_str;
-        };
+        }
 
-    uint16_t port(void)
-        {
-            return ntohs(this->sin->sin_port);
-        };
-
-    struct sockaddr *sockaddr(void)
-        {
-            return (struct sockaddr *)this->sin;
-        };
+    int family(void) const { return this->sin->sin_family; }
+    uint16_t port(void) const { return ntohs(this->sin->sin_port); }
+    struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sin; }
 };
 
 /* A couple functions to be able to handle IPV6 addresses easily:
@@ -240,7 +222,7 @@ class Sockaddr_in6 : public Sockaddr
                     sizeof(struct in6_addr));
             this->sin6->sin6_scope_id = htonl(0L);
             memset(this->ip_str, 0, sizeof(this->ip_str));
-        };
+        }
     Sockaddr_in6(const Sockaddr& s)
         {
             const Sockaddr_in6& sin6 = dynamic_cast<const Sockaddr_in6&>(s);
@@ -254,7 +236,7 @@ class Sockaddr_in6 : public Sockaddr
                    sizeof(struct in6_addr));
             this->sin6->sin6_scope_id = sin6.sin6->sin6_scope_id;
             memcpy(this->ip_str, sin6.ip_str, sizeof(this->ip_str));
-        };
+        }
     Sockaddr_in6(const struct sockaddr& s)
         {
             const struct sockaddr_in6& si
@@ -269,10 +251,8 @@ class Sockaddr_in6 : public Sockaddr
                    sizeof(struct in6_addr));
             this->sin6->sin6_scope_id = si.sin6_scope_id;
             memset(this->ip_str, 0, sizeof(this->ip_str));
-        };
-    ~Sockaddr_in6()
-        {
-        };
+        }
+    ~Sockaddr_in6() {}
 
     bool operator==(const Sockaddr& s) const
         {
@@ -280,7 +260,7 @@ class Sockaddr_in6 : public Sockaddr
             if (si == NULL)
                 return false;
             return !memcmp(this->sin6, si->sin6, sizeof(struct sockaddr_in6));
-        };
+        }
 
     bool operator<(const Sockaddr& s) const
         {
@@ -289,21 +269,21 @@ class Sockaddr_in6 : public Sockaddr
                 return false;
             return (this->sin6->sin6_addr < si->sin6->sin6_addr
                     || this->sin6->sin6_port < si->sin6->sin6_port);
-        };
+        }
     bool operator<(const struct sockaddr& s) const
         {
             const struct sockaddr_in6& sin6
                 = reinterpret_cast<const struct sockaddr_in6&>(s);
             return (this->sin6->sin6_addr < sin6.sin6_addr
                     || this->sin6->sin6_port < sin6.sin6_port);
-        };
+        }
 
     const char *ntop(void)
         {
             inet_ntop(this->sin6->sin6_family, &(this->sin6->sin6_addr),
                       this->ip_str, sizeof(this->ip_str));
             return this->ip_str;
-        };
+        }
 
     const char *hostname(void)
         {
@@ -312,17 +292,11 @@ class Sockaddr_in6 : public Sockaddr
                         this->host_str, sizeof(this->host_str),
                         NULL, 0, NI_NOFQDN);
             return this->host_str;
-        };
+        }
 
-    uint16_t port(void)
-        {
-            return ntohs(this->sin6->sin6_port);
-        };
-
-    struct sockaddr *sockaddr(void)
-        {
-            return (struct sockaddr *)this->sin6;
-        };
+    int family(void) const { return this->sin6->sin6_family; }
+    uint16_t port(void) const { return ntohs(this->sin6->sin6_port); }
+    struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sin6; }
 };
 
 class Sockaddr_un : public Sockaddr
@@ -336,7 +310,7 @@ class Sockaddr_un : public Sockaddr
             this->sun = (struct sockaddr_un *)&ss;
             this->sun->sun_family = AF_UNIX;
             memset(this->sun->sun_path, 0, sizeof(this->sun->sun_path));
-        };
+        }
     Sockaddr_un(const Sockaddr& s)
         {
             const Sockaddr_un& su = dynamic_cast<const Sockaddr_un&>(s);
@@ -346,7 +320,7 @@ class Sockaddr_un : public Sockaddr
             memcpy(this->sun->sun_path,
                    su.sun->sun_path,
                    sizeof(this->sun->sun_path));
-        };
+        }
     Sockaddr_un(const struct sockaddr& s)
         {
             const struct sockaddr_un& su
@@ -357,7 +331,7 @@ class Sockaddr_un : public Sockaddr
             memcpy(this->sun->sun_path,
                    su.sun_path,
                    sizeof(this->sun->sun_path));
-        };
+        }
     ~Sockaddr_un()
         {
             if (unlink(this->sun->sun_path))
@@ -370,7 +344,7 @@ class Sockaddr_un : public Sockaddr
                           << " (" << errno << ')'
                           << std::endl;
             }
-        };
+        }
 
     bool operator==(const Sockaddr& s)
         {
@@ -378,7 +352,7 @@ class Sockaddr_un : public Sockaddr
             if (su == NULL)
                 return false;
             return !memcmp(this->sun, su->sun, sizeof(struct sockaddr_un));
-        };
+        }
 
     bool operator<(const Sockaddr& s) const
         {
@@ -388,7 +362,7 @@ class Sockaddr_un : public Sockaddr
             return (memcmp(this->sun->sun_path,
                            su->sun->sun_path,
                            sizeof(this->sun->sun_path)) < 0);
-        };
+        }
 
     bool operator<(const struct sockaddr& s) const
         {
@@ -397,27 +371,13 @@ class Sockaddr_un : public Sockaddr
             return (memcmp(this->sun->sun_path,
                            su.sun_path,
                            sizeof(this->sun->sun_path)) < 0);
-        };
+        }
 
-    const char *ntop(void)
-        {
-            return this->sun->sun_path;
-        };
-
-    const char *hostname(void)
-        {
-            return "localhost";
-        };
-
-    uint16_t port(void)
-        {
-            return UINT16_MAX;
-        };
-
-    struct sockaddr *sockaddr(void)
-        {
-            return (struct sockaddr *)this->sun;
-        };
+    const char *ntop(void) { return this->sun->sun_path; }
+    const char *hostname(void) { return "localhost"; }
+    int family(void) const { return this->sun->sun_family; }
+    uint16_t port(void) const { return UINT16_MAX; }
+    struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sun; }
 };
 
 inline Sockaddr *build_sockaddr(struct sockaddr& s)
