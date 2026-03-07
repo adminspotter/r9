@@ -183,7 +183,6 @@ class ThreadPool
             return this->request_queue.size();
         };
 
-    /* Resize the pool */
     void grow(unsigned int new_count)
         {
             if (new_count > this->thread_pool.size())

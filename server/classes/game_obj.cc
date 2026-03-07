@@ -22,7 +22,6 @@
  * This file contains the implementation of the GameObject class.
  *
  * Things to do
- *   - Implement the destructor if necessary.
  *   - Decide on a method to make sure we don't repeat object ID
  *   values (not that there's likely to be a very large chance of
  *   that happening, but you never know).

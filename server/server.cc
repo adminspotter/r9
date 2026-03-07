@@ -78,20 +78,18 @@ static void cleanup_daemon(void);
 
 std::atomic<int> main_loop_exit_flag(0);
 Zone *zone = NULL;
-ActionPool *action_pool = NULL;   /* Takes action requests      */
-MotionPool *motion_pool = NULL;   /* Processes motion/collision */
-UpdatePool *update_pool = NULL;   /* Sends motion updates       */
+ActionPool *action_pool = NULL;
+MotionPool *motion_pool = NULL;
+UpdatePool *update_pool = NULL;
 DB *database = NULL;
 static Library *db_lib = NULL, *console_lib = NULL;
 std::vector<listen_socket *> sockets;
 std::vector<Console *> consoles;
-/* May need this mutex */
 static pthread_mutex_t exit_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t exit_flag = PTHREAD_COND_INITIALIZER;
 
 int main(int argc, char **argv)
 {
-    /* Set everything up. */
     setup_configuration(argc, argv);
     try { setup_daemon(); }
     catch (std::exception& e)
@@ -133,7 +131,6 @@ int main(int argc, char **argv)
     pthread_cond_destroy(&exit_flag);
     pthread_mutex_destroy(&exit_mutex);
 
-    /* Clean everything up before we exit. */
     cleanup_console();
   BAILOUT3:
     cleanup_sockets();
@@ -155,7 +152,6 @@ static void setup_daemon(void)
 
     if (config.daemonize)
     {
-        /* Start up like a proper daemon */
         if ((pid = fork()) < 0)
         {
             std::string s("failed to fork");
@@ -171,7 +167,6 @@ static void setup_daemon(void)
     chdir("/");
     umask(0);
 
-    /* Now write the pid file if we can. */
     if ((fd = open(config.pid_fname.c_str(),
                    O_CREAT | O_WRONLY | O_EXCL,
                    S_IRUSR | S_IWUSR)) != -1)
@@ -182,7 +177,6 @@ static void setup_daemon(void)
     }
     else
     {
-        /* Apparently another invocation is running, so we can't. */
         std::string s("couldn't create lock file");
 
         throw std::system_error(errno, std::generic_category(), s);
@@ -197,7 +191,6 @@ static void setup_daemon(void)
 
 static void setup_log(void)
 {
-    /* Open the system log. */
     if (config.daemonize)
         std::clog.rdbuf(new Log(config.log_prefix, config.log_facility));
 
@@ -212,7 +205,6 @@ static void setup_sockets(void)
     int type_map[] = { 0, SOCK_DGRAM, SOCK_STREAM };
     int created = 0;
 
-    /* Bailout now if there are no sockets to create */
     if (config.listen_ports.size() == 0)
     {
         std::string s("no sockets to create");
@@ -249,7 +241,6 @@ static void setup_sockets(void)
         std::clog << "created " << created << " listening socket"
                   << (created == 1 ? "" : "s") << std::endl;
 
-    /* Now start them all up */
     for (j = sockets.begin(); j != sockets.end(); ++j)
         (*j)->start();
 }
@@ -329,7 +320,6 @@ static void setup_zone(void)
 
     std::clog << "in zone setup" << std::endl;
 
-    /* Load up the database lib before we start the access thread pool */
     db_lib = new Library("libr9_" + config.db_type + LT_MODULE_EXT);
     db_create = (db_create_t *)db_lib->symbol("db_create");
 
@@ -376,7 +366,6 @@ static void setup_console(void)
         return;
     }
 
-    /* Load the console module */
     console_lib = new Library("libr9_console" LT_MODULE_EXT);
     console_create =
         (console_create_t *)console_lib->symbol("console_create");
@@ -387,7 +376,6 @@ static void setup_console(void)
     {
         struct addrinfo *ai;
 
-        /* First get an addrinfo struct for the socket */
         if ((ai = get_addr_info(type_map[i->type], i->addr, i->port)) == NULL)
             continue;
         try
@@ -415,7 +403,6 @@ static void cleanup_console(void)
 {
     struct stat st;
 
-    /* If we didn't load the console lib, we didn't create any consoles */
     if (console_lib == NULL)
         return;
 
@@ -429,9 +416,8 @@ static void cleanup_console(void)
             consoles.pop_back();
         }
     }
-    catch (std::exception& e) { /* Do nothing */ }
+    catch (std::exception& e) {}
 
-    /* Unload the library */
     std::clog << "closing console library" << std::endl;
     delete console_lib;
     console_lib = NULL;
@@ -476,7 +462,7 @@ static void cleanup_zone(void)
                 (db_destroy_t *)db_lib->symbol("db_destroy");
             db_destroy(database);
         }
-        catch (std::exception& e) { /* Do nothing */ }
+        catch (std::exception& e) {}
         delete db_lib;
         db_lib = NULL;
     }
@@ -496,7 +482,6 @@ static void cleanup_log(void)
 {
     std::clog << syslogNotice << "terminating" << std::endl;
 
-    /* Close the system log gracefully. */
     if (config.daemonize)
     {
         Log *l = dynamic_cast<Log *>(std::clog.rdbuf());
@@ -508,7 +493,6 @@ static void cleanup_log(void)
 
 static void cleanup_daemon(void)
 {
-    /* Remove the pidfile so another invocation can run. */
     unlink(config.pid_fname.c_str());
 }
 

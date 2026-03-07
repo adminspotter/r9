@@ -65,7 +65,7 @@ basesock::basesock(struct addrinfo *ai)
 basesock::~basesock()
 {
     try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
+    catch (std::exception& e) {}
     if (this->sock)
     {
         close(this->sock);
@@ -97,7 +97,6 @@ void basesock::create_socket(struct addrinfo *ai)
     }
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 
-    /* If root's gotta open the port, become root, if possible. */
     if (do_uid)
     {
         if (getuid() != 0)
@@ -116,7 +115,6 @@ void basesock::create_socket(struct addrinfo *ai)
         }
     }
     ret = bind(this->sock, this->sa->sockaddr(), ai->ai_addrlen);
-    /* Restore the original euid and egid of the process, if necessary. */
     if (do_uid)
     {
         seteuid(uid);
@@ -153,10 +151,6 @@ std::string basesock::get_port_string(void)
 {
     std::ostringstream s;
 
-    /* Port isn't meaningful with a Sockaddr_un, so let's check if
-     * that's what we have.  ntop returns the path for a unix-domain
-     * sockaddr.
-     */
     Sockaddr_un *sun = dynamic_cast<Sockaddr_un *>(this->sa);
     if (sun != NULL)
         s << sun->ntop();

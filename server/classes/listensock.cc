@@ -102,7 +102,6 @@ base_user::base_user(uint64_t userid,
 base_user::~base_user()
 {
     if (this->slave != NULL)
-        /* Clean up a user who has logged out */
         this->slave->deactivate();
 }
 
@@ -255,7 +254,7 @@ listen_socket::listen_socket(struct addrinfo *ai)
 listen_socket::~listen_socket()
 {
     try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
+    catch (std::exception& e) {}
 
     delete this->send_pool;
     delete this->access_pool;
@@ -276,7 +275,6 @@ void listen_socket::start(void)
               << this->port_type() << " port "
               << this->sock.sa->port() << std::endl;
 
-    /* Start up the reaping thread */
     if ((retval = pthread_create(&this->reaper, NULL,
                                  reaper_worker, (void *)this)) != 0)
     {
@@ -368,7 +366,6 @@ void *listen_socket::reaper_worker(void *arg)
             bu = (*i).second;
             if (bu->pending_logout == true || bu->timestamp < link_dead)
             {
-                /* We'll consider the user link-dead */
                 std::clog << "removing user " << bu->username << " ("
                           << bu->userid << ") from " << ls->port_type()
                           << " port " << ls->sock.sa->port() << std::endl;
@@ -433,7 +430,6 @@ void listen_socket::login_user(access_list& p)
     if (userid == 0LL)
         return;
 
-    /* If they're already in our list, turn off any pending logout. */
     if (this->users.find(userid) != this->users.end())
     {
         /* This is going to be a race with the reaper thread. */

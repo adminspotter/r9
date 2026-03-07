@@ -62,7 +62,7 @@ dgram_socket::~dgram_socket()
      * the worker loops, we'll stop ourselves first.
      */
     try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
+    catch (std::exception& e) {}
 
     /* Should we send logout messages to everybody? */
 
@@ -78,7 +78,6 @@ void dgram_socket::start(void)
 {
     this->listen_socket::start();
 
-    /* Start up the listen thread and thread pools */
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(dgram_socket::dgram_send_worker);
     this->sock.listen_arg = (void *)this;
@@ -133,7 +132,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
                        (struct sockaddr *)&from, &fromlen);
         pthread_testcancel();
 
-        /* If anything is wrong, just ignore what we got */
         if (len <= 0 || fromlen == 0)
             continue;
 

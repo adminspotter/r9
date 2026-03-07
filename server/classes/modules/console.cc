@@ -90,7 +90,6 @@ void *ConsoleSession::session_listener(void *arg)
     {
         std::string str = sess->get_line();
 
-        /* Do we need to exit? */
         if (str == "exit")
         {
             (*sess->out) << "exiting" << std::endl;
@@ -116,7 +115,6 @@ std::string ConsoleSession::dispatch(std::string &command)
     return std::string("not implemented");
 }
 
-/* So we don't leak file descriptors when we get cancelled */
 void ConsoleSession::cleanup(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;

@@ -78,11 +78,8 @@ stream_socket::stream_socket(struct addrinfo *ai)
 
 stream_socket::~stream_socket()
 {
-    /* In order to not have a race between the fd map and the worker
-     * loops, we'll stop ourselves first.
-     */
     try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
+    catch (std::exception& e) {}
 
     for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
         close((*i).first);
@@ -100,7 +97,6 @@ void stream_socket::start(void)
 {
     this->listen_socket::start();
 
-    /* Start up the sending thread pool */
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(stream_socket::stream_send_worker);
     this->sock.listen_arg = (void *)this;
