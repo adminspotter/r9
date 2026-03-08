@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2006-2025  Trinity Annabelle Quirk
+ * Copyright (C) 2006-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,6 +38,7 @@
 #define __INC_SOCKADDR_H__
 
 #include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -48,6 +49,8 @@
 #include <cstdint>
 #include <sstream>
 #include <stdexcept>
+
+#include "log.h"
 
 class Sockaddr
 {
@@ -357,6 +360,16 @@ class Sockaddr_un : public Sockaddr
         };
     ~Sockaddr_un()
         {
+            if (unlink(this->sun->sun_path))
+            {
+                char err[128];
+
+                std::clog << syslogWarn << "could not unlink path "
+                          << this->sun->sun_path << ": "
+                          << strerror_r(errno, err, sizeof(err))
+                          << " (" << errno << ')'
+                          << std::endl;
+            }
         };
 
     bool operator==(const Sockaddr& s)
@@ -412,29 +425,18 @@ inline Sockaddr *build_sockaddr(struct sockaddr& s)
     switch (s.sa_family)
     {
       case AF_INET:
-      {
-          Sockaddr_in *sin = new Sockaddr_in(s);
-          return dynamic_cast<Sockaddr *>(sin);
-      }
+        return dynamic_cast<Sockaddr *>(new Sockaddr_in(s));
 
       case AF_INET6:
-      {
-          Sockaddr_in6 *sin6 = new Sockaddr_in6(s);
-          return dynamic_cast<Sockaddr *>(sin6);
-      }
+        return dynamic_cast<Sockaddr *>(new Sockaddr_in6(s));
 
       case AF_UNIX:
-      {
-          Sockaddr_un *sun = new Sockaddr_un(s);
-          return dynamic_cast<Sockaddr *>(sun);
-      }
+        return dynamic_cast<Sockaddr *>(new Sockaddr_un(s));
 
       default:
-      {
-          std::ostringstream st;
-          st << "invalid address family " << s.sa_family;
-          throw std::runtime_error(st.str());
-      }
+        std::ostringstream st;
+        st << "invalid address family " << s.sa_family;
+        throw std::runtime_error(st.str());
     }
 }
 
