@@ -142,7 +142,7 @@ std::string ConsoleSession::get_line(void)
     return str;
 }
 
-Console::Console(struct addrinfo *ai)
+Console::Console(Addrinfo *ai)
     : basesock(ai), sessions()
 {
 }
@@ -212,7 +212,7 @@ int Console::wrap_request(Sockaddr *sa)
 #endif
 }
 
-extern "C" Console *console_create(struct addrinfo *ai)
+extern "C" Console *console_create(Addrinfo *ai)
 {
     return new Console(ai);
 }

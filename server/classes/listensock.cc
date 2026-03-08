@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -245,7 +245,7 @@ void listen_socket::init(void)
     this->reaper_running = false;
 }
 
-listen_socket::listen_socket(struct addrinfo *ai)
+listen_socket::listen_socket(Addrinfo *ai)
     : users(), sock(ai)
 {
     this->init();

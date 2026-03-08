@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2007-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -51,7 +51,7 @@ static std::map<int, listen_socket::packet_handler> packet_handlers =
     { TYPE_LGTREQ, listen_socket::handle_logout }
 };
 
-dgram_socket::dgram_socket(struct addrinfo *ai)
+dgram_socket::dgram_socket(Addrinfo *ai)
     : listen_socket(ai)
 {
 }

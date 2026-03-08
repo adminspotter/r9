@@ -20,34 +20,9 @@ class test_stream_socket : public stream_socket
     using stream_socket::readfs;
     using stream_socket::master_readfs;
 
-    test_stream_socket(struct addrinfo *a) : stream_socket(a) {};
+    test_stream_socket(Addrinfo *a) : stream_socket(a) {};
     ~test_stream_socket() {};
 };
-
-struct addrinfo *create_addrinfo(void)
-{
-    struct addrinfo hints, *addr = NULL;
-    static int port = 8765;
-    char port_str[6];
-    int ret;
-
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_NUMERICSERV;
-    hints.ai_protocol = 0;
-    hints.ai_canonname = NULL;
-    hints.ai_addr = NULL;
-    hints.ai_next = NULL;
-
-    snprintf(port_str, sizeof(port_str), "%d", port--);
-    if ((ret = getaddrinfo(NULL, port_str, &hints, &addr)) != 0)
-    {
-        std::cerr << gai_strerror(ret) << std::endl;
-        throw std::runtime_error("getaddrinfo broke");
-    }
-
-    return addr;
-}
 
 int select(int a, fd_set *b, fd_set *c, fd_set *d, struct timeval *e)
 {
@@ -93,7 +68,7 @@ void test_listen_worker(void)
     config.send_threads = 1;
     config.access_threads = 1;
 
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(STREAM, "localhost", "8765");
     test_stream_socket *sts = new test_stream_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
@@ -118,7 +93,7 @@ void test_listen_worker(void)
     main_loop_exit_flag = 1;
 
     delete sts;
-    freeaddrinfo(addr);
+    delete addr;
 }
 
 /* Send queue test
@@ -134,7 +109,7 @@ void test_send_worker(void)
     config.send_threads = 1;
     config.access_threads = 1;
 
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(STREAM, "localhost", "8765");
     test_stream_socket *sts = new test_stream_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
     int fd = 99;
@@ -166,7 +141,7 @@ void test_send_worker(void)
         ;
 
     delete sts;
-    freeaddrinfo(addr);
+    delete addr;
 }
 
 int main(int argc, char **argv)

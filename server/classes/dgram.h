@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2007-2019  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -63,7 +63,7 @@ class dgram_socket : public listen_socket
                      less_sockaddr>::iterator socks_iterator;
 
   public:
-    dgram_socket(struct addrinfo *);
+    dgram_socket(Addrinfo *);
     ~dgram_socket();
 
     std::string port_type(void) override;

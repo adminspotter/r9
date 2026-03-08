@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2016-2024  Trinity Annabelle Quirk
+ * Copyright (C) 2016-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,6 +30,6 @@
 
 #include "listensock.h"
 
-listen_socket *socket_create(struct addrinfo *);
+listen_socket *socket_create(Addrinfo *);
 
 #endif /* __INC_R9_SOCKET_H__ */

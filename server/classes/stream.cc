@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2007-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -70,7 +70,7 @@ void stream_socket::init(void)
     this->max_fd = this->sock.sock + 1;
 }
 
-stream_socket::stream_socket(struct addrinfo *ai)
+stream_socket::stream_socket(Addrinfo *ai)
     : listen_socket(ai), fds()
 {
     this->init();

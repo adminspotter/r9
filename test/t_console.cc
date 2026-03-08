@@ -9,7 +9,7 @@ using namespace TAP;
 
 #define TMP_PATH  "./consoletest"
 
-extern "C" Console *console_create(struct addrinfo *);
+extern "C" Console *console_create(Addrinfo *);
 extern "C" void console_destroy(Console *);
 
 #if HAVE_LIBWRAP
@@ -26,7 +26,7 @@ int hosts_ctl(char *prefix, char *hostname, char *address, char *user)
         ret = 0;
     if (strcmp(hostname, "localhost"))
         ret = 0;
-    if (strcmp(address, "127.0.0.1"))
+    if (strlen(address) && strcmp(address, "127.0.0.1"))
         ret = 0;
     if (strcmp(user, STRING_UNKNOWN))
         ret = 0;
@@ -37,35 +37,30 @@ int hosts_ctl(char *prefix, char *hostname, char *address, char *user)
 void send_data_to(short port)
 {
     std::string func = "send_data_to: ";
-    struct addrinfo hints, *ai;
+    Addrinfo_un *ai = new Addrinfo_un(TMP_PATH);
     int sock, len;
     char buf[1024];
 
-    snprintf(buf, sizeof(buf), "%d", port);
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    getaddrinfo("localhost", buf, &hints, &ai);
-
-    if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+    if ((sock = socket(PF_UNIX, SOCK_STREAM, 0)) < 0)
     {
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << "socket error: " << err << " (" << errno << ')';
-        throw std::runtime_error(s.str());
+        s << "socket error: " << strerror_r(errno, err, sizeof(err))
+          << " (" << errno << ')';
+        fail(func + s.str());
+        goto CLEANUP;
     }
 
-    if (connect(sock, ai->ai_addr, ai->ai_addrlen) < 0)
+    if (connect(sock, ai->ai->ai_addr, ai->ai->ai_addrlen) < 0)
     {
         std::ostringstream s;
         char err[128];
 
-        strerror_r(errno, err, sizeof(err));
-        s << "connect error: " << err << " (" << errno << ')';
-        throw std::runtime_error(s.str());
+        s << "connect error: " << strerror_r(errno, err, sizeof(err))
+          << " (" << errno << ')';
+        fail(func + s.str());
+        goto CLEANUP;
     }
 
     /* First thing, we should get a prompt */
@@ -93,23 +88,16 @@ void send_data_to(short port)
     while ((len = recv(sock, buf, sizeof(buf), 0)) != 0)
         ;
 
+  CLEANUP:
     close(sock);
-    freeaddrinfo(ai);
+    delete ai;
 }
 
 void test_create_inet(void)
 {
     std::string test = "create inet console: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
     Console *con;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     try
     {
@@ -123,22 +111,15 @@ void test_create_inet(void)
     is(con->sa->port(), 1235, test + "expected port");
     is(con->sock >= 0, true, test + "expected socket descriptor");
 
-    delete(con);
-    freeaddrinfo(ai);
+    delete con;
+    delete ai;
 }
 
 void test_create_factory(void)
 {
     std::string test = "create factory: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1234", AF_INET);
     Console *con;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1234", &hints, &ai);
 
     try
     {
@@ -153,25 +134,18 @@ void test_create_factory(void)
     is(con->sock >= 0, true, test + "expected socket descriptor");
 
     console_destroy(con);
-    freeaddrinfo(ai);
+    delete ai;
 }
 
 void test_wrap_request(void)
 {
     std::string test = "wrap_request: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1236", AF_INET);
     Console *con;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1236", &hints, &ai);
 
     con = new Console(ai);
 
-    Sockaddr *sa = build_sockaddr(*ai->ai_addr);
+    Sockaddr *sa = ai->sockaddr();
 
 #if HAVE_LIBWRAP
     /* We'll only actually use the config if we have the wrap_request
@@ -186,24 +160,18 @@ void test_wrap_request(void)
      */
     is(con->wrap_request(sa), 1, test + "expected result");
 
-    delete(con);
-    freeaddrinfo(ai);
+    delete con;
+    delete sa;
+    delete ai;
 }
 
-void test_inet_listener(void)
+void test_listener(void)
 {
-    std::string test = "inet listener:";
-    struct addrinfo hints, *ai;
-    int ret;
+    std::string test = "listener: ";
+    Addrinfo *ai = new Addrinfo_un(TMP_PATH);
     Console *con;
 
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1237", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
-
+    unlink(TMP_PATH);
     try
     {
         con = new Console(ai);
@@ -212,9 +180,6 @@ void test_inet_listener(void)
     {
         fail(test + "constructor exception");
     }
-    is(strncmp(con->sa->ntop(), "127.0.0.1", 10), 0, test + "expected address");
-    is(con->sa->port(), 1237, test + "expected port");
-    is(con->sock >= 0, true, test + "expected socket descriptor");
 
     con->listen_arg = (void *)con;
     con->start(Console::console_listener);
@@ -223,17 +188,18 @@ void test_inet_listener(void)
 
     con->stop();
 
-    delete(con);
-    freeaddrinfo(ai);
+    unlink(TMP_PATH);
+    delete con;
+    delete ai;
 }
 
 int main(int argc, char **argv)
 {
-    plan(18);
+    plan(13);
 
     test_create_inet();
     test_create_factory();
     test_wrap_request();
-    test_inet_listener();
+    test_listener();
     return exit_status();
 }

@@ -38,25 +38,13 @@ struct addrinfo *create_addrinfo(int type)
 void test_unix(void)
 {
     std::string test = "unix: ";
-    struct sockaddr_un sun;
-    struct addrinfo addr;
-
-    memset(&addr, 0, sizeof(struct addrinfo));
-    addr.ai_family = AF_UNIX;
-    addr.ai_socktype = SOCK_STREAM;
-    addr.ai_protocol = 0;
-    addr.ai_addrlen = sizeof(struct sockaddr_un);
-    addr.ai_addr = (struct sockaddr *)&sun;
-
-    memset(&sun, 0, sizeof(struct sockaddr_un));
-    sun.sun_family = AF_UNIX;
-    strncpy(sun.sun_path, "/no/such/path", 14);
+    Addrinfo_un *addr = new Addrinfo_un("/no/such/path");
 
     listen_socket *listen = NULL;
 
     try
     {
-        listen = socket_create(&addr);
+        listen = socket_create(addr);
     }
     catch (std::runtime_error& e)
     {
@@ -69,12 +57,13 @@ void test_unix(void)
     {
         fail(test + "wrong error type");
     }
+    delete addr;
 }
 
 void test_stream(void)
 {
     std::string test = "stream: ";
-    struct addrinfo *addr = create_addrinfo(SOCK_STREAM);
+    Addrinfo *addr = new Addrinfo(STREAM, "localhost", "7654");
     listen_socket *listen = NULL;
 
     try
@@ -90,13 +79,13 @@ void test_stream(void)
        test + "expected type");
 
     delete listen;
-    freeaddrinfo(addr);
+    delete addr;
 }
 
 void test_dgram(void)
 {
     std::string test = "dgram: ";
-    struct addrinfo *addr = create_addrinfo(SOCK_DGRAM);
+    Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "7654");
     listen_socket *listen = NULL;
 
     try
@@ -112,7 +101,7 @@ void test_dgram(void)
        test + "expected type");
 
     delete listen;
-    freeaddrinfo(addr);
+    delete addr;
 }
 
 int main(int argc, char **argv)

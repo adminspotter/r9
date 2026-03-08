@@ -207,7 +207,7 @@ static void setup_sockets(void)
     for (auto& i : config.listen_ports)
     {
         try {
-            sockets.push_back(socket_create(i->ai));
+            sockets.push_back(socket_create(i));
             ++created;
         }
         catch (std::exception& e)
@@ -296,7 +296,7 @@ static void setup_console(void)
     {
         try
         {
-            consoles.push_back(console_create(i->ai));
+            consoles.push_back(console_create(i));
             ++created;
         }
         catch (std::exception& e)

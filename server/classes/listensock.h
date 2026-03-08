@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015-2019  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -140,7 +140,7 @@ class listen_socket {
     void init(void);
 
   public:
-    listen_socket(struct addrinfo *);
+    listen_socket(Addrinfo *);
     virtual ~listen_socket();
 
     virtual std::string port_type(void);

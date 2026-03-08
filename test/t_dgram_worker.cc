@@ -101,35 +101,10 @@ int hton_packet(packet *p, size_t s)
     return 1;
 }
 
-struct addrinfo *create_addrinfo(void)
-{
-    struct addrinfo hints, *addr = NULL;
-    static int port = 8765;
-    char port_str[6];
-    int ret;
-
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_NUMERICSERV;
-    hints.ai_protocol = 0;
-    hints.ai_canonname = NULL;
-    hints.ai_addr = NULL;
-    hints.ai_next = NULL;
-
-    snprintf(port_str, sizeof(port_str), "%d", port--);
-    if ((ret = getaddrinfo(NULL, port_str, &hints, &addr)) != 0)
-    {
-        std::cerr << gai_strerror(ret) << std::endl;
-        throw std::runtime_error("getaddrinfo broke");
-    }
-
-    return addr;
-}
-
 void test_listen_worker(void)
 {
     std::string test = "listen worker: ";
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
     dgram_socket *dgs = new dgram_socket(addr);
     void *retval;
 
@@ -146,7 +121,7 @@ void test_listen_worker(void)
     is(retval == NULL, true, test + "expected return value");
 
     delete dgs;
-    freeaddrinfo(addr);
+    delete addr;
 }
 
 /* Send queue test
@@ -164,7 +139,7 @@ void test_send_worker(void)
     config.key.priv_key = generate_ecdh_key();
     pkey_to_public_key(config.key.priv_key, config.key.pub_key, R9_PUBKEY_SZ);
 
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
     dgram_socket *dgs = new dgram_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
     bu->parent = (listen_socket *)dgs;
@@ -200,7 +175,7 @@ void test_send_worker(void)
         ;
 
     delete dgs;
-    freeaddrinfo(addr);
+    delete addr;
 }
 
 int main(int argc, char **argv)

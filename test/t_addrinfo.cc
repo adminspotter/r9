@@ -33,6 +33,12 @@ void test_addrinfo(void)
     is(ai->ai->ai_family, AF_INET, test + st + "expected address family");
     is(ai->ai->ai_socktype, SOCK_STREAM, test + st + "expected socket type");
 
+    ok(ai->family() == ai->ai->ai_family, test + st + "good family");
+    ok(ai->socktype() == ai->ai->ai_socktype, test + st + "good socktype");
+    ok(ai->protocol() == ai->ai->ai_protocol, test + st + "good protocol");
+    ok(ai->addrlen() == ai->ai->ai_addrlen, test + st + "good addrlen");
+    ok(ai->canonname() == ai->ai->ai_canonname, test + st + "good canonname");
+
     delete ai;
 
     st = "dgram: ";
@@ -126,7 +132,7 @@ void test_str_to_addrinfo(void)
 
 int main(int argc, char **argv)
 {
-    plan(26);
+    plan(31);
 
     test_addrinfo();
     test_addrinfo_un();

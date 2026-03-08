@@ -42,6 +42,8 @@
 #include <stdexcept>
 #include <system_error>
 
+#include "sockaddr.h"
+
 typedef enum {
     UNIX = 0,
     STREAM = SOCK_STREAM,
@@ -60,14 +62,17 @@ class Addrinfo
         }
 
   public:
-    Addrinfo(int type, const std::string& addr, const std::string& port)
+    Addrinfo(int type,
+             const std::string& addr,
+             const std::string& port,
+             int family = AF_UNSPEC)
         {
             struct addrinfo hints;
 
             this->ai = NULL;
             memset(&hints, 0, sizeof(struct addrinfo));
             hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
-            hints.ai_family = AF_UNSPEC;
+            hints.ai_family = family;
             hints.ai_socktype = type;
 
             int ret = getaddrinfo(addr.c_str(), port.c_str(),
@@ -84,6 +89,17 @@ class Addrinfo
             }
         }
     virtual ~Addrinfo() { freeaddrinfo(this->ai); }
+
+    inline int family(void) { return this->ai->ai_family; }
+    inline int socktype(void) { return this->ai->ai_socktype; }
+    inline int protocol(void) { return this->ai->ai_protocol; }
+    inline socklen_t addrlen(void) { return this->ai->ai_addrlen; }
+    inline Sockaddr *sockaddr(void)
+        {
+            return build_sockaddr(*this->ai->ai_addr);
+        }
+    inline const char *canonname(void) { return this->ai->ai_canonname; }
+    /* Explicitly not handling ai_next here (yet?) */
 };
 
 class Addrinfo_un : public Addrinfo

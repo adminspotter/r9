@@ -39,6 +39,7 @@
 
 #include <cstdint>
 
+#include "addrinfo.h"
 #include "sockaddr.h"
 
 class basesock
@@ -56,12 +57,12 @@ class basesock
     static const int LISTEN_BACKLOG = 10;
 
   protected:
-    virtual void create_socket(struct addrinfo *);
+    virtual void create_socket(Addrinfo *);
     virtual std::string get_port_string(void);
 
   public:
     basesock();
-    basesock(struct addrinfo *);
+    basesock(Addrinfo *);
     virtual ~basesock();
 
     virtual std::string port_type(void);
