@@ -142,7 +142,6 @@ void test_create_delete(void)
        0,
        test + st + "expected address");
     is(base->sa->port(), 1235, test + st + "expected port");
-    ok(base->sock >= 0, test + st + "socket created");
 
     delete base;
     delete ai;
@@ -164,13 +163,12 @@ void test_create_delete(void)
            0,
            test + st + "expected address");
         is(base->sa->port(), 1235, test + st + "expected port");
-        ok(base->sock >= 0, test + st + "socket created");
 
         delete base;
         delete ai;
     }
     else
-        skip(3, test + "no IPv6");
+        skip(2, test + "no IPv6");
     socket_zero = false;
 }
 
@@ -223,6 +221,7 @@ void test_bad_socket(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (std::runtime_error& e)
     {
@@ -250,6 +249,7 @@ void test_privileged_socket(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (std::runtime_error& e)
     {
@@ -269,6 +269,7 @@ void test_privileged_socket(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (...)
     {
@@ -293,6 +294,7 @@ void test_bad_bind(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (std::runtime_error& e)
     {
@@ -306,6 +308,7 @@ void test_bad_bind(void)
         fail(test + "wrong error type");
     }
 
+    delete base;
     delete ai;
     bind_error = false;
 }
@@ -320,6 +323,7 @@ void test_bad_listen(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (std::runtime_error& e)
     {
@@ -333,6 +337,7 @@ void test_bad_listen(void)
         fail(test + "wrong error type");
     }
 
+    delete base;
     delete ai;
     listen_error = false;
 }
@@ -347,6 +352,7 @@ void test_start_stop(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (...)
     {
@@ -357,10 +363,8 @@ void test_start_stop(void)
     is(base->sa->port(), 1235, test + st + "expected port");
     ok(base->sock >= 0, test + st + "socket created");
 
-    base->listen_arg = base;
     try
     {
-        base->start(test_thread_worker);
         base->stop();
     }
     catch (...)
@@ -390,7 +394,6 @@ void test_start_stop(void)
         is(base->sa->port(), 1235, test + st + "expected port");
         ok(base->sock >= 0, test + st + "socket created");
 
-        base->listen_arg = base;
         try
         {
             base->start(test_thread_worker);
@@ -424,7 +427,6 @@ void test_start_bad_socket(void)
         fail(test + "constructor exception");
     }
 
-    base->listen_arg = base;
     try
     {
         base->start(test_thread_worker);
@@ -455,7 +457,6 @@ void test_start_create_thread_fail(void)
         fail(test + "constructor exception");
     }
 
-    base->listen_arg = base;
     try
     {
         base->start(test_thread_worker);
@@ -486,25 +487,16 @@ void test_stop_cancel_fail(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (...)
     {
-        fail(test + "constructor exception");
+        fail(test + "setup failure");
     }
     is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
        test + "expected address");
     is(base->sa->port(), 1235, test + "expected port");
     ok(base->sock >= 0, test + "socket created");
-
-    base->listen_arg = base;
-    try
-    {
-        base->start(test_thread_worker);
-    }
-    catch (...)
-    {
-        fail(test + "start exception");
-    }
 
     pthread_cancel_error = true;
     try
@@ -544,25 +536,16 @@ void test_stop_join_fail(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (...)
     {
-        fail(test + "constructor exception");
+        fail(test + "setup failure");
     }
     is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
        test + "expected address");
     is(base->sa->port(), 1235, test + "expected port");
     ok(base->sock >= 0, test + "socket created");
-
-    base->listen_arg = base;
-    try
-    {
-        base->start(test_thread_worker);
-    }
-    catch (...)
-    {
-        fail(test + "start exception");
-    }
 
     pthread_join_error = true;
     try
@@ -588,7 +571,7 @@ void test_stop_join_fail(void)
 
 int main(int argc, char **argv)
 {
-    plan(30);
+    plan(28);
 
     test_create_delete();
     test_delete_unix();

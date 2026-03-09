@@ -48,6 +48,7 @@
 basesock::basesock()
 {
     std::clog << syslogWarn << "default basesock constructor" << std::endl;
+    this->ai = NULL;
     this->sa = NULL;
     this->listen_arg = NULL;
     this->thread_started = false;
@@ -56,10 +57,10 @@ basesock::basesock()
 
 basesock::basesock(Addrinfo *ai)
 {
+    this->ai = ai;
     this->sa = ai->sockaddr();
     this->listen_arg = NULL;
     this->thread_started = false;
-    this->create_socket(ai);
 }
 
 basesock::~basesock()
@@ -75,7 +76,7 @@ basesock::~basesock()
         delete this->sa;
 }
 
-void basesock::create_socket(Addrinfo *ai)
+void basesock::create_socket(void)
 {
     uid_t uid = geteuid();
     gid_t gid = getegid();
@@ -84,9 +85,9 @@ void basesock::create_socket(Addrinfo *ai)
     const std::string typestr
         = (ai->socktype() == SOCK_DGRAM ? "dgram " : "stream ");
 
-    if ((this->sock = socket(ai->family(),
-                             ai->socktype(),
-                             ai->protocol())) < 0)
+    if ((this->sock = socket(this->ai->family(),
+                             this->ai->socktype(),
+                             this->ai->protocol())) < 0)
     {
         std::ostringstream s;
 
@@ -114,7 +115,7 @@ void basesock::create_socket(Addrinfo *ai)
             setegid(getgid());
         }
     }
-    ret = bind(this->sock, this->sa->sockaddr(), ai->addrlen());
+    ret = bind(this->sock, this->sa->sockaddr(), this->ai->addrlen());
     if (do_uid)
     {
         seteuid(uid);
@@ -130,7 +131,7 @@ void basesock::create_socket(Addrinfo *ai)
         throw std::system_error(errno, std::generic_category(), s.str());
     }
 
-    if (ai->socktype() == SOCK_STREAM)
+    if (this->ai->socktype() == SOCK_STREAM)
     {
         if (listen(this->sock, basesock::LISTEN_BACKLOG) < 0)
         {
@@ -168,6 +169,7 @@ void basesock::start(void *(*func)(void *))
 {
     int ret;
 
+    this->create_socket();
     if (!this->thread_started && this->sock > 0)
     {
         if ((ret = pthread_create(&(this->listen_thread),

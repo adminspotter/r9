@@ -48,6 +48,7 @@ class basesock
     bool thread_started;
 
   public:
+    Addrinfo *ai;
     Sockaddr *sa;
     int sock;
 
@@ -57,7 +58,7 @@ class basesock
     static const int LISTEN_BACKLOG = 10;
 
   protected:
-    virtual void create_socket(Addrinfo *);
+    virtual void create_socket(void);
     virtual std::string get_port_string(void);
 
   public:
