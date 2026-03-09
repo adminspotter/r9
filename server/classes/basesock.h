@@ -59,7 +59,6 @@ class basesock
 
   protected:
     virtual void create_socket(void);
-    virtual std::string get_port_string(void);
 
   public:
     basesock();

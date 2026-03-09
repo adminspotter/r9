@@ -98,6 +98,13 @@ class Sockaddr
         {
             return (struct sockaddr *)&(this->ss);
         }
+    virtual std::string str(void)
+        {
+            char s[INET6_ADDRSTRLEN + 1 + 5 + 1];
+
+            snprintf(s, sizeof(s), "%s:%hu", this->ntop(), this->port());
+            return std::string(s);
+        }
 };
 
 class Sockaddr_in : public Sockaddr
@@ -378,6 +385,7 @@ class Sockaddr_un : public Sockaddr
     int family(void) const { return this->sun->sun_family; }
     uint16_t port(void) const { return UINT16_MAX; }
     struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sun; }
+    std::string str(void) { return this->ntop(); }
 };
 
 inline Sockaddr *build_sockaddr(struct sockaddr& s)

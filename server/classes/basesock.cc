@@ -92,7 +92,7 @@ void basesock::create_socket(void)
         std::ostringstream s;
 
         s << "socket creation failed for " << typestr
-          << this->get_port_string();
+          << this->sa->str();
         this->sock = 0;
         throw std::system_error(errno, std::generic_category(), s.str());
     }
@@ -103,7 +103,7 @@ void basesock::create_socket(void)
         if (getuid() != 0)
         {
             std::ostringstream s;
-            s << "can't open " << typestr << this->get_port_string()
+            s << "can't open " << typestr << this->sa->str()
               << " as non-root user";
             close(this->sock);
             this->sock = 0;
@@ -125,7 +125,7 @@ void basesock::create_socket(void)
     {
         std::ostringstream s;
 
-        s << "bind failed for " << typestr << this->get_port_string();
+        s << "bind failed for " << typestr << this->sa->str();
         close(this->sock);
         this->sock = 0;
         throw std::system_error(errno, std::generic_category(), s.str());
@@ -137,7 +137,7 @@ void basesock::create_socket(void)
         {
             std::ostringstream s;
 
-            s << "listen failed for " << typestr << this->get_port_string();
+            s << "listen failed for " << typestr << this->sa->str();
             close(this->sock);
             this->sock = 0;
             throw std::system_error(errno, std::generic_category(), s.str());
@@ -145,24 +145,12 @@ void basesock::create_socket(void)
     }
 
     std::clog << "created " << typestr << "socket "
-              << this->sock << " on " << this->get_port_string() << std::endl;
+              << this->sock << " on " << this->sa->str() << std::endl;
 }
 
 std::string basesock::port_type(void)
 {
     return "base";
-}
-
-std::string basesock::get_port_string(void)
-{
-    std::ostringstream s;
-
-    Sockaddr_un *sun = dynamic_cast<Sockaddr_un *>(this->sa);
-    if (sun != NULL)
-        s << sun->ntop();
-    else
-        s << "port " << this->sa->port();
-    return s.str();
 }
 
 void basesock::start(void *(*func)(void *))
@@ -179,7 +167,7 @@ void basesock::start(void *(*func)(void *))
         {
             std::ostringstream s;
 
-            s << "couldn't start listen thread for " << this->get_port_string();
+            s << "couldn't start listen thread for " << this->sa->str();
             throw std::system_error(ret, std::generic_category(), s.str());
         }
         this->thread_started = true;
@@ -197,7 +185,7 @@ void basesock::stop(void)
             std::ostringstream s;
 
             s << "couldn't cancel listen thread for "
-              << this->get_port_string();
+              << this->sa->str();
             throw std::system_error(ret, std::generic_category(), s.str());
         }
         sleep(0);
@@ -205,7 +193,7 @@ void basesock::stop(void)
         {
             std::ostringstream s;
 
-            s << "couldn't join listen thread for " << this->get_port_string();
+            s << "couldn't join listen thread for " << this->sa->str();
             throw std::system_error(ret, std::generic_category(), s.str());
         }
         this->thread_started = false;
