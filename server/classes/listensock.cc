@@ -230,13 +230,14 @@ void base_user::send_ack(uint8_t req,
 }
 
 listen_socket::listen_socket()
-    : users(), sock()
+    : basesock(), users()
 {
     this->init();
 }
 
 void listen_socket::init(void)
 {
+    this->port_type = "listen";
     this->send_pool = new ThreadPool<packet_list>("send", config.send_threads);
     this->access_pool = new ThreadPool<access_list>("access",
                                                     config.access_threads);
@@ -246,7 +247,7 @@ void listen_socket::init(void)
 }
 
 listen_socket::listen_socket(Addrinfo *ai)
-    : users(), sock(ai)
+    : basesock(ai), users()
 {
     this->init();
 }
@@ -262,18 +263,13 @@ listen_socket::~listen_socket()
     this->users.erase(this->users.begin(), this->users.end());
 }
 
-std::string listen_socket::port_type(void)
-{
-    return "listen";
-}
-
 void listen_socket::start(void)
 {
     int retval;
 
     std::clog << "starting connection loop for "
-              << this->port_type() << " port "
-              << this->sock.sa->port() << std::endl;
+              << this->port_type << " port "
+              << this->sa->port() << std::endl;
 
     if ((retval = pthread_create(&this->reaper, NULL,
                                  reaper_worker, (void *)this)) != 0)
@@ -281,8 +277,8 @@ void listen_socket::start(void)
         std::ostringstream s;
 
         s << "couldn't create reaper thread for "
-          << this->port_type() << " port "
-          << this->sock.sa->port();
+          << this->port_type << " port "
+          << this->sa->port();
         throw std::system_error(retval, std::generic_category(), s.str());
     }
     this->reaper_running = true;
@@ -302,8 +298,8 @@ void listen_socket::stop(void)
         {
             std::ostringstream s;
 
-            s << "couldn't cancel reaper thread for " << this->port_type()
-              << " port " << this->sock.sa->port();
+            s << "couldn't cancel reaper thread for " << this->port_type
+              << " port " << this->sa->port();
             throw std::system_error(retval, std::generic_category(), s.str());
         }
         sleep(0);
@@ -311,8 +307,8 @@ void listen_socket::stop(void)
         {
             std::ostringstream s;
 
-            s << "couldn't join reaper thread for " << this->port_type()
-              << " port " << this->sock.sa->port();
+            s << "couldn't join reaper thread for " << this->port_type
+              << " port " << this->sa->port();
             throw std::system_error(retval, std::generic_category(), s.str());
         }
         this->reaper_running = false;
@@ -320,7 +316,7 @@ void listen_socket::stop(void)
 
     this->send_pool->stop();
     this->access_pool->stop();
-    this->sock.stop();
+    basesock::stop();
 }
 
 void *listen_socket::access_pool_worker(void *arg)
@@ -328,8 +324,8 @@ void *listen_socket::access_pool_worker(void *arg)
     listen_socket *ls = (listen_socket *)arg;
     access_list req;
 
-    std::clog << "started access pool worker for " << ls->port_type()
-              << " port " << ls->sock.sa->port() << std::endl;
+    std::clog << "started access pool worker for " << ls->port_type
+              << " port " << ls->sa->port() << std::endl;
     for (;;)
     {
         ls->access_pool->pop(&req);
@@ -351,8 +347,8 @@ void *listen_socket::reaper_worker(void *arg)
     base_user *bu;
     time_t now, link_dead, sleepy;
 
-    std::clog << "started reaper thread for " << ls->port_type()
-              << " port " << ls->sock.sa->port() << std::endl;
+    std::clog << "started reaper thread for " << ls->port_type
+              << " port " << ls->sa->port() << std::endl;
     for (;;)
     {
         sleep(listen_socket::REAP_TIMEOUT);
@@ -367,8 +363,8 @@ void *listen_socket::reaper_worker(void *arg)
             if (bu->pending_logout == true || bu->timestamp < link_dead)
             {
                 std::clog << "removing user " << bu->username << " ("
-                          << bu->userid << ") from " << ls->port_type()
-                          << " port " << ls->sock.sa->port() << std::endl;
+                          << bu->userid << ") from " << ls->port_type
+                          << " port " << ls->sa->port() << std::endl;
                 ++i;
                 ls->disconnect_user(bu);
                 continue;

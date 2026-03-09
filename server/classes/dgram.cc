@@ -69,19 +69,14 @@ dgram_socket::~dgram_socket()
     /* Thread pools are handled by the listen_socket destructor */
 }
 
-std::string dgram_socket::port_type(void)
-{
-    return "datagram";
-}
-
 void dgram_socket::start(void)
 {
     this->listen_socket::start();
 
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(dgram_socket::dgram_send_worker);
-    this->sock.listen_arg = (void *)this;
-    this->sock.start(dgram_socket::dgram_listen_worker);
+    this->listen_arg = (void *)this;
+    basesock::start(dgram_socket::dgram_listen_worker);
 }
 
 void dgram_socket::connect_user(base_user *bu, access_list& al)
@@ -125,7 +120,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         fromlen = sizeof(struct sockaddr_storage);
 
         /* recvfrom should be interruptible by pthread_cancel */
-        len = recvfrom(dgs->sock.sock,
+        len = recvfrom(dgs->sock,
                        (void *)&buf,
                        sizeof(packet),
                        0,
@@ -144,7 +139,7 @@ void *dgram_socket::dgram_listen_worker(void *arg)
         dgs->handle_packet(buf, len, sa);
     }
     std::clog << "exiting connection loop for datagram port "
-              << dgs->sock.sa->port() << std::endl;
+              << dgs->sa->port() << std::endl;
     return NULL;
 }
 
@@ -185,7 +180,7 @@ void *dgram_socket::dgram_send_worker(void *arg)
     size_t realsize;
 
     std::clog << "started send pool worker for datagram port "
-              << dgs->sock.sa->port() << std::endl;
+              << dgs->sa->port() << std::endl;
     for (;;)
     {
         dgs->send_pool->pop(&req);
@@ -193,7 +188,7 @@ void *dgram_socket::dgram_send_worker(void *arg)
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
         {
-            if (sendto(dgs->sock.sock,
+            if (sendto(dgs->sock,
                        (void *)&req.buf, realsize, 0,
                        dgs->user_socks[req.who->userid]->sockaddr(),
                        sizeof(struct sockaddr_storage)) == -1)
@@ -202,7 +197,7 @@ void *dgram_socket::dgram_send_worker(void *arg)
 
                 std::clog << syslogErr
                           << "error sending packet out datagram port "
-                          << dgs->sock.sa->port() << ": "
+                          << dgs->sa->port() << ": "
                           << strerror_r(errno, err, sizeof(err))
                           << " (" << errno << ")"
                           << std::endl;
@@ -210,6 +205,6 @@ void *dgram_socket::dgram_send_worker(void *arg)
         }
     }
     std::clog << "exiting send pool worker for datagram port "
-              << dgs->sock.sa->port() << std::endl;
+              << dgs->sa->port() << std::endl;
     return NULL;
 }

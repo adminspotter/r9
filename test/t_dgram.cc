@@ -69,18 +69,6 @@ void test_create_delete_stop_error(void)
     delete addr;
 }
 
-void test_port_type(void)
-{
-    std::string test = "port type: ";
-    Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    dgram_socket *dgs = new dgram_socket(addr);
-
-    is(dgs->port_type(), "datagram", test + "expected port type");
-
-    delete dgs;
-    delete addr;
-}
-
 void test_connect_user(void)
 {
     std::string test = "connect_user: ";
@@ -231,11 +219,10 @@ void test_handle_login(void)
 
 int main(int argc, char **argv)
 {
-    plan(18);
+    plan(17);
 
     test_create_delete();
     test_create_delete_stop_error();
-    test_port_type();
     test_connect_user();
     test_disconnect_user();
     test_handle_packet_unknown();

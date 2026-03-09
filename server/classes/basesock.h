@@ -58,6 +58,8 @@ class basesock
     static const int LISTEN_BACKLOG = 10;
 
   protected:
+    std::string port_type;
+
     virtual void create_socket(void);
 
   public:
@@ -65,10 +67,8 @@ class basesock
     basesock(Addrinfo *);
     virtual ~basesock();
 
-    virtual std::string port_type(void);
-
     void start(void *(*)(void *));
-    void stop(void);
+    virtual void stop(void);
 };
 
 #endif /* __INC_BASESOCK_H__ */

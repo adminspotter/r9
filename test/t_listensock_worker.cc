@@ -25,11 +25,6 @@ class test_listen_socket : public listen_socket
   public:
     test_listen_socket(Addrinfo *a) : listen_socket(a) {};
     virtual ~test_listen_socket() {};
-
-    virtual std::string port_type(void) override
-        {
-            return "test";
-        };
 };
 
 void test_reaper_worker(void)

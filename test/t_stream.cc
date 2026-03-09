@@ -122,16 +122,6 @@ void test_create_delete_stop_error(void)
     stop_error = false;
 }
 
-void test_port_type(void)
-{
-    std::string test = "port type: ";
-    test_stream_socket *sts = new test_stream_socket();
-
-    is(sts->port_type(), "stream", test + "expected port type");
-
-    delete sts;
-}
-
 void test_start_stop(void)
 {
     std::string test = "start/stop: ";
@@ -321,7 +311,7 @@ void test_accept_new_connection(void)
 
     test_stream_socket *sts = new test_stream_socket();
 
-    FD_SET(sts->sock.sock, &sts->readfs);
+    FD_SET(sts->sock, &sts->readfs);
 
     sts->accept_new_connection();
 
@@ -422,11 +412,10 @@ void test_handle_users(void)
 
 int main(int argc, char **argv)
 {
-    plan(35);
+    plan(34);
 
     test_create_delete();
     test_create_delete_stop_error();
-    test_port_type();
     test_start_stop();
     test_handle_packet();
     test_handle_login();

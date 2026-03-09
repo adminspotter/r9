@@ -113,7 +113,8 @@ typedef struct access_list_tag
 }
 access_list;
 
-class listen_socket {
+class listen_socket : public basesock
+{
   public:
     static const int REAP_TIMEOUT = 15;
     static const int PING_TIMEOUT = 30;
@@ -133,7 +134,6 @@ class listen_socket {
 
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
-    basesock sock;
 
   protected:
     listen_socket();
@@ -143,10 +143,8 @@ class listen_socket {
     listen_socket(Addrinfo *);
     virtual ~listen_socket();
 
-    virtual std::string port_type(void);
-
     virtual void start(void);
-    virtual void stop(void);
+    virtual void stop(void) override;
 
     static void *access_pool_worker(void *);
     static void *reaper_worker(void *);

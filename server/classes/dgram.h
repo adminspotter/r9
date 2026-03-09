@@ -66,8 +66,6 @@ class dgram_socket : public listen_socket
     dgram_socket(Addrinfo *);
     ~dgram_socket();
 
-    std::string port_type(void) override;
-
     void start(void) override;
 
     void handle_packet(packet&, int, Sockaddr *);

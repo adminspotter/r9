@@ -365,18 +365,6 @@ void test_listen_socket_create_delete(void)
     delete addr;
 }
 
-void test_listen_socket_port_type(void)
-{
-    std::string test = "listen_socket port: ";
-    Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
-
-    is(listen->port_type() == "listen", true, test + "expected port type");
-
-    delete listen;
-    delete addr;
-}
-
 void test_listen_socket_start_stop(void)
 {
     std::string test = "listen_socket start/stop: ";
@@ -788,7 +776,7 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(81);
+    plan(80);
 
     test_base_user_create_delete();
     test_base_user_no_access();
@@ -802,7 +790,6 @@ int main(int argc, char **argv)
     test_base_user_send_ack();
 
     test_listen_socket_create_delete();
-    test_listen_socket_port_type();
     test_listen_socket_start_stop();
     test_listen_socket_handle_ack();
     test_listen_socket_handle_action();

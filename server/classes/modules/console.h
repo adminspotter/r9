@@ -85,8 +85,6 @@ class Console : public basesock
     Console(Addrinfo *);
     virtual ~Console();
 
-    virtual std::string port_type(void) override;
-
     int wrap_request(Sockaddr *);
 
     static void *console_listener(void *);

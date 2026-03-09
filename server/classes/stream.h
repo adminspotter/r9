@@ -54,8 +54,6 @@ class stream_socket : public listen_socket
     stream_socket(Addrinfo *);
     ~stream_socket();
 
-    std::string port_type(void) override;
-
     void start(void) override;
 
     void handle_packet(packet&, int, int);

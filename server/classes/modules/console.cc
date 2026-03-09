@@ -145,6 +145,7 @@ std::string ConsoleSession::get_line(void)
 Console::Console(Addrinfo *ai)
     : basesock(ai), sessions()
 {
+    this->port_type = "console";
 }
 
 Console::~Console()
@@ -154,11 +155,6 @@ Console::~Console()
     for (i = this->sessions.begin(); i != this->sessions.end(); ++i)
         delete *i;
     this->sessions.erase(this->sessions.begin(), this->sessions.end());
-}
-
-std::string Console::port_type(void)
-{
-    return "console";
 }
 
 void *Console::console_listener(void *arg)
