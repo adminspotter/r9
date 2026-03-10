@@ -98,6 +98,10 @@ class Sockaddr
         {
             return (struct sockaddr *)&(this->ss);
         }
+    virtual inline size_t size(void) const
+        {
+            return sizeof(struct sockaddr_storage);
+        }
     virtual std::string str(void)
         {
             char s[INET6_ADDRSTRLEN + 1 + 5 + 1];
@@ -195,6 +199,7 @@ class Sockaddr_in : public Sockaddr
     int family(void) const { return this->sin->sin_family; }
     uint16_t port(void) const { return ntohs(this->sin->sin_port); }
     struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sin; }
+    size_t size(void) const { return sizeof(struct sockaddr_in); }
 };
 
 /* A couple functions to be able to handle IPV6 addresses easily:
@@ -304,6 +309,7 @@ class Sockaddr_in6 : public Sockaddr
     int family(void) const { return this->sin6->sin6_family; }
     uint16_t port(void) const { return ntohs(this->sin6->sin6_port); }
     struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sin6; }
+    size_t size(void) const { return sizeof(struct sockaddr_in6); }
 };
 
 class Sockaddr_un : public Sockaddr
@@ -385,6 +391,7 @@ class Sockaddr_un : public Sockaddr
     int family(void) const { return this->sun->sun_family; }
     uint16_t port(void) const { return UINT16_MAX; }
     struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sun; }
+    size_t size(void) const { return sizeof(struct sockaddr_un); }
     std::string str(void) { return this->ntop(); }
 };
 

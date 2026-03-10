@@ -115,7 +115,7 @@ void basesock::create_socket(void)
             setegid(getgid());
         }
     }
-    ret = bind(this->sock, this->sa->sockaddr(), this->ai->addrlen());
+    ret = bind(this->sock, this->sa->sockaddr(), this->sa->size());
     if (do_uid)
     {
         seteuid(uid);

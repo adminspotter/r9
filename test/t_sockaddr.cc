@@ -144,6 +144,17 @@ void test_sockaddr_sockaddr(void)
     delete sa;
 }
 
+void test_sockaddr_size(void)
+{
+    std::string test = "sockaddr size: ";
+    struct sockaddr_storage ss;
+    memset(&ss, 0, sizeof(struct sockaddr_storage));
+    ss.ss_family = 33;
+
+    fake_Sockaddr *sa = new fake_Sockaddr((const struct sockaddr&)ss);
+    is(sa->size(), sizeof(struct sockaddr_storage), test + "expected size");
+}
+
 void test_sockaddr_factory(void)
 {
     std::string test = "sockaddr factory: ";
@@ -399,6 +410,16 @@ void test_sockaddr_in_sockaddr(void)
     is(saddr->sin_addr.s_addr, ip_addr, test + "expected addr");
 
     delete sa;
+}
+
+void test_sockaddr_in_size(void)
+{
+    std::string test = "sockaddr_in size: ";
+    Sockaddr_in *sa_in = new Sockaddr_in;
+
+    is(sa_in->size(), sizeof(struct sockaddr_in), test + "expected size");
+
+    delete sa_in;
 }
 
 void test_sockaddr_in_factory(void)
@@ -665,6 +686,16 @@ void test_sockaddr_in6_sockaddr(void)
     delete sa;
 }
 
+void test_sockaddr_in6_size(void)
+{
+    std::string test = "sockaddr_in6 size: ";
+    Sockaddr_in6 *sa_in6 = new Sockaddr_in6;
+
+    is(sa_in6->size(), sizeof(struct sockaddr_in6), test + "expected size");
+
+    delete sa_in6;
+}
+
 void test_sockaddr_in6_factory(void)
 {
     std::string test = "sockaddr_in6 factory: ";
@@ -879,6 +910,16 @@ void test_sockaddr_un_sockaddr(void)
     delete su;
 }
 
+void test_sockaddr_un_size(void)
+{
+    std::string test = "sockaddr_un size: ";
+    Sockaddr_un *sa_un = new Sockaddr_un;
+
+    is(sa_un->size(), sizeof(struct sockaddr_un), test + "expected size");
+
+    delete sa_un;
+}
+
 void test_sockaddr_un_factory(void)
 {
     std::string test = "sockaddr_un factory: ";
@@ -900,7 +941,7 @@ void test_sockaddr_un_factory(void)
 
 int main(int argc, char **argv)
 {
-    plan(109);
+    plan(113);
 
     test_sockaddr_blank_constructor();
     test_sockaddr_copy_constructor();
@@ -908,6 +949,7 @@ int main(int argc, char **argv)
     test_sockaddr_equal_comparison();
     test_sockaddr_assignment();
     test_sockaddr_sockaddr();
+    test_sockaddr_size();
     test_sockaddr_factory();
 
     test_sockaddr_in_blank_constructor();
@@ -920,6 +962,7 @@ int main(int argc, char **argv)
     test_sockaddr_in_family();
     test_sockaddr_in_port();
     test_sockaddr_in_sockaddr();
+    test_sockaddr_in_size();
     test_sockaddr_in_factory();
 
     test_sockaddr_in6_blank_constructor();
@@ -932,6 +975,7 @@ int main(int argc, char **argv)
     test_sockaddr_in6_family();
     test_sockaddr_in6_port();
     test_sockaddr_in6_sockaddr();
+    test_sockaddr_in6_size();
     test_sockaddr_in6_factory();
 
     test_sockaddr_un_blank_constructor();
@@ -944,6 +988,7 @@ int main(int argc, char **argv)
     test_sockaddr_un_family();
     test_sockaddr_un_port();
     test_sockaddr_un_sockaddr();
+    test_sockaddr_un_size();
     test_sockaddr_un_factory();
     return exit_status();
 }
