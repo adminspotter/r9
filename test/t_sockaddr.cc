@@ -42,7 +42,8 @@ class fake_Sockaddr : public Sockaddr
 
     virtual const char *ntop(void) {return "howdy";};
     virtual const char *hostname(void) {return "host";};
-    virtual uint16_t port(void) {return 42;};
+    virtual int family(void) const {return AF_INET;};
+    virtual uint16_t port(void) const {return 42;};
 };
 
 void test_sockaddr_blank_constructor(void)
@@ -141,6 +142,17 @@ void test_sockaddr_sockaddr(void)
     is(saddr->ss_family, 33, test + "expected family");
 
     delete sa;
+}
+
+void test_sockaddr_size(void)
+{
+    std::string test = "sockaddr size: ";
+    struct sockaddr_storage ss;
+    memset(&ss, 0, sizeof(struct sockaddr_storage));
+    ss.ss_family = 33;
+
+    fake_Sockaddr *sa = new fake_Sockaddr((const struct sockaddr&)ss);
+    is(sa->size(), sizeof(struct sockaddr_storage), test + "expected size");
 }
 
 void test_sockaddr_factory(void)
@@ -357,6 +369,26 @@ void test_sockaddr_in_port(void)
     delete sa;
 }
 
+void test_sockaddr_in_family(void)
+{
+    std::string test = "sockaddr_in family: ";
+    uint32_t ip_addr;
+    int ret = inet_pton(AF_INET, v4_ADDRESS, &ip_addr);
+    is(ret, 1, test + "pton successful");
+
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(1234);
+    sin.sin_addr.s_addr = ip_addr;
+
+    Sockaddr_in *sa = new Sockaddr_in((const struct sockaddr&)sin);
+
+    is(sa->family(), AF_INET, test + "families equal");
+
+    delete sa;
+}
+
 void test_sockaddr_in_sockaddr(void)
 {
     std::string test = "sockaddr_in: ";
@@ -378,6 +410,16 @@ void test_sockaddr_in_sockaddr(void)
     is(saddr->sin_addr.s_addr, ip_addr, test + "expected addr");
 
     delete sa;
+}
+
+void test_sockaddr_in_size(void)
+{
+    std::string test = "sockaddr_in size: ";
+    Sockaddr_in *sa_in = new Sockaddr_in;
+
+    is(sa_in->size(), sizeof(struct sockaddr_in), test + "expected size");
+
+    delete sa_in;
 }
 
 void test_sockaddr_in_factory(void)
@@ -575,6 +617,27 @@ void test_sockaddr_in6_hostname(void)
     delete sa;
 }
 
+void test_sockaddr_in6_family(void)
+{
+    std::string test = "sockaddr_in6 family: ";
+    struct in6_addr ip_addr;
+    int ret = inet_pton(AF_INET6, v6_ADDRESS, &ip_addr);
+    is(ret, 1, test + "pton successful");
+
+    struct sockaddr_in6 sin;
+    sin.sin6_family = AF_INET6;
+    sin.sin6_port = htons(1234);
+    sin.sin6_flowinfo = htonl(0L);
+    sin.sin6_scope_id = htonl(0L);
+    memcpy(&sin.sin6_addr, &ip_addr, sizeof(struct in6_addr));
+
+    Sockaddr_in6 *sa = new Sockaddr_in6((const struct sockaddr&)sin);
+
+    is(sa->family(), AF_INET6, test + "families equal");
+
+    delete sa;
+}
+
 void test_sockaddr_in6_port(void)
 {
     std::string test = "sockaddr_in6 port: ";
@@ -621,6 +684,16 @@ void test_sockaddr_in6_sockaddr(void)
        test + "expected addr");
 
     delete sa;
+}
+
+void test_sockaddr_in6_size(void)
+{
+    std::string test = "sockaddr_in6 size: ";
+    Sockaddr_in6 *sa_in6 = new Sockaddr_in6;
+
+    is(sa_in6->size(), sizeof(struct sockaddr_in6), test + "expected size");
+
+    delete sa_in6;
 }
 
 void test_sockaddr_in6_factory(void)
@@ -784,6 +857,23 @@ void test_sockaddr_un_hostname(void)
     delete su;
 }
 
+void test_sockaddr_un_family(void)
+{
+    std::string test = "sockaddr_un family: ";
+    char path[] = "/this/is/a/path";
+
+    struct sockaddr_un sun;
+    memset(&sun, 0, sizeof(struct sockaddr_un));
+    sun.sun_family = AF_UNIX;
+    strcpy(sun.sun_path, path);
+
+    Sockaddr_un *su = new Sockaddr_un((const struct sockaddr&)sun);
+
+    is(su->family(), AF_UNIX, test + "families equal");
+
+    delete su;
+}
+
 void test_sockaddr_un_port(void)
 {
     std::string test = "sockaddr_un port: ";
@@ -820,6 +910,16 @@ void test_sockaddr_un_sockaddr(void)
     delete su;
 }
 
+void test_sockaddr_un_size(void)
+{
+    std::string test = "sockaddr_un size: ";
+    Sockaddr_un *sa_un = new Sockaddr_un;
+
+    is(sa_un->size(), sizeof(struct sockaddr_un), test + "expected size");
+
+    delete sa_un;
+}
+
 void test_sockaddr_un_factory(void)
 {
     std::string test = "sockaddr_un factory: ";
@@ -841,7 +941,7 @@ void test_sockaddr_un_factory(void)
 
 int main(int argc, char **argv)
 {
-    plan(104);
+    plan(113);
 
     test_sockaddr_blank_constructor();
     test_sockaddr_copy_constructor();
@@ -849,6 +949,7 @@ int main(int argc, char **argv)
     test_sockaddr_equal_comparison();
     test_sockaddr_assignment();
     test_sockaddr_sockaddr();
+    test_sockaddr_size();
     test_sockaddr_factory();
 
     test_sockaddr_in_blank_constructor();
@@ -858,8 +959,10 @@ int main(int argc, char **argv)
     test_sockaddr_in_less_comparison();
     test_sockaddr_in_ntop();
     test_sockaddr_in_hostname();
+    test_sockaddr_in_family();
     test_sockaddr_in_port();
     test_sockaddr_in_sockaddr();
+    test_sockaddr_in_size();
     test_sockaddr_in_factory();
 
     test_sockaddr_in6_blank_constructor();
@@ -869,8 +972,10 @@ int main(int argc, char **argv)
     test_sockaddr_in6_less_comparison();
     test_sockaddr_in6_ntop();
     test_sockaddr_in6_hostname();
+    test_sockaddr_in6_family();
     test_sockaddr_in6_port();
     test_sockaddr_in6_sockaddr();
+    test_sockaddr_in6_size();
     test_sockaddr_in6_factory();
 
     test_sockaddr_un_blank_constructor();
@@ -880,8 +985,10 @@ int main(int argc, char **argv)
     test_sockaddr_un_less_comparison();
     test_sockaddr_un_ntop();
     test_sockaddr_un_hostname();
+    test_sockaddr_un_family();
     test_sockaddr_un_port();
     test_sockaddr_un_sockaddr();
+    test_sockaddr_un_size();
     test_sockaddr_un_factory();
     return exit_status();
 }

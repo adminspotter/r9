@@ -53,14 +53,10 @@ class DB
     const int dbport;
 
   public:
-    /* Some maximum field lengths */
     static const int MAX_USERNAME = 64;
     static const int MAX_CHARNAME = 64;
     static const int MAX_SKILLNAME = 64;
 
-    /* IPv6 addresses can be a lot longer than IPv4, so we'll just use
-     * the IPv6 max length to ensure that everything will fit.
-     */
     char host_ip[INET6_ADDRSTRLEN];
     uint64_t host_id;
 

@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2007-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -66,11 +66,12 @@ stream_socket::stream_socket()
 void stream_socket::init(void)
 {
     FD_ZERO(&this->master_readfs);
-    FD_SET(this->sock.sock, &this->master_readfs);
-    this->max_fd = this->sock.sock + 1;
+    FD_SET(this->sock, &this->master_readfs);
+    this->max_fd = this->sock + 1;
+    this->port_type = "stream";
 }
 
-stream_socket::stream_socket(struct addrinfo *ai)
+stream_socket::stream_socket(Addrinfo *ai)
     : listen_socket(ai), fds()
 {
     this->init();
@@ -78,11 +79,8 @@ stream_socket::stream_socket(struct addrinfo *ai)
 
 stream_socket::~stream_socket()
 {
-    /* In order to not have a race between the fd map and the worker
-     * loops, we'll stop ourselves first.
-     */
     try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
+    catch (std::exception& e) {}
 
     for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
         close((*i).first);
@@ -91,20 +89,14 @@ stream_socket::~stream_socket()
     /* Thread pools and users are handled by the listen_socket destructor */
 }
 
-std::string stream_socket::port_type(void)
-{
-    return "stream";
-}
-
 void stream_socket::start(void)
 {
     this->listen_socket::start();
 
-    /* Start up the sending thread pool */
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(stream_socket::stream_send_worker);
-    this->sock.listen_arg = (void *)this;
-    this->sock.start(stream_socket::stream_listen_worker);
+    this->listen_arg = (void *)this;
+    basesock::start(stream_socket::stream_listen_worker);
 }
 
 void stream_socket::handle_packet(packet& p, int len, int fd)
@@ -175,7 +167,7 @@ void *stream_socket::stream_listen_worker(void *arg)
         sts->handle_users();
     }
     std::clog << "exiting connection loop for stream port "
-              << sts->sock.sa->port() << std::endl;
+              << sts->sa->port() << std::endl;
     return NULL;
 }
 
@@ -199,7 +191,7 @@ int stream_socket::select_fd_set(void)
         {
             std::clog << syslogNotice
                       << "select interrupted by signal in stream port "
-                      << this->sock.sa->port() << std::endl;
+                      << this->sa->port() << std::endl;
         }
         else
         {
@@ -207,7 +199,7 @@ int stream_socket::select_fd_set(void)
 
             std::clog << syslogErr
                       << "select error in stream port "
-                      << this->sock.sa->port() << ": "
+                      << this->sa->port() << ": "
                       << strerror_r(errno, err, sizeof(err))
                       << " (" << errno << ")"
                       << std::endl;
@@ -222,9 +214,8 @@ void stream_socket::accept_new_connection(void)
     socklen_t slen;
     int fd;
 
-    if (FD_ISSET(this->sock.sock, &this->readfs)
-        && (fd = accept(this->sock.sock,
-                        (struct sockaddr *)&sin, &slen)) > 0)
+    if (FD_ISSET(this->sock, &this->readfs)
+        && (fd = accept(this->sock, (struct sockaddr *)&sin, &slen)) > 0)
     {
         struct linger ls;
         int keepalive = (config.use_keepalive == true ? 1 : 0);
@@ -277,7 +268,7 @@ void *stream_socket::stream_send_worker(void *arg)
     size_t realsize;
 
     std::clog << "started send pool worker for stream port "
-              << sts->sock.sa->port() << std::endl;
+              << sts->sa->port() << std::endl;
     for (;;)
     {
         sts->send_pool->pop(&req);
@@ -292,7 +283,7 @@ void *stream_socket::stream_send_worker(void *arg)
 
                 std::clog << syslogErr
                           << "error sending packet out stream port "
-                          << sts->sock.sa->port() << ", user port "
+                          << sts->sa->port() << ", user port "
                           << sts->user_fds[req.who->userid] << ": "
                           << strerror_r(errno, err, sizeof(err))
                           << " (" << errno << ")"
@@ -301,6 +292,6 @@ void *stream_socket::stream_send_worker(void *arg)
         }
     }
     std::clog << "exiting send pool worker for stream port "
-              << sts->sock.sa->port() << std::endl;
+              << sts->sa->port() << std::endl;
     return NULL;
 }

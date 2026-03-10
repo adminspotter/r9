@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2014-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -90,7 +90,6 @@ void *ConsoleSession::session_listener(void *arg)
     {
         std::string str = sess->get_line();
 
-        /* Do we need to exit? */
         if (str == "exit")
         {
             (*sess->out) << "exiting" << std::endl;
@@ -116,7 +115,6 @@ std::string ConsoleSession::dispatch(std::string &command)
     return std::string("not implemented");
 }
 
-/* So we don't leak file descriptors when we get cancelled */
 void ConsoleSession::cleanup(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;
@@ -144,9 +142,10 @@ std::string ConsoleSession::get_line(void)
     return str;
 }
 
-Console::Console(struct addrinfo *ai)
+Console::Console(Addrinfo *ai)
     : basesock(ai), sessions()
 {
+    this->port_type = "console";
 }
 
 Console::~Console()
@@ -209,9 +208,12 @@ int Console::wrap_request(Sockaddr *sa)
 #endif
 }
 
-extern "C" Console *console_create(struct addrinfo *ai)
+extern "C" Console *console_create(Addrinfo *ai)
 {
-    return new Console(ai);
+    Console *c = new Console(ai);
+    c->listen_arg = c;
+    c->start(Console::console_listener);
+    return c;
 }
 
 extern "C" void console_destroy(Console *con)

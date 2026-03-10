@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2007-2018  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -39,6 +39,7 @@
 
 #include <cstdint>
 
+#include "addrinfo.h"
 #include "sockaddr.h"
 
 class basesock
@@ -47,6 +48,7 @@ class basesock
     bool thread_started;
 
   public:
+    Addrinfo *ai;
     Sockaddr *sa;
     int sock;
 
@@ -56,16 +58,17 @@ class basesock
     static const int LISTEN_BACKLOG = 10;
 
   protected:
-    virtual void create_socket(struct addrinfo *);
-    virtual std::string get_port_string(void);
+    std::string port_type;
+
+    virtual void create_socket(void);
 
   public:
     basesock();
-    basesock(struct addrinfo *);
+    basesock(Addrinfo *);
     virtual ~basesock();
 
     void start(void *(*)(void *));
-    void stop(void);
+    virtual void stop(void);
 };
 
 #endif /* __INC_BASESOCK_H__ */

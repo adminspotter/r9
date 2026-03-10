@@ -33,31 +33,6 @@ class test_stream_socket : public stream_socket
         };
 };
 
-struct addrinfo *create_addrinfo(void)
-{
-    struct addrinfo hints, *addr = NULL;
-    static int port = 8765;
-    char port_str[6];
-    int ret;
-
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_NUMERICSERV;
-    hints.ai_protocol = 0;
-    hints.ai_canonname = NULL;
-    hints.ai_addr = NULL;
-    hints.ai_next = NULL;
-
-    snprintf(port_str, sizeof(port_str), "%d", port--);
-    if ((ret = getaddrinfo(NULL, port_str, &hints, &addr)) != 0)
-    {
-        std::cerr << gai_strerror(ret) << std::endl;
-        throw std::runtime_error("getaddrinfo broke");
-    }
-
-    return addr;
-}
-
 int select(int a, fd_set *b, fd_set *c, fd_set *d, struct timeval *e)
 {
     if (select_failure == true)
@@ -105,7 +80,7 @@ ssize_t read(int a, void *b, size_t c)
 void test_create_delete(void)
 {
     std::string test = "create/delete: ";
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(STREAM, "localhost", "8765");
     stream_socket *sts;
 
     try
@@ -118,7 +93,7 @@ void test_create_delete(void)
     }
 
     delete sts;
-    freeaddrinfo(addr);
+    delete addr;
 }
 
 void test_create_delete_stop_error(void)
@@ -147,25 +122,14 @@ void test_create_delete_stop_error(void)
     stop_error = false;
 }
 
-void test_port_type(void)
-{
-    std::string test = "port type: ";
-    test_stream_socket *sts = new test_stream_socket();
-
-    is(sts->port_type(), "stream", test + "expected port type");
-
-    delete sts;
-}
-
 void test_start_stop(void)
 {
     std::string test = "start/stop: ";
     config.send_threads = 1;
     config.access_threads = 1;
 
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(STREAM, "localhost", "8765");
     stream_socket *sts = new stream_socket(addr);
-    freeaddrinfo(addr);
 
     try
     {
@@ -189,6 +153,7 @@ void test_start_stop(void)
     }
 
     delete sts;
+    delete addr;
 }
 
 void test_handle_packet(void)
@@ -307,9 +272,8 @@ void test_select_fd_set(void)
 {
     std::string test = "select_fd_set: ", st;
     int retval;
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(STREAM, "localhost", "8765");
     stream_socket *sts = new stream_socket(addr);
-    freeaddrinfo(addr);
 
     st = "select EINTR failure: ";
 
@@ -336,6 +300,7 @@ void test_select_fd_set(void)
     is(retval, 0, test + st + "expected return value");
 
     delete sts;
+    delete addr;
 }
 
 void test_accept_new_connection(void)
@@ -346,7 +311,7 @@ void test_accept_new_connection(void)
 
     test_stream_socket *sts = new test_stream_socket();
 
-    FD_SET(sts->sock.sock, &sts->readfs);
+    FD_SET(sts->sock, &sts->readfs);
 
     sts->accept_new_connection();
 
@@ -447,11 +412,10 @@ void test_handle_users(void)
 
 int main(int argc, char **argv)
 {
-    plan(35);
+    plan(34);
 
     test_create_delete();
     test_create_delete_stop_error();
-    test_port_type();
     test_start_stop();
     test_handle_packet();
     test_handle_login();

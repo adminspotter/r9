@@ -124,18 +124,11 @@ int unlink(const char *a)
 
 void test_create_delete(void)
 {
-    std::string test = "create/delete: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    std::string test = "create/delete: ", st;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
     basesock *base;
 
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "v4 addrinfo created successfully");
-
+    st = "IPv4: ";
     socket_zero = true;
     try
     {
@@ -145,22 +138,18 @@ void test_create_delete(void)
     {
         fail(test + "constructor exception");
     }
-    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
-       test + "expected address");
-    is(base->sa->port(), 1235, test + "expected port");
-    ok(base->sock >= 0, test + "socket created");
+    is(strncmp(base->sa->ntop(), "127.0.0.1", 10),
+       0,
+       test + st + "expected address");
+    is(base->sa->port(), 1235, test + st + "expected port");
 
-    delete(base);
-    freeaddrinfo(ai);
+    delete base;
+    delete ai;
 
     if (getenv("R9_TEST_USE_IPv6") != NULL)
     {
-        memset(&hints, 0, sizeof(struct addrinfo));
-        hints.ai_family = AF_INET6;
-        hints.ai_socktype = SOCK_DGRAM;
-        hints.ai_flags = AI_PASSIVE;
-        ret = getaddrinfo("localhost", "1235", &hints, &ai);
-        is(ret, 0, test + "v6 addrinfo created successfully");
+        st = "IPv6: ";
+        ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET6);
 
         try
         {
@@ -170,15 +159,16 @@ void test_create_delete(void)
         {
             fail(test + "constructor exception");
         }
-        is(strncmp(base->sa->ntop(), "::1", 4), 0, test + "expected address");
-        is(base->sa->port(), 1235, test + "expected port");
-        ok(base->sock >= 0, test + "socket created");
+        is(strncmp(base->sa->ntop(), "::1", 4),
+           0,
+           test + st + "expected address");
+        is(base->sa->port(), 1235, test + st + "expected port");
 
-        delete(base);
-        freeaddrinfo(ai);
+        delete base;
+        delete ai;
     }
     else
-        skip(5, test + "no IPv6");
+        skip(2, test + "no IPv6");
     socket_zero = false;
 }
 
@@ -188,23 +178,12 @@ void test_delete_unix(void)
     std::stringstream *new_clog = new std::stringstream;
     auto old_clog_rdbuf = std::clog.rdbuf(new_clog->rdbuf());
 
-    struct addrinfo ai;
-    struct sockaddr_un sun;
+    Addrinfo_un *ai = new Addrinfo_un("t_basesock.sock");
     basesock *base;
-
-    memset(&ai, 0, sizeof(struct addrinfo));
-    ai.ai_family = AF_UNIX;
-    ai.ai_socktype = SOCK_STREAM;
-    ai.ai_protocol = 0;
-    ai.ai_addrlen = sizeof(struct sockaddr_un);
-    ai.ai_addr = (struct sockaddr *)&sun;
-    memset(&sun, 0, sizeof(struct sockaddr_un));
-    sun.sun_family = AF_UNIX;
-    strncpy(sun.sun_path, "t_basesock.sock", 16);
 
     try
     {
-        base = new basesock(&ai);
+        base = new basesock(ai);
     }
     catch (...)
     {
@@ -214,6 +193,7 @@ void test_delete_unix(void)
     unlink_error = true;
 
     delete base;
+    delete ai;
 
     unlink_error = false;
 
@@ -234,21 +214,14 @@ void test_delete_unix(void)
 void test_bad_socket(void)
 {
     std::string test = "bad socket: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235");
     basesock *base;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     socket_error = true;
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (std::runtime_error& e)
     {
@@ -262,28 +235,21 @@ void test_bad_socket(void)
         fail(test + "wrong error type");
     }
     socket_error = false;
-    freeaddrinfo(ai);
+    delete ai;
 }
 
 void test_privileged_socket(void)
 {
     std::string test = "privileged socket creation: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "123");
     basesock *base;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "123", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     am_root = false;
     seteuid_count = setegid_count = 0;
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (std::runtime_error& e)
     {
@@ -303,6 +269,7 @@ void test_privileged_socket(void)
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (...)
     {
@@ -312,7 +279,7 @@ void test_privileged_socket(void)
     is(setegid_count, 2, test + "expected setegid count");
 
     delete base;
-    freeaddrinfo(ai);
+    delete ai;
     seteuid_count = setegid_count = 0;
     am_root = false;
 }
@@ -320,21 +287,14 @@ void test_privileged_socket(void)
 void test_bad_bind(void)
 {
     std::string test = "bad bind: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235");
     basesock *base;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     bind_error = true;
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (std::runtime_error& e)
     {
@@ -348,28 +308,22 @@ void test_bad_bind(void)
         fail(test + "wrong error type");
     }
 
-    freeaddrinfo(ai);
+    delete base;
+    delete ai;
     bind_error = false;
 }
 
 void test_bad_listen(void)
 {
     std::string test = "bad listen: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(STREAM, "localhost", "1235");
     basesock *base;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     listen_error = true;
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (std::runtime_error& e)
     {
@@ -383,59 +337,48 @@ void test_bad_listen(void)
         fail(test + "wrong error type");
     }
 
-    freeaddrinfo(ai);
+    delete base;
+    delete ai;
     listen_error = false;
 }
 
 void test_start_stop(void)
 {
-    std::string test = "start/stop: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    std::string test = "start/stop: ", st;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
     basesock *base;
 
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "v4 addrinfo created successfully");
-
+    st = "IPv4: ";
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (...)
     {
         fail(test + "constructor exception");
     }
     is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
-       test + "expected address");
-    is(base->sa->port(), 1235, test + "expected port");
-    ok(base->sock >= 0, test + "socket created");
+       test + st + "expected address");
+    is(base->sa->port(), 1235, test + st + "expected port");
+    ok(base->sock >= 0, test + st + "socket created");
 
-    base->listen_arg = base;
     try
     {
-        base->start(test_thread_worker);
         base->stop();
     }
     catch (...)
     {
-        fail(test + "start/stop exception");
+        fail(test + st + "start/stop exception");
     }
 
-    delete(base);
-    freeaddrinfo(ai);
+    delete base;
+    delete ai;
 
     if (getenv("R9_TEST_USE_IPv6") != NULL)
     {
-        memset(&hints, 0, sizeof(struct addrinfo));
-        hints.ai_family = AF_INET6;
-        hints.ai_socktype = SOCK_DGRAM;
-        hints.ai_flags = AI_PASSIVE;
-        ret = getaddrinfo("localhost", "1235", &hints, &ai);
-        is(ret, 0, test + "v6 addrinfo created successfully");
+        st = "IPv6: ";
+        ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET6);
 
         try
         {
@@ -445,11 +388,12 @@ void test_start_stop(void)
         {
             fail(test + "constructor exception");
         }
-        is(strncmp(base->sa->ntop(), "::1", 4), 0, test + "expected address");
-        is(base->sa->port(), 1235, test + "expected port");
-        ok(base->sock >= 0, test + "socket created");
+        is(strncmp(base->sa->ntop(), "::1", 4),
+           0,
+           test + st + "expected address");
+        is(base->sa->port(), 1235, test + st + "expected port");
+        ok(base->sock >= 0, test + st + "socket created");
 
-        base->listen_arg = base;
         try
         {
             base->start(test_thread_worker);
@@ -457,11 +401,11 @@ void test_start_stop(void)
         }
         catch (...)
         {
-            fail(test + "start/stop exception");
+            fail(test + st + "start/stop exception");
         }
 
-        delete(base);
-        freeaddrinfo(ai);
+        delete base;
+        delete ai;
     }
     else
         skip(4, test + "no IPv6");
@@ -470,16 +414,8 @@ void test_start_stop(void)
 void test_start_bad_socket(void)
 {
     std::string test = "start w/bad socket: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235");
     basesock *base;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     socket_zero = true;
     try
@@ -491,7 +427,6 @@ void test_start_bad_socket(void)
         fail(test + "constructor exception");
     }
 
-    base->listen_arg = base;
     try
     {
         base->start(test_thread_worker);
@@ -502,23 +437,15 @@ void test_start_bad_socket(void)
     }
 
     delete base;
-    freeaddrinfo(ai);
+    delete ai;
     socket_zero = false;
 }
 
 void test_start_create_thread_fail(void)
 {
     std::string test = "start w/bad pthread_create: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235");
     basesock *base;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     pthread_create_error = true;
     try
@@ -530,7 +457,6 @@ void test_start_create_thread_fail(void)
         fail(test + "constructor exception");
     }
 
-    base->listen_arg = base;
     try
     {
         base->start(test_thread_worker);
@@ -548,46 +474,29 @@ void test_start_create_thread_fail(void)
     }
 
     delete base;
-    freeaddrinfo(ai);
+    delete ai;
     pthread_create_error = false;
 }
 
 void test_stop_cancel_fail(void)
 {
     std::string test = "stop w/bad pthread_cancel: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
     basesock *base;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (...)
     {
-        fail(test + "constructor exception");
+        fail(test + "setup failure");
     }
     is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
        test + "expected address");
     is(base->sa->port(), 1235, test + "expected port");
     ok(base->sock >= 0, test + "socket created");
-
-    base->listen_arg = base;
-    try
-    {
-        base->start(test_thread_worker);
-    }
-    catch (...)
-    {
-        fail(test + "start exception");
-    }
 
     pthread_cancel_error = true;
     try
@@ -614,46 +523,29 @@ void test_stop_cancel_fail(void)
     {
         fail(test + "destructor exception");
     }
-    freeaddrinfo(ai);
+    delete ai;
     pthread_cancel_error = false;
 }
 
 void test_stop_join_fail(void)
 {
     std::string test = "stop w/bad pthread_join: ";
-    struct addrinfo hints, *ai;
-    int ret;
+    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
     basesock *base;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    ret = getaddrinfo("localhost", "1235", &hints, &ai);
-    is(ret, 0, test + "addrinfo created successfully");
 
     try
     {
         base = new basesock(ai);
+        base->start(test_thread_worker);
     }
     catch (...)
     {
-        fail(test + "constructor exception");
+        fail(test + "setup failure");
     }
     is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
        test + "expected address");
     is(base->sa->port(), 1235, test + "expected port");
     ok(base->sock >= 0, test + "socket created");
-
-    base->listen_arg = base;
-    try
-    {
-        base->start(test_thread_worker);
-    }
-    catch (...)
-    {
-        fail(test + "start exception");
-    }
 
     pthread_join_error = true;
     try
@@ -672,21 +564,14 @@ void test_stop_join_fail(void)
         fail(test + "wrong error type");
     }
 
-    try
-    {
-        delete(base);
-    }
-    catch (...)
-    {
-        fail(test + "destructor exception");
-    }
-    freeaddrinfo(ai);
+    delete base;
+    delete ai;
     pthread_join_error = false;
 }
 
 int main(int argc, char **argv)
 {
-    plan(43);
+    plan(28);
 
     test_create_delete();
     test_delete_unix();

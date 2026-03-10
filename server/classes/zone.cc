@@ -37,7 +37,6 @@
 #include "log.h"
 #include "../server.h"
 
-/* Private methods */
 void Zone::init(DB *database)
 {
     int i, j, k;
@@ -83,7 +82,6 @@ void Zone::init(DB *database)
         this->sector_contains(go.second->get_position())->insert(go.second);
 }
 
-/* Public methods */
 Zone::Zone(uint64_t dim, uint16_t steps, DB *database)
     : sectors(), game_objects()
 {
@@ -109,14 +107,12 @@ Zone::~Zone()
 {
     int i, j, k;
 
-    /* Clear out the octrees */
     for (i = 0; i < this->x_steps; ++i)
         for (j = 0; j < this->y_steps; ++j)
             for (k = 0; k < this->z_steps; ++k)
                 if (this->sectors[i][j][k] != NULL)
                     delete this->sectors[i][j][k];
 
-    /* Delete all the game objects. */
     if (this->game_objects.size())
     {
         std::clog << "deleting " << this->game_objects.size()
@@ -156,10 +152,8 @@ GameObject *Zone::find_game_object(uint64_t objid)
     GameObject *go;
     GameObject::objects_iterator gi = this->game_objects.find(objid);
 
-    /* Hook up to our character object */
     if (gi == this->game_objects.end())
     {
-        /* Object doesn't exist, so we'll make it. */
         go = new GameObject(NULL, NULL, objid);
         this->game_objects[objid] = go;
         go->set_position(glm::dvec3(0.0, 0.0, 0.0));
@@ -180,8 +174,6 @@ void Zone::send_nearby_objects(uint64_t objid)
     /* Send updates on all objects within visual range */
     for (auto& gi : this->game_objects)
     {
-        /* We've already sent go, so no need to send it again. */
-        /* Figure out how to send only to specific users */
         if (gi.second != go
             && go->distance_from(gi.second->get_position()) < 1000.0)
             update_pool->push(gi.second);

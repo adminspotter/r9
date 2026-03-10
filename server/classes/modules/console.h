@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2014-2015  Trinity Annabelle Quirk
+ * Copyright (C) 2014-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -82,7 +82,7 @@ class Console : public basesock
     typedef std::vector<ConsoleSession *>::iterator sessions_iterator;
 
   public:
-    Console(struct addrinfo *);
+    Console(Addrinfo *);
     virtual ~Console();
 
     int wrap_request(Sockaddr *);
@@ -90,7 +90,7 @@ class Console : public basesock
     static void *console_listener(void *);
 };
 
-typedef Console *console_create_t(struct addrinfo *);
+typedef Console *console_create_t(Addrinfo *);
 typedef void console_destroy_t(Console *);
 
 #endif /* __INC_CONSOLE_H__ */

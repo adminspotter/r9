@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2007-2019  Trinity Annabelle Quirk
+ * Copyright (C) 2007-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -51,10 +51,8 @@ class stream_socket : public listen_socket
     void init(void);
 
   public:
-    stream_socket(struct addrinfo *);
+    stream_socket(Addrinfo *);
     ~stream_socket();
-
-    std::string port_type(void) override;
 
     void start(void) override;
 

@@ -39,7 +39,6 @@ Control::Control(uint64_t userid, GameObject *slave)
 
 Control::~Control()
 {
-    /* Disconnect the slaves */
     if (this->slave != NULL)
         this->slave->disconnect(this);
     if (this->default_slave != NULL && this->default_slave != this->slave)

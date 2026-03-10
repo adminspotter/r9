@@ -48,7 +48,7 @@ Library::Library(const std::string& name)
 Library::~Library()
 {
     try { this->close(); }
-    catch (std::exception& e) { /* Do nothing */ }
+    catch (std::exception& e) {}
 }
 
 void Library::open(void)

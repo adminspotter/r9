@@ -20,41 +20,11 @@ unsigned int sleep(unsigned int a)
     return a;
 }
 
-struct addrinfo *create_addrinfo(void)
-{
-    struct addrinfo hints, *addr = NULL;
-    static int port = 9876;
-    char port_str[6];
-    int ret;
-
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_NUMERICSERV;
-    hints.ai_protocol = 0;
-    hints.ai_canonname = NULL;
-    hints.ai_addr = NULL;
-    hints.ai_next = NULL;
-
-    snprintf(port_str, sizeof(port_str), "%d", port--);
-    if ((ret = getaddrinfo(NULL, port_str, &hints, &addr)) != 0)
-    {
-        std::cerr << gai_strerror(ret) << std::endl;
-        throw std::runtime_error("getaddrinfo broke");
-    }
-
-    return addr;
-}
-
 class test_listen_socket : public listen_socket
 {
   public:
-    test_listen_socket(struct addrinfo *a) : listen_socket(a) {};
+    test_listen_socket(Addrinfo *a) : listen_socket(a) {};
     virtual ~test_listen_socket() {};
-
-    virtual std::string port_type(void) override
-        {
-            return "test";
-        };
 };
 
 void test_reaper_worker(void)
@@ -63,7 +33,7 @@ void test_reaper_worker(void)
     config.send_threads = 1;
     config.access_threads = 1;
 
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
     listen_socket *listen = new test_listen_socket(addr);
 
     /* This user will be sent a ping */
@@ -97,7 +67,7 @@ void test_reaper_worker(void)
 
     delete bu;
     delete listen;
-    freeaddrinfo(addr);
+    delete addr;
 }
 
 void test_access_worker(void)
@@ -111,7 +81,7 @@ void test_access_worker(void)
     check_authentication_count = 0;
     check_authentication_result = 0LL;
 
-    struct addrinfo *addr = create_addrinfo();
+    Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
     listen_socket *listen = new test_listen_socket(addr);
 
     access_list req;
@@ -140,7 +110,7 @@ void test_access_worker(void)
        test + "expected access queue size");
 
     delete listen;
-    freeaddrinfo(addr);
+    delete addr;
     delete database;
 }
 

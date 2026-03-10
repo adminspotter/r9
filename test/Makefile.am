@@ -6,6 +6,7 @@ TAP_LDADD = tap++/libtap++.la
 TC = t_byteswap t_dh t_dh_exception t_ec t_encrypt t_key
 if WANT_SERVER
   TC += t_action_pool \
+	t_addrinfo \
 	t_basesock \
 	t_config_data \
 	t_console \
@@ -89,6 +90,9 @@ t_action_pool_CXXFLAGS = $(CONFIG_DEFS) $(LIBDIR_DEFS) $(TAP_INCLUDES)
 t_action_pool_LDADD = $(TAP_LDADD) \
 	../proto/libr9_proto.la ../server/classes/libr9_classes.la \
 	$(SERVER_LDLIBS)
+
+t_addrinfo_SOURCES = t_addrinfo.cc ../server/classes/addrinfo.h
+t_addrinfo_LDADD = $(TAP_LDADD)
 
 t_basesock_SOURCES = t_basesock.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \

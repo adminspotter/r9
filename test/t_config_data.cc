@@ -284,13 +284,8 @@ void test_parse_config_file(void)
     ofs << "LogFacility uucp" << std::endl;
     ofs << "LogFacility bogus" << std::endl;
     ofs << "Port broken" << std::endl;
-    ofs << "Port bogus:whatever" << std::endl;
     ofs << "Port unix:thing" << std::endl;
-    ofs << "Port dgram:1.2.3.4" << std::endl;
     ofs << "Port dgram:1.2.3.4:9876" << std::endl;
-    ofs << "Port stream:9876" << std::endl;
-    ofs << "Port stream:f00f::abcd:9876" << std::endl;
-    ofs << "Port stream:[f00f::abcd:9876" << std::endl;
     ofs << "Port stream:[f00f::abcd]:9876" << std::endl;
     ofs << "ZoneSize 10 15 20 25 30 35" << std::endl;
     ofs.close();

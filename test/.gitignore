@@ -2,6 +2,7 @@
 *.trs
 
 t_action_pool
+t_addrinfo
 t_basesock
 t_byteswap
 t_comm

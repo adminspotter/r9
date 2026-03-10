@@ -201,7 +201,6 @@ void Octree::compute_neighbors(void)
         }
     }
     for (i = 0; i < 8; ++i)
-        /* Recurse for each subspace */
         if (this->octants[i] != NULL)
             this->octants[i]->compute_neighbors();
 }
@@ -286,7 +285,6 @@ void Octree::build(std::list<GameObject *>& objs)
         for (i = objs.begin(); i != objs.end(); ++i)
             obj_list[this->which_octant((*i)->get_position())].push_back(*i);
 
-        /* Recurse if required for each octant. */
         for (j = 0; j < 8; ++j)
         {
             if (!obj_list[j].empty() || this->depth < Octree::MIN_DEPTH)
@@ -309,11 +307,10 @@ void Octree::build(std::list<GameObject *>& objs)
             }
         }
     }
-    /* Once we're back out of the creation recursion, calculate
-     * everybody's neighbor pointers.  I don't think we can do this
-     * during creation because of the way we do the higher-numbered
-     * octants' check, and the fact that the target octants will not
-     * have been created yet, though I'll look into it.
+    /* I don't think we can do this during creation because of the way
+     * we do the higher-numbered octants' check, and the fact that the
+     * target octants will not have been created yet, though I'll look
+     * into it.
      */
     if (this->depth == 0)
         this->compute_neighbors();
@@ -326,7 +323,6 @@ void Octree::insert(GameObject *gobj)
     if (this->depth < Octree::MAX_DEPTH
         && this->objects.size() > Octree::MAX_LEAF_OBJECTS)
     {
-        /* Classify it and insert it into the appropriate subtree */
         int octant = this->which_octant(gobj->get_position());
 
         if (this->octants[octant] == NULL)
@@ -365,9 +361,6 @@ void Octree::remove(GameObject *gobj)
             this->octants[octant]->remove(gobj);
         this->objects.erase(gobj);
 
-        /* If our subtree doesn't have enough objects to warrant a
-         * subtree, delete ourselves.
-         */
         if (this->objects.size() < Octree::MAX_LEAF_OBJECTS
             && this->depth > Octree::MIN_DEPTH)
         {

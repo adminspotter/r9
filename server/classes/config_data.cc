@@ -194,6 +194,8 @@ config_data::~config_data()
     if (this->key.priv_key != NULL)
         EVP_PKEY_free(this->key.priv_key);
     this->argv.clear();
+    for (auto& i : this->listen_ports)
+        delete i;
     this->listen_ports.clear();
     this->consoles.clear();
 }
@@ -416,69 +418,18 @@ static void config_logfac_element(const std::string& key,
                   << key << std::endl;
 }
 
-/* ARGSUSED */
 static void config_port_element(const std::string& key,
                                 const std::string& value,
                                 void *ptr)
 {
-    std::vector<port> *element = (std::vector<port> *)ptr;
-    std::string val = value, type_str;
-    std::string::size_type found;
-    port new_port;
+    std::vector<Addrinfo *> *element = (std::vector<Addrinfo *> *)ptr;
+    Addrinfo *ai = str_to_addrinfo(value);
 
-    /* Elements will be in the forms:
-     * (dgram|stream):<addr>:<port>
-     * unix:<path>
-     *
-     * addr is an optional IP address of some kind
-     *   (1.2.3.4 or [::f00f:1234])
-     * port is a port number
-     * path is the pathname of the unix domain socket
-     */
-
-    if ((found = val.find_first_of(":")) == std::string::npos)
-        goto ERROR;
-    type_str = val.substr(0, found);
-    val.replace(0, found + 1, "");
-    if (type_str == "unix")
-    {
-        new_port.type = port_unix;
-        new_port.addr = val;
-    }
+    if (ai != NULL)
+        element->push_back(ai);
     else
-    {
-        if (type_str == "dgram")
-            new_port.type = port_dgram;
-        else if (type_str == "stream")
-            new_port.type = port_stream;
-        else
-            goto ERROR;
-
-        if ((found = val.find_last_of(":")) == std::string::npos)
-            goto ERROR;
-        new_port.addr = val.substr(0, found);
-        new_port.port = val.substr(found + 1);
-
-        /* See if we've got an IPv6 address */
-        if ((found = new_port.addr.find_first_of(":"))
-            != std::string::npos)
-        {
-            if ((found = new_port.addr.find_first_of("[")) == std::string::npos)
-                goto ERROR;
-            new_port.addr.erase(found, 1);
-            if ((found = new_port.addr.find_last_of("]")) == std::string::npos)
-                goto ERROR;
-            new_port.addr.erase(found, 1);
-        }
-    }
-
-    element->push_back(new_port);
-    return;
-
-  ERROR:
-    std::clog << "Incorrectly formatted port specification ("
-              << value << ") for " << key << std::endl;
-    return;
+        std::clog << "Incorrectly formatted port specification ("
+                  << value << ") for " << key << std::endl;
 }
 
 /* ARGSUSED */

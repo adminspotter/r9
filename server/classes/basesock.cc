@@ -48,24 +48,27 @@
 basesock::basesock()
 {
     std::clog << syslogWarn << "default basesock constructor" << std::endl;
+    this->ai = NULL;
     this->sa = NULL;
     this->listen_arg = NULL;
     this->thread_started = false;
     this->sock = 0;
+    this->port_type = "base";
 }
 
-basesock::basesock(struct addrinfo *ai)
+basesock::basesock(Addrinfo *ai)
 {
-    this->sa = build_sockaddr(*ai->ai_addr);
+    this->ai = ai;
+    this->sa = ai->sockaddr();
     this->listen_arg = NULL;
     this->thread_started = false;
-    this->create_socket(ai);
+    this->port_type = "base";
 }
 
 basesock::~basesock()
 {
     try { this->stop(); }
-    catch (std::exception& e) { /* Do nothing */ }
+    catch (std::exception& e) {}
     if (this->sock)
     {
         close(this->sock);
@@ -75,36 +78,33 @@ basesock::~basesock()
         delete this->sa;
 }
 
-void basesock::create_socket(struct addrinfo *ai)
+void basesock::create_socket(void)
 {
     uid_t uid = geteuid();
     gid_t gid = getegid();
     int do_uid = this->sa->port() <= 1024 && uid != 0;
     int opt = 1, ret;
-    const std::string typestr
-        = (ai->ai_socktype == SOCK_DGRAM ? "dgram " : "stream ");
 
-    if ((this->sock = socket(ai->ai_family,
-                             ai->ai_socktype,
-                             ai->ai_protocol)) < 0)
+    if ((this->sock = socket(this->ai->family(),
+                             this->ai->socktype(),
+                             this->ai->protocol())) < 0)
     {
         std::ostringstream s;
 
-        s << "socket creation failed for " << typestr
-          << this->get_port_string();
+        s << "socket creation failed for " << this->port_type
+          << " " << this->sa->str();
         this->sock = 0;
         throw std::system_error(errno, std::generic_category(), s.str());
     }
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 
-    /* If root's gotta open the port, become root, if possible. */
     if (do_uid)
     {
         if (getuid() != 0)
         {
             std::ostringstream s;
-            s << "can't open " << typestr << this->get_port_string()
-              << " as non-root user";
+            s << "can't open " << this->port_type << " "
+              << this->sa->str() << " as non-root user";
             close(this->sock);
             this->sock = 0;
             throw std::runtime_error(s.str());
@@ -115,8 +115,7 @@ void basesock::create_socket(struct addrinfo *ai)
             setegid(getgid());
         }
     }
-    ret = bind(this->sock, this->sa->sockaddr(), ai->ai_addrlen);
-    /* Restore the original euid and egid of the process, if necessary. */
+    ret = bind(this->sock, this->sa->sockaddr(), this->sa->size());
     if (do_uid)
     {
         seteuid(uid);
@@ -126,49 +125,35 @@ void basesock::create_socket(struct addrinfo *ai)
     {
         std::ostringstream s;
 
-        s << "bind failed for " << typestr << this->get_port_string();
+        s << "bind failed for " << this->port_type << " " << this->sa->str();
         close(this->sock);
         this->sock = 0;
         throw std::system_error(errno, std::generic_category(), s.str());
     }
 
-    if (ai->ai_socktype == SOCK_STREAM)
+    if (this->ai->socktype() == SOCK_STREAM)
     {
         if (listen(this->sock, basesock::LISTEN_BACKLOG) < 0)
         {
             std::ostringstream s;
 
-            s << "listen failed for " << typestr << this->get_port_string();
+            s << "listen failed for " << this->port_type << " "
+              << this->sa->str();
             close(this->sock);
             this->sock = 0;
             throw std::system_error(errno, std::generic_category(), s.str());
         }
     }
 
-    std::clog << "created " << typestr << "socket "
-              << this->sock << " on " << this->get_port_string() << std::endl;
-}
-
-std::string basesock::get_port_string(void)
-{
-    std::ostringstream s;
-
-    /* Port isn't meaningful with a Sockaddr_un, so let's check if
-     * that's what we have.  ntop returns the path for a unix-domain
-     * sockaddr.
-     */
-    Sockaddr_un *sun = dynamic_cast<Sockaddr_un *>(this->sa);
-    if (sun != NULL)
-        s << sun->ntop();
-    else
-        s << "port " << this->sa->port();
-    return s.str();
+    std::clog << "created " << this->port_type << " socket "
+              << this->sock << " on " << this->sa->str() << std::endl;
 }
 
 void basesock::start(void *(*func)(void *))
 {
     int ret;
 
+    this->create_socket();
     if (!this->thread_started && this->sock > 0)
     {
         if ((ret = pthread_create(&(this->listen_thread),
@@ -178,7 +163,8 @@ void basesock::start(void *(*func)(void *))
         {
             std::ostringstream s;
 
-            s << "couldn't start listen thread for " << this->get_port_string();
+            s << "couldn't start listen thread for " << this->port_type
+              << " " << this->sa->str();
             throw std::system_error(ret, std::generic_category(), s.str());
         }
         this->thread_started = true;
@@ -195,8 +181,8 @@ void basesock::stop(void)
         {
             std::ostringstream s;
 
-            s << "couldn't cancel listen thread for "
-              << this->get_port_string();
+            s << "couldn't cancel listen thread for " << this->port_type
+              << " " << this->sa->str();
             throw std::system_error(ret, std::generic_category(), s.str());
         }
         sleep(0);
@@ -204,7 +190,8 @@ void basesock::stop(void)
         {
             std::ostringstream s;
 
-            s << "couldn't join listen thread for " << this->get_port_string();
+            s << "couldn't join listen thread for " << this->port_type
+              << " " << this->sa->str();
             throw std::system_error(ret, std::generic_category(), s.str());
         }
         this->thread_started = false;
