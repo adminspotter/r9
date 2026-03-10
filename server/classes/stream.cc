@@ -66,8 +66,6 @@ stream_socket::stream_socket()
 void stream_socket::init(void)
 {
     FD_ZERO(&this->master_readfs);
-    FD_SET(this->sock, &this->master_readfs);
-    this->max_fd = this->sock + 1;
     this->port_type = "stream";
 }
 
@@ -92,6 +90,9 @@ stream_socket::~stream_socket()
 void stream_socket::start(void)
 {
     this->listen_socket::start();
+
+    FD_SET(this->sock, &this->master_readfs);
+    this->max_fd = this->sock + 1;
 
     this->send_pool->startup_arg = (void *)this;
     this->send_pool->start(stream_socket::stream_send_worker);
