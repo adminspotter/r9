@@ -207,7 +207,9 @@ static void setup_sockets(void)
     for (auto& i : config.listen_ports)
     {
         try {
-            sockets.push_back(socket_create(i));
+            listen_socket *sock = socket_create(i);
+            sock->start();
+            sockets.push_back(sock);
             ++created;
         }
         catch (std::exception& e)
@@ -223,9 +225,6 @@ static void setup_sockets(void)
     if (created > 0)
         std::clog << "created " << created << " listening socket"
                   << (created == 1 ? "" : "s") << std::endl;
-
-    for (auto& i : sockets)
-        i->start();
 }
 
 void set_exit_flag(void)
@@ -318,8 +317,6 @@ static void setup_console(void)
 
 static void cleanup_console(void)
 {
-    struct stat st;
-
     if (console_lib == NULL)
         return;
 
