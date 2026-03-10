@@ -210,7 +210,10 @@ int Console::wrap_request(Sockaddr *sa)
 
 extern "C" Console *console_create(Addrinfo *ai)
 {
-    return new Console(ai);
+    Console *c = new Console(ai);
+    c->listen_arg = c;
+    c->start(Console::console_listener);
+    return c;
 }
 
 extern "C" void console_destroy(Console *con)
