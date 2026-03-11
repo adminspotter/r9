@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-02-09 13:51-0800\n"
+"POT-Creation-Date: 2026-03-10 12:49-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -172,104 +172,104 @@ msgstr ""
 msgid "Could not find home directory"
 msgstr ""
 
-#: client/control/control.cc:52
+#: client/control/control.cc:53
 msgctxt "Error message"
 msgid "Out of memory"
 msgstr ""
 
-#: client/control/control.cc:53
+#: client/control/control.cc:54
 msgctxt "Error message"
 msgid "Read error"
 msgstr ""
 
-#: client/control/control.cc:54
+#: client/control/control.cc:55
 msgctxt "Error message"
 msgid "No match found"
 msgstr ""
 
-#: client/control/control.cc:55
+#: client/control/control.cc:56
 msgctxt "Error message"
 msgid "Function not implemented"
 msgstr ""
 
-#: client/control/control.cc:57
+#: client/control/control.cc:58
 msgctxt "Error message"
 msgid "Unknown error"
 msgstr ""
 
-#: client/control/control.cc:77
+#: client/control/control.cc:78
 msgid "Error opening library {1,name}: {2,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:87
+#: client/control/control.cc:88
 msgid "Error finding can_use symbol: {1,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:97
+#: client/control/control.cc:98
 msgid "Error finding create symbol: {1,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:123
+#: client/control/control.cc:124
 msgid "Error starting device notify thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:144
+#: client/control/control.cc:145
 msgid "Error cancelling device notify thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:154
+#: client/control/control.cc:155
 msgid "Error joining device notify thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:186
+#: client/control/control.cc:187
 msgid "Removed device {1,name}"
 msgstr ""
 
-#: client/control/control.cc:193
+#: client/control/control.cc:194
 msgid "notify watcher terminated"
 msgstr ""
 
-#: client/control/control.cc:218
+#: client/control/control.cc:219
 msgid "Error closing library {1,name}: {2,errmsg}"
 msgstr ""
 
-#: client/control/control.cc:235
+#: client/control/control.cc:236
 msgid "Error finding control modules: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:276
+#: client/control/control.cc:277
 msgid "Error finding devices: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:286
+#: client/control/control.cc:287
 msgid "Starting inotify"
 msgstr ""
 
-#: client/control/control.cc:294
+#: client/control/control.cc:295
 msgid "Stopping inotify"
 msgstr ""
 
-#: client/control/control.cc:358
+#: client/control/control.cc:359
 msgid "Error creating notify watch descriptor: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:377
+#: client/control/control.cc:378
 msgid "Error removing notify watch descriptor: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:395
+#: client/control/control.cc:396
 msgid "Error creating notify file descriptor: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:411
+#: client/control/control.cc:412
 msgid "Error closing notify file descriptor: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:436
+#: client/control/control.cc:437
 msgid "Error reading notification: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/control/control.cc:444
+#: client/control/control.cc:445
 msgid "notify connection closed"
 msgstr ""
 

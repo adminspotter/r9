@@ -146,29 +146,24 @@ void test_create_delete(void)
     delete base;
     delete ai;
 
-    if (getenv("R9_TEST_USE_IPv6") != NULL)
+    st = "IPv6: ";
+    ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET6);
+
+    try
     {
-        st = "IPv6: ";
-        ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET6);
-
-        try
-        {
-            base = new basesock(ai);
-        }
-        catch (...)
-        {
-            fail(test + "constructor exception");
-        }
-        is(strncmp(base->sa->ntop(), "::1", 4),
-           0,
-           test + st + "expected address");
-        is(base->sa->port(), 1235, test + st + "expected port");
-
-        delete base;
-        delete ai;
+        base = new basesock(ai);
     }
-    else
-        skip(2, test + "no IPv6");
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(base->sa->ntop(), "::1", 4),
+       0,
+       test + st + "expected address");
+    is(base->sa->port(), 1235, test + st + "expected port");
+
+    delete base;
+    delete ai;
     socket_zero = false;
 }
 
@@ -375,40 +370,35 @@ void test_start_stop(void)
     delete base;
     delete ai;
 
-    if (getenv("R9_TEST_USE_IPv6") != NULL)
+    st = "IPv6: ";
+    ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET6);
+
+    try
     {
-        st = "IPv6: ";
-        ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET6);
-
-        try
-        {
-            base = new basesock(ai);
-        }
-        catch (...)
-        {
-            fail(test + "constructor exception");
-        }
-        is(strncmp(base->sa->ntop(), "::1", 4),
-           0,
-           test + st + "expected address");
-        is(base->sa->port(), 1235, test + st + "expected port");
-        ok(base->sock >= 0, test + st + "socket created");
-
-        try
-        {
-            base->start(test_thread_worker);
-            base->stop();
-        }
-        catch (...)
-        {
-            fail(test + st + "start/stop exception");
-        }
-
-        delete base;
-        delete ai;
+        base = new basesock(ai);
     }
-    else
-        skip(4, test + "no IPv6");
+    catch (...)
+    {
+        fail(test + "constructor exception");
+    }
+    is(strncmp(base->sa->ntop(), "::1", 4),
+       0,
+       test + st + "expected address");
+    is(base->sa->port(), 1235, test + st + "expected port");
+    ok(base->sock >= 0, test + st + "socket created");
+
+    try
+    {
+        base->start(test_thread_worker);
+        base->stop();
+    }
+    catch (...)
+    {
+        fail(test + st + "start/stop exception");
+    }
+
+    delete base;
+    delete ai;
 }
 
 void test_start_bad_socket(void)

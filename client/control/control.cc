@@ -37,6 +37,7 @@
 #include <pthread.h>
 #endif /* HAVE_INOTIFY */
 
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
