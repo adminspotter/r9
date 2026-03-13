@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2000-2025  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -54,6 +54,7 @@
 #include <errno.h>
 
 #include <string>
+#include <mutex>
 #include <system_error>
 
 #include "octree.h"
@@ -99,21 +100,6 @@ Neighbor 5: if (index & 1) (parent->neighbor->octant[index + 1])
             else (index - 1)
 
 */
-
-void Octree::enter_read(void)
-{
-    pthread_rwlock_rdlock(&this->lock);
-}
-
-void Octree::enter(void)
-{
-    pthread_rwlock_wrlock(&this->lock);
-}
-
-void Octree::leave(void)
-{
-    pthread_rwlock_unlock(&this->lock);
-}
 
 bool Octree::in_octant(const glm::dvec3& p)
 {
@@ -210,7 +196,7 @@ Octree::Octree(Octree *parent,
                glm::dvec3& max,
                uint8_t index)
     : min_point(min), center_point((max - min) * 0.5 + min), max_point(max),
-      objects()
+      objects(), lock()
 {
     this->parent = parent;
     memset(this->octants, 0, sizeof(Octree *) * 8);
@@ -220,19 +206,6 @@ Octree::Octree(Octree *parent,
         this->depth = this->parent->depth + 1;
     else
         this->depth = 0;
-
-    pthread_rwlockattr_t lock_init;
-    pthread_rwlockattr_init(&lock_init);
-#ifdef PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP
-    pthread_rwlockattr_setkind_np(&lock_init,
-                                  PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
-#endif /* PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP */
-    if (pthread_rwlock_init(&this->lock, &lock_init))
-    {
-        std::string s("couldn't init octree lock");
-
-        throw std::system_error(errno, std::generic_category(), s);
-    }
 }
 
 Octree::~Octree()
@@ -262,7 +235,6 @@ Octree::~Octree()
      * the things in the map... not what we want.
      */
     this->objects.clear();
-    pthread_rwlock_destroy(&this->lock);
 }
 
 bool Octree::empty(void)
@@ -318,7 +290,7 @@ void Octree::build(std::list<GameObject *>& objs)
 
 void Octree::insert(GameObject *gobj)
 {
-    this->enter();
+    std::unique_lock write_lock(this->lock);
     this->objects.insert(gobj);
     if (this->depth < Octree::MAX_DEPTH
         && this->objects.size() > Octree::MAX_LEAF_OBJECTS)
@@ -336,7 +308,6 @@ void Octree::insert(GameObject *gobj)
             }
             catch (std::system_error& e)
             {
-                this->leave();
                 std::clog << syslogErr
                           << "couldn't create octree subtree at depth "
                           << this->depth + 1 << ": " << e.code().message()
@@ -347,12 +318,11 @@ void Octree::insert(GameObject *gobj)
         }
         this->octants[octant]->insert(gobj);
     }
-    this->leave();
 }
 
 void Octree::remove(GameObject *gobj)
 {
-    this->enter();
+    std::unique_lock write_lock(this->lock);
     if (this->objects.find(gobj) != this->objects.end())
     {
         int octant = this->which_octant(gobj->get_position());
@@ -364,12 +334,10 @@ void Octree::remove(GameObject *gobj)
         if (this->objects.size() < Octree::MAX_LEAF_OBJECTS
             && this->depth > Octree::MIN_DEPTH)
         {
-            this->leave();
             if (this->parent != NULL)
                 this->parent->octants[this->parent_index] = NULL;
             delete this;
             return;
         }
     }
-    this->leave();
 }

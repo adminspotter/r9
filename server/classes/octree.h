@@ -47,11 +47,10 @@
 #ifndef __INC_OCTREE_H__
 #define __INC_OCTREE_H__
 
-#include <pthread.h>
-
 #include <cstdint>
 #include <list>
 #include <set>
+#include <shared_mutex>
 
 #include <glm/vec3.hpp>
 
@@ -65,7 +64,7 @@ class Octree
     static const int MAX_DEPTH;
 
   private:
-    pthread_rwlock_t lock;
+    std::shared_mutex lock;
 
   public:
     glm::dvec3 min_point, center_point, max_point;
@@ -76,9 +75,6 @@ class Octree
     std::set<GameObject *> objects;
 
   private:
-    inline void enter_read(void);
-    inline void enter(void);
-    inline void leave(void);
     inline bool in_octant(const glm::dvec3&);
     inline int which_octant(const glm::dvec3&);
     inline Octree *neighbor_test(int neigh, int oct);
