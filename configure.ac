@@ -32,8 +32,8 @@ LT_SYS_MODULE_EXT
 # Set the host type for OSX-specific flags
 AC_CANONICAL_HOST
 
-# Check for c++11 language support
-AX_CXX_COMPILE_STDCXX_11
+# Check for c++17 language support
+AX_CXX_COMPILE_STDCXX(17)
 
 # Check for std::put_time existence
 AC_MSG_CHECKING([if std::put_time exists])
