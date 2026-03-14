@@ -52,8 +52,6 @@ void *UpdatePool::update_pool_worker(void *arg)
     UpdatePool *pool = (UpdatePool *)arg;
     GameObject *req;
     packet_list pkt;
-    std::vector<listen_socket *>::iterator sock;
-    listen_socket::users_iterator user;
 
     for (;;)
     {
