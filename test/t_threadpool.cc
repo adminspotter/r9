@@ -6,48 +6,8 @@ using namespace TAP;
 
 #include <stdexcept>
 
-bool pthread_mutex_init_error = false, pthread_cond_init_error = false;
 bool pthread_create_error = false;
-int mutex_destroy_count, cond_broadcast_count, cond_destroy_count;
-int create_count, join_count, lock_count, unlock_count, signal_count;
-
-int pthread_mutex_init(pthread_mutex_t *a, const pthread_mutexattr_t *b)
-{
-    if (pthread_mutex_init_error == true)
-        return EINVAL;
-    return 0;
-}
-
-int pthread_mutex_destroy(pthread_mutex_t *a)
-{
-    ++mutex_destroy_count;
-    return 0;
-}
-
-int pthread_cond_init(pthread_cond_t *a, const pthread_condattr_t *b)
-{
-    if (pthread_cond_init_error == true)
-        return EINVAL;
-    return 0;
-}
-
-int pthread_cond_signal(pthread_cond_t *a)
-{
-    ++signal_count;
-    return 0;
-}
-
-int pthread_cond_broadcast(pthread_cond_t *a)
-{
-    ++cond_broadcast_count;
-    return 0;
-}
-
-int pthread_cond_destroy(pthread_cond_t *a)
-{
-    ++cond_destroy_count;
-    return 0;
-}
+int create_count, join_count;
 
 int pthread_create(pthread_t *a, const pthread_attr_t *b,
                    void *(*c)(void *), void *d)
@@ -61,18 +21,6 @@ int pthread_create(pthread_t *a, const pthread_attr_t *b,
 int pthread_join(pthread_t a, void **b)
 {
     ++join_count;
-    return 0;
-}
-
-int pthread_mutex_lock(pthread_mutex_t *a)
-{
-    ++lock_count;
-    return 0;
-}
-
-int pthread_mutex_unlock(pthread_mutex_t *a)
-{
-    ++unlock_count;
     return 0;
 }
 
@@ -108,59 +56,7 @@ void test_create_delete(void)
     is(pool->clean_on_pop, false, test + "expected clean-on-pop");
     is(pool->startup_arg == NULL, true, test + "expected startup arg");
 
-    cond_broadcast_count = mutex_destroy_count = cond_destroy_count = 0;
     delete pool;
-    is(cond_broadcast_count, 1, test + "expected cond broadcasts");
-    is(mutex_destroy_count, 1, test + "expected mutex destroys");
-    is(cond_destroy_count, 1, test + "expected cond destroys");
-}
-
-void test_mutex_init_failure(void)
-{
-    std::string test = "mutex init failure: ";
-    ThreadPool<int> *pool = NULL;
-
-    pthread_mutex_init_error = true;
-    try
-    {
-        pool = new ThreadPool<int>("rut-roh", 1);
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("queue mutex"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
-    pthread_mutex_init_error = false;
-}
-
-void test_cond_init_failure(void)
-{
-    std::string test = "cond init failure: ";
-    ThreadPool<int> *pool = NULL;
-
-    pthread_cond_init_error = true;
-    try
-    {
-        pool = new ThreadPool<int>("oh-noes", 1);
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("queue not-empty cond"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
-    pthread_cond_init_error = false;
 }
 
 void test_start_stop(void)
@@ -178,7 +74,6 @@ void test_start_stop(void)
     }
     is(pool->pool_size(), 0, test + "expected pool size");
 
-    lock_count = unlock_count = 0;
     pool->startup_arg = (void *)pool;
     try
     {
@@ -189,8 +84,6 @@ void test_start_stop(void)
         fail(test + "start exception");
     }
     is(pool->pool_size(), 2, test + "expected pool size");
-    is(lock_count > 0, true, test + "performed locks");
-    is(lock_count, unlock_count, test + "unlocked all locks");
 
     join_count = 0;
     pool->stop();
@@ -216,7 +109,6 @@ void test_start_failure(void)
     is(pool->pool_size(), 0, test + "expected pool size");
 
     pthread_create_error = true;
-    lock_count = unlock_count = 0;
     pool->startup_arg = (void *)pool;
     try
     {
@@ -234,11 +126,8 @@ void test_start_failure(void)
         fail(test + "wrong error type");
     }
     is(pool->pool_size(), 0, test + "expected pool size");
-    is(lock_count > 0, true, test + "performed locks");
-    is(lock_count, unlock_count, test + "unlocked all locks");
 
     delete pool;
-    pthread_create_error = false;
 }
 
 void test_grow(void)
@@ -270,36 +159,35 @@ void test_push_pop(void)
     std::string test = "push/pop: ", st;
     ThreadPool<test_type> *pool = new ThreadPool<test_type>("push-pop", 1);
     test_type req = {1, 'a', 1.234}, buf;
+    bool result;
 
     st = "push: ";
 
-    lock_count = signal_count = unlock_count = 0;
     pool->push(req);
-    is(lock_count > 0, true, test + st + "performed locks");
-    is(lock_count, unlock_count, test + st + "unlocked all locks");
-    is(signal_count, 1, test + st + "expected signal count");
+    is(pool->queue_size(), 1, test + st + "expected queue size");
 
     st = "pop: ";
 
-    lock_count = unlock_count = 0;
     pool->clean_on_pop = true;
-    pool->pop(&buf);
-    is(lock_count > 0, true, test + st + "performed locks");
-    is(lock_count, unlock_count, test + st + "unlocked all locks");
+    result = pool->pop(&buf);
+    ok(result, test + st + "expected result");
     is(buf.foo, 1, test + st + "expected test foo");
     is(buf.bar, 'a', test + st + "expected test bar");
-    is(buf.baz, 1.234, test + st + "expected test baz");
+    ok(buf.baz == 1.234, test + st + "expected test baz");
+
+    st = "pop null buffer: ";
+
+    result = pool->pop(NULL);
+    not_ok(result, test + st + "expected result");
 
     delete pool;
 }
 
 int main(int argc, char **argv)
 {
-    plan(29);
+    plan(18);
 
     test_create_delete();
-    test_mutex_init_failure();
-    test_cond_init_failure();
     test_start_stop();
     test_start_failure();
     test_grow();

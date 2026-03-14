@@ -183,7 +183,8 @@ void *dgram_socket::dgram_send_worker(void *arg)
               << dgs->sa->port() << std::endl;
     for (;;)
     {
-        dgs->send_pool->pop(&req);
+        if (!dgs->send_pool->pop(&req))
+            break;
 
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))

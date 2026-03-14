@@ -57,7 +57,8 @@ void *UpdatePool::update_pool_worker(void *arg)
 
     for (;;)
     {
-        pool->pop(&req);
+        if (!pool->pop(&req))
+            break;
 
         req->generate_update_packet(pkt.buf);
 

@@ -272,7 +272,8 @@ void *stream_socket::stream_send_worker(void *arg)
               << sts->sa->port() << std::endl;
     for (;;)
     {
-        sts->send_pool->pop(&req);
+        if (!sts->send_pool->pop(&req))
+            break;
 
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))

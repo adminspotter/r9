@@ -70,7 +70,8 @@ void *MotionPool::motion_pool_worker(void *arg)
 
     for (;;)
     {
-        mot->pop(&req);
+        if (!mot->pop(&req))
+            break;
 
         if (req->still_moving())
         {

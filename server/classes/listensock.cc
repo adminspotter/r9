@@ -328,7 +328,8 @@ void *listen_socket::access_pool_worker(void *arg)
               << " port " << ls->sa->port() << std::endl;
     for (;;)
     {
-        ls->access_pool->pop(&req);
+        if (!ls->access_pool->pop(&req))
+            break;
 
         if (req.buf.basic.type == TYPE_LOGREQ)
             ls->login_user(req);

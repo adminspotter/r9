@@ -115,7 +115,8 @@ void *ActionPool::action_pool_worker(void *arg)
 
     for (;;)
     {
-        act->pop(&req);
+        if (!act->pop(&req))
+            break;
         act->execute_action(req.who, req.buf.act);
     }
     return NULL;
