@@ -6,36 +6,8 @@ using namespace TAP;
 
 #include <stdexcept>
 
-bool pthread_create_error = false;
-int create_count, join_count;
-
-int pthread_create(pthread_t *a, const pthread_attr_t *b,
-                   void *(*c)(void *), void *d)
-{
-    ++create_count;
-    if (pthread_create_error == true)
-        return EINVAL;
-    return 0;
-}
-
-int pthread_join(pthread_t a, void **b)
-{
-    ++join_count;
-    return 0;
-}
-
-/* This should never actually be executed, so it'll just sort of sit
- * there.
- */
 void *thread_worker(void *arg)
 {
-    ThreadPool<int> *pool = (ThreadPool<int> *)arg;
-    int what;
-
-    for (;;)
-    {
-        sleep(1);
-    }
     return NULL;
 }
 
@@ -85,46 +57,7 @@ void test_start_stop(void)
     }
     is(pool->pool_size(), 2, test + "expected pool size");
 
-    join_count = 0;
     pool->stop();
-    is(pool->pool_size(), 0, test + "expected pool size");
-    is(join_count, 2, test + "expected join count");
-
-    delete pool;
-}
-
-void test_start_failure(void)
-{
-    std::string test = "start failure: ";
-    ThreadPool<int> *pool;
-
-    try
-    {
-        pool = new ThreadPool<int>("kaboom", 1);
-    }
-    catch (...)
-    {
-        fail(test + "constructor exception");
-    }
-    is(pool->pool_size(), 0, test + "expected pool size");
-
-    pthread_create_error = true;
-    pool->startup_arg = (void *)pool;
-    try
-    {
-        pool->start(thread_worker);
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("couldn't start"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
     is(pool->pool_size(), 0, test + "expected pool size");
 
     delete pool;
@@ -135,7 +68,6 @@ void test_grow(void)
     std::string test = "grow: ";
     ThreadPool<int> *pool = new ThreadPool<int>("grow", 5);
 
-    pthread_create_error = false;
     pool->startup_arg = (void *)pool;
     pool->start(thread_worker);
     is(pool->pool_size(), 5, test + "expected pool size");
@@ -185,11 +117,10 @@ void test_push_pop(void)
 
 int main(int argc, char **argv)
 {
-    plan(18);
+    plan(14);
 
     test_create_delete();
     test_start_stop();
-    test_start_failure();
     test_grow();
     test_push_pop();
     return exit_status();

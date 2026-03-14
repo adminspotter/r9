@@ -25,10 +25,9 @@
  * This thread pool is able to grow on the fly, starting up new
  * threads as necessary.  This is with an eye to using a
  * dynamically-expandable pool of servers; if we expand our pool of
- * hosts, we can expand our number of proceses to fit.  Unfortunately
- * pthreads is unable to kill off a single specific thread without a
- * lot of scaffolding in place, so a shrink operation is out of the
- * question.
+ * hosts, we can expand our number of proceses to fit.  A shrink
+ * operation is going to require a large amount of scaffolding, so we
+ * won't be doing that at this time.
  *
  * Interface:
  *   ThreadPool(char *name, int size)
@@ -64,11 +63,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <pthread.h>
 
 #include <vector>
 #include <queue>
 #include <string>
+#include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <sstream>
@@ -81,7 +80,7 @@ class ThreadPool
 {
   private:
     std::string name;
-    std::vector<pthread_t> thread_pool;
+    std::vector<std::thread> thread_pool;
     std::mutex queue_lock;
     std::condition_variable queue_not_empty;
     void *(*startup_func)(void *);
@@ -109,30 +108,24 @@ class ThreadPool
 
     virtual void start(void *(*func)(void *))
         {
-            int ret;
-            pthread_t thread;
-
             std::scoped_lock lock(this->queue_lock);
             this->thread_pool.reserve(this->thread_count);
             this->startup_func = func;
             this->exit_flag = false;
             while (this->thread_pool.size() < this->thread_count)
             {
-                if ((ret = pthread_create(&thread,
-                                          NULL,
-                                          this->startup_func,
-                                          this->startup_arg)) != 0)
+                try
                 {
-                    std::ostringstream s;
-
-                    s << "couldn't start a " << this->name << " thread";
+                    this->thread_pool.push_back(
+                        std::thread(this->startup_func, this->startup_arg)
+                    );
+                }
+                catch (std::system_error& e)
+                {
                     /* Something's messed up; stop all the threads */
                     this->stop();
-                    throw std::system_error(ret,
-                                            std::generic_category(),
-                                            s.str());
+                    throw;
                 }
-                this->thread_pool.push_back(thread);
             }
         };
 
@@ -144,7 +137,7 @@ class ThreadPool
             {
                 /* Give up our slice, so the children can die */
                 sleep(0);
-                pthread_join(this->thread_pool.back(), NULL);
+                this->thread_pool.back().join();
                 this->thread_pool.pop_back();
             }
         };
