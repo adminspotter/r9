@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 1998-2021  Trinity Annabelle Quirk
+ * Copyright (C) 1998-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -62,7 +62,7 @@ void setup_signals(void)
     sigaddset(&ss, SIGUSR1);
     sigaddset(&ss, SIGUSR2);
     sa.sa_mask = ss;
-    sa.sa_flags = 0;
+    sa.sa_flags = SA_INTERRUPT;
     if (sigaction(SIGHUP, &sa, NULL) == -1)
     {
         char err[128];
@@ -73,6 +73,7 @@ void setup_signals(void)
     }
     /* SIGUSR1 - reread the configuration files. */
     sa.sa_handler = sigusr1_handler;
+    sa.sa_flags = 0;
     if (sigaction(SIGUSR1, &sa, NULL) == -1)
     {
         char err[128];
@@ -83,6 +84,7 @@ void setup_signals(void)
     }
     /* SIGUSR2 - recreate the zone. */
     sa.sa_handler = sigusr2_handler;
+    sa.sa_flags = 0;
     if (sigaction(SIGUSR2, &sa, NULL) == -1)
     {
         char err[128];
@@ -95,6 +97,7 @@ void setup_signals(void)
     sa.sa_handler = sigterm_handler;
     sigaddset(&ss, SIGTERM);
     sa.sa_mask = ss;
+    sa.sa_flags = SA_INTERRUPT;
     if (sigaction(SIGTERM, &sa, NULL) == -1)
     {
         char err[128];
@@ -107,6 +110,7 @@ void setup_signals(void)
     sa.sa_handler = sigint_handler;
     sigaddset(&ss, SIGINT);
     sa.sa_mask = ss;
+    sa.sa_flags = SA_INTERRUPT;
     if (sigaction(SIGINT, &sa, NULL) == -1)
     {
         char err[128];
