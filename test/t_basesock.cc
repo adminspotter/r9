@@ -17,6 +17,16 @@ bool pthread_cancel_error = false, pthread_join_error = false;
 bool unlink_error = false;
 int seteuid_count, setegid_count;
 
+class fake_basesock : public basesock
+{
+  public:
+    fake_basesock() : basesock() {}
+    fake_basesock(Addrinfo *ai) : basesock(ai) {}
+    ~fake_basesock() {}
+    using basesock::sa;
+    using basesock::sock;
+};
+
 /* This will never actually be run, so it doesn't need to do anything */
 void *test_thread_worker(void *arg)
 {
@@ -126,13 +136,13 @@ void test_create_delete(void)
 {
     std::string test = "create/delete: ", st;
     Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
-    basesock *base;
+    fake_basesock *base;
 
     st = "IPv4: ";
     socket_zero = true;
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -151,7 +161,7 @@ void test_create_delete(void)
 
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -174,11 +184,11 @@ void test_delete_unix(void)
     auto old_clog_rdbuf = std::clog.rdbuf(new_clog->rdbuf());
 
     Addrinfo_un *ai = new Addrinfo_un("t_basesock.sock");
-    basesock *base;
+    fake_basesock *base;
 
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -341,12 +351,12 @@ void test_start_stop(void)
 {
     std::string test = "start/stop: ", st;
     Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
-    basesock *base;
+    fake_basesock *base;
 
     st = "IPv4: ";
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
         base->start(test_thread_worker);
     }
     catch (...)
@@ -375,7 +385,7 @@ void test_start_stop(void)
 
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -405,12 +415,12 @@ void test_start_bad_socket(void)
 {
     std::string test = "start w/bad socket: ";
     Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235");
-    basesock *base;
+    fake_basesock *base;
 
     socket_zero = true;
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {

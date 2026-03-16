@@ -50,32 +50,15 @@ basesock::basesock()
     std::clog << syslogWarn << "default basesock constructor" << std::endl;
     this->ai = NULL;
     this->sa = NULL;
+    this->init();
+}
+
+void basesock::init(void)
+{
     this->listen_arg = NULL;
     this->thread_started = false;
     this->sock = 0;
     this->port_type = "base";
-}
-
-basesock::basesock(Addrinfo *ai)
-{
-    this->ai = ai;
-    this->sa = ai->sockaddr();
-    this->listen_arg = NULL;
-    this->thread_started = false;
-    this->port_type = "base";
-}
-
-basesock::~basesock()
-{
-    try { this->stop(); }
-    catch (std::exception& e) {}
-    if (this->sock)
-    {
-        close(this->sock);
-        this->sock = 0;
-    }
-    if (this->sa != NULL)
-        delete this->sa;
 }
 
 void basesock::create_socket(void)
@@ -147,6 +130,26 @@ void basesock::create_socket(void)
 
     std::clog << "created " << this->port_type << " socket "
               << this->sock << " on " << this->sa->str() << std::endl;
+}
+
+basesock::basesock(Addrinfo *ai)
+{
+    this->ai = ai;
+    this->sa = ai->sockaddr();
+    this->init();
+}
+
+basesock::~basesock()
+{
+    try { this->stop(); }
+    catch (std::exception& e) {}
+    if (this->sock)
+    {
+        close(this->sock);
+        this->sock = 0;
+    }
+    if (this->sa != NULL)
+        delete this->sa;
 }
 
 void basesock::start(void *(*func)(void *))

@@ -60,10 +60,11 @@ class basesock
   protected:
     std::string port_type;
 
+    basesock();
+    void init(void);
     virtual void create_socket(void);
 
   public:
-    basesock();
     basesock(Addrinfo *);
     virtual ~basesock();
 
