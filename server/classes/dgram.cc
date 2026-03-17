@@ -105,29 +105,20 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     struct sockaddr_storage from;
     socklen_t fromlen;
 
-    /* Make sure we can be cancelled as we expect. */
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-
     for (;;)
     {
         if (main_loop_exit_flag == 1)
             break;
 
-        pthread_testcancel();
-
         memset((char *)&buf, 0, sizeof(packet));
         fromlen = sizeof(struct sockaddr_storage);
 
-        /* recvfrom should be interruptible by pthread_cancel */
-        len = recvfrom(dgs->sock,
-                       (void *)&buf,
-                       sizeof(packet),
-                       0,
-                       (struct sockaddr *)&from, &fromlen);
-        pthread_testcancel();
-
-        if (len <= 0 || fromlen == 0)
+        if ((len = recvfrom(dgs->sock,
+                            (void *)&buf,
+                            sizeof(packet),
+                            0,
+                            (struct sockaddr *)&from, &fromlen)) <= 0
+            || fromlen == 0)
             continue;
 
         try { sa = build_sockaddr((struct sockaddr&)from); }

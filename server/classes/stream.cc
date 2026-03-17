@@ -159,10 +159,8 @@ void *stream_socket::stream_listen_worker(void *arg)
         if (main_loop_exit_flag == 1)
             break;
 
-        pthread_testcancel();
         if (sts->select_fd_set() < 1)
             continue;
-        pthread_testcancel();
 
         sts->accept_new_connection();
         sts->handle_users();

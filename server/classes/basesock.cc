@@ -46,6 +46,7 @@
  * production code, thus the log warning.
  */
 basesock::basesock()
+    : exit_flag(false), exit_lock(), exit_cond(), listen_thread()
 {
     std::clog << syslogWarn << "default basesock constructor" << std::endl;
     this->ai = NULL;
@@ -56,7 +57,7 @@ basesock::basesock()
 void basesock::init(void)
 {
     this->listen_arg = NULL;
-    this->thread_started = false;
+    this->listen_started = false;
     this->sock = 0;
     this->port_type = "base";
 }
@@ -133,6 +134,7 @@ void basesock::create_socket(void)
 }
 
 basesock::basesock(Addrinfo *ai)
+    : exit_flag(false), exit_lock(), exit_cond(), listen_thread()
 {
     this->ai = ai;
     this->sa = ai->sockaddr();
@@ -157,46 +159,21 @@ void basesock::start(void *(*func)(void *))
     int ret;
 
     this->create_socket();
-    if (!this->thread_started && this->sock > 0)
+    if (!this->listen_started && this->sock > 0)
     {
-        if ((ret = pthread_create(&(this->listen_thread),
-                                  NULL,
-                                  func,
-                                  this->listen_arg)) != 0)
-        {
-            std::ostringstream s;
-
-            s << "couldn't start listen thread for " << this->port_type
-              << " " << this->sa->str();
-            throw std::system_error(ret, std::generic_category(), s.str());
-        }
-        this->thread_started = true;
+        this->listen_thread = std::thread(func, this->listen_arg);
+        this->listen_started = true;
     }
 }
 
 void basesock::stop(void)
 {
-    int ret;
+    this->exit_flag = true;
+    this->exit_cond.notify_all();
 
-    if (this->thread_started)
+    if (this->listen_started)
     {
-        if ((ret = pthread_cancel(this->listen_thread)) != 0)
-        {
-            std::ostringstream s;
-
-            s << "couldn't cancel listen thread for " << this->port_type
-              << " " << this->sa->str();
-            throw std::system_error(ret, std::generic_category(), s.str());
-        }
-        sleep(0);
-        if ((ret = pthread_join(this->listen_thread, NULL)) != 0)
-        {
-            std::ostringstream s;
-
-            s << "couldn't join listen thread for " << this->port_type
-              << " " << this->sa->str();
-            throw std::system_error(ret, std::generic_category(), s.str());
-        }
-        this->thread_started = false;
+        this->listen_thread.join();
+        this->listen_started = false;
     }
 }
