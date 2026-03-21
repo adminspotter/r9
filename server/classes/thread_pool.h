@@ -106,10 +106,12 @@ class ThreadPool
 
     virtual ~ThreadPool() { this->stop(); };
 
-    virtual void start(void *(*func)(void *))
+    virtual void start(void *(*func)(void *), void *arg = NULL)
         {
             std::scoped_lock lock(this->queue_lock);
             this->thread_pool.reserve(this->thread_count);
+            if (arg != NULL)
+                this->startup_arg = arg;
             this->startup_func = func;
             this->exit_flag = false;
             while (this->thread_pool.size() < this->thread_count)

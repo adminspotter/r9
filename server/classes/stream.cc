@@ -94,10 +94,8 @@ void stream_socket::start(void)
     FD_SET(this->sock, &this->master_readfs);
     this->max_fd = this->sock + 1;
 
-    this->send_pool->startup_arg = (void *)this;
-    this->send_pool->start(stream_socket::stream_send_worker);
-    this->listen_arg = (void *)this;
-    basesock::start(stream_socket::stream_listen_worker);
+    this->send_pool->start(stream_socket::stream_send_worker, (void *)this);
+    this->basesock::start(stream_socket::stream_listen_worker, (void *)this);
 }
 
 void stream_socket::handle_packet(packet& p, int len, int fd)

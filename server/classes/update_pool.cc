@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,13 +38,7 @@ UpdatePool::~UpdatePool()
 
 void UpdatePool::start(void)
 {
-    this->startup_arg = (void *)this;
-    this->start(UpdatePool::update_pool_worker);
-}
-
-void UpdatePool::start(void *(*func)(void *))
-{
-    ThreadPool<GameObject *>::start(func);
+    this->ThreadPool::start(UpdatePool::update_pool_worker, (void *)this);
 }
 
 void *UpdatePool::update_pool_worker(void *arg)

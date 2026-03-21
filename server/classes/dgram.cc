@@ -73,10 +73,8 @@ void dgram_socket::start(void)
 {
     this->listen_socket::start();
 
-    this->send_pool->startup_arg = (void *)this;
-    this->send_pool->start(dgram_socket::dgram_send_worker);
-    this->listen_arg = (void *)this;
-    basesock::start(dgram_socket::dgram_listen_worker);
+    this->send_pool->start(dgram_socket::dgram_send_worker, (void *)this);
+    this->basesock::start(dgram_socket::dgram_listen_worker, (void *)this);
 }
 
 void dgram_socket::connect_user(base_user *bu, access_list& al)

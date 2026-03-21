@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -97,15 +97,10 @@ ActionPool::~ActionPool()
     this->actions.clear();
 }
 
-/* We will only use this thread pool in a very specific way, so making
- * the caller handle stuff that it doesn't need to know about is
- * inappropriate.  We'll set the required arg and start things up with
- * the expected function.
- */
 void ActionPool::start(void)
 {
-    this->startup_arg = (void *)this;
-    this->ThreadPool<packet_list>::start(ActionPool::action_pool_worker);
+    this->ThreadPool<packet_list>::start(ActionPool::action_pool_worker,
+                                         (void *)this);
 }
 
 void *ActionPool::action_pool_worker(void *arg)

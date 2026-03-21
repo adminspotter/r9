@@ -284,8 +284,7 @@ void listen_socket::start(void)
     this->reaper_running = true;
 
     sleep(0);
-    this->access_pool->startup_arg = (void *)this;
-    this->access_pool->start(listen_socket::access_pool_worker);
+    this->access_pool->start(listen_socket::access_pool_worker, (void *)this);
 }
 
 void listen_socket::stop(void)

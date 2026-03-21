@@ -154,11 +154,13 @@ basesock::~basesock()
         delete this->sa;
 }
 
-void basesock::start(void *(*func)(void *))
+void basesock::start(void *(*func)(void *), void *arg)
 {
     int ret;
 
     this->create_socket();
+    if (arg != NULL)
+        this->listen_arg = arg;
     if (!this->listen_started && this->sock > 0)
     {
         this->listen_thread = std::thread(func, this->listen_arg);
