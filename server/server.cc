@@ -40,8 +40,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <pthread.h>
 
+#include <mutex>
+#include <condition_variable>
 #include <fstream>
 #include <stdexcept>
 #include <system_error>
@@ -68,7 +69,7 @@ static void cleanup_sockets(void);
 static void cleanup_log(void);
 static void cleanup_daemon(void);
 
-std::atomic<int> main_loop_exit_flag(0);
+std::atomic<bool> main_loop_exit_flag(false);
 Zone *zone = NULL;
 ActionPool *action_pool = NULL;
 MotionPool *motion_pool = NULL;
@@ -77,8 +78,8 @@ DB *database = NULL;
 static Library *db_lib = NULL, *console_lib = NULL;
 std::vector<listen_socket *> sockets;
 std::vector<Console *> consoles;
-static pthread_mutex_t exit_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t exit_flag = PTHREAD_COND_INITIALIZER;
+static std::mutex exit_mutex;
+static std::condition_variable exit_flag;
 
 int main(int argc, char **argv)
 {
@@ -112,16 +113,11 @@ int main(int argc, char **argv)
 
     /* Since all our stuff is running in other threads, we'll just
      * wait until the exit flag gets waved.
-     *
-     * If we have errors with the exit flag here, we should just go
-     * ahead and continue execution through to the exit.  Error
-     * checking is kind of a moot point.
      */
-    pthread_mutex_lock(&exit_mutex);
-    pthread_cond_wait(&exit_flag, &exit_mutex);
-    pthread_mutex_unlock(&exit_mutex);
-    pthread_cond_destroy(&exit_flag);
-    pthread_mutex_destroy(&exit_mutex);
+    {
+        std::unique_lock lock(exit_mutex);
+        exit_flag.wait(lock);
+    }
 
     cleanup_console();
   BAILOUT3:
@@ -229,10 +225,11 @@ static void setup_sockets(void)
 
 void set_exit_flag(void)
 {
-    pthread_mutex_lock(&exit_mutex);
-    main_loop_exit_flag = 1;
-    pthread_cond_broadcast(&exit_flag);
-    pthread_mutex_unlock(&exit_mutex);
+    {
+        std::unique_lock lock(exit_mutex);
+        main_loop_exit_flag = true;
+    }
+    exit_flag.notify_all();
 }
 
 static void setup_zone(void)

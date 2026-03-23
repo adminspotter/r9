@@ -146,7 +146,7 @@ void test_start_stop(void)
 
     try
     {
-        main_loop_exit_flag = 1;
+        main_loop_exit_flag = true;
         sts->stop();
     }
     catch (...)

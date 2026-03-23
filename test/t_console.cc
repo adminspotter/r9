@@ -3,13 +3,12 @@
 using namespace TAP;
 
 #include "../server/classes/modules/console.h"
+#include "mock_server_globals.h"
 
 #include <string.h>
 #include <unistd.h>
 
 #include <atomic>
-
-std::atomic<int> main_loop_exit_flag;
 
 #define TMP_PATH  "./consoletest"
 
@@ -197,12 +196,12 @@ void test_listener(void)
     }
 
     con->listen_arg = (void *)con;
-    main_loop_exit_flag = 0;
+    main_loop_exit_flag = false;
     con->start(Console::console_listener);
 
     send_data_to(1237);
 
-    main_loop_exit_flag = 1;
+    main_loop_exit_flag = true;
     con->stop();
 
     unlink(TMP_PATH);

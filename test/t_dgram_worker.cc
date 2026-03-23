@@ -47,7 +47,7 @@ ssize_t recvfrom(int sockfd,
 
       default:
       case 3:
-        main_loop_exit_flag = 1;
+        main_loop_exit_flag = true;
         pkt->basic.type = TYPE_ACKPKT;
         retval = sizeof(ack_packet);
         memset(sin, 0, sizeof(struct sockaddr_in));
@@ -96,7 +96,7 @@ void test_listen_worker(void)
     dgram_socket *dgs = new dgram_socket(addr);
     void *retval;
 
-    main_loop_exit_flag = 0;
+    main_loop_exit_flag = false;
 
     try
     {

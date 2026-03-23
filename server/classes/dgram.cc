@@ -105,7 +105,7 @@ void dgram_socket::dgram_listen_worker(void *arg)
 
     for (;;)
     {
-        if (main_loop_exit_flag == 1)
+        if (main_loop_exit_flag)
             break;
 
         memset((char *)&buf, 0, sizeof(packet));
