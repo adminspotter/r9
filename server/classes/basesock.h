@@ -34,9 +34,10 @@
 #ifndef __INC_BASESOCK_H__
 #define __INC_BASESOCK_H__
 
-#include <netinet/in.h>
-#include <netdb.h>
-
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 #include <cstdint>
 
 #include "addrinfo.h"
@@ -44,30 +45,34 @@
 
 class basesock
 {
-  private:
-    bool thread_started;
-
-  public:
+  protected:
     Addrinfo *ai;
     Sockaddr *sa;
     int sock;
 
-    pthread_t listen_thread;
+    std::atomic<bool> exit_flag;
+    std::mutex exit_lock;
+    std::condition_variable exit_cond;
+
+    std::thread listen_thread;
+  public:
     void *listen_arg;
+  protected:
+    bool listen_started;
 
     static const int LISTEN_BACKLOG = 10;
 
-  protected:
     std::string port_type;
 
+    basesock();
+    void init(void);
     virtual void create_socket(void);
 
   public:
-    basesock();
     basesock(Addrinfo *);
     virtual ~basesock();
 
-    void start(void *(*)(void *));
+    void start(void (*)(void *), void * = NULL);
     virtual void stop(void);
 };
 

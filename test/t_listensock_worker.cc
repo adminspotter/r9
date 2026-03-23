@@ -12,14 +12,6 @@ using namespace TAP;
 #include "mock_db.h"
 #include "mock_server_globals.h"
 
-int sleep_count;
-
-unsigned int sleep(unsigned int a)
-{
-    ++sleep_count;
-    return a;
-}
-
 class test_listen_socket : public listen_socket
 {
   public:
@@ -60,7 +52,6 @@ void test_reaper_worker(void)
 
     listen->stop();
 
-    is(sleep_count >= 1, true, test + "expected sleep count");
     is(listen->send_pool->queue_size() > 0, true,
        test + "expected send queue size");
     is(listen->users.size(), 1, test + "expected user list size");
@@ -116,7 +107,7 @@ void test_access_worker(void)
 
 int main(int argc, char **argv)
 {
-    plan(6);
+    plan(5);
 
     test_reaper_worker();
     test_access_worker();

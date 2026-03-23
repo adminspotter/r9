@@ -12,34 +12,6 @@ using namespace TAP;
 #include "mock_server_globals.h"
 #include "mock_zone.h"
 
-bool create_error = false, cancel_error = false, join_error = false;
-int create_count, cancel_count, join_count;
-
-int pthread_create(pthread_t *a, const pthread_attr_t *b,
-                   void *(*c)(void *), void *d)
-{
-    ++create_count;
-    if (create_error == true)
-        return EINVAL;
-    return 0;
-}
-
-int pthread_cancel(pthread_t a)
-{
-    ++cancel_count;
-    if (cancel_error == true)
-        return EINVAL;
-    return 0;
-}
-
-int pthread_join(pthread_t a, void **b)
-{
-    ++join_count;
-    if (join_error == true)
-        return EINVAL;
-    return 0;
-}
-
 int fake_server_objects(GameObject::objects_map& gom)
 {
     glm::dvec3 pos(100.0, 100.0, 100.0);
@@ -371,29 +343,8 @@ void test_listen_socket_start_stop(void)
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
     listen_socket *listen;
 
-    create_count = cancel_count = join_count = 0;
     listen = new listen_socket(addr);
 
-    create_error = true;
-    try
-    {
-        listen->start();
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("couldn't create reaper"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
-    is(create_count, 1, test + "expected creates");
-
-    create_error = false;
-    create_count = 0;
     try
     {
         listen->start();
@@ -402,44 +353,10 @@ void test_listen_socket_start_stop(void)
     {
         fail(test + "start exception");
     }
-    is(create_count > 1, true, test + "expected creates");
+    isnt(listen->access_pool->pool_size(),
+         0,
+         test + "expected access pool size");
 
-    cancel_error = true;
-    try
-    {
-        listen->stop();
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("couldn't cancel reaper"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
-
-    cancel_error = false;
-    join_error = true;
-    try
-    {
-        listen->stop();
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("couldn't join reaper"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
-
-    join_error = false;
     try
     {
         listen->stop();
@@ -448,6 +365,7 @@ void test_listen_socket_start_stop(void)
     {
         fail(test + "stop exception");
     }
+    is(listen->access_pool->pool_size(), 0, test + "expected access pool size");
 
     delete listen;
     delete addr;
@@ -776,7 +694,7 @@ void test_listen_socket_disconnect_user(void)
 
 int main(int argc, char **argv)
 {
-    plan(80);
+    plan(77);
 
     test_base_user_create_delete();
     test_base_user_no_access();

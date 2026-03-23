@@ -1,29 +1,8 @@
-#include <unistd.h>
-
 #include <tap++.h>
 
 using namespace TAP;
 
 #include "../server/classes/game_obj.h"
-
-bool pthread_mutex_lock_error = false, pthread_mutex_unlock_error = false;
-int lock_count, unlock_count;
-
-int pthread_mutex_lock(pthread_mutex_t *a)
-{
-    ++lock_count;
-    if (pthread_mutex_lock_error == true)
-        return EINVAL;
-    return 0;
-}
-
-int pthread_mutex_unlock(pthread_mutex_t *a)
-{
-    ++unlock_count;
-    if (pthread_mutex_unlock_error == true)
-        return EINVAL;
-    return 0;
-}
 
 void test_create_delete(void)
 {
@@ -34,13 +13,10 @@ void test_create_delete(void)
 
     GameObject::reset_max_id();
 
-    lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 38LL);
     is(go->get_object_id(), 38LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
-    ok(lock_count > 0, test + "performed locks");
-    is(lock_count, unlock_count, test + "all locks unlocked");
 
     delete go;
 
@@ -62,13 +38,10 @@ void test_clone(void)
 
     GameObject::reset_max_id();
 
-    lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 45LL);
     is(go->get_object_id(), 45LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
-    ok(lock_count > 0, test + "performed locks");
-    is(lock_count, unlock_count, test + "all locks unlocked");
 
     GameObject *go2 = go->clone();
     is(go2->get_object_id(), 46LL, test + "expected objectid");
@@ -89,13 +62,10 @@ void test_connect_disconnect(void)
 
     GameObject::reset_max_id();
 
-    lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 45LL);
     is(go->get_object_id(), 45LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
-    ok(lock_count > 0, test + "performed locks");
-    is(lock_count, unlock_count, test + "all locks unlocked");
 
     Control *con2 = new Control(2LL, NULL);
 
@@ -148,13 +118,10 @@ void test_reset_id(void)
     Geometry *geom = new Geometry();
     Control *con = new Control(1LL, NULL);
 
-    lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 123LL);
     is(go->get_object_id(), 123LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
-    ok(lock_count > 0, test + "performed locks");
-    is(lock_count, unlock_count, test + "all locks unlocked");
 
     delete go;
 
@@ -164,10 +131,7 @@ void test_reset_id(void)
 
     delete go;
 
-    lock_count = unlock_count = 0;
     GameObject::reset_max_id();
-    ok(lock_count > 0, test + "performed locks");
-    is(lock_count, unlock_count, test + "all locks unlocked");
 
     geom = new Geometry();
     go = new GameObject(geom, con);
@@ -184,13 +148,10 @@ void test_distance(void)
     Geometry *geom = new Geometry();
     Control *con = new Control(1LL, NULL);
 
-    lock_count = unlock_count = 0;
     go = new GameObject(geom, con, 123LL);
     is(go->get_object_id(), 123LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
-    ok(lock_count > 0, test + "performed locks");
-    is(lock_count, unlock_count, test + "all locks unlocked");
 
     glm::dvec3 pt = {0.0, 0.0, 0.0};
     go->set_position(glm::dvec3(1.0, 0.0, 0.0));
@@ -268,7 +229,7 @@ void test_move_and_rotate(void)
 
 int main(int argc, char **argv)
 {
-    plan(54);
+    plan(42);
 
     test_create_delete();
     test_clone();

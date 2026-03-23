@@ -67,7 +67,7 @@ love to collaborate on.
 r9 has been built and tested on:
 
 * CentOS Linux 6/7
-* Debian GNU/Linux Stretch - Buster
+* Debian GNU/Linux Stretch - Bookworm
 * Ubuntu GNU/Linux Trusty Tahr and Xenial Xerus (via [Travis CI](https://travis-ci.org))
 * MacOS X Mavericks - Mojave
 
@@ -79,7 +79,7 @@ any platform-specific stuff to its own files.
 
 ## Build dependencies ##
 
-* A C++11 compiler
+* A C++17 compiler
 * OpenGL 3.2 support
 * The GNU autotools
 * [glm](http://glm.g-truc.net/)

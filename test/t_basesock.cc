@@ -12,16 +12,21 @@ using namespace TAP;
 #include <typeinfo>
 
 bool socket_error = false, socket_zero = false, bind_error = false;
-bool am_root = false, listen_error = false, pthread_create_error = false;
-bool pthread_cancel_error = false, pthread_join_error = false;
-bool unlink_error = false;
+bool am_root = false, listen_error = false, unlink_error = false;
 int seteuid_count, setegid_count;
 
-/* This will never actually be run, so it doesn't need to do anything */
-void *test_thread_worker(void *arg)
+class fake_basesock : public basesock
 {
-    return NULL;
-}
+  public:
+    fake_basesock() : basesock() {}
+    fake_basesock(Addrinfo *ai) : basesock(ai) {}
+    ~fake_basesock() {}
+    using basesock::sa;
+    using basesock::sock;
+};
+
+/* This will never actually be run, so it doesn't need to do anything */
+void test_thread_worker(void *arg) {}
 
 int socket(int a, int b, int c)
 {
@@ -93,28 +98,6 @@ int setegid(gid_t a)
     return 0;
 }
 
-int pthread_create(pthread_t *a, const pthread_attr_t *b,
-                   void *(*c)(void *), void *d)
-{
-    if (pthread_create_error == true)
-        return EINVAL;
-    return 0;
-}
-
-int pthread_cancel(pthread_t a)
-{
-    if (pthread_cancel_error == true)
-        return EINVAL;
-    return 0;
-}
-
-int pthread_join(pthread_t a, void **b)
-{
-    if (pthread_join_error == true)
-        return EINVAL;
-    return 0;
-}
-
 int unlink(const char *a)
 {
     if (unlink_error == true)
@@ -126,13 +109,13 @@ void test_create_delete(void)
 {
     std::string test = "create/delete: ", st;
     Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
-    basesock *base;
+    fake_basesock *base;
 
     st = "IPv4: ";
     socket_zero = true;
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -151,7 +134,7 @@ void test_create_delete(void)
 
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -174,11 +157,11 @@ void test_delete_unix(void)
     auto old_clog_rdbuf = std::clog.rdbuf(new_clog->rdbuf());
 
     Addrinfo_un *ai = new Addrinfo_un("t_basesock.sock");
-    basesock *base;
+    fake_basesock *base;
 
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -341,12 +324,12 @@ void test_start_stop(void)
 {
     std::string test = "start/stop: ", st;
     Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
-    basesock *base;
+    fake_basesock *base;
 
     st = "IPv4: ";
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
         base->start(test_thread_worker);
     }
     catch (...)
@@ -375,7 +358,7 @@ void test_start_stop(void)
 
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -405,12 +388,12 @@ void test_start_bad_socket(void)
 {
     std::string test = "start w/bad socket: ";
     Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235");
-    basesock *base;
+    fake_basesock *base;
 
     socket_zero = true;
     try
     {
-        base = new basesock(ai);
+        base = new fake_basesock(ai);
     }
     catch (...)
     {
@@ -431,137 +414,9 @@ void test_start_bad_socket(void)
     socket_zero = false;
 }
 
-void test_start_create_thread_fail(void)
-{
-    std::string test = "start w/bad pthread_create: ";
-    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235");
-    basesock *base;
-
-    pthread_create_error = true;
-    try
-    {
-        base = new basesock(ai);
-    }
-    catch (...)
-    {
-        fail(test + "constructor exception");
-    }
-
-    try
-    {
-        base->start(test_thread_worker);
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("couldn't start listen thread"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
-
-    delete base;
-    delete ai;
-    pthread_create_error = false;
-}
-
-void test_stop_cancel_fail(void)
-{
-    std::string test = "stop w/bad pthread_cancel: ";
-    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
-    basesock *base;
-
-    try
-    {
-        base = new basesock(ai);
-        base->start(test_thread_worker);
-    }
-    catch (...)
-    {
-        fail(test + "setup failure");
-    }
-    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
-       test + "expected address");
-    is(base->sa->port(), 1235, test + "expected port");
-    ok(base->sock >= 0, test + "socket created");
-
-    pthread_cancel_error = true;
-    try
-    {
-        base->stop();
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("couldn't cancel listen thread"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
-
-    try
-    {
-        delete(base);
-    }
-    catch (...)
-    {
-        fail(test + "destructor exception");
-    }
-    delete ai;
-    pthread_cancel_error = false;
-}
-
-void test_stop_join_fail(void)
-{
-    std::string test = "stop w/bad pthread_join: ";
-    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1235", AF_INET);
-    basesock *base;
-
-    try
-    {
-        base = new basesock(ai);
-        base->start(test_thread_worker);
-    }
-    catch (...)
-    {
-        fail(test + "setup failure");
-    }
-    is(strncmp(base->sa->ntop(), "127.0.0.1", 10), 0,
-       test + "expected address");
-    is(base->sa->port(), 1235, test + "expected port");
-    ok(base->sock >= 0, test + "socket created");
-
-    pthread_join_error = true;
-    try
-    {
-        base->stop();
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("couldn't join listen thread"), std::string::npos,
-             test + "correct error contents");
-    }
-    catch (...)
-    {
-        fail(test + "wrong error type");
-    }
-
-    delete base;
-    delete ai;
-    pthread_join_error = false;
-}
-
 int main(int argc, char **argv)
 {
-    plan(28);
+    plan(19);
 
     test_create_delete();
     test_delete_unix();
@@ -571,8 +426,5 @@ int main(int argc, char **argv)
     test_bad_listen();
     test_start_stop();
     test_start_bad_socket();
-    test_start_create_thread_fail();
-    test_stop_cancel_fail();
-    test_stop_join_fail();
     return exit_status();
 }

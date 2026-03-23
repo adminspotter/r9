@@ -35,71 +35,44 @@
 #include "game_obj.h"
 #include "zone.h"
 
-pthread_mutex_t GameObject::max_mutex = PTHREAD_MUTEX_INITIALIZER;
+std::mutex GameObject::max_mutex;
 uint64_t GameObject::max_id_value = 0LL;
 
 glm::dvec3 GameObject::no_movement(0.0, 0.0, 0.0);
 glm::dquat GameObject::no_rotation(1.0, 0.0, 0.0, 0.0);
 
-void GameObject::enter_read(void)
-{
-    pthread_rwlock_rdlock(&this->movement_lock);
-}
-
-void GameObject::enter(void)
-{
-    pthread_rwlock_wrlock(&this->movement_lock);
-}
-
-void GameObject::leave(void)
-{
-    pthread_rwlock_unlock(&this->movement_lock);
-}
-
 uint64_t GameObject::reset_max_id(void)
 {
     uint64_t val;
 
-    pthread_mutex_lock(&GameObject::max_mutex);
+    std::scoped_lock lock(GameObject::max_mutex);
     val = GameObject::max_id_value;
     GameObject::max_id_value = (uint64_t)0;
-    pthread_mutex_unlock(&GameObject::max_mutex);
     return val;
 }
 
 GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
     : position(), movement(), look(0.0, 1.0, 0.0),
-      orient(1.0, 0.0, 0.0, 0.0), rotation(1.0, 0.0, 0.0, 0.0)
+      orient(1.0, 0.0, 0.0, 0.0), rotation(1.0, 0.0, 0.0, 0.0), movement_lock()
 {
     this->default_master = this->master = c;
     this->default_geometry = this->geometry = g;
     this->active = true;
-    pthread_mutex_lock(&GameObject::max_mutex);
-    if (newid == 0LL)
-        newid = GameObject::max_id_value++;
-    else
-        /* This clause is mostly for recreating an object from some
-         * saved state.
-         */
-        GameObject::max_id_value = std::max(GameObject::max_id_value,
-                                            newid + 1);
 
-    pthread_mutex_unlock(&GameObject::max_mutex);
+    {
+        std::scoped_lock lock(GameObject::max_mutex);
+        if (newid == 0LL)
+            newid = GameObject::max_id_value++;
+        else
+            /* This clause is mostly for recreating an object from some
+             * saved state.
+             */
+            GameObject::max_id_value = std::max(GameObject::max_id_value,
+                                                newid + 1);
+    }
+
     this->id_value = newid;
     gettimeofday(&this->last_updated, NULL);
-
-    pthread_rwlockattr_t lock_init;
-    pthread_rwlockattr_init(&lock_init);
-#ifdef PTHREAD_RWLOCK_PREFER_WRITER_NP
-    pthread_rwlockattr_setkind_np(&lock_init, PTHREAD_RWLOCK_PREFER_WRITER_NP);
-#endif /* PTHREAD_RWLOCK_PREFER_WRITER_NP */
-    if (pthread_rwlock_init(&this->movement_lock, &lock_init))
-    {
-        std::ostringstream s;
-
-        s << "couldn't init game obj lock for " << this->id_value;
-        throw std::system_error(errno, std::generic_category(), s.str());
-    }
 }
 
 GameObject::~GameObject()
@@ -108,7 +81,6 @@ GameObject::~GameObject()
         delete this->geometry;
     if (this->default_geometry != NULL)
         delete this->default_geometry;
-    pthread_rwlock_destroy(&this->movement_lock);
 }
 
 GameObject *GameObject::clone(void) const
@@ -148,11 +120,10 @@ void GameObject::disconnect(Control *con)
 
 void GameObject::activate(void)
 {
-    this->enter();
+    std::unique_lock lock(this->movement_lock);
     this->natures.erase(GameObject::nature::invisible);
     this->natures.erase(GameObject::nature::non_interactive);
     this->active = true;
-    this->leave();
 }
 
 void GameObject::deactivate(void)
@@ -162,105 +133,92 @@ void GameObject::deactivate(void)
      * movement and rotation, and make it stop interacting with the
      * rest of the universe.
      */
-    this->enter();
+    std::unique_lock lock(this->movement_lock);
     this->movement = GameObject::no_movement;
     this->rotation = GameObject::no_rotation;
     this->natures.insert(GameObject::nature::invisible);
     this->natures.insert(GameObject::nature::non_interactive);
     this->active = false;
-    this->leave();
 }
 
 double GameObject::distance_from(const glm::dvec3& pt)
 {
-    this->enter_read();
-    double res = glm::distance(pt, this->position);
-    this->leave();
-    return res;
+    std::shared_lock lock(this->movement_lock);
+    return glm::distance(pt, this->position);
 }
 
 glm::dvec3 GameObject::get_position(void)
 {
-    this->enter_read();
+    std::shared_lock lock(this->movement_lock);
     glm::dvec3 res = this->position;
-    this->leave();
     return res;
 }
 
 glm::dvec3 GameObject::set_position(const glm::dvec3& p)
 {
-    this->enter();
+    std::unique_lock lock(this->movement_lock);
     this->position = p;
     gettimeofday(&this->last_updated, NULL);
-    this->leave();
     return p;
 }
 
 glm::dvec3 GameObject::get_look(void)
 {
-    this->enter_read();
+    std::shared_lock lock(this->movement_lock);
     glm::dvec3 res = this->look;
-    this->leave();
     return res;
 }
 
 glm::dvec3 GameObject::set_look(const glm::dvec3& l)
 {
-    this->enter();
+    std::unique_lock lock(this->movement_lock);
     this->look = l;
     gettimeofday(&this->last_updated, NULL);
-    this->leave();
     return l;
 }
 
 glm::dvec3 GameObject::get_movement(void)
 {
-    this->enter_read();
+    std::shared_lock lock(this->movement_lock);
     glm::dvec3 res = this->movement;
-    this->leave();
     return res;
 }
 
 glm::dvec3 GameObject::set_movement(const glm::dvec3& m)
 {
-    this->enter();
+    std::unique_lock lock(this->movement_lock);
     this->movement = m;
     gettimeofday(&this->last_updated, NULL);
-    this->leave();
     return m;
 }
 
 glm::dquat GameObject::get_orientation(void)
 {
-    this->enter_read();
+    std::shared_lock lock(this->movement_lock);
     glm::dquat res = this->orient;
-    this->leave();
     return res;
 }
 
 glm::dquat GameObject::set_orientation(const glm::dquat& o)
 {
-    this->enter();
+    std::unique_lock lock(this->movement_lock);
     this->orient = o;
     gettimeofday(&this->last_updated, NULL);
-    this->leave();
     return o;
 }
 
 glm::dquat GameObject::get_rotation(void)
 {
-    this->enter_read();
+    std::shared_lock lock(this->movement_lock);
     glm::dquat res = this->rotation;
-    this->leave();
     return res;
 }
 
 glm::dquat GameObject::set_rotation(const glm::dquat& r)
 {
-    this->enter();
+    std::unique_lock lock(this->movement_lock);
     this->rotation = r;
     gettimeofday(&this->last_updated, NULL);
-    this->leave();
     return r;
 }
 
@@ -270,8 +228,8 @@ void GameObject::move_and_rotate(void)
     {
         struct timeval current;
         double interval;
+        std::unique_lock lock(this->movement_lock);
 
-        this->enter();
         gettimeofday(&current, NULL);
         interval = (current.tv_sec + (current.tv_usec / 1000000.0))
             - (this->last_updated.tv_sec
@@ -283,23 +241,20 @@ void GameObject::move_and_rotate(void)
         if (this->movement != GameObject::no_movement)
             this->position += this->orient * this->movement * interval;
         memcpy(&this->last_updated, &current, sizeof(struct timeval));
-        this->leave();
     }
 }
 
 bool GameObject::still_moving(void)
 {
-    this->enter_read();
-    bool res = (this->active == true
-                && (this->movement != GameObject::no_movement
-                    || this->rotation != GameObject::no_rotation));
-    this->leave();
-    return res;
+    std::shared_lock lock(this->movement_lock);
+    return (this->active == true
+            && (this->movement != GameObject::no_movement
+                || this->rotation != GameObject::no_rotation));
 }
 
 void GameObject::generate_update_packet(packet& pkt)
 {
-    this->enter_read();
+    std::shared_lock lock(this->movement_lock);
     if (this->active == false)
     {
         pkt.del.type = TYPE_OBJDEL;
@@ -326,5 +281,4 @@ void GameObject::generate_update_packet(packet& pkt)
         pkt.pos.y_look = (uint32_t)look.y;
         pkt.pos.z_look = (uint32_t)look.z;
     }
-    this->leave();
 }

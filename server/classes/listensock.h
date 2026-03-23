@@ -28,8 +28,6 @@
 #ifndef __INC_LISTENSOCK_H__
 #define __INC_LISTENSOCK_H__
 
-#include <pthread.h>
-
 #include <map>
 
 #include <proto/proto.h>
@@ -121,8 +119,8 @@ class listen_socket : public basesock
     static const int LINK_DEAD_TIMEOUT = 75;
 
   protected:
-    bool reaper_running;
-    pthread_t reaper;
+    bool reaper_started;
+    std::thread reaper_thread;
 
   public:
     std::map<uint64_t, base_user *> users;
@@ -146,8 +144,8 @@ class listen_socket : public basesock
     virtual void start(void);
     virtual void stop(void) override;
 
-    static void *access_pool_worker(void *);
-    static void *reaper_worker(void *);
+    static void access_pool_worker(void *);
+    static void reaper_worker(listen_socket *);
 
     static void handle_ack(listen_socket *, packet&, base_user *, void *);
     static void handle_action(listen_socket *, packet&, base_user *, void *);

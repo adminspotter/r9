@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -56,7 +56,7 @@ class ActionPool : public ThreadPool<packet_list>
 
     void start(void);
 
-    static void *action_pool_worker(void *);
+    static void action_pool_worker(void *);
 
     void execute_action(base_user *, action_request&);
 };

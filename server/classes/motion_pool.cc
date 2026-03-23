@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -58,11 +58,7 @@ void MotionPool::start(void)
     this->ThreadPool<GameObject *>::start(MotionPool::motion_pool_worker);
 }
 
-/* We take ourselves as the arg, but we also use the zone and update
- * pool from the global scope.  It's probably not the ideal way to go,
- * but it'll get us going for now.
- */
-void *MotionPool::motion_pool_worker(void *arg)
+void MotionPool::motion_pool_worker(void *arg)
 {
     MotionPool *mot = (MotionPool *)arg;
     GameObject *req;
@@ -70,7 +66,8 @@ void *MotionPool::motion_pool_worker(void *arg)
 
     for (;;)
     {
-        mot->pop(&req);
+        if (!mot->pop(&req))
+            break;
 
         if (req->still_moving())
         {
@@ -90,5 +87,4 @@ void *MotionPool::motion_pool_worker(void *arg)
                 mot->push(req);
         }
     }
-    return NULL;
 }

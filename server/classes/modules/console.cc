@@ -29,10 +29,6 @@
 #include <config.h>
 
 #include <unistd.h>
-#include <pthread.h>
-
-#include <string>
-#include <system_error>
 
 #include "console.h"
 #include "fdstreambuf.h"
@@ -44,7 +40,7 @@
 static char string_unknown[] = STRING_UNKNOWN;
 #endif /* HAVE_LIBWRAP */
 
-pthread_mutex_t ConsoleSession::dispatch_lock = PTHREAD_MUTEX_INITIALIZER;
+std::mutex ConsoleSession::dispatch_lock;
 
 ConsoleSession::ConsoleSession(int sock)
 {
@@ -54,80 +50,45 @@ ConsoleSession::ConsoleSession(int sock)
     this->in = new std::istream(new fdibuf(sock));
     this->out = new std::ostream(new fdobuf(sock));
 
-    if ((ret = pthread_create(&(this->thread_id), NULL,
-                              ConsoleSession::session_listener,
-                              (void *)this)) != 0)
-    {
-        std::string s("error creating console thread");
-
-        throw std::system_error(ret, std::generic_category(), s);
-    }
+    this->thread_id = std::thread(ConsoleSession::session_listener,
+                                  (void *)this);
 }
 
 ConsoleSession::~ConsoleSession()
 {
-    ConsoleSession::cleanup(this);
+    close(this->sock);
+    delete this->in->rdbuf();
+    delete this->in;
+    delete this->out->rdbuf();
+    delete this->out;
+    this->thread_id.join();
 }
 
-void ConsoleSession::get_lock(void)
-{
-    pthread_mutex_lock(&ConsoleSession::dispatch_lock);
-}
-
-void ConsoleSession::drop_lock(void)
-{
-    pthread_mutex_unlock(&ConsoleSession::dispatch_lock);
-}
-
-void *ConsoleSession::session_listener(void *arg)
+void ConsoleSession::session_listener(void *arg)
 {
     ConsoleSession *sess = (ConsoleSession *)arg;
-    int done = 0, old_cancel_type;
 
-    pthread_cleanup_push(ConsoleSession::cleanup, (void *)sess);
-
-    while (!done)
+    for (;;)
     {
         std::string str = sess->get_line();
 
-        if (str == "exit")
+        if (str == "" || str == "exit")
         {
             (*sess->out) << "exiting" << std::endl;
-            done = 1;
             break;
         }
 
-        sess->get_lock();
-        *(sess->out) << ConsoleSession::dispatch(str) << std::endl;
-        sess->drop_lock();
+        {
+            std::unique_lock lock(ConsoleSession::dispatch_lock);
+            *(sess->out) << ConsoleSession::dispatch(str) << std::endl;
+        }
     }
-
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &old_cancel_type);
-    pthread_cleanup_pop(1);
-    pthread_setcanceltype(old_cancel_type, NULL);
-    pthread_exit(NULL);
-
-    return NULL;
+    delete sess;
 }
 
 std::string ConsoleSession::dispatch(std::string &command)
 {
-    return std::string("not implemented");
-}
-
-void ConsoleSession::cleanup(void *arg)
-{
-    ConsoleSession *sess = (ConsoleSession *)arg;
-
-    if (sess->sock)
-    {
-        close(sess->sock);
-        sess->sock = 0;
-        delete sess->in->rdbuf();
-        delete sess->in;
-        delete sess->out->rdbuf();
-        delete sess->out;
-    }
+    return "not implemented";
 }
 
 std::string ConsoleSession::get_line(void)
@@ -137,49 +98,41 @@ std::string ConsoleSession::get_line(void)
     (*this->out) << "r9 ~> ";
     this->out->flush();
     (*this->in) >> str;
-    if (this->in->eof())
-        str = "exit";
     return str;
 }
 
 Console::Console(Addrinfo *ai)
-    : basesock(ai), sessions()
+    : basesock(ai)
 {
     this->port_type = "console";
 }
 
 Console::~Console()
 {
-    Console::sessions_iterator i;
-
-    for (i = this->sessions.begin(); i != this->sessions.end(); ++i)
-        delete *i;
-    this->sessions.erase(this->sessions.begin(), this->sessions.end());
 }
 
-void *Console::console_listener(void *arg)
+void Console::console_listener(void *arg)
 {
     Console *con = (Console *)arg;
     int newsock;
     struct sockaddr_storage ss;
     socklen_t ss_len = sizeof(ss);
     Sockaddr *sa;
-    ConsoleSession *sess = NULL;
 
-    while ((newsock = accept(con->sock,
-                             (struct sockaddr *)(&ss),
-                             &ss_len)) != -1)
+    for (;;)
     {
+        if ((newsock = accept(con->sock,
+                             (struct sockaddr *)(&ss),
+                             &ss_len)) < 1)
+            break;
+
         try
         {
             sa = NULL;
             sa = build_sockaddr((struct sockaddr&)ss);
 
             if (con->wrap_request(sa))
-            {
-                sess = new ConsoleSession(newsock);
-                con->sessions.push_back(sess);
-            }
+                new ConsoleSession(newsock);
             else
                 close(newsock);
         }
@@ -192,8 +145,6 @@ void *Console::console_listener(void *arg)
             delete sa;
         ss_len = sizeof(ss);
     }
-    pthread_exit(NULL);
-    return NULL;
 }
 
 int Console::wrap_request(Sockaddr *sa)

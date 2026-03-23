@@ -94,10 +94,8 @@ void stream_socket::start(void)
     FD_SET(this->sock, &this->master_readfs);
     this->max_fd = this->sock + 1;
 
-    this->send_pool->startup_arg = (void *)this;
-    this->send_pool->start(stream_socket::stream_send_worker);
-    this->listen_arg = (void *)this;
-    basesock::start(stream_socket::stream_listen_worker);
+    this->send_pool->start(stream_socket::stream_send_worker, (void *)this);
+    this->basesock::start(stream_socket::stream_listen_worker, (void *)this);
 }
 
 void stream_socket::handle_packet(packet& p, int len, int fd)
@@ -150,26 +148,23 @@ void stream_socket::disconnect_user(base_user *bu)
     this->listen_socket::disconnect_user(bu);
 }
 
-void *stream_socket::stream_listen_worker(void *arg)
+void stream_socket::stream_listen_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
 
     for (;;)
     {
-        if (main_loop_exit_flag == 1)
+        if (main_loop_exit_flag)
             break;
 
-        pthread_testcancel();
         if (sts->select_fd_set() < 1)
             continue;
-        pthread_testcancel();
 
         sts->accept_new_connection();
         sts->handle_users();
     }
     std::clog << "exiting connection loop for stream port "
               << sts->sa->port() << std::endl;
-    return NULL;
 }
 
 int stream_socket::select_fd_set(void)
@@ -262,7 +257,7 @@ void stream_socket::handle_users(void)
         }
 }
 
-void *stream_socket::stream_send_worker(void *arg)
+void stream_socket::stream_send_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
     packet_list req;
@@ -272,7 +267,8 @@ void *stream_socket::stream_send_worker(void *arg)
               << sts->sa->port() << std::endl;
     for (;;)
     {
-        sts->send_pool->pop(&req);
+        if (!sts->send_pool->pop(&req))
+            break;
 
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
@@ -294,5 +290,4 @@ void *stream_socket::stream_send_worker(void *arg)
     }
     std::clog << "exiting send pool worker for stream port "
               << sts->sa->port() << std::endl;
-    return NULL;
 }

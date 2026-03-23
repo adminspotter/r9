@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,26 +38,19 @@ UpdatePool::~UpdatePool()
 
 void UpdatePool::start(void)
 {
-    this->startup_arg = (void *)this;
-    this->start(UpdatePool::update_pool_worker);
+    this->ThreadPool::start(UpdatePool::update_pool_worker, (void *)this);
 }
 
-void UpdatePool::start(void *(*func)(void *))
-{
-    ThreadPool<GameObject *>::start(func);
-}
-
-void *UpdatePool::update_pool_worker(void *arg)
+void UpdatePool::update_pool_worker(void *arg)
 {
     UpdatePool *pool = (UpdatePool *)arg;
     GameObject *req;
     packet_list pkt;
-    std::vector<listen_socket *>::iterator sock;
-    listen_socket::users_iterator user;
 
     for (;;)
     {
-        pool->pop(&req);
+        if (!pool->pop(&req))
+            break;
 
         req->generate_update_packet(pkt.buf);
 
@@ -71,5 +64,4 @@ void *UpdatePool::update_pool_worker(void *arg)
                 sock->send_pool->push(pkt);
             }
     }
-    return NULL;
 }

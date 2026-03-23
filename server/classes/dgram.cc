@@ -73,10 +73,8 @@ void dgram_socket::start(void)
 {
     this->listen_socket::start();
 
-    this->send_pool->startup_arg = (void *)this;
-    this->send_pool->start(dgram_socket::dgram_send_worker);
-    this->listen_arg = (void *)this;
-    basesock::start(dgram_socket::dgram_listen_worker);
+    this->send_pool->start(dgram_socket::dgram_send_worker, (void *)this);
+    this->basesock::start(dgram_socket::dgram_listen_worker, (void *)this);
 }
 
 void dgram_socket::connect_user(base_user *bu, access_list& al)
@@ -96,7 +94,7 @@ void dgram_socket::disconnect_user(base_user *bu)
     this->listen_socket::disconnect_user(bu);
 }
 
-void *dgram_socket::dgram_listen_worker(void *arg)
+void dgram_socket::dgram_listen_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
     int len;
@@ -105,29 +103,20 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     struct sockaddr_storage from;
     socklen_t fromlen;
 
-    /* Make sure we can be cancelled as we expect. */
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-
     for (;;)
     {
-        if (main_loop_exit_flag == 1)
+        if (main_loop_exit_flag)
             break;
-
-        pthread_testcancel();
 
         memset((char *)&buf, 0, sizeof(packet));
         fromlen = sizeof(struct sockaddr_storage);
 
-        /* recvfrom should be interruptible by pthread_cancel */
-        len = recvfrom(dgs->sock,
-                       (void *)&buf,
-                       sizeof(packet),
-                       0,
-                       (struct sockaddr *)&from, &fromlen);
-        pthread_testcancel();
-
-        if (len <= 0 || fromlen == 0)
+        if ((len = recvfrom(dgs->sock,
+                            (void *)&buf,
+                            sizeof(packet),
+                            0,
+                            (struct sockaddr *)&from, &fromlen)) <= 0
+            || fromlen == 0)
             continue;
 
         try { sa = build_sockaddr((struct sockaddr&)from); }
@@ -140,7 +129,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     }
     std::clog << "exiting connection loop for datagram port "
               << dgs->sa->port() << std::endl;
-    return NULL;
 }
 
 void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
@@ -173,7 +161,7 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
     s->access_pool->push(al);
 }
 
-void *dgram_socket::dgram_send_worker(void *arg)
+void dgram_socket::dgram_send_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
     packet_list req;
@@ -183,7 +171,8 @@ void *dgram_socket::dgram_send_worker(void *arg)
               << dgs->sa->port() << std::endl;
     for (;;)
     {
-        dgs->send_pool->pop(&req);
+        if (!dgs->send_pool->pop(&req))
+            break;
 
         realsize = packet_size(&req.buf);
         if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
@@ -206,5 +195,4 @@ void *dgram_socket::dgram_send_worker(void *arg)
     }
     std::clog << "exiting send pool worker for datagram port "
               << dgs->sa->port() << std::endl;
-    return NULL;
 }

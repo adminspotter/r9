@@ -19,6 +19,7 @@ bool read_nothing = false, read_bad_packet = false;
 class test_stream_socket : public stream_socket
 {
   public:
+    using stream_socket::sock;
     using stream_socket::max_fd;
     using stream_socket::readfs;
     using stream_socket::master_readfs;
@@ -145,6 +146,7 @@ void test_start_stop(void)
 
     try
     {
+        main_loop_exit_flag = true;
         sts->stop();
     }
     catch (...)

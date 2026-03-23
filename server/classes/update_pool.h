@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,9 +37,8 @@ class UpdatePool : public ThreadPool<GameObject *>
     ~UpdatePool();
 
     void start(void);
-    void start(void *(*)(void *));
 
-    static void *update_pool_worker(void *);
+    static void update_pool_worker(void *);
 };
 
 #endif /* __INC_UPDATE_POOL_H__ */

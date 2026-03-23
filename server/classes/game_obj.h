@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2000-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,7 +30,6 @@
 #define __INC_GAME_OBJ_H__
 
 #include <sys/time.h>
-#include <pthread.h>
 
 #include <cstdint>
 #include <string>
@@ -40,6 +39,8 @@
 #else
 #include <set>
 #endif /* STD_UNORDERED_SET_WORKS */
+#include <mutex>
+#include <shared_mutex>
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
@@ -67,7 +68,7 @@ class GameObject
     typedef int attribute;
 
   private:
-    static pthread_mutex_t max_mutex;
+    static std::mutex max_mutex;
     static uint64_t max_id_value;
 
     static glm::dvec3 no_movement;
@@ -77,7 +78,7 @@ class GameObject
     Geometry *default_geometry;
     Control *default_master;
 
-    pthread_rwlock_t movement_lock;
+    std::shared_mutex movement_lock;
 
     struct timeval last_updated;
     glm::dvec3 position, movement, look;
@@ -94,11 +95,6 @@ class GameObject
 #endif /* STD_UNORDERED_SET_WORKS */
     Geometry *geometry;
     Control *master;
-
-  private:
-    void enter_read(void);
-    void enter(void);
-    void leave(void);
 
   public:
     static uint64_t reset_max_id(void);

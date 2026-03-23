@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2015-2017  Trinity Annabelle Quirk
+ * Copyright (C) 2015-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,7 +38,7 @@ class MotionPool : public ThreadPool<GameObject *>
 
     void start(void);
 
-    static void *motion_pool_worker(void *);
+    static void motion_pool_worker(void *);
 };
 
 #endif /* __INC_MOTION_POOL_H__ */

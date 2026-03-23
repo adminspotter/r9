@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 1998-2024  Trinity Annabelle Quirk
+ * Copyright (C) 1998-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,7 +41,7 @@ extern DB *database;
 extern ActionPool *action_pool;
 extern MotionPool *motion_pool;
 extern UpdatePool *update_pool;
-extern std::atomic<int> main_loop_exit_flag;
+extern std::atomic<bool> main_loop_exit_flag;
 
 void set_exit_flag(void);
 void complete_startup(void);

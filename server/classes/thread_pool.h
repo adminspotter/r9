@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2006-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2006-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,10 +25,9 @@
  * This thread pool is able to grow on the fly, starting up new
  * threads as necessary.  This is with an eye to using a
  * dynamically-expandable pool of servers; if we expand our pool of
- * hosts, we can expand our number of proceses to fit.  Unfortunately
- * pthreads is unable to kill off a single specific thread without a
- * lot of scaffolding in place, so a shrink operation is out of the
- * question.
+ * hosts, we can expand our number of proceses to fit.  A shrink
+ * operation is going to require a large amount of scaffolding, so we
+ * won't be doing that at this time.
  *
  * Interface:
  *   ThreadPool(char *name, int size)
@@ -64,10 +63,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <pthread.h>
+
 #include <vector>
 #include <queue>
 #include <string>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <sstream>
 #include <system_error>
 
@@ -78,10 +80,10 @@ class ThreadPool
 {
   private:
     std::string name;
-    std::vector<pthread_t> thread_pool;
-    pthread_mutex_t queue_lock;
-    pthread_cond_t queue_not_empty;
-    void *(*startup_func)(void *);
+    std::vector<std::thread> thread_pool;
+    std::mutex queue_lock;
+    std::condition_variable queue_not_empty;
+    void (*startup_func)(void *);
     std::queue<T> request_queue;
     unsigned int thread_count;
     bool exit_flag;
@@ -91,7 +93,8 @@ class ThreadPool
 
   public:
     ThreadPool(const char *pool_name, unsigned int pool_size)
-        : name(pool_name, 0, 8), thread_pool(), request_queue()
+        : name(pool_name, 0, 8), thread_pool(), queue_lock(),
+          queue_not_empty(), request_queue()
         {
             int ret;
 
@@ -99,76 +102,44 @@ class ThreadPool
             this->clean_on_pop = false;
             this->exit_flag = false;
             this->startup_arg = NULL;
-
-            if ((ret = pthread_mutex_init(&(this->queue_lock), NULL)) != 0)
-            {
-                std::ostringstream s;
-
-                s << "couldn't init " << this->name << " queue mutex";
-                throw std::system_error(ret, std::generic_category(), s.str());
-            }
-            if ((ret = pthread_cond_init(&(this->queue_not_empty), NULL)) != 0)
-            {
-                std::ostringstream s;
-
-                s << "couldn't init " << this->name << " queue not-empty cond";
-                pthread_mutex_destroy(&(this->queue_lock));
-                throw std::system_error(ret, std::generic_category(), s.str());
-            }
         };
 
-    virtual ~ThreadPool()
+    virtual ~ThreadPool() { this->stop(); };
+
+    virtual void start(void (*func)(void *), void *arg = NULL)
         {
-            this->stop();
-
-            /* We won't throw exceptions out of a destructor, so no
-             * point in checking return values here.  There's nothing
-             * we can do anyway.
-             */
-            pthread_cond_destroy(&(this->queue_not_empty));
-            pthread_mutex_destroy(&(this->queue_lock));
-        };
-
-    virtual void start(void *(*func)(void *))
-        {
-            int ret;
-            pthread_t thread;
-
-            pthread_mutex_lock(&(this->queue_lock));
+            std::scoped_lock lock(this->queue_lock);
             this->thread_pool.reserve(this->thread_count);
+            if (arg != NULL)
+                this->startup_arg = arg;
             this->startup_func = func;
             this->exit_flag = false;
             while (this->thread_pool.size() < this->thread_count)
             {
-                if ((ret = pthread_create(&thread,
-                                          NULL,
-                                          this->startup_func,
-                                          this->startup_arg)) != 0)
+                try
                 {
-                    std::ostringstream s;
-
-                    s << "couldn't start a " << this->name << " thread";
-                    /* Something's messed up; stop all the threads */
-                    pthread_mutex_unlock(&(this->queue_lock));
-                    this->stop();
-                    throw std::system_error(ret,
-                                            std::generic_category(),
-                                            s.str());
+                    this->thread_pool.push_back(
+                        std::thread(this->startup_func, this->startup_arg)
+                    );
                 }
-                this->thread_pool.push_back(thread);
+                catch (std::system_error& e)
+                {
+                    /* Something's messed up; stop all the threads */
+                    this->stop();
+                    throw;
+                }
             }
-            pthread_mutex_unlock(&(this->queue_lock));
         };
 
     void stop(void)
         {
             this->exit_flag = true;
-            pthread_cond_broadcast(&(this->queue_not_empty));
+            this->queue_not_empty.notify_all();
             while (this->thread_pool.size() > 0)
             {
                 /* Give up our slice, so the children can die */
                 sleep(0);
-                pthread_join(this->thread_pool.back(), NULL);
+                this->thread_pool.back().join();
                 this->thread_pool.pop_back();
             }
         };
@@ -187,48 +158,38 @@ class ThreadPool
         {
             if (new_count > this->thread_pool.size())
             {
-                pthread_mutex_lock(&(this->queue_lock));
                 this->thread_count = new_count;
-                pthread_mutex_unlock(&(this->queue_lock));
                 this->start(this->startup_func);
             }
         };
 
     virtual void push(T& req)
         {
-            pthread_mutex_lock(&(this->queue_lock));
-            this->request_queue.push(req);
-            pthread_cond_signal(&(this->queue_not_empty));
-            pthread_mutex_unlock(&(this->queue_lock));
+            {
+                std::scoped_lock lock(this->queue_lock);
+                this->request_queue.push(req);
+            }
+            this->queue_not_empty.notify_one();
         };
 
-    /* The worker threads will call into this function, and just wait
-     * until it returns, so that's why we have the exit_flag processing
-     * taking place here.
-     */
-    virtual void pop(T *buffer)
+    virtual bool pop(T *buffer)
         {
             if (buffer == NULL)
-                return;
+                return false;
 
-            pthread_mutex_lock(&(this->queue_lock));
+            std::unique_lock lock(this->queue_lock);
 
             while (this->request_queue.empty() && !this->exit_flag)
-                pthread_cond_wait(&(this->queue_not_empty),
-                                  &(this->queue_lock));
+                this->queue_not_empty.wait(lock);
 
             if (this->exit_flag)
-            {
-                pthread_mutex_unlock(&(this->queue_lock));
-                pthread_exit(NULL);
-            }
+                return false;
 
             memcpy(buffer, &(this->request_queue.front()), sizeof(T));
             if (this->clean_on_pop)
                 memset(&(this->request_queue.front()), 0, sizeof(T));
             this->request_queue.pop();
-
-            pthread_mutex_unlock(&(this->queue_lock));
+            return true;
         };
 };
 
