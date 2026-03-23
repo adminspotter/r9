@@ -34,6 +34,7 @@
 #include <proto/ec.h>
 
 #include <sstream>
+#include <chrono>
 #include <system_error>
 
 #include "listensock.h"
@@ -243,7 +244,7 @@ void listen_socket::init(void)
                                                     config.access_threads);
     this->access_pool->clean_on_pop = true;
 
-    this->reaper_running = false;
+    this->reaper_started = false;
 }
 
 listen_socket::listen_socket(Addrinfo *ai)
@@ -271,17 +272,9 @@ void listen_socket::start(void)
               << this->port_type << " port "
               << this->sa->port() << std::endl;
 
-    if ((retval = pthread_create(&this->reaper, NULL,
-                                 reaper_worker, (void *)this)) != 0)
-    {
-        std::ostringstream s;
-
-        s << "couldn't create reaper thread for "
-          << this->port_type << " port "
-          << this->sa->port();
-        throw std::system_error(retval, std::generic_category(), s.str());
-    }
-    this->reaper_running = true;
+    this->reaper_thread = std::thread(listen_socket::reaper_worker,
+                                      (void *)this);
+    this->reaper_started = true;
 
     sleep(0);
     this->access_pool->start(listen_socket::access_pool_worker, (void *)this);
@@ -291,31 +284,15 @@ void listen_socket::stop(void)
 {
     int retval;
 
-    if (this->reaper_running)
+    this->basesock::stop();
+    if (this->reaper_started)
     {
-        if ((retval = pthread_cancel(this->reaper)) != 0)
-        {
-            std::ostringstream s;
-
-            s << "couldn't cancel reaper thread for " << this->port_type
-              << " port " << this->sa->port();
-            throw std::system_error(retval, std::generic_category(), s.str());
-        }
-        sleep(0);
-        if ((retval = pthread_join(this->reaper, NULL)) != 0)
-        {
-            std::ostringstream s;
-
-            s << "couldn't join reaper thread for " << this->port_type
-              << " port " << this->sa->port();
-            throw std::system_error(retval, std::generic_category(), s.str());
-        }
-        this->reaper_running = false;
+        this->reaper_thread.join();
+        this->reaper_started = false;
     }
 
     this->send_pool->stop();
     this->access_pool->stop();
-    basesock::stop();
 }
 
 void *listen_socket::access_pool_worker(void *arg)
@@ -337,6 +314,8 @@ void *listen_socket::access_pool_worker(void *arg)
 
         /* Otherwise, we don't recognize it, and will ignore it */
     }
+    std::clog << "exiting access pool worker for " << ls->port_type
+              << " port " << ls->sa->port() << std::endl;
     return NULL;
 }
 
@@ -346,19 +325,30 @@ void *listen_socket::reaper_worker(void *arg)
     listen_socket::users_iterator i;
     base_user *bu;
     time_t now, link_dead, sleepy;
+    std::chrono::seconds reaper_timeout(listen_socket::REAP_TIMEOUT);
 
     std::clog << "started reaper thread for " << ls->port_type
               << " port " << ls->sa->port() << std::endl;
     for (;;)
     {
-        sleep(listen_socket::REAP_TIMEOUT);
+        if (ls->exit_flag)
+            break;
+        {
+            std::unique_lock lock(ls->exit_lock);
+            if (ls->exit_cond.wait_for(
+                    lock, reaper_timeout
+                ) != std::cv_status::timeout)
+                break;
+        }
+
         now = time(NULL);
         link_dead = now - listen_socket::LINK_DEAD_TIMEOUT;
         sleepy = now - listen_socket::PING_TIMEOUT;
         i = ls->users.begin();
         while (i != ls->users.end())
         {
-            pthread_testcancel();
+            if (ls->exit_flag)
+                break;
             bu = (*i).second;
             if (bu->pending_logout == true || bu->timestamp < link_dead)
             {
@@ -373,8 +363,9 @@ void *listen_socket::reaper_worker(void *arg)
                 bu->send_ping();
             ++i;
         }
-        pthread_testcancel();
     }
+    std::clog << "exiting reaper thread for " << ls->port_type
+              << " port " << ls->sa->port() << std::endl;
     return NULL;
 }
 
