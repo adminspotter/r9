@@ -38,7 +38,7 @@ class UpdatePool : public ThreadPool<GameObject *>
 
     void start(void);
 
-    static void *update_pool_worker(void *);
+    static void update_pool_worker(void *);
 };
 
 #endif /* __INC_UPDATE_POOL_H__ */

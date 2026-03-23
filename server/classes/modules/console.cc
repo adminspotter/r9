@@ -111,7 +111,7 @@ Console::~Console()
 {
 }
 
-void *Console::console_listener(void *arg)
+void Console::console_listener(void *arg)
 {
     Console *con = (Console *)arg;
     int newsock;
@@ -145,7 +145,6 @@ void *Console::console_listener(void *arg)
             delete sa;
         ss_len = sizeof(ss);
     }
-    return NULL;
 }
 
 int Console::wrap_request(Sockaddr *sa)

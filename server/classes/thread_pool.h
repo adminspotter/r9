@@ -83,7 +83,7 @@ class ThreadPool
     std::vector<std::thread> thread_pool;
     std::mutex queue_lock;
     std::condition_variable queue_not_empty;
-    void *(*startup_func)(void *);
+    void (*startup_func)(void *);
     std::queue<T> request_queue;
     unsigned int thread_count;
     bool exit_flag;
@@ -106,7 +106,7 @@ class ThreadPool
 
     virtual ~ThreadPool() { this->stop(); };
 
-    virtual void start(void *(*func)(void *), void *arg = NULL)
+    virtual void start(void (*func)(void *), void *arg = NULL)
         {
             std::scoped_lock lock(this->queue_lock);
             this->thread_pool.reserve(this->thread_count);

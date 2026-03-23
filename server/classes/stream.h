@@ -63,12 +63,12 @@ class stream_socket : public listen_socket
     virtual void connect_user(base_user *, access_list&) override;
     virtual void disconnect_user(base_user *) override;
 
-    static void *stream_listen_worker(void *);
+    static void stream_listen_worker(void *);
     int select_fd_set(void);
     void accept_new_connection(void);
     void handle_users(void);
 
-    static void *stream_send_worker(void *);
+    static void stream_send_worker(void *);
 };
 
 #endif /* __INC_STREAM_H__ */

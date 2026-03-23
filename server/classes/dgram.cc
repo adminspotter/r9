@@ -94,7 +94,7 @@ void dgram_socket::disconnect_user(base_user *bu)
     this->listen_socket::disconnect_user(bu);
 }
 
-void *dgram_socket::dgram_listen_worker(void *arg)
+void dgram_socket::dgram_listen_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
     int len;
@@ -129,7 +129,6 @@ void *dgram_socket::dgram_listen_worker(void *arg)
     }
     std::clog << "exiting connection loop for datagram port "
               << dgs->sa->port() << std::endl;
-    return NULL;
 }
 
 void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
@@ -162,7 +161,7 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
     s->access_pool->push(al);
 }
 
-void *dgram_socket::dgram_send_worker(void *arg)
+void dgram_socket::dgram_send_worker(void *arg)
 {
     dgram_socket *dgs = (dgram_socket *)arg;
     packet_list req;
@@ -196,5 +195,4 @@ void *dgram_socket::dgram_send_worker(void *arg)
     }
     std::clog << "exiting send pool worker for datagram port "
               << dgs->sa->port() << std::endl;
-    return NULL;
 }

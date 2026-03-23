@@ -103,7 +103,7 @@ void ActionPool::start(void)
                                          (void *)this);
 }
 
-void *ActionPool::action_pool_worker(void *arg)
+void ActionPool::action_pool_worker(void *arg)
 {
     ActionPool *act = (ActionPool *)arg;
     packet_list req;
@@ -114,7 +114,6 @@ void *ActionPool::action_pool_worker(void *arg)
             break;
         act->execute_action(req.who, req.buf.act);
     }
-    return NULL;
 }
 
 void ActionPool::execute_action(base_user *user, action_request& req)

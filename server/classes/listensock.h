@@ -144,8 +144,8 @@ class listen_socket : public basesock
     virtual void start(void);
     virtual void stop(void) override;
 
-    static void *access_pool_worker(void *);
-    static void *reaper_worker(void *);
+    static void access_pool_worker(void *);
+    static void reaper_worker(listen_socket *);
 
     static void handle_ack(listen_socket *, packet&, base_user *, void *);
     static void handle_action(listen_socket *, packet&, base_user *, void *);

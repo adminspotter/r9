@@ -272,8 +272,7 @@ void listen_socket::start(void)
               << this->port_type << " port "
               << this->sa->port() << std::endl;
 
-    this->reaper_thread = std::thread(listen_socket::reaper_worker,
-                                      (void *)this);
+    this->reaper_thread = std::thread(listen_socket::reaper_worker, this);
     this->reaper_started = true;
 
     sleep(0);
@@ -295,7 +294,7 @@ void listen_socket::stop(void)
     this->access_pool->stop();
 }
 
-void *listen_socket::access_pool_worker(void *arg)
+void listen_socket::access_pool_worker(void *arg)
 {
     listen_socket *ls = (listen_socket *)arg;
     access_list req;
@@ -316,12 +315,10 @@ void *listen_socket::access_pool_worker(void *arg)
     }
     std::clog << "exiting access pool worker for " << ls->port_type
               << " port " << ls->sa->port() << std::endl;
-    return NULL;
 }
 
-void *listen_socket::reaper_worker(void *arg)
+void listen_socket::reaper_worker(listen_socket *ls)
 {
-    listen_socket *ls = (listen_socket *)arg;
     listen_socket::users_iterator i;
     base_user *bu;
     time_t now, link_dead, sleepy;
@@ -366,7 +363,6 @@ void *listen_socket::reaper_worker(void *arg)
     }
     std::clog << "exiting reaper thread for " << ls->port_type
               << " port " << ls->sa->port() << std::endl;
-    return NULL;
 }
 
 void listen_socket::handle_ack(listen_socket *s, packet& p,

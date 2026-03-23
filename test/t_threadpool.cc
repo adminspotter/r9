@@ -6,10 +6,7 @@ using namespace TAP;
 
 #include <stdexcept>
 
-void *thread_worker(void *arg)
-{
-    return NULL;
-}
+void thread_worker(void *arg) {}
 
 void test_create_delete(void)
 {

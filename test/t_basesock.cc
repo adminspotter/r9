@@ -26,10 +26,7 @@ class fake_basesock : public basesock
 };
 
 /* This will never actually be run, so it doesn't need to do anything */
-void *test_thread_worker(void *arg)
-{
-    return NULL;
-}
+void test_thread_worker(void *arg) {}
 
 int socket(int a, int b, int c)
 {

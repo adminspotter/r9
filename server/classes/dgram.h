@@ -75,8 +75,8 @@ class dgram_socket : public listen_socket
     virtual void connect_user(base_user *, access_list&) override;
     virtual void disconnect_user(base_user *) override;
 
-    static void *dgram_listen_worker(void *);
-    static void *dgram_send_worker(void *);
+    static void dgram_listen_worker(void *);
+    static void dgram_send_worker(void *);
 };
 
 #endif /* __INC_DGRAM_H__ */

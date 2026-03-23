@@ -72,7 +72,7 @@ class Console : public basesock
 
     int wrap_request(Sockaddr *);
 
-    static void *console_listener(void *);
+    static void console_listener(void *);
 };
 
 typedef Console *console_create_t(Addrinfo *);

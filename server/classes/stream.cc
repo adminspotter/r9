@@ -148,7 +148,7 @@ void stream_socket::disconnect_user(base_user *bu)
     this->listen_socket::disconnect_user(bu);
 }
 
-void *stream_socket::stream_listen_worker(void *arg)
+void stream_socket::stream_listen_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
 
@@ -165,7 +165,6 @@ void *stream_socket::stream_listen_worker(void *arg)
     }
     std::clog << "exiting connection loop for stream port "
               << sts->sa->port() << std::endl;
-    return NULL;
 }
 
 int stream_socket::select_fd_set(void)
@@ -258,7 +257,7 @@ void stream_socket::handle_users(void)
         }
 }
 
-void *stream_socket::stream_send_worker(void *arg)
+void stream_socket::stream_send_worker(void *arg)
 {
     stream_socket *sts = (stream_socket *)arg;
     packet_list req;
@@ -291,5 +290,4 @@ void *stream_socket::stream_send_worker(void *arg)
     }
     std::clog << "exiting send pool worker for stream port "
               << sts->sa->port() << std::endl;
-    return NULL;
 }

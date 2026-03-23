@@ -154,7 +154,7 @@ basesock::~basesock()
         delete this->sa;
 }
 
-void basesock::start(void *(*func)(void *), void *arg)
+void basesock::start(void (*func)(void *), void *arg)
 {
     int ret;
 

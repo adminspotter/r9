@@ -41,7 +41,7 @@ void UpdatePool::start(void)
     this->ThreadPool::start(UpdatePool::update_pool_worker, (void *)this);
 }
 
-void *UpdatePool::update_pool_worker(void *arg)
+void UpdatePool::update_pool_worker(void *arg)
 {
     UpdatePool *pool = (UpdatePool *)arg;
     GameObject *req;
@@ -64,5 +64,4 @@ void *UpdatePool::update_pool_worker(void *arg)
                 sock->send_pool->push(pkt);
             }
     }
-    return NULL;
 }

@@ -72,7 +72,7 @@ class basesock
     basesock(Addrinfo *);
     virtual ~basesock();
 
-    void start(void *(*)(void *), void * = NULL);
+    void start(void (*)(void *), void * = NULL);
     virtual void stop(void);
 };
 
