@@ -7,6 +7,10 @@ using namespace TAP;
 #include <string.h>
 #include <unistd.h>
 
+#include <atomic>
+
+std::atomic<int> main_loop_exit_flag;
+
 #define TMP_PATH  "./consoletest"
 
 extern "C" Console *console_create(Addrinfo *);
@@ -193,10 +197,12 @@ void test_listener(void)
     }
 
     con->listen_arg = (void *)con;
+    main_loop_exit_flag = 0;
     con->start(Console::console_listener);
 
     send_data_to(1237);
 
+    main_loop_exit_flag = 1;
     con->stop();
 
     unlink(TMP_PATH);

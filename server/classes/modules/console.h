@@ -23,12 +23,12 @@
  * classes for Unix-domain files, and for TCP ports.
  *
  * We'll have a server-wide vector of Consoles, each of which will
- * have its own listening port.  Each Console object will have a
- * listening thread, and a vector of active connection threads.
+ * have its own listening port.  Each Console object will have its own
+ * listening thread.
  *
  * If two console threads try to modify things at the same time, there
- * could be some bad drama.  We've got a static pthread_mutex in the
- * console session, with some protected get/drop lock functions.
+ * could be some bad drama.  We've got a static mutex in the console
+ * session to try to limit such collisions.
  *
  * Things to do
  *
@@ -37,50 +37,35 @@
 #ifndef __INC_CONSOLE_H__
 #define __INC_CONSOLE_H__
 
-#include <pthread.h>
-
-#include <vector>
 #include <string>
+#include <thread>
+#include <mutex>
 #include <iostream>
 
 #include "../basesock.h"
 
-/* Each accepted session on a console socket will create a new thread
- * which is handled by a ConsoleSession.  The function calls are
- * dispatched through the class ConsoleSession::dispatch method, which
- * should have a lock-unlock of the mutex around the call.
- */
 class ConsoleSession
 {
   public:
-    pthread_t thread_id;
+    std::thread thread_id;
     int sock;
     std::istream *in;
     std::ostream *out;
-    static pthread_mutex_t dispatch_lock;
+    static std::mutex dispatch_lock;
 
     ConsoleSession(int);
     ~ConsoleSession();
 
-    static void *session_listener(void *);
+    static void session_listener(void *);
 
   protected:
-    void get_lock(void);
-    void drop_lock(void);
-
     static std::string dispatch(std::string &);
-    static void cleanup(void *);
 
     std::string get_line(void);
 };
 
 class Console : public basesock
 {
-  protected:
-    std::vector<ConsoleSession *> sessions;
-
-    typedef std::vector<ConsoleSession *>::iterator sessions_iterator;
-
   public:
     Console(Addrinfo *);
     virtual ~Console();
