@@ -119,6 +119,7 @@ class listen_socket : public basesock
     static const int LINK_DEAD_TIMEOUT = 75;
 
   protected:
+    int reap_timeout;
     bool reaper_started;
     std::thread reaper_thread;
 

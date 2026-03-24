@@ -17,6 +17,7 @@ class test_listen_socket : public listen_socket
   public:
     test_listen_socket(Addrinfo *a) : listen_socket(a) {};
     virtual ~test_listen_socket() {};
+    using listen_socket::reap_timeout;
 };
 
 void test_reaper_worker(void)
@@ -26,7 +27,8 @@ void test_reaper_worker(void)
     config.access_threads = 1;
 
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new test_listen_socket(addr);
+    test_listen_socket *listen = new test_listen_socket(addr);
+    listen->reap_timeout = 0;
 
     /* This user will be sent a ping */
     fake_base_user *bu = new fake_base_user(123LL);
