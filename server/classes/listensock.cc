@@ -244,6 +244,7 @@ void listen_socket::init(void)
                                                     config.access_threads);
     this->access_pool->clean_on_pop = true;
 
+    this->reap_timeout = listen_socket::REAP_TIMEOUT;
     this->reaper_started = false;
 }
 
@@ -322,7 +323,7 @@ void listen_socket::reaper_worker(listen_socket *ls)
     listen_socket::users_iterator i;
     base_user *bu;
     time_t now, link_dead, sleepy;
-    std::chrono::seconds reaper_timeout(listen_socket::REAP_TIMEOUT);
+    std::chrono::seconds reaper_timeout(ls->reap_timeout);
 
     std::clog << "started reaper thread for " << ls->port_type
               << " port " << ls->sa->port() << std::endl;
