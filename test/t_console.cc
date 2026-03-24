@@ -15,12 +15,6 @@ using namespace TAP;
 extern "C" Console *console_create(Addrinfo *);
 extern "C" void console_destroy(Console *);
 
-#if HAVE_LIBWRAP
-#include <tcpd.h>
-#include "../server/classes/config_data.h"
-
-extern config_data config;
-
 class fake_Console : public Console
 {
   public:
@@ -28,6 +22,12 @@ class fake_Console : public Console
     using Console::sa;
     using Console::sock;
 };
+
+#if HAVE_LIBWRAP
+#include <tcpd.h>
+#include "../server/classes/config_data.h"
+
+extern config_data config;
 
 int hosts_ctl(char *prefix, char *hostname, char *address, char *user)
 {
