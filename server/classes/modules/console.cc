@@ -50,8 +50,7 @@ ConsoleSession::ConsoleSession(int sock, console_func_map_t *funcs)
     this->in = new std::istream(new fdibuf(sock));
     this->out = new std::ostream(new fdobuf(sock));
 
-    this->thread_id = std::thread(ConsoleSession::session_listener,
-                                  (void *)this);
+    this->thread_id = std::thread(ConsoleSession::session_listener, this);
     this->funcs = funcs;
 }
 
@@ -65,10 +64,8 @@ ConsoleSession::~ConsoleSession()
     this->thread_id.join();
 }
 
-void ConsoleSession::session_listener(void *arg)
+void ConsoleSession::session_listener(ConsoleSession *sess)
 {
-    ConsoleSession *sess = (ConsoleSession *)arg;
-
     for (;;)
     {
         std::string str = sess->get_line();
@@ -81,7 +78,7 @@ void ConsoleSession::session_listener(void *arg)
 
         {
             std::unique_lock lock(ConsoleSession::dispatch_lock);
-            *(sess->out) << ConsoleSession::dispatch(str) << std::endl;
+            *(sess->out) << sess->dispatch(str) << std::endl;
         }
     }
     delete sess;

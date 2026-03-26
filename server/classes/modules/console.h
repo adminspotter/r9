@@ -66,10 +66,10 @@ class ConsoleSession
     ConsoleSession(int, console_func_map_t *);
     ~ConsoleSession();
 
-    static void session_listener(void *);
+    static void session_listener(ConsoleSession *);
 
   protected:
-    static std::string dispatch(std::string &);
+    std::string dispatch(std::string &);
 
     std::string get_line(void);
 };
