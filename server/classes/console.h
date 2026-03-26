@@ -44,8 +44,8 @@
 #include <vector>
 #include <unordered_map>
 
-#include "../basesock.h"
-#include "../library.h"
+#include "basesock.h"
+#include "library.h"
 
 typedef std::string (*console_func_t)(std::string&);
 typedef std::unordered_map<std::string, console_func_t> console_func_map_t;
@@ -86,12 +86,11 @@ class Console : public basesock
     Console(Addrinfo *);
     virtual ~Console();
 
+    void start(void);
+
     int wrap_request(Sockaddr *);
 
     static void console_listener(void *);
 };
-
-typedef Console *console_create_t(Addrinfo *);
-typedef void console_destroy_t(Console *);
 
 #endif /* __INC_CONSOLE_H__ */

@@ -35,7 +35,7 @@
 
 #if HAVE_LIBWRAP
 #include <tcpd.h>
-#include "../config_data.h"
+#include "config_data.h"
 
 static char string_unknown[] = STRING_UNKNOWN;
 #endif /* HAVE_LIBWRAP */
@@ -159,6 +159,11 @@ Console::~Console()
     }
 }
 
+void Console::start(void)
+{
+    this->basesock::start(Console::console_listener, (void *)this);
+}
+
 void Console::console_listener(void *arg)
 {
     Console *con = (Console *)arg;
@@ -205,17 +210,4 @@ int Console::wrap_request(Sockaddr *sa)
 #else
     return 1;
 #endif
-}
-
-extern "C" Console *console_create(Addrinfo *ai)
-{
-    Console *c = new Console(ai);
-    c->listen_arg = c;
-    c->start(Console::console_listener);
-    return c;
-}
-
-extern "C" void console_destroy(Console *con)
-{
-    delete con;
 }

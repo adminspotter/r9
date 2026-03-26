@@ -54,7 +54,7 @@
 #include "classes/config_data.h"
 #include "classes/library.h"
 #include "classes/socket.h"
-#include "classes/modules/console.h"
+#include "classes/console.h"
 
 static void setup_daemon(void);
 static void setup_log(void);
@@ -75,7 +75,7 @@ ActionPool *action_pool = NULL;
 MotionPool *motion_pool = NULL;
 UpdatePool *update_pool = NULL;
 DB *database = NULL;
-static Library *db_lib = NULL, *console_lib = NULL;
+static Library *db_lib = NULL;
 std::vector<listen_socket *> sockets;
 std::vector<Console *> consoles;
 static std::mutex exit_mutex;
@@ -272,8 +272,6 @@ static void setup_thread_pools(void)
 
 static void setup_console(void)
 {
-    console_create_t *console_create;
-    console_destroy_t *console_destroy;
     int created = 0;
 
     if (config.consoles.size() == 0)
@@ -282,28 +280,18 @@ static void setup_console(void)
         return;
     }
 
-    console_lib = new Library("libr9_console" LT_MODULE_EXT);
-    console_create =
-        (console_create_t *)console_lib->symbol("console_create");
-    console_destroy =
-        (console_destroy_t *)console_lib->symbol("console_destroy");
-
     for (auto& i : config.consoles)
     {
         try
         {
-            consoles.push_back(console_create(i));
+            Console *con = new Console(i);
+            con->start();
+            consoles.push_back(con);
             ++created;
         }
         catch (std::exception& e)
         {
-            while (consoles.size())
-            {
-                console_destroy(consoles.back());
-                consoles.pop_back();
-            }
-            delete console_lib;
-            console_lib = NULL;
+            cleanup_console();
             throw;
         }
     }
@@ -314,24 +302,11 @@ static void setup_console(void)
 
 static void cleanup_console(void)
 {
-    if (console_lib == NULL)
-        return;
-
-    try
+    while (consoles.size())
     {
-        console_destroy_t *console_destroy =
-            (console_destroy_t *)console_lib->symbol("console_destroy");
-        while (consoles.size())
-        {
-            console_destroy(consoles.back());
-            consoles.pop_back();
-        }
+        delete consoles.back();
+        consoles.pop_back();
     }
-    catch (std::exception& e) {}
-
-    std::clog << "closing console library" << std::endl;
-    delete console_lib;
-    console_lib = NULL;
 }
 
 static void cleanup_thread_pools(void)

@@ -1,4 +1,4 @@
-modules_libs = libr9_console.la
+modules_libs =
 if WANT_MYSQL
 modules_libs += libr9_MySQL.la
 endif
@@ -16,16 +16,10 @@ modules_libs += libr9_tcl.la
 endif
 
 serverlibdir = $(pkglibdir)/server
-consolelibdir = $(serverlibdir)/console
 
 serverlib_LTLIBRARIES = $(modules_libs)
 
 AM_LDFLAGS = -module -avoid-version
-
-libr9_console_la_SOURCES = console.cc console.h ../basesock.cc ../basesock.h \
-	fdstreambuf.h
-libr9_console_la_CXXFLAGS = -DCONSOLE_LIB_DIR=\"$(consolelibdir)\"
-libr9_console_la_LIBADD = $(WRAP_LDLIBS)
 
 libr9_MySQL_la_SOURCES = db.cc r9mysql.cc db.h
 libr9_MySQL_la_CXXFLAGS= $(MYSQL_INCLUDES)

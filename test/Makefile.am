@@ -115,15 +115,14 @@ t_control_LDADD = $(TAP_LDADD) \
 	$(SERVER_LDLIBS)
 
 t_console_SOURCES = t_console.cc \
-	../server/classes/modules/console.h \
-	../server/classes/modules/console.cc \
+	../server/classes/console.h ../server/classes/console.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
 	../server/classes/library.cc ../server/classes/library.h \
 	../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
 t_console_CXXFLAGS = $(CONFIG_DEFS) $(LIBDIR_DEFS) $(TAP_INCLUDES)
 t_console_LDADD = $(TAP_LDADD) $(WRAP_LDLIBS) ../proto/libr9_proto.la \
-	../server/classes/libr9_classes.la
+	../server/classes/libr9_classes.la $(SERVER_LDLIBS)
 
 t_db_SOURCES = t_db.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h

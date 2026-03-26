@@ -2,12 +2,14 @@ SUBDIRS = actions modules
 
 serverlibdir = $(pkglibdir)/server
 actionlibdir = $(serverlibdir)/actions
+consolelibdir = $(serverlibdir)/console
 
 lib_LTLIBRARIES = libr9_classes.la
 
 libr9_classes_la_SOURCES = action.h action_pool.cc action_pool.h \
 	basesock.cc basesock.h \
 	config_data.cc config_data.h \
+	console.cc console.h fdstreambuf.h \
 	control.cc control.h \
 	dgram.cc dgram.h \
 	game_obj.cc game_obj.h \
@@ -25,6 +27,7 @@ libr9_classes_la_SOURCES = action.h action_pool.cc action_pool.h \
 libr9_classes_la_CXXFLAGS = -DSERVER_ROOT_DIR=\"$(prefix)\" \
 	-DSERVER_LIB_DIR=\"$(serverlibdir)\" \
 	-DACTION_LIB_DIR=\"$(actionlibdir)\" \
+	-DCONSOLE_LIB_DIR=\"$(consolelibdir)\" \
 	-DSERVER_PID_FNAME=\"$(localstatedir)/run/r9.pid\"
 libr9_classes_la_LIBADD = ../../proto/libr9_proto.la
 
