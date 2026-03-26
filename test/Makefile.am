@@ -63,7 +63,8 @@ CONFIG_DEFS = -DSERVER_ROOT_DIR=\"./\" -DSERVER_PID_FNAME=\"blah.pid\"
 if HAVE_LIBWRAP
   CONFIG_DEFS += -DHAVE_LIBWRAP=1
 endif
-LIBDIR_DEFS = -DSERVER_LIB_DIR=\".\" -DACTION_LIB_DIR=\".\"
+LIBDIR_DEFS = -DSERVER_LIB_DIR=\".\" -DACTION_LIB_DIR=\".\" \
+	-DCONSOLE_LIB_DIR=\"./\"
 
 t_byteswap_SOURCES = t_byteswap.cc ../proto/byteswap.c ../proto/proto.h
 t_byteswap_LDADD = $(TAP_LDADD) ../proto/libr9_proto.la
@@ -117,10 +118,12 @@ t_console_SOURCES = t_console.cc \
 	../server/classes/modules/console.h \
 	../server/classes/modules/console.cc \
 	../server/classes/basesock.cc ../server/classes/basesock.h \
+	../server/classes/library.cc ../server/classes/library.h \
 	../server/classes/log.cc ../server/classes/log.h \
 	../server/classes/config_data.cc ../server/classes/config_data.h
-t_console_CXXFLAGS = $(CONFIG_DEFS) $(TAP_INCLUDES)
-t_console_LDADD = $(TAP_LDADD) $(WRAP_LDLIBS) ../proto/libr9_proto.la
+t_console_CXXFLAGS = $(CONFIG_DEFS) $(LIBDIR_DEFS) $(TAP_INCLUDES)
+t_console_LDADD = $(TAP_LDADD) $(WRAP_LDLIBS) ../proto/libr9_proto.la \
+	../server/classes/libr9_classes.la
 
 t_db_SOURCES = t_db.cc \
 	../server/classes/modules/db.cc ../server/classes/modules/db.h

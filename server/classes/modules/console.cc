@@ -42,7 +42,7 @@ static char string_unknown[] = STRING_UNKNOWN;
 
 std::mutex ConsoleSession::dispatch_lock;
 
-ConsoleSession::ConsoleSession(int sock)
+ConsoleSession::ConsoleSession(int sock, console_func_map_t *funcs)
 {
     int ret;
 
@@ -52,6 +52,7 @@ ConsoleSession::ConsoleSession(int sock)
 
     this->thread_id = std::thread(ConsoleSession::session_listener,
                                   (void *)this);
+    this->funcs = funcs;
 }
 
 ConsoleSession::~ConsoleSession()
@@ -101,14 +102,49 @@ std::string ConsoleSession::get_line(void)
     return str;
 }
 
+void Console::load_functions(void)
+{
+    std::string path(CONSOLE_LIB_DIR);
+
+    path += "/*" LT_MODULE_EXT;
+    try
+    {
+        find_libraries(path, this->console_libs);
+        if (this->console_libs.size())
+        {
+            for (auto& lib : this->console_libs)
+            {
+                console_reg_t *reg
+                    = (console_reg_t *)lib->symbol("console_register");
+                (*reg)(this->functions);
+            }
+        }
+    }
+    catch (...) {}
+    std::clog << "loaded " << this->functions.size() << " console functions"
+              << std::endl;
+}
+
 Console::Console(Addrinfo *ai)
     : basesock(ai)
 {
     this->port_type = "console";
+    this->load_functions();
 }
 
 Console::~Console()
 {
+    if (this->console_libs.size())
+    {
+        std::clog << "unloading console functions" << std::endl;
+        for (auto& lib : this->console_libs)
+        {
+            console_unreg_t *unreg
+                = (console_unreg_t *)lib->symbol("console_unregister");
+            (*unreg)(this->functions);
+            delete lib;
+        }
+    }
 }
 
 void Console::console_listener(void *arg)
@@ -132,7 +168,7 @@ void Console::console_listener(void *arg)
             sa = build_sockaddr((struct sockaddr&)ss);
 
             if (con->wrap_request(sa))
-                new ConsoleSession(newsock);
+                new ConsoleSession(newsock, &con->functions);
             else
                 close(newsock);
         }
