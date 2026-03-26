@@ -86,6 +86,21 @@ void ConsoleSession::session_listener(ConsoleSession *sess)
 
 std::string ConsoleSession::dispatch(std::string &command)
 {
+    std::string cmd, args;
+    std::string::size_type found;
+
+    if ((found = command.find_first_of(" ")) != std::string::npos)
+    {
+        cmd = command.substr(0, found);
+        command.replace(0, found, "");
+        args = command;
+    }
+    else
+        cmd = command;
+
+    if (this->funcs->find(cmd) != this->funcs->end())
+        return (*this->funcs)[cmd](args);
+
     return "not implemented";
 }
 
