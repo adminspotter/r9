@@ -2,7 +2,7 @@
 
 using namespace TAP;
 
-#include "../server/classes/modules/console.h"
+#include "../server/classes/console.h"
 #include "mock_server_globals.h"
 
 #include <string.h>
@@ -126,29 +126,6 @@ void test_create_inet(void)
     delete ai;
 }
 
-void test_create_factory(void)
-{
-    std::string test = "create factory: ";
-    Addrinfo *ai = new Addrinfo(DGRAM, "localhost", "1234", AF_INET);
-    Console *con;
-
-    try
-    {
-        con = console_create(ai);
-    }
-    catch (...)
-    {
-        fail(test + "factory exception");
-    }
-    skip(3, test + "skipping protected field assertions");
-    //is(strncmp(con->sa->ntop(), "127.0.0.1", 10), 0, test + "expected address");
-    //is(con->sa->port(), 1234, test + "expected port");
-    //is(con->sock >= 0, true, test + "expected socket descriptor");
-
-    console_destroy(con);
-    delete ai;
-}
-
 void test_wrap_request(void)
 {
     std::string test = "wrap_request: ";
@@ -197,7 +174,7 @@ void test_listener(void)
 
     con->listen_arg = (void *)con;
     main_loop_exit_flag = false;
-    con->start(Console::console_listener);
+    con->start();
 
     send_data_to(1237);
 
@@ -211,10 +188,9 @@ void test_listener(void)
 
 int main(int argc, char **argv)
 {
-    plan(13);
+    plan(10);
 
     test_create_inet();
-    test_create_factory();
     test_wrap_request();
     test_listener();
     return exit_status();

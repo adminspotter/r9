@@ -9,7 +9,7 @@
 #include "../server/classes/update_pool.h"
 #include "../server/classes/listensock.h"
 #include "../server/classes/modules/db.h"
-#include "../server/classes/modules/console.h"
+#include "../server/classes/console.h"
 
 bool main_loop_exit_flag = 0;
 Zone *zone = NULL;

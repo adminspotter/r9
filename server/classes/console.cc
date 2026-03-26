@@ -35,14 +35,14 @@
 
 #if HAVE_LIBWRAP
 #include <tcpd.h>
-#include "../config_data.h"
+#include "config_data.h"
 
 static char string_unknown[] = STRING_UNKNOWN;
 #endif /* HAVE_LIBWRAP */
 
 std::mutex ConsoleSession::dispatch_lock;
 
-ConsoleSession::ConsoleSession(int sock)
+ConsoleSession::ConsoleSession(int sock, console_func_map_t *funcs)
 {
     int ret;
 
@@ -50,8 +50,8 @@ ConsoleSession::ConsoleSession(int sock)
     this->in = new std::istream(new fdibuf(sock));
     this->out = new std::ostream(new fdobuf(sock));
 
-    this->thread_id = std::thread(ConsoleSession::session_listener,
-                                  (void *)this);
+    this->thread_id = std::thread(ConsoleSession::session_listener, this);
+    this->funcs = funcs;
 }
 
 ConsoleSession::~ConsoleSession()
@@ -64,10 +64,8 @@ ConsoleSession::~ConsoleSession()
     this->thread_id.join();
 }
 
-void ConsoleSession::session_listener(void *arg)
+void ConsoleSession::session_listener(ConsoleSession *sess)
 {
-    ConsoleSession *sess = (ConsoleSession *)arg;
-
     for (;;)
     {
         std::string str = sess->get_line();
@@ -80,7 +78,7 @@ void ConsoleSession::session_listener(void *arg)
 
         {
             std::unique_lock lock(ConsoleSession::dispatch_lock);
-            *(sess->out) << ConsoleSession::dispatch(str) << std::endl;
+            *(sess->out) << sess->dispatch(str) << std::endl;
         }
     }
     delete sess;
@@ -88,6 +86,21 @@ void ConsoleSession::session_listener(void *arg)
 
 std::string ConsoleSession::dispatch(std::string &command)
 {
+    std::string cmd, args;
+    std::string::size_type found;
+
+    if ((found = command.find_first_of(" ")) != std::string::npos)
+    {
+        cmd = command.substr(0, found);
+        command.replace(0, found, "");
+        args = command;
+    }
+    else
+        cmd = command;
+
+    if (this->funcs->find(cmd) != this->funcs->end())
+        return (*this->funcs)[cmd](args);
+
     return "not implemented";
 }
 
@@ -101,14 +114,54 @@ std::string ConsoleSession::get_line(void)
     return str;
 }
 
+void Console::load_functions(void)
+{
+    std::string path(CONSOLE_LIB_DIR);
+
+    path += "/*" LT_MODULE_EXT;
+    try
+    {
+        find_libraries(path, this->console_libs);
+        if (this->console_libs.size())
+        {
+            for (auto& lib : this->console_libs)
+            {
+                console_reg_t *reg
+                    = (console_reg_t *)lib->symbol("console_register");
+                (*reg)(this->functions);
+            }
+        }
+    }
+    catch (...) {}
+    std::clog << "loaded " << this->functions.size() << " console functions"
+              << std::endl;
+}
+
 Console::Console(Addrinfo *ai)
     : basesock(ai)
 {
     this->port_type = "console";
+    this->load_functions();
 }
 
 Console::~Console()
 {
+    if (this->console_libs.size())
+    {
+        std::clog << "unloading console functions" << std::endl;
+        for (auto& lib : this->console_libs)
+        {
+            console_unreg_t *unreg
+                = (console_unreg_t *)lib->symbol("console_unregister");
+            (*unreg)(this->functions);
+            delete lib;
+        }
+    }
+}
+
+void Console::start(void)
+{
+    this->basesock::start(Console::console_listener, (void *)this);
 }
 
 void Console::console_listener(void *arg)
@@ -132,7 +185,7 @@ void Console::console_listener(void *arg)
             sa = build_sockaddr((struct sockaddr&)ss);
 
             if (con->wrap_request(sa))
-                new ConsoleSession(newsock);
+                new ConsoleSession(newsock, &con->functions);
             else
                 close(newsock);
         }
@@ -157,17 +210,4 @@ int Console::wrap_request(Sockaddr *sa)
 #else
     return 1;
 #endif
-}
-
-extern "C" Console *console_create(Addrinfo *ai)
-{
-    Console *c = new Console(ai);
-    c->listen_arg = c;
-    c->start(Console::console_listener);
-    return c;
-}
-
-extern "C" void console_destroy(Console *con)
-{
-    delete con;
 }

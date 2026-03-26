@@ -41,8 +41,17 @@
 #include <thread>
 #include <mutex>
 #include <iostream>
+#include <vector>
+#include <unordered_map>
 
-#include "../basesock.h"
+#include "basesock.h"
+#include "library.h"
+
+typedef std::string (*console_func_t)(std::string&);
+typedef std::unordered_map<std::string, console_func_t> console_func_map_t;
+
+typedef void (*console_reg_t)(console_func_map_t&);
+typedef void (*console_unreg_t)(console_func_map_t&);
 
 class ConsoleSession
 {
@@ -52,30 +61,36 @@ class ConsoleSession
     std::istream *in;
     std::ostream *out;
     static std::mutex dispatch_lock;
+    console_func_map_t *funcs;
 
-    ConsoleSession(int);
+    ConsoleSession(int, console_func_map_t *);
     ~ConsoleSession();
 
-    static void session_listener(void *);
+    static void session_listener(ConsoleSession *);
 
   protected:
-    static std::string dispatch(std::string &);
+    std::string dispatch(std::string &);
 
     std::string get_line(void);
 };
 
 class Console : public basesock
 {
+  private:
+    std::vector<Library *> console_libs;
+    console_func_map_t functions;
+
+    void load_functions(void);
+
   public:
     Console(Addrinfo *);
     virtual ~Console();
+
+    void start(void);
 
     int wrap_request(Sockaddr *);
 
     static void console_listener(void *);
 };
-
-typedef Console *console_create_t(Addrinfo *);
-typedef void console_destroy_t(Console *);
 
 #endif /* __INC_CONSOLE_H__ */
