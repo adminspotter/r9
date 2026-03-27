@@ -227,6 +227,32 @@ void test_move_and_rotate(void)
     delete con;
 }
 
+void test_collide(void)
+{
+    std::string test = "collide: ", st;
+    GameObject *go1 = new GameObject(NULL, NULL, 93LL);
+    GameObject *go2 = new GameObject(NULL, NULL, 94LL);
+
+    st = "miss: ";
+    go1->set_position(glm::dvec3(123.0, 123.0, 123.0));
+    go1->set_movement(glm::dvec3(1.0, 0.0, 0.0));
+    go2->set_position(glm::dvec3(234.0, 234.0, 234.0));
+
+    bool result = go1->collide(go2);
+
+    not_ok(result, test + st + "expected result");
+
+    st = "hit: ";
+    go2->set_position(glm::dvec3(123.5, 123.0, 123.0));
+
+    result = go1->collide(go2);
+
+    ok(result, test + st + "expected result");
+
+    delete go2;
+    delete go1;
+}
+
 void test_update(void)
 {
     std::string test = "update: ", st;
@@ -261,7 +287,7 @@ void test_update(void)
 
 int main(int argc, char **argv)
 {
-    plan(44);
+    plan(46);
 
     test_create_delete();
     test_clone();
@@ -271,6 +297,7 @@ int main(int argc, char **argv)
     test_distance();
     test_accessors();
     test_move_and_rotate();
+    test_collide();
     test_update();
     return exit_status();
 }
