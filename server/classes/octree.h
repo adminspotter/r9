@@ -95,6 +95,8 @@ class Octree
     void insert(GameObject *);
     void remove(GameObject *);
 
+    object_set_t get_objects(void);
+
     Octree *find(GameObject *);
 };
 

@@ -350,6 +350,12 @@ void Octree::remove(GameObject *gobj)
     }
 }
 
+Octree::object_set_t Octree::get_objects(void)
+{
+    std::shared_lock read_lock(this->lock);
+    return Octree::object_set_t(this->objects.begin(), this->objects.end());
+}
+
 Octree *Octree::find(GameObject *go)
 {
     std::shared_lock read_lock(this->lock);
