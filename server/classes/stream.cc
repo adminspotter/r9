@@ -240,18 +240,18 @@ void stream_socket::handle_users(void)
     int len;
     packet buf;
 
-    for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
+    for (auto& fd : this->fds)
     {
         if (this->exit_flag)
             return;
 
-        if (FD_ISSET((*i).first, &this->readfs))
+        if (FD_ISSET(fd.first, &this->readfs))
         {
             memset((char *)&buf, 0, sizeof(packet));
-            if ((len = read((*i).first,
+            if ((len = read(fd.first,
                             (void *)&buf,
                             sizeof(buf))) > 0)
-                this->handle_packet(buf, len, (*i).first);
+                this->handle_packet(buf, len, fd.first);
             else
             {
                 /* It's either that the other end closed the socket,
@@ -260,8 +260,8 @@ void stream_socket::handle_users(void)
                  * looking at it, and have the reaper take care of the
                  * rest of things.
                  */
-                FD_CLR((*i).first, &this->master_readfs);
-                (*i).second->pending_logout = true;
+                FD_CLR(fd.first, &this->master_readfs);
+                fd.second->pending_logout = true;
             }
         }
 
