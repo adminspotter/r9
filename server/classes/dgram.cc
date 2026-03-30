@@ -56,15 +56,11 @@ dgram_socket::dgram_socket(Addrinfo *ai)
 
 dgram_socket::~dgram_socket()
 {
-    /* In order to prevent any races between our various user maps and
-     * the worker loops, we'll stop ourselves first.
-     */
-    try { this->stop(); }
-    catch (std::exception& e) {}
-
     /* Should we send logout messages to everybody? */
 
-    /* Thread pools are handled by the listen_socket destructor */
+    /* Thread pools and listen sockets are handled by the
+     * listen_socket destructor.
+     */
 }
 
 void dgram_socket::start(void)

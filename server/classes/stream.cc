@@ -75,14 +75,9 @@ stream_socket::stream_socket(Addrinfo *ai)
 
 stream_socket::~stream_socket()
 {
-    try { this->stop(); }
-    catch (std::exception& e) {}
-
-    for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
-        close((*i).first);
-    this->fds.clear();
-
-    /* Thread pools and users are handled by the listen_socket destructor */
+    /* Thread pools, listen sockets, and users are handled by the
+     * listen_socket destructor.
+     */
 }
 
 void stream_socket::start(void)
@@ -94,6 +89,15 @@ void stream_socket::start(void)
 
     this->send_pool->start(stream_socket::stream_send_worker, (void *)this);
     this->basesock::start(stream_socket::stream_listen_worker, (void *)this);
+}
+
+void stream_socket::stop(void)
+{
+    FD_ZERO(&this->readfs);
+    this->basesock::stop();
+    for (auto& fd : this->fds)
+        close(fd.first);
+    this->fds.clear();
 }
 
 void stream_socket::handle_packet(packet& p, int len, int fd)
