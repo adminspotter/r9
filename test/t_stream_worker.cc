@@ -49,10 +49,6 @@ ssize_t write(int a, const void *b, size_t c)
     return 0;
 }
 
-void pthread_testcancel(void)
-{
-}
-
 int hton_packet(packet *p, size_t s)
 {
     static int stage = 0;
@@ -83,14 +79,10 @@ void test_listen_worker(void)
     time_t now = time(NULL) - 2;
     bu->timestamp = now;
 
-    main_loop_exit_flag = false;
-
     sts->start();
 
     while (bu->timestamp == now)
         ;
-
-    main_loop_exit_flag = true;
 
     delete sts;
     delete addr;
@@ -132,8 +124,6 @@ void test_send_worker(void)
     sts->send_pool->push(pl);
     sts->send_pool->push(pl);
     sts->send_pool->push(pl);
-
-    main_loop_exit_flag = true;
 
     sts->start();
 

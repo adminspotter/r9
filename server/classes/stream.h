@@ -55,6 +55,7 @@ class stream_socket : public listen_socket
     ~stream_socket();
 
     void start(void) override;
+    void stop(void) override;
 
     void handle_packet(packet&, int, int);
 

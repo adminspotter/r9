@@ -47,8 +47,6 @@
 #include "config_data.h"
 #include "log.h"
 
-#include "../server.h"
-
 static std::map<int, listen_socket::packet_handler> packet_handlers =
 {
     { TYPE_LOGREQ, stream_socket::handle_login },
@@ -77,14 +75,9 @@ stream_socket::stream_socket(Addrinfo *ai)
 
 stream_socket::~stream_socket()
 {
-    try { this->stop(); }
-    catch (std::exception& e) {}
-
-    for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
-        close((*i).first);
-    this->fds.clear();
-
-    /* Thread pools and users are handled by the listen_socket destructor */
+    /* Thread pools, listen sockets, and users are handled by the
+     * listen_socket destructor.
+     */
 }
 
 void stream_socket::start(void)
@@ -96,6 +89,15 @@ void stream_socket::start(void)
 
     this->send_pool->start(stream_socket::stream_send_worker, (void *)this);
     this->basesock::start(stream_socket::stream_listen_worker, (void *)this);
+}
+
+void stream_socket::stop(void)
+{
+    FD_ZERO(&this->readfs);
+    this->basesock::stop();
+    for (auto& fd : this->fds)
+        close(fd.first);
+    this->fds.clear();
 }
 
 void stream_socket::handle_packet(packet& p, int len, int fd)
@@ -154,7 +156,7 @@ void stream_socket::stream_listen_worker(void *arg)
 
     for (;;)
     {
-        if (main_loop_exit_flag)
+        if (sts->exit_flag)
             break;
 
         if (sts->select_fd_set() < 1)
@@ -210,6 +212,9 @@ void stream_socket::accept_new_connection(void)
     socklen_t slen;
     int fd;
 
+    if (this->exit_flag)
+        return;
+
     if (FD_ISSET(this->sock, &this->readfs)
         && (fd = accept(this->sock, (struct sockaddr *)&sin, &slen)) > 0)
     {
@@ -235,14 +240,18 @@ void stream_socket::handle_users(void)
     int len;
     packet buf;
 
-    for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
-        if (FD_ISSET((*i).first, &this->readfs))
+    for (auto& fd : this->fds)
+    {
+        if (this->exit_flag)
+            return;
+
+        if (FD_ISSET(fd.first, &this->readfs))
         {
             memset((char *)&buf, 0, sizeof(packet));
-            if ((len = read((*i).first,
+            if ((len = read(fd.first,
                             (void *)&buf,
                             sizeof(buf))) > 0)
-                this->handle_packet(buf, len, (*i).first);
+                this->handle_packet(buf, len, fd.first);
             else
             {
                 /* It's either that the other end closed the socket,
@@ -251,10 +260,14 @@ void stream_socket::handle_users(void)
                  * looking at it, and have the reaper take care of the
                  * rest of things.
                  */
-                FD_CLR((*i).first, &this->master_readfs);
-                (*i).second->pending_logout = true;
+                FD_CLR(fd.first, &this->master_readfs);
+                fd.second->pending_logout = true;
             }
         }
+
+        if (this->exit_flag)
+            return;
+    }
 }
 
 void stream_socket::stream_send_worker(void *arg)

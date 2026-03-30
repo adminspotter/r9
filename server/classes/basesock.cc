@@ -145,11 +145,6 @@ basesock::~basesock()
 {
     try { this->stop(); }
     catch (std::exception& e) {}
-    if (this->sock)
-    {
-        close(this->sock);
-        this->sock = 0;
-    }
     if (this->sa != NULL)
         delete this->sa;
 }
@@ -173,6 +168,12 @@ void basesock::stop(void)
     this->exit_flag = true;
     this->exit_cond.notify_all();
 
+    if (this->sock)
+    {
+        /* A hard shutdown will interrupt any blocking syscall. */
+        shutdown(this->sock, SHUT_RDWR);
+        this->sock = 0;
+    }
     if (this->listen_started)
     {
         this->listen_thread.join();
