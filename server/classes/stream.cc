@@ -47,8 +47,6 @@
 #include "config_data.h"
 #include "log.h"
 
-#include "../server.h"
-
 static std::map<int, listen_socket::packet_handler> packet_handlers =
 {
     { TYPE_LOGREQ, stream_socket::handle_login },
@@ -154,7 +152,7 @@ void stream_socket::stream_listen_worker(void *arg)
 
     for (;;)
     {
-        if (main_loop_exit_flag)
+        if (sts->exit_flag)
             break;
 
         if (sts->select_fd_set() < 1)
@@ -210,6 +208,9 @@ void stream_socket::accept_new_connection(void)
     socklen_t slen;
     int fd;
 
+    if (this->exit_flag)
+        return;
+
     if (FD_ISSET(this->sock, &this->readfs)
         && (fd = accept(this->sock, (struct sockaddr *)&sin, &slen)) > 0)
     {
@@ -236,6 +237,10 @@ void stream_socket::handle_users(void)
     packet buf;
 
     for (auto i = this->fds.begin(); i != this->fds.end(); ++i)
+    {
+        if (this->exit_flag)
+            return;
+
         if (FD_ISSET((*i).first, &this->readfs))
         {
             memset((char *)&buf, 0, sizeof(packet));
@@ -255,6 +260,10 @@ void stream_socket::handle_users(void)
                 (*i).second->pending_logout = true;
             }
         }
+
+        if (this->exit_flag)
+            return;
+    }
 }
 
 void stream_socket::stream_send_worker(void *arg)

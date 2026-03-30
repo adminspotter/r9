@@ -41,8 +41,6 @@
 #include "dgram.h"
 #include "log.h"
 
-#include "../server.h"
-
 static std::map<int, listen_socket::packet_handler> packet_handlers =
 {
     { TYPE_LOGREQ, dgram_socket::handle_login },
@@ -105,7 +103,7 @@ void dgram_socket::dgram_listen_worker(void *arg)
 
     for (;;)
     {
-        if (main_loop_exit_flag)
+        if (dgs->exit_flag)
             break;
 
         memset((char *)&buf, 0, sizeof(packet));
