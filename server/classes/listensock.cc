@@ -261,8 +261,6 @@ listen_socket::~listen_socket()
 
     delete this->send_pool;
     delete this->access_pool;
-
-    this->users.erase(this->users.begin(), this->users.end());
 }
 
 void listen_socket::start(void)
@@ -293,6 +291,10 @@ void listen_socket::stop(void)
 
     this->send_pool->stop();
     this->access_pool->stop();
+
+    for (auto& user : this->users)
+        delete user.second;
+    this->users.clear();
 }
 
 void listen_socket::access_pool_worker(void *arg)

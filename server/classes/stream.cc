@@ -98,6 +98,10 @@ void stream_socket::stop(void)
     for (auto& fd : this->fds)
         close(fd.first);
     this->fds.clear();
+    /* Users are deleted in the basesock stop method.  All user
+     * pointers in this->user_fds are invalid at this point.
+     */
+    this->user_fds.clear();
 }
 
 void stream_socket::handle_packet(packet& p, int len, int fd)

@@ -56,9 +56,8 @@ void test_reaper_worker(void)
 
     is(listen->send_pool->queue_size() > 0, true,
        test + "expected send queue size");
-    is(listen->users.size(), 1, test + "expected user list size");
+    is(listen->users.size(), 0, test + "expected user list size");
 
-    delete bu;
     delete listen;
     delete addr;
 }
