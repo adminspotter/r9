@@ -390,7 +390,6 @@ void test_listen_socket_handle_ack(void)
 
     isnt(bu->timestamp, 0, test + "expected timestamp");
 
-    delete bu;
     delete listen;
     delete addr;
 }
@@ -444,7 +443,6 @@ void test_listen_socket_handle_action(void)
 
     delete (ThreadPool<packet_list> *)action_pool;
     delete go;
-    delete bu;
     delete listen;
     delete zone;
     delete database;
@@ -478,7 +476,6 @@ void test_listen_socket_handle_logout(void)
     is(al.buf.basic.type, TYPE_LGTREQ, test + "expected logout packet");
     is(al.what.logout.who, 123LL, test + "expected userid");
 
-    delete bu;
     delete listen;
     delete addr;
 }
