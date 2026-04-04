@@ -267,7 +267,6 @@ void config_data::cleanup(void)
         delete i;
     this->consoles.clear();
 
-    chdir("/");
     seteuid(getuid());
     setegid(getgid());
 }
