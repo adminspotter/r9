@@ -191,13 +191,8 @@ config_data::config_data()
 
 config_data::~config_data()
 {
-    if (this->key.priv_key != NULL)
-        EVP_PKEY_free(this->key.priv_key);
+    this->cleanup();
     this->argv.clear();
-    for (auto& i : this->listen_ports)
-        delete i;
-    this->listen_ports.clear();
-    this->consoles.clear();
 }
 
 void config_data::set_defaults(void)
@@ -257,22 +252,31 @@ void setup_configuration(int count, char **args)
     }
 }
 
-void cleanup_configuration(void)
+void config_data::cleanup(void)
 {
-    if (config.key.priv_key != NULL)
+    if (this->key.priv_key != NULL)
     {
-        EVP_PKEY_free(config.key.priv_key);
-        config.key.priv_key = NULL;
+        EVP_PKEY_free(this->key.priv_key);
+        this->key.priv_key = NULL;
     }
 
-    /* We'll leave argv alone because this may be a reinit */
-    config.listen_ports.clear();
-    config.consoles.clear();
-    config.set_defaults();
+    for (auto& i : this->listen_ports)
+        delete i;
+    this->listen_ports.clear();
+    for (auto& i : this->consoles)
+        delete i;
+    this->consoles.clear();
 
     chdir("/");
     seteuid(getuid());
     setegid(getgid());
+}
+
+void cleanup_configuration(void)
+{
+    config.cleanup();
+    config.set_defaults();
+    /* We'll leave argv alone because this may be a reinit */
 }
 
 void config_data::parse_command_line(int count, char **args)
