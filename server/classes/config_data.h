@@ -83,6 +83,8 @@ class config_data
     config_data();
     ~config_data();
 
+    void cleanup(void);
+
     void parse_command_line(int, char **);
     void read_config_file(std::string&);
 

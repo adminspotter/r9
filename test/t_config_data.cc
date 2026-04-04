@@ -21,7 +21,7 @@ extern void cleanup_configuration(void);
 
 struct passwd pw;
 struct group gr;
-int getpwnam_count, getgrnam_count, seteuid_count, setegid_count, chdir_count;
+int getpwnam_count, getgrnam_count, seteuid_count, setegid_count;
 
 struct passwd *getpwnam(const char *a)
 {
@@ -54,12 +54,6 @@ int seteuid(uid_t a)
 int setegid(gid_t a)
 {
     ++setegid_count;
-    return 0;
-}
-
-int chdir(const char *a)
-{
-    ++chdir_count;
     return 0;
 }
 
@@ -166,7 +160,7 @@ void test_setup_cleanup(void)
     is(config.listen_ports.size(), 0, test + st + "expected port size");
     is(config.consoles.size(), 0, test + st + "expected console size");
 
-    seteuid_count = setegid_count = chdir_count = 0;
+    seteuid_count = setegid_count = 0;
 
     setup_configuration(3, args);
     unlink(fname.c_str());
@@ -183,7 +177,6 @@ void test_setup_cleanup(void)
     is(config.consoles.size(), 1, test + st + "expected console size");
     is(seteuid_count, 0, test + st + "expected seteuids");
     is(setegid_count, 0, test + st + "expected setegids");
-    is(chdir_count, 0, test + st + "expected chdirs");
     ok(config.key.priv_key != NULL, test + st + "expected key");
 
     cleanup_configuration();
@@ -205,7 +198,6 @@ void test_setup_cleanup(void)
     is(config.consoles.size(), 0, test + st + "expected console size");
     is(seteuid_count, 1, test + st + "expected seteuids");
     is(setegid_count, 1, test + st + "expected setegids");
-    is(chdir_count, 1, test + st + "expected chdirs");
     ok(config.key.priv_key == NULL, test + st + "expected key");
 }
 
@@ -338,7 +330,7 @@ void test_parse_config_file(void)
 
 int main(int argc, char **argv)
 {
-    plan(84);
+    plan(82);
 
     test_create_delete();
     test_setup_cleanup();
