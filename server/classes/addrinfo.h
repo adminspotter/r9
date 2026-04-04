@@ -55,10 +55,14 @@ class Addrinfo
   public:
     struct addrinfo *ai;
 
+  private:
+    bool allocated;
+
   protected:
     Addrinfo()
         {
             this->ai = NULL;
+            this->allocated = false;
         }
 
   public:
@@ -77,6 +81,7 @@ class Addrinfo
 
             int ret = getaddrinfo(addr.c_str(), port.c_str(),
                                   &hints, &this->ai);
+            this->allocated = true;
             if (ret != 0)
             {
                 std::ostringstream s;
@@ -88,7 +93,7 @@ class Addrinfo
                 throw std::runtime_error(s.str());
             }
         }
-    virtual ~Addrinfo() { freeaddrinfo(this->ai); }
+    virtual ~Addrinfo() { if (this->allocated) freeaddrinfo(this->ai); }
 
     inline int family(void) { return this->ai->ai_family; }
     inline int socktype(void) { return this->ai->ai_socktype; }
@@ -124,6 +129,8 @@ class Addrinfo_un : public Addrinfo
         {
             delete this->ai->ai_addr;
             this->ai->ai_addr = NULL;
+            delete this->ai;
+            this->ai = NULL;
         }
 };
 
