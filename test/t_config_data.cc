@@ -22,6 +22,7 @@ extern void cleanup_configuration(void);
 struct passwd pw;
 struct group gr;
 int getpwnam_count, getgrnam_count, seteuid_count, setegid_count;
+bool file_to_pkey_fail = false, pkey_to_public_key_fail = false;
 
 struct passwd *getpwnam(const char *a)
 {
@@ -55,6 +56,21 @@ int setegid(gid_t a)
 {
     ++setegid_count;
     return 0;
+}
+
+EVP_PKEY *file_to_pkey(const char *a, unsigned char *b)
+{
+    if (file_to_pkey_fail == true)
+        return NULL;
+    return EVP_PKEY_new();
+}
+
+int pkey_to_public_key(const EVP_PKEY *a, uint8_t *b, size_t c)
+{
+    if (pkey_to_public_key_fail == true)
+        return 0;
+    memset(b, 1, c);
+    return c;
 }
 
 /* There is a global config_data object that comes in with
@@ -328,13 +344,45 @@ void test_parse_config_file(void)
     is(config.size.steps[2], 35, test + st + "expected zone z steps");
 }
 
+void test_bad_key(void)
+{
+    std::string test = "bad key: ", st;
+    std::string fname = "./t_bad_key.fake";
+    config_data *conf = new config_data;
+
+    std::ofstream ofs(fname);
+    ofs << std::endl;
+    ofs << "KeyFile somekey" << std::endl;
+    ofs.close();
+
+    st = "bad file: ";
+    file_to_pkey_fail = true;
+    conf->read_config_file(fname);
+    is(conf->key.priv_key == NULL, true, test + st + "expected NULL key");
+
+    st = "convert fail: ";
+    file_to_pkey_fail = false;
+    pkey_to_public_key_fail = true;
+    conf->read_config_file(fname);
+    uint8_t expected_pub_key[R9_PUBKEY_SZ];
+    memset(expected_pub_key, 0, sizeof(expected_pub_key));
+    is(memcmp(conf->key.pub_key, expected_pub_key, sizeof(conf->key.pub_key)),
+       0,
+       test + st + "expected empty public key");
+
+    unlink(fname.c_str());
+
+    delete conf;
+}
+
 int main(int argc, char **argv)
 {
-    plan(82);
+    plan(84);
 
     test_create_delete();
     test_setup_cleanup();
     test_parse_command_line();
     test_parse_config_file();
+    test_bad_key();
     return exit_status();
 }

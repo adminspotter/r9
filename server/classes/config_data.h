@@ -76,7 +76,6 @@ class config_data
     location size, spawn;
     std::string db_type, db_host, db_user, db_pass, db_name;
     int db_port;
-    std::string action_lib;
 
     crypto_key key;
 
