@@ -27,11 +27,6 @@
  * movements.
  *
  * Things to do
- *   - The physics library, once we create it, should be a part of this
- *     object, and not the zone as we had originally intended.
- *   - Consider whether passing a struct into the worker, composed of
- *     pointers to the motion pool, update pool, and zone, might be
- *     more appropriate.
  *
  */
 
@@ -47,11 +42,6 @@ MotionPool::~MotionPool()
 {
 }
 
-/* We will only use this thread pool in a very specific way, so making
- * the caller handle stuff that it doesn't need to know about is
- * inappropriate.  We'll set the required arg and start things up with
- * the expected function.
- */
 void MotionPool::start(void)
 {
     this->startup_arg = (void *)this;
@@ -72,19 +62,38 @@ void MotionPool::motion_pool_worker(void *arg)
         if (req->still_moving())
         {
             sector = zone->sector_contains(req->get_position());
-            if (sector == NULL)
+            if (sector == NULL || !req->still_moving())
                 continue;
             sector->remove(req);
             req->move_and_rotate();
             sector = zone->sector_contains(req->get_position());
             if (sector != NULL)
+            {
                 sector->insert(req);
-            /* else figure out the neighbor that it needs to go to */
-            /*mot->physics->collide(sector, req);*/
+                if (mot->collide(sector, req) || req->still_moving())
+                    mot->push(req);
+            }
+            else
+                /* Should instead figure out the neighbor that it
+                 * needs to go to and make a motion request there.
+                 */
+                continue;
             update_pool->push(req);
 
-            if (req->still_moving())
-                mot->push(req);
         }
     }
+}
+
+bool MotionPool::collide(Octree *sector, GameObject *obj)
+{
+    Octree *subtree = sector->find(obj);
+
+    if (subtree == NULL)
+        return false;
+
+    for (GameObject *target : subtree->get_objects())
+        if (obj->collide(target))
+            return true;
+
+    return false;
 }

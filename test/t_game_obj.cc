@@ -155,7 +155,7 @@ void test_distance(void)
 
     glm::dvec3 pt = {0.0, 0.0, 0.0};
     go->set_position(glm::dvec3(1.0, 0.0, 0.0));
-    is(go->distance_from(pt), 1.0, test + "expected distance");
+    ok(go->distance_from(pt) == 1.0, test + "expected distance");
 
     delete go;
     delete con;
@@ -227,9 +227,41 @@ void test_move_and_rotate(void)
     delete con;
 }
 
+void test_update(void)
+{
+    std::string test = "update: ", st;
+    GameObject *go = NULL;
+    Geometry *geom = new Geometry();
+    Control *con = new Control(1LL, NULL);
+    packet pkt;
+
+    GameObject::reset_max_id();
+
+    go = new GameObject(geom, con, 46LL);
+
+    st = "inactive: ";
+
+    go->deactivate();
+
+    go->generate_update_packet(pkt);
+
+    is(pkt.del.type, TYPE_OBJDEL, test + st + "expected packet type");
+
+    st = "active: ";
+
+    go->activate();
+
+    go->generate_update_packet(pkt);
+
+    is(pkt.pos.type, TYPE_POSUPD, test + st + "expected packet type");
+
+    delete go;
+    delete con;
+}
+
 int main(int argc, char **argv)
 {
-    plan(42);
+    plan(44);
 
     test_create_delete();
     test_clone();
@@ -239,5 +271,6 @@ int main(int argc, char **argv)
     test_distance();
     test_accessors();
     test_move_and_rotate();
+    test_update();
     return exit_status();
 }

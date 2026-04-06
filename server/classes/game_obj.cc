@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2000-2021  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -55,6 +55,8 @@ GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
     : position(), movement(), look(0.0, 1.0, 0.0),
       orient(1.0, 0.0, 0.0, 0.0), rotation(1.0, 0.0, 0.0, 0.0), movement_lock()
 {
+    if (g == NULL)
+        g = new Geometry();
     this->default_master = this->master = c;
     this->default_geometry = this->geometry = g;
     this->active = true;
@@ -250,6 +252,25 @@ bool GameObject::still_moving(void)
     return (this->active == true
             && (this->movement != GameObject::no_movement
                 || this->rotation != GameObject::no_rotation));
+}
+
+bool GameObject::collide(GameObject *target)
+{
+    if (target == this)
+        return false;
+
+    const glm::dvec3& target_pos = target->get_position();
+
+    if (this->active == true
+        && this->distance_from(target_pos)
+        <= this->geometry->radius + target->geometry->radius)
+    {
+        std::unique_lock lock(this->movement_lock);
+
+        this->movement = -this->movement;
+        return true;
+    }
+    return false;
 }
 
 void GameObject::generate_update_packet(packet& pkt)

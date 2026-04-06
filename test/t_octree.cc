@@ -122,6 +122,10 @@ void test_build(void)
     is(sub->parent_index, 0, test + "expected parent index");
     is(sub->depth, Octree::MAX_DEPTH, test + "expected depth");
 
+    Octree::object_set_t result = tree->get_objects();
+
+    is(result.size(), tree->objects.size(), test + "expected set size");
+
     tree->remove(go4);
     is(tree->objects.find(go4) == tree->objects.end(),
        true,
@@ -148,7 +152,7 @@ void test_build(void)
 
 int main(int argc, char **argv)
 {
-    plan(14);
+    plan(15);
 
     test_create_delete();
     test_build_empty_list();

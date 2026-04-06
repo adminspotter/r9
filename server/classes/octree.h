@@ -2,7 +2,7 @@
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
- * Copyright (C) 2000-2020  Trinity Annabelle Quirk
+ * Copyright (C) 2000-2026  Trinity Annabelle Quirk
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -59,6 +59,8 @@
 class Octree
 {
   public:
+    typedef std::set<GameObject *> object_set_t;
+
     static const int MAX_LEAF_OBJECTS;
     static const int MIN_DEPTH;
     static const int MAX_DEPTH;
@@ -72,7 +74,7 @@ class Octree
     uint8_t parent_index;
     int depth;
 
-    std::set<GameObject *> objects;
+    object_set_t objects;
 
   private:
     inline bool in_octant(const glm::dvec3&);
@@ -88,9 +90,14 @@ class Octree
 
     bool empty(void);
 
-    void build(std::list<GameObject *>&);
+    void build(const std::list<GameObject *>&);
+    void build(const object_set_t&);
     void insert(GameObject *);
     void remove(GameObject *);
+
+    object_set_t get_objects(void);
+
+    Octree *find(GameObject *);
 };
 
 #endif /* INC_OCTREE_H__ */

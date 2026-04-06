@@ -20,6 +20,7 @@ t_ec
 t_encrypt
 t_font
 t_game_obj
+t_geometry
 t_image
 t_key
 t_library

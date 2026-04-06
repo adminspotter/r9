@@ -128,6 +128,8 @@ class GameObject
     void move_and_rotate(void);
     bool still_moving(void);
 
+    bool collide(GameObject *);
+
     void generate_update_packet(packet& pkt);
 };
 
