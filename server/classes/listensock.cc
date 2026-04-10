@@ -483,4 +483,5 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 void listen_socket::disconnect_user(base_user *bu)
 {
     this->users.erase(bu->userid);
+    delete bu;
 }

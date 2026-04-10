@@ -126,7 +126,6 @@ void test_disconnect_user(void)
     is(dgs->socks.size(), 0, test + "expected socks size");
     is(dgs->user_socks.size(), 0, test + "expected user socks size");
 
-    delete bu;
     delete dgs;
     delete addr;
 }

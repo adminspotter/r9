@@ -266,7 +266,6 @@ void test_disconnect_user(void)
     is(!FD_ISSET(fd, &sts->master_readfs), true,
        test + "fd not in select set");
 
-    delete bu;
     delete sts;
 }
 
