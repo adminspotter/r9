@@ -124,6 +124,7 @@ class listen_socket : public basesock
     std::thread reaper_thread;
 
   public:
+    std::shared_mutex user_mutex;
     std::map<uint64_t, base_user *> users;
 
     typedef std::map<uint64_t, base_user *>::iterator users_iterator;

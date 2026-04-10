@@ -73,17 +73,25 @@ void dgram_socket::start(void)
 
 void dgram_socket::connect_user(base_user *bu, access_list& al)
 {
-    this->socks[al.what.login.who.dgram] = bu;
-    this->user_socks[bu->userid] = al.what.login.who.dgram;
+    {
+        std::unique_lock lock(this->user_mutex);
+        this->socks[al.what.login.who.dgram] = bu;
+        this->user_socks[bu->userid] = al.what.login.who.dgram;
+    }
 
     this->listen_socket::connect_user(bu, al);
 }
 
 void dgram_socket::disconnect_user(base_user *bu)
 {
-    Sockaddr *sa = this->user_socks[bu->userid];
-    this->socks.erase(sa);
-    this->user_socks.erase(bu->userid);
+    {
+        std::unique_lock lock(this->user_mutex);
+        if (this->user_socks.find(bu->userid) != this->user_socks.end())
+        {
+            this->socks.erase(this->user_socks[bu->userid]);
+            this->user_socks.erase(bu->userid);
+        }
+    }
 
     this->listen_socket::disconnect_user(bu);
 }
@@ -133,6 +141,7 @@ void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
 
     if (handler != packet_handlers.end())
     {
+        std::shared_lock lock(this->user_mutex);
         if (found != this->socks.end())
         {
             u = found->second;
@@ -169,6 +178,8 @@ void dgram_socket::dgram_send_worker(void *arg)
             break;
 
         realsize = packet_size(&req.buf);
+
+        std::shared_lock lock(dgs->user_mutex);
         if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
         {
             if (sendto(dgs->sock,

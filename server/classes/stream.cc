@@ -134,22 +134,30 @@ void stream_socket::handle_login(listen_socket *s, packet& p,
 
 void stream_socket::connect_user(base_user *bu, access_list& al)
 {
-    this->fds[al.what.login.who.stream] = bu;
-    this->user_fds[bu->userid] = al.what.login.who.stream;
+    {
+        std::unique_lock lock(this->user_mutex);
+        this->fds[al.what.login.who.stream] = bu;
+        this->user_fds[bu->userid] = al.what.login.who.stream;
+    }
 
     this->listen_socket::connect_user(bu, al);
 }
 
 void stream_socket::disconnect_user(base_user *bu)
 {
-    int fd = this->user_fds[bu->userid];
-    close(fd);
-    FD_CLR(fd, &this->master_readfs);
-    if (fd + 1 == this->max_fd)
-        --this->max_fd;
-    this->fds[fd] = NULL;
-    this->fds.erase(fd);
-    this->user_fds.erase(bu->userid);
+    {
+        std::unique_lock lock(this->user_mutex);
+        if (this->user_fds.find(bu->userid) != this->user_fds.end())
+        {
+            int fd = this->user_fds[bu->userid];
+            close(fd);
+            FD_CLR(fd, &this->master_readfs);
+            if (fd + 1 == this->max_fd)
+                --this->max_fd;
+            this->fds.erase(fd);
+            this->user_fds.erase(bu->userid);
+        }
+    }
 
     this->listen_socket::disconnect_user(bu);
 }
@@ -288,6 +296,8 @@ void stream_socket::stream_send_worker(void *arg)
             break;
 
         realsize = packet_size(&req.buf);
+
+        std::shared_lock lock(sts->user_mutex);
         if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
         {
             if (write(sts->user_fds[req.who->userid],
