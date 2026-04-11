@@ -180,7 +180,9 @@ void dgram_socket::dgram_send_worker(void *arg)
         realsize = packet_size(&req.buf);
 
         std::shared_lock lock(dgs->user_mutex);
-        if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
+        if (dgs->user_socks.find(req.who->userid) != dgs->user_socks.end()
+            && hton_packet(&req.buf, realsize)
+            && req.who->encrypt_packet(req.buf))
         {
             if (sendto(dgs->sock,
                        (void *)&req.buf, realsize, 0,

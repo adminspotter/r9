@@ -298,7 +298,9 @@ void stream_socket::stream_send_worker(void *arg)
         realsize = packet_size(&req.buf);
 
         std::shared_lock lock(sts->user_mutex);
-        if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
+        if (sts->user_fds.find(req.who->userid) != sts->user_fds.end()
+            && hton_packet(&req.buf, realsize)
+            && req.who->encrypt_packet(req.buf))
         {
             if (write(sts->user_fds[req.who->userid],
                       (void *)&req, realsize) == -1)
