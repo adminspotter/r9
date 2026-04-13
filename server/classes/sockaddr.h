@@ -407,20 +407,14 @@ inline Sockaddr *build_sockaddr(struct sockaddr& s)
 {
     switch (s.sa_family)
     {
-      case AF_INET:
-        return dynamic_cast<Sockaddr *>(new Sockaddr_in(s));
-
-      case AF_INET6:
-        return dynamic_cast<Sockaddr *>(new Sockaddr_in6(s));
-
-      case AF_UNIX:
-        return dynamic_cast<Sockaddr *>(new Sockaddr_un(s));
-
-      default:
-        std::ostringstream st;
-        st << "invalid address family " << s.sa_family;
-        throw std::runtime_error(st.str());
+      case AF_INET:   return dynamic_cast<Sockaddr *>(new Sockaddr_in(s));
+      case AF_INET6:  return dynamic_cast<Sockaddr *>(new Sockaddr_in6(s));
+      case AF_UNIX:   return dynamic_cast<Sockaddr *>(new Sockaddr_un(s));
     }
+
+    std::ostringstream st;
+    st << "invalid address family " << s.sa_family;
+    throw std::runtime_error(st.str());
 }
 
 #endif /* __INC_SOCKADDR_H__ */
