@@ -109,6 +109,8 @@ class Sockaddr
             snprintf(s, sizeof(s), "%s:%hu", this->ntop(), this->port());
             return std::string(s);
         }
+
+    virtual Sockaddr *clone(void) = 0;
 };
 
 class Sockaddr_in : public Sockaddr
@@ -200,6 +202,8 @@ class Sockaddr_in : public Sockaddr
     uint16_t port(void) const { return ntohs(this->sin->sin_port); }
     struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sin; }
     size_t size(void) const { return sizeof(struct sockaddr_in); }
+
+    Sockaddr *clone(void) { return new Sockaddr_in(*this); }
 };
 
 /* A couple functions to be able to handle IPV6 addresses easily:
@@ -310,6 +314,8 @@ class Sockaddr_in6 : public Sockaddr
     uint16_t port(void) const { return ntohs(this->sin6->sin6_port); }
     struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sin6; }
     size_t size(void) const { return sizeof(struct sockaddr_in6); }
+
+    Sockaddr *clone(void) { return new Sockaddr_in6(*this); }
 };
 
 class Sockaddr_un : public Sockaddr
@@ -393,26 +399,22 @@ class Sockaddr_un : public Sockaddr
     struct sockaddr *sockaddr(void) { return (struct sockaddr *)this->sun; }
     size_t size(void) const { return sizeof(struct sockaddr_un); }
     std::string str(void) { return this->ntop(); }
+
+    Sockaddr *clone(void) { return new Sockaddr_un(*this); }
 };
 
 inline Sockaddr *build_sockaddr(struct sockaddr& s)
 {
     switch (s.sa_family)
     {
-      case AF_INET:
-        return dynamic_cast<Sockaddr *>(new Sockaddr_in(s));
-
-      case AF_INET6:
-        return dynamic_cast<Sockaddr *>(new Sockaddr_in6(s));
-
-      case AF_UNIX:
-        return dynamic_cast<Sockaddr *>(new Sockaddr_un(s));
-
-      default:
-        std::ostringstream st;
-        st << "invalid address family " << s.sa_family;
-        throw std::runtime_error(st.str());
+      case AF_INET:   return dynamic_cast<Sockaddr *>(new Sockaddr_in(s));
+      case AF_INET6:  return dynamic_cast<Sockaddr *>(new Sockaddr_in6(s));
+      case AF_UNIX:   return dynamic_cast<Sockaddr *>(new Sockaddr_un(s));
     }
+
+    std::ostringstream st;
+    st << "invalid address family " << s.sa_family;
+    throw std::runtime_error(st.str());
 }
 
 #endif /* __INC_SOCKADDR_H__ */

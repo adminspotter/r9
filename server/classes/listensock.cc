@@ -470,7 +470,10 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 {
     uint64_t obj_id = 0LL;
 
-    this->users[bu->userid] = bu;
+    {
+        std::unique_lock lock(this->user_mutex);
+        this->users[bu->userid] = bu;
+    }
     if (bu->default_slave != NULL)
     {
         bu->default_slave->activate();
@@ -482,5 +485,7 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 
 void listen_socket::disconnect_user(base_user *bu)
 {
+    std::unique_lock lock(this->user_mutex);
     this->users.erase(bu->userid);
+    delete bu;
 }

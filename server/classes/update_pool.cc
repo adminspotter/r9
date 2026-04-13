@@ -57,11 +57,14 @@ void UpdatePool::update_pool_worker(void *arg)
         /* Figure out who to send it to */
         /* Send to EVERYONE (for now) */
         for (auto sock : sockets)
+        {
+            std::shared_lock lock(sock->user_mutex);
             for (auto& user : sock->users)
             {
                 pkt.who = user.second;
                 pkt.buf.pos.sequence = user.second->sequence++;
                 sock->send_pool->push(pkt);
             }
+        }
     }
 }

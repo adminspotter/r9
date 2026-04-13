@@ -73,17 +73,25 @@ void dgram_socket::start(void)
 
 void dgram_socket::connect_user(base_user *bu, access_list& al)
 {
-    this->socks[al.what.login.who.dgram] = bu;
-    this->user_socks[bu->userid] = al.what.login.who.dgram;
+    {
+        std::unique_lock lock(this->user_mutex);
+        this->socks[al.what.login.who.dgram] = bu;
+        this->user_socks[bu->userid] = al.what.login.who.dgram;
+    }
 
     this->listen_socket::connect_user(bu, al);
 }
 
 void dgram_socket::disconnect_user(base_user *bu)
 {
-    Sockaddr *sa = this->user_socks[bu->userid];
-    this->socks.erase(sa);
-    this->user_socks.erase(bu->userid);
+    {
+        std::unique_lock lock(this->user_mutex);
+        if (this->user_socks.find(bu->userid) != this->user_socks.end())
+        {
+            this->socks.erase(this->user_socks[bu->userid]);
+            this->user_socks.erase(bu->userid);
+        }
+    }
 
     this->listen_socket::disconnect_user(bu);
 }
@@ -120,6 +128,7 @@ void dgram_socket::dgram_listen_worker(void *arg)
         }
 
         dgs->handle_packet(buf, len, sa);
+        delete sa;
     }
     std::clog << "exiting connection loop for datagram port "
               << dgs->sa->port() << std::endl;
@@ -127,22 +136,14 @@ void dgram_socket::dgram_listen_worker(void *arg)
 
 void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
 {
-    auto handler = packet_handlers.find(p.basic.type);
-    auto found = this->socks.find(sa);
-    base_user *u = NULL;
-
-    if (handler != packet_handlers.end())
+    if (packet_handlers.find(p.basic.type) != packet_handlers.end())
     {
-        if (found != this->socks.end())
-        {
-            u = found->second;
-            if (!u->decrypt_packet(p) || !ntoh_packet(&p, len))
-                goto BAILOUT;
-        }
-        (handler->second)(this, p, u, sa);
+        std::shared_lock lock(this->user_mutex);
+        if (this->socks.find(sa) != this->socks.end()
+            && this->socks[sa]->decrypt_packet(p)
+            && ntoh_packet(&p, len))
+            packet_handlers[p.basic.type](this, p, this->socks[sa], sa);
     }
-  BAILOUT:
-    delete sa;
 }
 
 void dgram_socket::handle_login(listen_socket *s, packet& p,
@@ -151,7 +152,13 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
     access_list al;
 
     memcpy(&al.buf, &p, sizeof(login_request));
-    al.what.login.who.dgram = build_sockaddr(*((Sockaddr *)sa)->sockaddr());
+    /* sa gets cleaned up at the end of packet handling, but we need
+     * to keep the object around for our user maps.  This is not an
+     * awesome memory allocation strategy, but we're kind of stuck
+     * because we can't return objects out of an abstract factory
+     * function by value.  They must be by pointer.
+     */
+    al.what.login.who.dgram = ((Sockaddr *)sa)->clone();
     s->access_pool->push(al);
 }
 
@@ -169,7 +176,11 @@ void dgram_socket::dgram_send_worker(void *arg)
             break;
 
         realsize = packet_size(&req.buf);
-        if (hton_packet(&req.buf, realsize) && req.who->encrypt_packet(req.buf))
+
+        std::shared_lock lock(dgs->user_mutex);
+        if (dgs->user_socks.find(req.who->userid) != dgs->user_socks.end()
+            && hton_packet(&req.buf, realsize)
+            && req.who->encrypt_packet(req.buf))
         {
             if (sendto(dgs->sock,
                        (void *)&req.buf, realsize, 0,
