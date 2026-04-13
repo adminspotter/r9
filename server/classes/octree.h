@@ -23,9 +23,7 @@
  *
  * We are not going to subdivide anything - it's more work than we may
  * ever need to do.  For the time being, we'll just classify based on
- * the center of the object.  We may eventually need to test our
- * neighbors' contents for a full collision test, but this'll be
- * lightweight for now.
+ * the center of the object.
  *
  * We need to have a max tree height too, but I don't know what range
  * is realistic.  Perhaps 10 or so might be a good start?  We might
@@ -70,7 +68,7 @@ class Octree
 
   public:
     glm::dvec3 min_point, center_point, max_point;
-    Octree *parent, *octants[8], *neighbor[6];
+    Octree *parent, *octants[8];
     uint8_t parent_index;
     int depth;
 
@@ -79,10 +77,8 @@ class Octree
   private:
     inline bool in_octant(const glm::dvec3&);
     inline int which_octant(const glm::dvec3&);
-    inline Octree *neighbor_test(int neigh, int oct);
     inline glm::dvec3 octant_min(int oct);
     inline glm::dvec3 octant_max(int oct);
-    void compute_neighbors(void);
 
   public:
     Octree(Octree *, glm::dvec3&, glm::dvec3&, uint8_t);
