@@ -128,6 +128,7 @@ void dgram_socket::dgram_listen_worker(void *arg)
         }
 
         dgs->handle_packet(buf, len, sa);
+        delete sa;
     }
     std::clog << "exiting connection loop for datagram port "
               << dgs->sa->port() << std::endl;
@@ -143,7 +144,6 @@ void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
             && ntoh_packet(&p, len))
             packet_handlers[p.basic.type](this, p, this->socks[sa], sa);
     }
-    delete sa;
 }
 
 void dgram_socket::handle_login(listen_socket *s, packet& p,
@@ -152,7 +152,13 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
     access_list al;
 
     memcpy(&al.buf, &p, sizeof(login_request));
-    al.what.login.who.dgram = build_sockaddr(*((Sockaddr *)sa)->sockaddr());
+    /* sa gets cleaned up at the end of packet handling, but we need
+     * to keep the object around for our user maps.  This is not an
+     * awesome memory allocation strategy, but we're kind of stuck
+     * because we can't return objects out of an abstract factory
+     * function by value.  They must be by pointer.
+     */
+    al.what.login.who.dgram = ((Sockaddr *)sa)->clone();
     s->access_pool->push(al);
 }
 
