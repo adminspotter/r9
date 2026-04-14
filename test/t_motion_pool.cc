@@ -103,11 +103,53 @@ void test_operate(void)
     delete std::clog.rdbuf(orig_rdbuf);
 }
 
+void test_collide(void)
+{
+    std::string test = "collide: ", st;
+    glm::dvec3 min(0.0, 0.0, 0.0), max(1000.0, 1000.0, 1000.0);
+    sector = new Octree(NULL, min, max, 1);
+    motion_pool = new MotionPool("t_motion", 1);
+    GameObject *go1 = new GameObject(NULL, NULL, 9876LL);
+    GameObject *go2 = new GameObject(NULL, NULL, 9877LL);
+
+    go1->set_position(glm::dvec3(234.0, 234.0, 234.0));
+    go2->set_position(glm::dvec3(123.0, 123.0, 123.0));
+    sector->insert(go2);
+
+    st = "not present: ";
+    motion_pool->collide(sector, go1);
+
+    is(motion_pool->queue_size(), 0, test + st + "expected queue length");
+
+    st = "miss: ";
+    sector->insert(go1);
+    motion_pool->collide(sector, go1);
+
+    is(motion_pool->queue_size(), 0, test + st + "expected queue length");
+
+    st = "hit: ";
+    sector->remove(go1);
+    go1->set_position(glm::dvec3(123.5, 123.0, 123.0));
+    sector->insert(go1);
+
+    motion_pool->collide(sector, go1);
+
+    isnt(motion_pool->queue_size(), 0, test + st + "expected queue length");
+
+    sector->remove(go2);
+    sector->remove(go1);
+    delete go2;
+    delete go1;
+    delete sector;
+    delete motion_pool;
+}
+
 int main(int argc, char **argv)
 {
-    plan(18);
+    plan(21);
 
     test_start_stop();
     test_operate();
+    test_collide();
     return exit_status();
 }

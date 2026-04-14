@@ -37,11 +37,6 @@
  * can know when the truncation is happening.
  *
  * Things to do
- *   - Make the neighbor-finder breadth-first, not depth-first as it
- *     is now.  Half the neighbors are going to end up NULL the way it
- *     stands.
- *   - Consider if the neighbors are really necessary.  If not, we can
- *     save a bunch of computation by getting rid of all of it.
  *   - Consider how we would do a move operation.  As things stand
  *     right now, we need to do an remove/insert pair, which may
  *     involve a bunch of possibly unnecessary memory deallocation and
@@ -64,7 +59,7 @@ const int Octree::MAX_LEAF_OBJECTS = 3;
 const int Octree::MIN_DEPTH = 5;
 const int Octree::MAX_DEPTH = 10;
 
-/* Orientation of octants and neighbors:
+/* Orientation of octants:
 
      +---------+--------+
      |\         \        \
@@ -85,20 +80,6 @@ const int Octree::MAX_DEPTH = 10;
            \ |         |    4   |                    |  \
             \|         |        |                    ~   ~
              +---------+--------+                    3    5
-
-Neighbor 0: if (index & 4 == 0) (parent->neighbor->octant[index - 4])
-            else (index + 4)
-Neighbor 1: if (index & 4) (parent->neighbor->octant[index + 4])
-            else (index - 4)
-Neighbor 2: if (index & 2 == 0) (parent->neighbor->octant[index - 2])
-            else (index + 2)
-Neighbor 3: if (index & 2) (parent->neighbor->octant[index + 2])
-            else (index - 2)
-Neighbor 4: if (index & 1 == 0) (parent->neighbor->octant[index - 1])
-            else (index + 1)
-Neighbor 5: if (index & 1) (parent->neighbor->octant[index + 1])
-            else (index - 1)
-
 */
 
 bool Octree::in_octant(const glm::dvec3& p)
@@ -113,15 +94,6 @@ int Octree::which_octant(const glm::dvec3& p)
     return ((p[0] < this->center_point[0] ? 0 : 4)
             | (p[1] < this->center_point[1] ? 0 : 2)
             | (p[2] < this->center_point[2] ? 0 : 1));
-}
-
-Octree *Octree::neighbor_test(int neigh, int oct)
-{
-    if (this->parent->neighbor[neigh] == NULL)
-        return NULL;
-    if (this->parent->neighbor[neigh]->octants[oct] == NULL)
-        return this->parent->neighbor[neigh];
-    return this->parent->neighbor[neigh]->octants[oct];
 }
 
 glm::dvec3 Octree::octant_min(int oct)
@@ -144,53 +116,6 @@ glm::dvec3 Octree::octant_max(int oct)
     return mx;
 }
 
-void Octree::compute_neighbors(void)
-{
-    int i;
-
-    /* The root octant has no neighbors, and they have already been set
-     * to NULL in the constructor, so that's a no-op.
-     */
-    if (this->parent != NULL)
-    {
-        if (this->parent_index & 4)
-        {
-            this->neighbor[0] = this->neighbor_test(0, this->parent_index - 4);
-            this->neighbor[1] = this->parent->octants[this->parent_index - 4];
-        }
-        else
-        {
-            this->neighbor[0] = this->parent->octants[this->parent_index + 4];
-            this->neighbor[1] = this->neighbor_test(1, this->parent_index + 4);
-        }
-
-        if (this->parent_index & 2)
-        {
-            this->neighbor[2] = this->neighbor_test(2, this->parent_index - 2);
-            this->neighbor[3] = this->parent->octants[this->parent_index - 2];
-        }
-        else
-        {
-            this->neighbor[2] = this->parent->octants[this->parent_index + 2];
-            this->neighbor[3] = this->neighbor_test(3, this->parent_index + 2);
-        }
-
-        if (this->parent_index & 1)
-        {
-            this->neighbor[4] = this->neighbor_test(4, this->parent_index - 1);
-            this->neighbor[5] = this->parent->octants[this->parent_index - 1];
-        }
-        else
-        {
-            this->neighbor[4] = this->parent->octants[this->parent_index + 1];
-            this->neighbor[5] = this->neighbor_test(5, this->parent_index + 1);
-        }
-    }
-    for (i = 0; i < 8; ++i)
-        if (this->octants[i] != NULL)
-            this->octants[i]->compute_neighbors();
-}
-
 Octree::Octree(Octree *parent,
                glm::dvec3& min,
                glm::dvec3& max,
@@ -200,7 +125,6 @@ Octree::Octree(Octree *parent,
 {
     this->parent = parent;
     memset(this->octants, 0, sizeof(Octree *) * 8);
-    memset(this->neighbor, 0, sizeof(Octree *) * 6);
     this->parent_index = index;
     if (this->parent != NULL)
         this->depth = this->parent->depth + 1;
@@ -216,21 +140,10 @@ Octree::~Octree()
         if (this->octants[i] != NULL)
             delete this->octants[i];
 
-    /* It is possible that we may only remove part of a tree, so make
-     * any neighbors point to our parent, and our parent point to
-     * nothing, for consistency.  If we're the root of the tree, it
-     * doesn't matter, of course.
-     */
-    if (this->parent != NULL)
-    {
-        /* Detach from our parent so the neighbor recalc will ignore us */
-        if (this->parent->octants[this->parent_index] == this)
-            this->parent->octants[this->parent_index] = NULL;
-        /* Reset our neighbors' neighbor pointers */
-        for (i = 0; i < 6; ++i)
-            if (this->neighbor[i] != NULL)
-                this->neighbor[i]->compute_neighbors();
-    }
+    if (this->parent != NULL
+        && this->parent->octants[this->parent_index] == this)
+        this->parent->octants[this->parent_index] = NULL;
+
     /* Allowing the map destructor to clear itself out will delete all
      * the things in the map... not what we want.
      */
@@ -286,13 +199,6 @@ void Octree::build(const Octree::object_set_t& objs)
             }
         }
     }
-    /* I don't think we can do this during creation because of the way
-     * we do the higher-numbered octants' check, and the fact that the
-     * target octants will not have been created yet, though I'll look
-     * into it.
-     */
-    if (this->depth == 0)
-        this->compute_neighbors();
 }
 
 void Octree::insert(GameObject *gobj)
@@ -322,7 +228,6 @@ void Octree::insert(GameObject *gobj)
                 return;
             }
             this->octants[octant]->build(this->objects);
-            this->octants[octant]->compute_neighbors();
         }
         this->octants[octant]->insert(gobj);
     }
@@ -344,6 +249,7 @@ void Octree::remove(GameObject *gobj)
         {
             if (this->parent != NULL)
                 this->parent->octants[this->parent_index] = NULL;
+            write_lock.unlock();
             delete this;
             return;
         }

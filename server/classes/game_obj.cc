@@ -254,6 +254,12 @@ bool GameObject::still_moving(void)
                 || this->rotation != GameObject::no_rotation));
 }
 
+/* TODO:  This assumes velocities are fairly low, and could miss
+ * collisions between objects which are moving with very high
+ * velocity.  We should project back along a decent quantum (perhaps
+ * scaled by the actual velocity?) to see if there was a collision
+ * along the path at all.
+ */
 bool GameObject::collide(GameObject *target)
 {
     if (target == this)
@@ -265,10 +271,24 @@ bool GameObject::collide(GameObject *target)
         && this->distance_from(target_pos)
         <= this->geometry->radius + target->geometry->radius)
     {
+        const glm::dvec3& target_move = target->get_movement();
         std::unique_lock lock(this->movement_lock);
+        const glm::dvec3 relative_vel = this->movement - target_move;
+        const glm::dvec3 normal = glm::normalize(target_pos - this->position);
+        const glm::dvec3 tangent = glm::normalize(
+            relative_vel - target_pos - this->position
+        );
+        double vel_normal = glm::dot(relative_vel, normal);
+        double vel_tangent = glm::dot(relative_vel, tangent);
 
-        this->movement = -this->movement;
-        return true;
+        this->movement = -normal * this->geometry->restitution
+            + (vel_tangent / 2 * tangent * (1 - this->geometry->friction));
+        lock.unlock();
+        target->set_movement(
+            normal * target->geometry->restitution
+            + (-vel_tangent / 2 * tangent * (1 - target->geometry->friction))
+        );
+        return this->movement != GameObject::no_movement;
     }
     return false;
 }

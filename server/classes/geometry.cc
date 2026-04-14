@@ -1,4 +1,4 @@
-/* geometry.c
+/* geometry.cc
  *   by Trinity Quirk <tquirk@ymb.net>
  *
  * Revision IX game server
@@ -26,18 +26,23 @@
  */
 
 #include "geometry.h"
-#include "config_data.h"
 
 Geometry::Geometry()
     : center(0.0, 0.0, 0.0)
 {
     this->radius = 0.5;
+    this->mass = 1.0;
+    this->restitution = 0.75;
+    this->friction = 0.25;
 }
 
 Geometry::Geometry(const Geometry& geo)
     : center(geo.center)
 {
     this->radius = geo.radius;
+    this->mass = geo.mass;
+    this->restitution = geo.restitution;
+    this->friction = geo.friction;
 }
 
 Geometry::~Geometry()
