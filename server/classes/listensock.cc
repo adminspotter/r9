@@ -416,6 +416,7 @@ void listen_socket::login_user(access_list& p)
     if (userid == 0LL)
         return;
 
+    std::unique_lock lock(this->user_mutex);
     if (this->users.find(userid) != this->users.end())
     {
         /* This is going to be a race with the reaper thread. */
@@ -470,10 +471,7 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 {
     uint64_t obj_id = 0LL;
 
-    {
-        std::unique_lock lock(this->user_mutex);
-        this->users[bu->userid] = bu;
-    }
+    this->users[bu->userid] = bu;
     if (bu->default_slave != NULL)
     {
         bu->default_slave->activate();

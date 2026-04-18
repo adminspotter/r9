@@ -73,11 +73,8 @@ void dgram_socket::start(void)
 
 void dgram_socket::connect_user(base_user *bu, access_list& al)
 {
-    {
-        std::unique_lock lock(this->user_mutex);
-        this->socks[al.what.login.who.dgram] = bu;
-        this->user_socks[bu->userid] = al.what.login.who.dgram;
-    }
+    this->socks[al.what.login.who.dgram] = bu;
+    this->user_socks[bu->userid] = al.what.login.who.dgram;
 
     this->listen_socket::connect_user(bu, al);
 }

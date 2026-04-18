@@ -135,11 +135,8 @@ void stream_socket::handle_login(listen_socket *s, packet& p,
 
 void stream_socket::connect_user(base_user *bu, access_list& al)
 {
-    {
-        std::unique_lock lock(this->user_mutex);
-        this->fds[al.what.login.who.stream] = bu;
-        this->user_fds[bu->userid] = al.what.login.who.stream;
-    }
+    this->fds[al.what.login.who.stream] = bu;
+    this->user_fds[bu->userid] = al.what.login.who.stream;
 
     this->listen_socket::connect_user(bu, al);
 }
