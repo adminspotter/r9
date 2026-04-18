@@ -144,9 +144,11 @@ void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
         if (this->socks.find(sa) != this->socks.end())
         {
             user = this->socks[sa];
-            if (!user->decrypt_packet(p) || !ntoh_packet(&p, len))
+            if (!user->decrypt_packet(p))
                 return;
         }
+        if (!ntoh_packet(&p, len))
+            return;
         packet_handlers[p.basic.type](this, p, user, sa);
     }
 }

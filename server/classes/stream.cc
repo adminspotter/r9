@@ -114,9 +114,11 @@ void stream_socket::handle_packet(packet& p, int len, int fd)
         if (this->fds.find(fd) != this->fds.end())
         {
             user = this->fds[fd];
-            if (!user->decrypt_packet(p) || !ntoh_packet(&p, len)))
+            if (!user->decrypt_packet(p))
                 return;
         }
+        if (!ntoh_packet(&p, len))
+            return;
         packet_handlers[p.basic.type](this, p, user, &fd);
     }
 }
