@@ -143,18 +143,15 @@ void stream_socket::connect_user(base_user *bu, access_list& al)
 
 void stream_socket::disconnect_user(base_user *bu)
 {
+    if (this->user_fds.find(bu->userid) != this->user_fds.end())
     {
-        std::unique_lock lock(this->user_mutex);
-        if (this->user_fds.find(bu->userid) != this->user_fds.end())
-        {
-            int fd = this->user_fds[bu->userid];
-            close(fd);
-            FD_CLR(fd, &this->master_readfs);
-            if (fd + 1 == this->max_fd)
-                --this->max_fd;
-            this->fds.erase(fd);
-            this->user_fds.erase(bu->userid);
-        }
+        int fd = this->user_fds[bu->userid];
+        close(fd);
+        FD_CLR(fd, &this->master_readfs);
+        if (fd + 1 == this->max_fd)
+            --this->max_fd;
+        this->fds.erase(fd);
+        this->user_fds.erase(bu->userid);
     }
 
     this->listen_socket::disconnect_user(bu);

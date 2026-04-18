@@ -81,13 +81,12 @@ void dgram_socket::connect_user(base_user *bu, access_list& al)
 
 void dgram_socket::disconnect_user(base_user *bu)
 {
+    if (this->user_socks.find(bu->userid) != this->user_socks.end())
     {
-        std::unique_lock lock(this->user_mutex);
-        if (this->user_socks.find(bu->userid) != this->user_socks.end())
-        {
-            this->socks.erase(this->user_socks[bu->userid]);
-            this->user_socks.erase(bu->userid);
-        }
+        Sockaddr *sa = this->user_socks[bu->userid];
+        this->socks.erase(sa);
+        this->user_socks.erase(bu->userid);
+        delete sa;
     }
 
     this->listen_socket::disconnect_user(bu);
