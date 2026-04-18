@@ -161,7 +161,7 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
      * because we can't return objects out of an abstract factory
      * function by value.  They must be by pointer.
      */
-    al.what.login.who.dgram = ((Sockaddr *)sa)->clone();
+    al.what.login.who.dgram = build_sockaddr(*((Sockaddr *)sa)->sockaddr());
     s->access_pool->push(al);
 }
 
