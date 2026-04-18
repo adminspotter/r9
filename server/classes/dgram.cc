@@ -136,13 +136,18 @@ void dgram_socket::dgram_listen_worker(void *arg)
 
 void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
 {
+    base_user *user = NULL;
+
     if (packet_handlers.find(p.basic.type) != packet_handlers.end())
     {
         std::shared_lock lock(this->user_mutex);
-        if (this->socks.find(sa) != this->socks.end()
-            && this->socks[sa]->decrypt_packet(p)
-            && ntoh_packet(&p, len))
-            packet_handlers[p.basic.type](this, p, this->socks[sa], sa);
+        if (this->socks.find(sa) != this->socks.end())
+        {
+            user = this->socks[sa];
+            if (!user->decrypt_packet(p) || !ntoh_packet(&p, len))
+                return;
+        }
+        packet_handlers[p.basic.type](this, p, user, sa);
     }
 }
 
