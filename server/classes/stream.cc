@@ -106,19 +106,20 @@ void stream_socket::stop(void)
 
 void stream_socket::handle_packet(packet& p, int len, int fd)
 {
-    auto handler = packet_handlers.find(p.basic.type);
-    auto found = this->fds.find(fd);
-    base_user *u = NULL;
+    base_user *user = NULL;
 
-    if (handler != packet_handlers.end())
+    if (packet_handlers.find(p.basic.type) != packet_handlers.end())
     {
-        if (found != this->fds.end())
+        std::shared_lock lock(this->user_mutex);
+        if (this->fds.find(fd) != this->fds.end())
         {
-            u = found->second;
-            if (!u->decrypt_packet(p) || !ntoh_packet(&p, len))
+            user = this->fds[fd];
+            if (!user->decrypt_packet(p))
                 return;
         }
-        (handler->second)(this, p, u, &fd);
+        if (!ntoh_packet(&p, len))
+            return;
+        packet_handlers[p.basic.type](this, p, user, &fd);
     }
 }
 
@@ -134,29 +135,23 @@ void stream_socket::handle_login(listen_socket *s, packet& p,
 
 void stream_socket::connect_user(base_user *bu, access_list& al)
 {
-    {
-        std::unique_lock lock(this->user_mutex);
-        this->fds[al.what.login.who.stream] = bu;
-        this->user_fds[bu->userid] = al.what.login.who.stream;
-    }
+    this->fds[al.what.login.who.stream] = bu;
+    this->user_fds[bu->userid] = al.what.login.who.stream;
 
     this->listen_socket::connect_user(bu, al);
 }
 
 void stream_socket::disconnect_user(base_user *bu)
 {
+    if (this->user_fds.find(bu->userid) != this->user_fds.end())
     {
-        std::unique_lock lock(this->user_mutex);
-        if (this->user_fds.find(bu->userid) != this->user_fds.end())
-        {
-            int fd = this->user_fds[bu->userid];
-            close(fd);
-            FD_CLR(fd, &this->master_readfs);
-            if (fd + 1 == this->max_fd)
-                --this->max_fd;
-            this->fds.erase(fd);
-            this->user_fds.erase(bu->userid);
-        }
+        int fd = this->user_fds[bu->userid];
+        close(fd);
+        FD_CLR(fd, &this->master_readfs);
+        if (fd + 1 == this->max_fd)
+            --this->max_fd;
+        this->fds.erase(fd);
+        this->user_fds.erase(bu->userid);
     }
 
     this->listen_socket::disconnect_user(bu);

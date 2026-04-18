@@ -73,24 +73,20 @@ void dgram_socket::start(void)
 
 void dgram_socket::connect_user(base_user *bu, access_list& al)
 {
-    {
-        std::unique_lock lock(this->user_mutex);
-        this->socks[al.what.login.who.dgram] = bu;
-        this->user_socks[bu->userid] = al.what.login.who.dgram;
-    }
+    this->socks[al.what.login.who.dgram] = bu;
+    this->user_socks[bu->userid] = al.what.login.who.dgram;
 
     this->listen_socket::connect_user(bu, al);
 }
 
 void dgram_socket::disconnect_user(base_user *bu)
 {
+    if (this->user_socks.find(bu->userid) != this->user_socks.end())
     {
-        std::unique_lock lock(this->user_mutex);
-        if (this->user_socks.find(bu->userid) != this->user_socks.end())
-        {
-            this->socks.erase(this->user_socks[bu->userid]);
-            this->user_socks.erase(bu->userid);
-        }
+        Sockaddr *sa = this->user_socks[bu->userid];
+        this->socks.erase(sa);
+        this->user_socks.erase(bu->userid);
+        delete sa;
     }
 
     this->listen_socket::disconnect_user(bu);
@@ -136,13 +132,20 @@ void dgram_socket::dgram_listen_worker(void *arg)
 
 void dgram_socket::handle_packet(packet& p, int len, Sockaddr *sa)
 {
+    base_user *user = NULL;
+
     if (packet_handlers.find(p.basic.type) != packet_handlers.end())
     {
         std::shared_lock lock(this->user_mutex);
-        if (this->socks.find(sa) != this->socks.end()
-            && this->socks[sa]->decrypt_packet(p)
-            && ntoh_packet(&p, len))
-            packet_handlers[p.basic.type](this, p, this->socks[sa], sa);
+        if (this->socks.find(sa) != this->socks.end())
+        {
+            user = this->socks[sa];
+            if (!user->decrypt_packet(p))
+                return;
+        }
+        if (!ntoh_packet(&p, len))
+            return;
+        packet_handlers[p.basic.type](this, p, user, sa);
     }
 }
 
@@ -158,7 +161,7 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
      * because we can't return objects out of an abstract factory
      * function by value.  They must be by pointer.
      */
-    al.what.login.who.dgram = ((Sockaddr *)sa)->clone();
+    al.what.login.who.dgram = build_sockaddr(*((Sockaddr *)sa)->sockaddr());
     s->access_pool->push(al);
 }
 

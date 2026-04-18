@@ -344,6 +344,12 @@ void listen_socket::reaper_worker(listen_socket *ls)
         now = time(NULL);
         link_dead = now - listen_socket::LINK_DEAD_TIMEOUT;
         sleepy = now - listen_socket::PING_TIMEOUT;
+
+        std::unique_lock lock(ls->user_mutex);
+
+        /* We use this weird not-for loop so we don't invalidate our
+         * iterator when we delete an entry that we're pointing to.
+         */
         i = ls->users.begin();
         while (i != ls->users.end())
         {
@@ -416,9 +422,9 @@ void listen_socket::login_user(access_list& p)
     if (userid == 0LL)
         return;
 
+    std::unique_lock lock(this->user_mutex);
     if (this->users.find(userid) != this->users.end())
     {
-        /* This is going to be a race with the reaper thread. */
         this->users[userid]->pending_logout = false;
         return;
     }
@@ -470,10 +476,7 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 {
     uint64_t obj_id = 0LL;
 
-    {
-        std::unique_lock lock(this->user_mutex);
-        this->users[bu->userid] = bu;
-    }
+    this->users[bu->userid] = bu;
     if (bu->default_slave != NULL)
     {
         bu->default_slave->activate();
@@ -485,7 +488,6 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 
 void listen_socket::disconnect_user(base_user *bu)
 {
-    std::unique_lock lock(this->user_mutex);
     this->users.erase(bu->userid);
     delete bu;
 }
