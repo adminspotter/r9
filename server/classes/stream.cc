@@ -106,19 +106,18 @@ void stream_socket::stop(void)
 
 void stream_socket::handle_packet(packet& p, int len, int fd)
 {
-    auto handler = packet_handlers.find(p.basic.type);
-    auto found = this->fds.find(fd);
-    base_user *u = NULL;
+    base_user *user = NULL;
 
-    if (handler != packet_handlers.end())
+    if (packet_handlers.find(p.basic.type) != packet_handlers.end())
     {
-        if (found != this->fds.end())
+        std::shared_lock lock(this->user_mutex);
+        if (this->fds.find(fd) != this->fds.end())
         {
-            u = found->second;
-            if (!u->decrypt_packet(p) || !ntoh_packet(&p, len))
+            user = this->fds[fd];
+            if (!user->decrypt_packet(p) || !ntoh_packet(&p, len)))
                 return;
         }
-        (handler->second)(this, p, u, &fd);
+        packet_handlers[p.basic.type](this, p, user, &fd);
     }
 }
 
