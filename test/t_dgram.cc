@@ -23,6 +23,7 @@ class test_dgram_socket : public dgram_socket
 
     using listen_socket::users;
     using listen_socket::send_pool;
+    using listen_socket::access_pool;
 };
 
 void test_create_delete(void)

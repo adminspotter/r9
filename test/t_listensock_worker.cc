@@ -20,6 +20,7 @@ class test_listen_socket : public listen_socket
     using listen_socket::reap_timeout;
     using listen_socket::users;
     using listen_socket::send_pool;
+    using listen_socket::access_pool;
 };
 
 void test_reaper_worker(void)

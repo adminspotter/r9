@@ -127,10 +127,13 @@ void stream_socket::handle_login(listen_socket *s, packet& p,
                                  base_user *u, void *fdp)
 {
     access_list al;
+    stream_socket *ss = dynamic_cast<stream_socket *>(s);
 
+    if (ss == NULL)
+        return;
     memcpy(&al.buf, &p, sizeof(login_request));
     al.what.login.who.stream = *((int *)fdp);
-    s->access_pool->push(al);
+    ss->access_pool->push(al);
 }
 
 void stream_socket::connect_user(base_user *bu, access_list& al)

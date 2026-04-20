@@ -153,7 +153,10 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
                                 base_user *u, void *sa)
 {
     access_list al;
+    dgram_socket *ds = dynamic_cast<dgram_socket *>(s);
 
+    if (ds == NULL)
+        return;
     memcpy(&al.buf, &p, sizeof(login_request));
     /* sa gets cleaned up at the end of packet handling, but we need
      * to keep the object around for our user maps.  This is not an
@@ -162,7 +165,7 @@ void dgram_socket::handle_login(listen_socket *s, packet& p,
      * function by value.  They must be by pointer.
      */
     al.what.login.who.dgram = build_sockaddr(*((Sockaddr *)sa)->sockaddr());
-    s->access_pool->push(al);
+    ds->access_pool->push(al);
 }
 
 void dgram_socket::dgram_send_worker(void *arg)

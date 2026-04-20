@@ -133,10 +133,8 @@ class listen_socket : public basesock
     std::map<uint64_t, base_user *> users;
 
     ThreadPool<packet_list> *send_pool;
-  public:
     ThreadPool<access_list> *access_pool;
 
-  protected:
     listen_socket();
     void init(void);
 
