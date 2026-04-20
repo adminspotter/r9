@@ -61,7 +61,7 @@ void UpdatePool::update_pool_worker(void *arg)
                 [&](base_user *user) {
                     pkt.who = user;
                     pkt.buf.pos.sequence = user->sequence++;
-                    sock->send_pool->push(pkt);
+                    sock->send(pkt);
                 }
             );
     }

@@ -118,6 +118,7 @@ class test_dgram_socket : public dgram_socket
     ~test_dgram_socket() {};
 
     using dgram_socket::users;
+    using dgram_socket::send_pool;
 };
 
 /* Send queue test

@@ -119,6 +119,11 @@ class listen_socket : public basesock
     static const int PING_TIMEOUT = 30;
     static const int LINK_DEAD_TIMEOUT = 75;
 
+    typedef std::map<uint64_t, base_user *>::iterator users_iterator;
+
+    typedef void (*packet_handler)(listen_socket *, packet&,
+                                   base_user *, void *);
+
   protected:
     int reap_timeout;
     bool reaper_started;
@@ -127,13 +132,8 @@ class listen_socket : public basesock
     std::shared_mutex user_mutex;
     std::map<uint64_t, base_user *> users;
 
-  public:
-    typedef std::map<uint64_t, base_user *>::iterator users_iterator;
-
-    typedef void (*packet_handler)(listen_socket *, packet&,
-                                   base_user *, void *);
-
     ThreadPool<packet_list> *send_pool;
+  public:
     ThreadPool<access_list> *access_pool;
 
   protected:
@@ -161,6 +161,7 @@ class listen_socket : public basesock
     virtual void disconnect_user(base_user *);
 
     void iter_users(std::function<void(base_user *)>);
+    void send(packet_list&);
 };
 
 #endif /* __INC_LISTENSOCK_H__ */
