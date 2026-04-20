@@ -111,6 +111,15 @@ void test_listen_worker(void)
     delete addr;
 }
 
+class test_dgram_socket : public dgram_socket
+{
+  public:
+    test_dgram_socket(Addrinfo *a) : dgram_socket(a) {};
+    ~test_dgram_socket() {};
+
+    using dgram_socket::users;
+};
+
 /* Send queue test
  *
  * 3 packet_list elements in the send queue:
@@ -127,7 +136,7 @@ void test_send_worker(void)
     pkey_to_public_key(config.key.priv_key, config.key.pub_key, R9_PUBKEY_SZ);
 
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    dgram_socket *dgs = new dgram_socket(addr);
+    test_dgram_socket *dgs = new test_dgram_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
     bu->parent = (listen_socket *)dgs;
 
