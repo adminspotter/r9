@@ -29,6 +29,7 @@
 #define __INC_LISTENSOCK_H__
 
 #include <map>
+#include <functional>
 
 #include <proto/proto.h>
 #include <proto/encrypt.h>
@@ -123,8 +124,8 @@ class listen_socket : public basesock
     bool reaper_started;
     std::thread reaper_thread;
 
-  public:
     std::shared_mutex user_mutex;
+  public:
     std::map<uint64_t, base_user *> users;
 
     typedef std::map<uint64_t, base_user *>::iterator users_iterator;
@@ -158,6 +159,8 @@ class listen_socket : public basesock
 
     virtual void connect_user(base_user *, access_list&);
     virtual void disconnect_user(base_user *);
+
+    void iter_users(std::function<void(base_user *)>);
 };
 
 #endif /* __INC_LISTENSOCK_H__ */

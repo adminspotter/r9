@@ -491,3 +491,10 @@ void listen_socket::disconnect_user(base_user *bu)
     this->users.erase(bu->userid);
     delete bu;
 }
+
+void listen_socket::iter_users(std::function<void(base_user *)> func)
+{
+    std::shared_lock lock(this->user_mutex);
+    for (auto& user : this->users)
+        func(user.second);
+}
