@@ -27,7 +27,7 @@ class fake_SendPool : public ThreadPool<packet_list>
 void test_operate(void)
 {
     std::string test = "operate: ";
-    listen_socket *sock;
+    fake_listen_socket *sock;
     UpdatePool *pool;
     fake_SendPool *send_pool = new fake_SendPool("t_send", 1);
     GameObject *go = new GameObject(NULL, NULL, 12345LL);

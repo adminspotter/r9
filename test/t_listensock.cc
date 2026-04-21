@@ -30,7 +30,12 @@ class fake_listen_socket : public listen_socket
 {
   public:
     fake_listen_socket(void) : listen_socket() {};
+    fake_listen_socket(Addrinfo *a) : listen_socket(a) {};
     virtual ~fake_listen_socket() {};
+
+    using listen_socket::users;
+    using listen_socket::send_pool;
+    using listen_socket::access_pool;
 };
 
 void test_base_user_create_delete(void)
@@ -319,11 +324,11 @@ void test_listen_socket_create_delete(void)
 {
     std::string test = "listen_socket create/delete: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen;
+    fake_listen_socket *listen;
 
     try
     {
-        listen = new listen_socket(addr);
+        listen = new fake_listen_socket(addr);
     }
     catch (...)
     {
@@ -341,9 +346,7 @@ void test_listen_socket_start_stop(void)
 {
     std::string test = "listen_socket start/stop: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen;
-
-    listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
 
     try
     {
@@ -375,7 +378,7 @@ void test_listen_socket_handle_ack(void)
 {
     std::string test = "listen_socket handle_ack: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
 
     listen->users[bu->userid] = bu;
@@ -400,7 +403,7 @@ void test_listen_socket_handle_action(void)
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
     database = new fake_DB("a", 0, "b", "c", "d");
     zone = new fake_Zone(1000, 1, database);
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
     GameObject *go = new GameObject(NULL, bu);
 
@@ -453,7 +456,7 @@ void test_listen_socket_handle_logout(void)
 {
     std::string test = "listen_socket handle_logout: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
 
     listen->users[bu->userid] = bu;
@@ -495,7 +498,7 @@ void test_listen_socket_login_no_user(void)
     strncpy(access.buf.log.charname, "bob", 4);
 
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
 
     is(listen->users.size(), 0, test + "expected user list size");
 
@@ -523,7 +526,7 @@ void test_listen_socket_login_already(void)
     strncpy(access.buf.log.username, "howdy", 6);
 
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
 
     fake_base_user *bu = new fake_base_user(123LL);
     bu->pending_logout = true;
@@ -560,7 +563,7 @@ void test_listen_socket_login_no_access(void)
     strncpy(access.buf.log.charname, "blah", 5);
 
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
 
     is(listen->users.size(), 0, test + "expected user list size");
 
@@ -602,7 +605,7 @@ void test_listen_socket_login(void)
     is(result, R9_PUBKEY_SZ, test + "expected pubkey string size");
 
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
 
     is(listen->users.size(), 0, test + "expected user list size");
 
@@ -625,7 +628,7 @@ void test_listen_socket_logout(void)
 {
     std::string test = "listen_socket logout: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
 
     fake_base_user *bu = new fake_base_user(123LL);
     bu->parent = listen;
@@ -647,7 +650,7 @@ void test_listen_socket_connect_user(void)
 {
     std::string test = "listen_socket connect_user: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
 
     fake_base_user *bu = new fake_base_user(123LL);
     bu->parent = listen;
@@ -672,7 +675,7 @@ void test_listen_socket_disconnect_user(void)
 {
     std::string test = "listen_socket disconnect_user: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new listen_socket(addr);
+    fake_listen_socket *listen = new fake_listen_socket(addr);
 
     fake_base_user *bu = new fake_base_user(123LL);
     bu->parent = listen;

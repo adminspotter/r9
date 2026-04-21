@@ -19,6 +19,9 @@ bool read_nothing = false, read_bad_packet = false;
 class test_stream_socket : public stream_socket
 {
   public:
+    using stream_socket::users;
+    using stream_socket::send_pool;
+    using stream_socket::access_pool;
     using stream_socket::sock;
     using stream_socket::max_fd;
     using stream_socket::readfs;

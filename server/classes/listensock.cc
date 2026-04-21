@@ -198,7 +198,7 @@ void base_user::send_server_key(uint8_t *pubkey, size_t key_sz)
                                                 sizeof(pkt.buf.key.pubkey)));
     memcpy(pkt.buf.key.iv, this->iv, R9_SYMMETRIC_IV_BUF_SZ);
     pkt.who = this;
-    this->parent->send_pool->push(pkt);
+    this->parent->send(pkt);
 }
 
 void base_user::send_ping(void)
@@ -209,7 +209,7 @@ void base_user::send_ping(void)
     pkt.buf.basic.version = R9_PROTO_VER;
     pkt.buf.basic.sequence = this->sequence++;
     pkt.who = this;
-    this->parent->send_pool->push(pkt);
+    this->parent->send(pkt);
 }
 
 void base_user::send_ack(uint8_t req,
@@ -227,7 +227,7 @@ void base_user::send_ack(uint8_t req,
     pkt.buf.ack.misc[2] = misc2;
     pkt.buf.ack.misc[3] = misc3;
     pkt.who = this;
-    this->parent->send_pool->push(pkt);
+    this->parent->send(pkt);
 }
 
 listen_socket::listen_socket()
@@ -490,4 +490,16 @@ void listen_socket::disconnect_user(base_user *bu)
 {
     this->users.erase(bu->userid);
     delete bu;
+}
+
+void listen_socket::iter_users(std::function<void(base_user *)> func)
+{
+    std::shared_lock lock(this->user_mutex);
+    for (auto& user : this->users)
+        func(user.second);
+}
+
+void listen_socket::send(packet_list& p)
+{
+    this->send_pool->push(p);
 }

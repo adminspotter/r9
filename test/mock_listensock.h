@@ -26,6 +26,9 @@ class fake_listen_socket : public listen_socket
     /* Shouldn't need to mock the access_pool_worker static method,
      * since the fake start/stop methods won't do anything.
      */
+
+    using listen_socket::users;
+    using listen_socket::send_pool;
 };
 
 #endif /* __INC_MOCK_LISTENSOCK_H__ */

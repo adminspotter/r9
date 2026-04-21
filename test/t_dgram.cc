@@ -20,6 +20,10 @@ class test_dgram_socket : public dgram_socket
             if (stop_error == true)
                 throw std::runtime_error("oh noes!");
         };
+
+    using listen_socket::users;
+    using listen_socket::send_pool;
+    using listen_socket::access_pool;
 };
 
 void test_create_delete(void)
@@ -73,7 +77,7 @@ void test_connect_user(void)
 {
     std::string test = "connect_user: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    dgram_socket *dgs = new dgram_socket(addr);
+    test_dgram_socket *dgs = new test_dgram_socket(addr);
 
     is(dgs->users.size(), 0, test + "expected user list size");
     is(dgs->socks.size(), 0, test + "expected socks size");
@@ -104,7 +108,7 @@ void test_disconnect_user(void)
 {
     std::string test = "disconnect_user: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    dgram_socket *dgs = new dgram_socket(addr);
+    test_dgram_socket *dgs = new test_dgram_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
     struct sockaddr_in sin;
 
@@ -159,7 +163,7 @@ void test_handle_packet(void)
 {
     std::string test = "handle_packet: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    dgram_socket *dgs = new dgram_socket(addr);
+    test_dgram_socket *dgs = new test_dgram_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
     struct sockaddr_in sin;
 
@@ -189,7 +193,7 @@ void test_handle_login(void)
 {
     std::string test = "handle_login: ";
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    dgram_socket *dgs = new dgram_socket(addr);
+    test_dgram_socket *dgs = new test_dgram_socket(addr);
     Sockaddr *sa = addr->sockaddr();
 
     packet p;

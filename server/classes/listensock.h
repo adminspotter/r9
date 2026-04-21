@@ -29,6 +29,7 @@
 #define __INC_LISTENSOCK_H__
 
 #include <map>
+#include <functional>
 
 #include <proto/proto.h>
 #include <proto/encrypt.h>
@@ -118,24 +119,22 @@ class listen_socket : public basesock
     static const int PING_TIMEOUT = 30;
     static const int LINK_DEAD_TIMEOUT = 75;
 
-  protected:
-    int reap_timeout;
-    bool reaper_started;
-    std::thread reaper_thread;
-
-  public:
-    std::shared_mutex user_mutex;
-    std::map<uint64_t, base_user *> users;
-
     typedef std::map<uint64_t, base_user *>::iterator users_iterator;
 
     typedef void (*packet_handler)(listen_socket *, packet&,
                                    base_user *, void *);
 
+  protected:
+    int reap_timeout;
+    bool reaper_started;
+    std::thread reaper_thread;
+
+    std::shared_mutex user_mutex;
+    std::map<uint64_t, base_user *> users;
+
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
 
-  protected:
     listen_socket();
     void init(void);
 
@@ -158,6 +157,9 @@ class listen_socket : public basesock
 
     virtual void connect_user(base_user *, access_list&);
     virtual void disconnect_user(base_user *);
+
+    void iter_users(std::function<void(base_user *)>);
+    void send(packet_list&);
 };
 
 #endif /* __INC_LISTENSOCK_H__ */

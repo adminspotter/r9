@@ -18,6 +18,9 @@ class test_listen_socket : public listen_socket
     test_listen_socket(Addrinfo *a) : listen_socket(a) {};
     virtual ~test_listen_socket() {};
     using listen_socket::reap_timeout;
+    using listen_socket::users;
+    using listen_socket::send_pool;
+    using listen_socket::access_pool;
 };
 
 void test_reaper_worker(void)
@@ -74,7 +77,7 @@ void test_access_worker(void)
     check_authentication_result = 0LL;
 
     Addrinfo *addr = new Addrinfo(DGRAM, "localhost", "8765");
-    listen_socket *listen = new test_listen_socket(addr);
+    test_listen_socket *listen = new test_listen_socket(addr);
 
     access_list req;
 
