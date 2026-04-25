@@ -34,6 +34,11 @@
 #include <fcntl.h>
 #include <openssl/pem.h>
 
+#if OPENSSL_VERSION_MAJOR >= 3
+#include <openssl/decoder.h>
+#include <openssl/encoder.h>
+#endif /* OPENSSL_VERSION_MAJOR */
+
 EVP_PKEY *string_to_pkey(const unsigned char *string, size_t len)
 {
     EVP_PKEY *priv_key = NULL;
@@ -99,6 +104,19 @@ size_t pkey_to_pub_string(EVP_PKEY *key, unsigned char **string, size_t len)
 
 EVP_PKEY *pub_der_to_pkey(const unsigned char *string, size_t len)
 {
+#if OPENSSL_VERSION_MAJOR >= 3
+    EVP_PKEY *pub_key = NULL;
+    OSSL_DECODER_CTX *ctx = OSSL_DECODER_CTX_new_for_pkey(
+        &pub_key, "DER", NULL, "EC", EVP_PKEY_PUBLIC_KEY, NULL, NULL
+    );
+
+    if (ctx != NULL)
+    {
+        OSSL_DECODER_from_data(ctx, &string, &len);
+        OSSL_DECODER_CTX_free(ctx);
+    }
+    return pub_key;
+#else
     EVP_PKEY *pub_key = EVP_PKEY_new();
     EC_KEY *ec_key = NULL;
     BIO *bo = NULL;
@@ -123,6 +141,7 @@ EVP_PKEY *pub_der_to_pkey(const unsigned char *string, size_t len)
   BAILOUT1:
     EVP_PKEY_free(pub_key);
     return NULL;
+#endif /* OPENSSL_VERSION_MAJOR */
 }
 
 size_t pkey_to_pub_der(EVP_PKEY *key, unsigned char **string, size_t len)
@@ -130,13 +149,35 @@ size_t pkey_to_pub_der(EVP_PKEY *key, unsigned char **string, size_t len)
     BIO *bo = NULL;
     size_t actual_len = 0;
 
+#if OPENSSL_VERSION_MAJOR >= 3
+    OSSL_ENCODER_CTX *ctx = OSSL_ENCODER_CTX_new_for_pkey(
+        key, EVP_PKEY_PUBLIC_KEY, "DER", NULL, NULL
+    );
+
+    if (ctx == NULL)
+        goto CLEANUP3;
+#endif /* OPENSSL_VERSION_MAJOR */
+
     if ((bo = BIO_new(BIO_s_mem())) == NULL)
-        return 0;
+        goto CLEANUP2;
 
-    if (i2d_EC_PUBKEY_bio(bo, EVP_PKEY_get1_EC_KEY(key)) == 1)
-        actual_len = BIO_read(bo, string, len);
+#if OPENSSL_VERSION_MAJOR >= 3
+    if (OSSL_ENCODER_to_bio(ctx, bo) == 0)
+        goto CLEANUP1;
+#else
+    if (i2d_EC_PUBKEY_bio(bo, EVP_PKEY_get1_EC_KEY(key)) == 0)
+        goto CLEANUP1;
+#endif /* OPENSSL_VERSION_MAJOR */
 
+    actual_len = BIO_read(bo, string, len);
+
+  CLEANUP1:
     BIO_free(bo);
+  CLEANUP2:
+#if OPENSSL_VERSION_MAJOR >= 3
+    OSSL_ENCODER_CTX_free(ctx);
+  CLEANUP3:
+#endif /* OPENSSL_VERSION_MAJOR */
     return actual_len;
 }
 
