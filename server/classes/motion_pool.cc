@@ -91,16 +91,16 @@ bool MotionPool::collide(Octree *sector, GameObject *obj)
     if (subtree == NULL)
         return false;
 
-    for (GameObject *target : subtree->get_objects())
-    {
-        bool already_moving = target->still_moving();
-        if (obj->collide(target))
-        {
-            if (!already_moving && target->still_moving())
-                this->push(target);
-
-            return true;
+    return subtree->iter_collisions(
+        [&](GameObject *target) -> bool {
+            bool already_moving = target->still_moving();
+            if (obj->collide(target))
+            {
+                if (!already_moving && target->still_moving())
+                    this->push(target);
+                return true;
+            }
+            return false;
         }
-    }
-    return false;
+    );
 }

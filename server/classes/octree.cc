@@ -256,10 +256,13 @@ void Octree::remove(GameObject *gobj)
     }
 }
 
-Octree::object_set_t Octree::get_objects(void)
+bool Octree::iter_collisions(std::function<bool(GameObject *)> func)
 {
     std::shared_lock read_lock(this->lock);
-    return Octree::object_set_t(this->objects.begin(), this->objects.end());
+    for (auto& obj : this->objects)
+        if (func(obj))
+            return true;
+    return false;
 }
 
 Octree *Octree::find(GameObject *go)
