@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-03-10 12:49-0700\n"
+"POT-Creation-Date: 2026-05-08 22:16-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -70,7 +70,7 @@ msgstr ""
 msgid "Error decrypting packet"
 msgstr ""
 
-#: client/comm.cc:267 client/comm.cc:531
+#: client/comm.cc:267 client/comm.cc:540
 msgid "Error reordering packet"
 msgstr ""
 
@@ -90,39 +90,39 @@ msgstr ""
 msgid "Could not derive shared secret with server"
 msgstr ""
 
-#: client/comm.cc:381
+#: client/comm.cc:382
 msgid "Error initializing queue mutex: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:392
+#: client/comm.cc:393
 msgid "Error initializing queue-not-empty cond: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:439
+#: client/comm.cc:443
 msgid "Error starting send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:454
+#: client/comm.cc:458
 msgid "Error starting receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:482
+#: client/comm.cc:486
 msgid "Error waking send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:493
+#: client/comm.cc:497
 msgid "Error joining send thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:504
+#: client/comm.cc:508
 msgid "Error cancelling receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:517
+#: client/comm.cc:521
 msgid "Error joining receive thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:536
+#: client/comm.cc:545
 msgid "Error encrypting packet"
 msgstr ""
 

@@ -93,6 +93,8 @@ int close(int a)
     return 0;
 }
 
+void freeaddrinfo(struct addrinfo *a) {}
+
 int ntoh_packet(packet *a, size_t b)
 {
     if (bad_ntoh == true)
@@ -177,6 +179,9 @@ void test_send_bad_hton(void)
 {
     std::string test = "hton failure: ";
     fake_Comm *comm = NULL;
+    struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     packet *pkt = new packet;
 
@@ -192,7 +197,7 @@ void test_send_bad_hton(void)
 
     try
     {
-        comm = new fake_Comm();
+        comm = new fake_Comm(&ai);
         comm->start();
     }
     catch (...)
@@ -214,6 +219,9 @@ void test_send_bad_encrypt(void)
 {
     std::string test = "encrypt failure: ";
     fake_Comm *comm = NULL;
+    struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     packet *pkt = new packet;
 
@@ -229,7 +237,7 @@ void test_send_bad_encrypt(void)
 
     try
     {
-        comm = new fake_Comm();
+        comm = new fake_Comm(&ai);
         comm->start();
     }
     catch (...)
@@ -251,6 +259,9 @@ void test_send_bad_send(void)
 {
     std::string test = "sendto failure: ";
     fake_Comm *comm = NULL;
+    struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     packet *pkt = new packet;
 
@@ -266,7 +277,7 @@ void test_send_bad_send(void)
 
     try
     {
-        comm = new fake_Comm();
+        comm = new fake_Comm(&ai);
         comm->start();
     }
     catch (...)
@@ -425,6 +436,9 @@ void test_recv_bad_result(void)
 {
     std::string test = "recvfrom failure: ";
     fake_Comm *comm = NULL;
+    struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
@@ -438,7 +452,7 @@ void test_recv_bad_result(void)
 
     try
     {
-        comm = new fake_Comm();
+        comm = new fake_Comm(&ai);
         comm->start();
     }
     catch (...)
@@ -459,6 +473,9 @@ void test_recv_bad_sender(void)
 {
     std::string test = "unknown sender: ";
     fake_Comm *comm = NULL;
+    struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
@@ -473,7 +490,7 @@ void test_recv_bad_sender(void)
 
     try
     {
-        comm = new fake_Comm();
+        comm = new fake_Comm(&ai);
         comm->start();
     }
     catch (...)
@@ -495,6 +512,8 @@ void test_recv_bad_packet(void)
     std::string test = "unknown packet: ";
     fake_Comm *comm = NULL;
     struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;
@@ -538,6 +557,8 @@ void test_recv_no_decrypt(void)
     std::string test = "decrypt failure: ";
     fake_Comm *comm = NULL;
     struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;
@@ -582,6 +603,8 @@ void test_recv_no_ntoh(void)
     std::string test = "ntoh failure: ";
     fake_Comm *comm = NULL;
     struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;
@@ -626,6 +649,8 @@ void test_recv_packet(void)
     std::string test = "recv_worker: ";
     fake_Comm *comm = NULL;
     struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;

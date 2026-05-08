@@ -112,16 +112,21 @@ int pthread_cond_broadcast(pthread_cond_t *a)
     return 0;
 }
 
+void freeaddrinfo(struct addrinfo *a) {}
+
 void test_socket_failure(void)
 {
     std::string test = "socket failure: ";
     Comm *obj = NULL;
     struct addrinfo a;
+    struct sockaddr_storage s;
+    a.ai_addr = (struct sockaddr *)&s;
 
     socket_error = true;
     try
     {
         obj = new Comm(&a);
+        obj->start();
     }
     catch (std::runtime_error& e)
     {
@@ -150,6 +155,7 @@ void test_mutex_failure(void)
     try
     {
         obj = new Comm(&a);
+        obj->start();
     }
     catch (std::runtime_error& e)
     {

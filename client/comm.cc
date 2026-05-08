@@ -101,11 +101,11 @@ Comm::pkt_handler Comm::pkt_type[] =
 
 #define COMM_MEMBER(a, b) ((a).*(b))
 
-void Comm::create_socket(struct addrinfo *ai)
+void Comm::create_socket(void)
 {
-    if ((this->sock = socket(ai->ai_family,
-                             ai->ai_socktype,
-                             ai->ai_protocol)) < 0)
+    if ((this->sock = socket(this->ai->ai_family,
+                             this->ai->ai_socktype,
+                             this->ai->ai_protocol)) < 0)
     {
         std::ostringstream s;
         char err[128];
@@ -115,12 +115,12 @@ void Comm::create_socket(struct addrinfo *ai)
         ) % strerror_r(errno, err, sizeof(err)) % errno;
         throw std::runtime_error(s.str());
     }
-    memcpy(&this->remote, ai->ai_addr, sizeof(sockaddr_storage));
+    memcpy(&this->remote, this->ai->ai_addr, sizeof(sockaddr_storage));
 
     /* OSX requires a family-specific size, rather than just
      * sizeof(sockaddr_storage).
      */
-    switch (ai->ai_family)
+    switch (this->ai->ai_family)
     {
       case AF_INET:
         this->remote_size = sizeof(sockaddr_in);
@@ -364,6 +364,7 @@ void Comm::handle_unsupported(packet& p)
 Comm::Comm(void)
     : send_queue(), thread_exit_flag(false)
 {
+    this->ai = NULL;
     this->init();
 }
 
@@ -397,6 +398,7 @@ void Comm::init(void)
         throw std::runtime_error(s.str());
     }
 
+    this->sock = 0;
     this->src_object_id = 0LL;
     this->threads_started = false;
 }
@@ -404,7 +406,7 @@ void Comm::init(void)
 Comm::Comm(struct addrinfo *ai)
     : send_queue(), thread_exit_flag(false)
 {
-    this->create_socket(ai);
+    this->ai = ai;
     this->init();
 }
 
@@ -412,10 +414,10 @@ Comm::~Comm()
 {
     try { this->stop(); }
     catch (std::exception e) { std::clog << e.what() << std::endl; }
-    if (this->sock)
-        close(this->sock);
     pthread_cond_destroy(&(this->send_queue_not_empty));
     pthread_mutex_destroy(&(this->send_lock));
+    if (this->ai != NULL)
+        freeaddrinfo(this->ai);
 }
 
 void Comm::start(void)
@@ -424,6 +426,8 @@ void Comm::start(void)
 
     if (this->threads_started)
         return;
+
+    this->create_socket();
 
     /* Now start up the actual threads */
     this->thread_exit_flag = false;
@@ -520,6 +524,11 @@ void Comm::stop(void)
             throw std::runtime_error(s.str());
         }
         this->threads_started = false;
+    }
+    if (this->sock)
+    {
+        close(this->sock);
+        this->sock = 0;
     }
 }
 

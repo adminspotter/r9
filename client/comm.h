@@ -30,18 +30,10 @@
 
 #include <config.h>
 
-#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
-#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif /* HAVE_SYS_SOCKET_H */
-#if HAVE_NETDB_H
 #include <netdb.h>
-#endif /* HAVE_NETDB_H */
-#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif /* HAVE_NETINET_IN_H */
 #include <pthread.h>
 
 #include <cstdint>
@@ -60,6 +52,7 @@ class Comm
     bool threads_started;
 
   protected:
+    struct addrinfo *ai;
     int sock;
     struct sockaddr_storage remote;
     size_t remote_size;
@@ -78,7 +71,7 @@ class Comm
     typedef void (Comm::*pkt_handler)(packet&);
     static pkt_handler pkt_type[8];
 
-    void create_socket(struct addrinfo *);
+    void create_socket(void);
 
     int encrypt_packet(packet&);
     int decrypt_packet(packet&);
