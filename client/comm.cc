@@ -50,6 +50,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <errno.h>
 
 #include <cstdint>
@@ -57,6 +58,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <chrono>
 
 #include <glm/geometric.hpp>
 
@@ -171,27 +173,24 @@ int Comm::decrypt_packet(packet& p)
     return 1;
 }
 
-void *Comm::send_worker(void *arg)
+void Comm::send_worker(Comm *comm)
 {
-    Comm *comm = (Comm *)arg;
     packet *pkt;
-
-    /* Make sure we can be cancelled as we expect. */
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+    std::chrono::seconds send_timeout(comm->send_timeout);
 
     for (;;)
     {
-        pthread_mutex_lock(&(comm->send_lock));
-        while (comm->send_queue.empty() && !comm->thread_exit_flag)
-            pthread_cond_wait(&(comm->send_queue_not_empty),
-                              &(comm->send_lock));
+        {
+            std::unique_lock lock(comm->send_lock);
+            while (comm->send_queue.empty() && !comm->thread_exit_flag)
+                if (comm->send_queue_not_empty.wait_for(
+                        lock, send_timeout
+                    ) != std::cv_status::timeout)
+                    break;
+        }
 
         if (comm->thread_exit_flag)
-        {
-            pthread_mutex_unlock(&(comm->send_lock));
-            pthread_exit(NULL);
-        }
+            return;
 
         pkt = comm->send_queue.front();
 
@@ -208,46 +207,38 @@ void *Comm::send_worker(void *arg)
             ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
         }
         comm->send_queue.pop();
-        pthread_mutex_unlock(&(comm->send_lock));
         memset(pkt, 0, sizeof(packet));
         delete pkt;
     }
-    return NULL;
 }
 
-void *Comm::recv_worker(void *arg)
+void Comm::recv_worker(Comm *comm)
 {
-    Comm *comm = (Comm *)arg;
     packet buf;
     struct sockaddr_storage sin;
     socklen_t fromlen;
     int len;
 
-    /* Make sure we can be cancelled as we expect. */
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-
     for (;;)
     {
-        fromlen = sizeof(struct sockaddr_storage);
-        if ((len = recvfrom(comm->sock, (void *)&buf, sizeof(packet), 0,
-                            (struct sockaddr *)&sin, &fromlen)) < 0)
-        {
-            char err[128];
+        if (comm->thread_exit_flag)
+            break;
 
-            std::clog << format(
-                translate("Error receiving packet: {1,errstr} ({2,errno})")
-            ) % strerror_r(errno, err, sizeof(err)) % errno << std::endl;
+        fromlen = sizeof(struct sockaddr_storage);
+        if ((len = recvfrom(comm->sock,
+                            (void *)&buf,
+                            sizeof(packet),
+                            0,
+                            (struct sockaddr *)&sin, &fromlen)) <= 0
+            || fromlen == 0)
             continue;
-        }
-        /* Verify that the sender is who we think it should be */
+
         if (memcmp(&sin, &(comm->remote), fromlen))
         {
             std::clog << translate("Packet from unknown sender")
                       << std::endl;
             continue;
         }
-        /* Needs to be a real packet type */
         if (buf.basic.type >= sizeof(pkt_type) / sizeof(pkt_handler))
         {
             std::clog << format(translate("Unknown packet type {1,type}"))
@@ -261,7 +252,6 @@ void *Comm::recv_worker(void *arg)
                       << std::endl;
             continue;
         }
-        /* We should be able to convert to host byte ordering */
         if (!ntoh_packet(&buf, len))
         {
             std::clog << translate("Error reordering packet") << std::endl;
@@ -270,7 +260,6 @@ void *Comm::recv_worker(void *arg)
 
         COMM_MEMBER(*comm, pkt_type[buf.basic.type])(buf);
     }
-    return NULL;
 }
 
 void Comm::handle_pngpkt(packet& p)
@@ -285,7 +274,6 @@ void Comm::handle_ackpkt(packet& p)
     switch (a.request)
     {
       case TYPE_LOGREQ:
-        /* The response to our login request */
         std::clog << format(
             translate("Login response, {1,Access type} access")
         ) % access_to_string(a.misc[0]) << std::endl;
@@ -294,7 +282,6 @@ void Comm::handle_ackpkt(packet& p)
         break;
 
       case TYPE_LGTREQ:
-        /* The response to our logout request */
         std::clog << format(
             translate("Logout response, {1,Access type} access")
         ) % access_to_string(a.misc[0]) << std::endl;
@@ -362,7 +349,9 @@ void Comm::handle_unsupported(packet& p)
 }
 
 Comm::Comm(void)
-    : send_queue(), thread_exit_flag(false)
+    : send_queue(), thread_exit_flag(false),
+      send_thread(), recv_thread(),
+      send_lock(), send_queue_not_empty()
 {
     this->ai = NULL;
     this->init();
@@ -370,41 +359,16 @@ Comm::Comm(void)
 
 void Comm::init(void)
 {
-    int ret;
-
-    /* Init the mutex and cond variables */
-    if ((ret = pthread_mutex_init(&(this->send_lock), NULL)) != 0)
-    {
-        char err[128];
-
-        std::ostringstream s;
-        s << format(
-            translate("Error initializing queue mutex: {1,errmsg} ({2,errno})")
-        ) % strerror_r(errno, err, sizeof(err)) % ret;
-        throw std::runtime_error(s.str());
-    }
-    if ((ret = pthread_cond_init(&send_queue_not_empty, NULL)) != 0)
-    {
-        char err[128];
-
-        std::ostringstream s;
-        s << format(
-            translate(
-                "Error initializing queue-not-empty cond: "
-                "{1,errmsg} ({2,errno})"
-            )
-        ) % strerror_r(errno, err, sizeof(err)) % ret;
-        pthread_mutex_destroy(&(this->send_lock));
-        throw std::runtime_error(s.str());
-    }
-
     this->sock = 0;
+    this->send_timeout = 1; /* second */
     this->src_object_id = 0LL;
     this->threads_started = false;
 }
 
 Comm::Comm(struct addrinfo *ai)
-    : send_queue(), thread_exit_flag(false)
+    : send_queue(), thread_exit_flag(false),
+      send_thread(), recv_thread(),
+      send_lock(), send_queue_not_empty()
 {
     this->ai = ai;
     this->init();
@@ -414,127 +378,46 @@ Comm::~Comm()
 {
     try { this->stop(); }
     catch (std::exception e) { std::clog << e.what() << std::endl; }
-    pthread_cond_destroy(&(this->send_queue_not_empty));
-    pthread_mutex_destroy(&(this->send_lock));
     if (this->ai != NULL)
         freeaddrinfo(this->ai);
 }
 
 void Comm::start(void)
 {
-    int ret;
-
-    if (this->threads_started)
-        return;
-
-    this->create_socket();
-
-    /* Now start up the actual threads */
-    this->thread_exit_flag = false;
-    if ((ret = pthread_create(&(this->send_thread),
-                              NULL,
-                              Comm::send_worker,
-                              (void *)this)) != 0)
+    if (!this->threads_started)
     {
-        std::ostringstream s;
-        char err[128];
-
-        s << format(
-            translate("Error starting send thread: {1,errmsg} ({2,errno})")
-        ) % strerror_r(errno, err, sizeof(err)) % ret;
-        pthread_cond_destroy(&(this->send_queue_not_empty));
-        pthread_mutex_destroy(&(this->send_lock));
-        throw std::runtime_error(s.str());
+        this->create_socket();
+        this->thread_exit_flag = false;
+        this->send_thread = std::thread(Comm::send_worker, this);
+        this->recv_thread = std::thread(Comm::recv_worker, this);
+        this->threads_started = true;
     }
-    if ((ret = pthread_create(&(this->recv_thread),
-                              NULL,
-                              Comm::recv_worker,
-                              (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        char err[128];
-
-        s << format(
-            translate("Error starting receive thread: {1,errmsg} ({2,errno})")
-        ) % strerror_r(errno, err, sizeof(err)) % ret;
-        pthread_cancel(this->send_thread);
-        sleep(0);
-        pthread_join(this->send_thread, NULL);
-        pthread_cond_destroy(&(this->send_queue_not_empty));
-        pthread_mutex_destroy(&(this->send_lock));
-        throw std::runtime_error(s.str());
-    }
-    this->threads_started = true;
 }
 
 void Comm::stop(void)
 {
-    int ret;
-
     if (this->threads_started)
     {
         if (this->sock)
             this->send_logout();
-        sleep(0);
         this->thread_exit_flag = true;
-        if ((ret = pthread_cond_broadcast(&(this->send_queue_not_empty))) != 0)
-        {
-            std::ostringstream s;
-            char err[128];
+        this->send_queue_not_empty.notify_all();
+        this->send_thread.join();
 
-            s << format(
-                translate("Error waking send thread: {1,errmsg} ({2,errno})")
-            ) % strerror_r(ret, err, sizeof(err)) % ret;
-            throw std::runtime_error(s.str());
-        }
-        sleep(0);
-        if ((ret = pthread_join(this->send_thread, NULL)) != 0)
+        if (this->sock)
         {
-            std::ostringstream s;
-            char err[128];
-
-            s << format(
-                translate("Error joining send thread: {1,errmsg} ({2,errno})")
-            ) % strerror_r(ret, err, sizeof(err)) % ret;
-            throw std::runtime_error(s.str());
+            /* A hard shutdown will interrupt any blocking syscall. */
+            shutdown(this->sock, SHUT_RDWR);
+            this->sock = 0;
         }
-        if ((ret = pthread_cancel(this->recv_thread)) != 0)
-        {
-            std::ostringstream s;
-            char err[128];
-
-            s << format(
-                translate(
-                    "Error cancelling receive thread: {1,errmsg} ({2,errno})"
-                )
-            ) % strerror_r(ret, err, sizeof(err)) % ret;
-            throw std::runtime_error(s.str());
-        }
-        sleep(0);
-        if ((ret = pthread_join(this->recv_thread, NULL)) != 0)
-        {
-            std::ostringstream s;
-            char err[128];
-
-            s << format(
-                translate(
-                    "Error joining receive thread: {1,errmsg} ({2,errno})"
-                )
-            ) % strerror_r(ret, err, sizeof(err)) % ret;
-            throw std::runtime_error(s.str());
-        }
+        this->recv_thread.join();
         this->threads_started = false;
-    }
-    if (this->sock)
-    {
-        close(this->sock);
-        this->sock = 0;
     }
 }
 
 void Comm::send(packet *p, size_t len)
 {
-    pthread_mutex_lock(&(this->send_lock));
+    std::unique_lock lock(this->send_lock);
     if (!hton_packet(p, len))
     {
         std::clog << translate("Error reordering packet") << std::endl;
@@ -548,9 +431,8 @@ void Comm::send(packet *p, size_t len)
     else
     {
         this->send_queue.push(p);
-        pthread_cond_signal(&(this->send_queue_not_empty));
+        this->send_queue_not_empty.notify_one();
     }
-    pthread_mutex_unlock(&(this->send_lock));
 }
 
 void Comm::send_login(const std::string& user,

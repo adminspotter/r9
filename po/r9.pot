@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-05-08 22:16-0700\n"
+"POT-Creation-Date: 2026-05-08 22:23-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,108 +21,72 @@ msgstr ""
 msgid "Failed to initialize GLFW"
 msgstr ""
 
-#: client/comm.cc:77
+#: client/comm.cc:79
 msgctxt "Access type"
 msgid "unknown"
 msgstr ""
 
-#: client/comm.cc:78
+#: client/comm.cc:80
 msgctxt "Access type"
 msgid "no"
 msgstr ""
 
-#: client/comm.cc:79
+#: client/comm.cc:81
 msgctxt "Access type"
 msgid "view-only"
 msgstr ""
 
-#: client/comm.cc:80
+#: client/comm.cc:82
 msgctxt "Access type"
 msgid "regular"
 msgstr ""
 
-#: client/comm.cc:81
+#: client/comm.cc:83
 msgctxt "Access type"
 msgid "modify"
 msgstr ""
 
-#: client/comm.cc:114
+#: client/comm.cc:116
 msgid "Error opening socket: {1,errstr} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:207
+#: client/comm.cc:206
 msgid "Error sending packet: {1,errstr} ({2,errno})"
 msgstr ""
 
-#: client/comm.cc:239
-msgid "Error receiving packet: {1,errstr} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:246
+#: client/comm.cc:238
 msgid "Packet from unknown sender"
 msgstr ""
 
-#: client/comm.cc:253 client/comm.cc:359
+#: client/comm.cc:244 client/comm.cc:346
 msgid "Unknown packet type {1,type}"
 msgstr ""
 
-#: client/comm.cc:260
+#: client/comm.cc:251
 msgid "Error decrypting packet"
 msgstr ""
 
-#: client/comm.cc:267 client/comm.cc:540
+#: client/comm.cc:257 client/comm.cc:423
 msgid "Error reordering packet"
 msgstr ""
 
-#: client/comm.cc:290
+#: client/comm.cc:278
 msgid "Login response, {1,Access type} access"
 msgstr ""
 
-#: client/comm.cc:299
+#: client/comm.cc:286
 msgid "Logout response, {1,Access type} access"
 msgstr ""
 
-#: client/comm.cc:341
+#: client/comm.cc:328
 msgid "Bad public key from server"
 msgstr ""
 
-#: client/comm.cc:347
+#: client/comm.cc:334
 msgid "Could not derive shared secret with server"
 msgstr ""
 
-#: client/comm.cc:382
-msgid "Error initializing queue mutex: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:393
-msgid "Error initializing queue-not-empty cond: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:443
-msgid "Error starting send thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:458
-msgid "Error starting receive thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:486
-msgid "Error waking send thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:497
-msgid "Error joining send thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:508
-msgid "Error cancelling receive thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:521
-msgid "Error joining receive thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/comm.cc:545
+#: client/comm.cc:428
 msgid "Error encrypting packet"
 msgstr ""
 

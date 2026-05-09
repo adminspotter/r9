@@ -41,7 +41,6 @@ if WANT_TCL
 endif
 if WANT_CLIENT
   TC += t_comm \
-	t_comm_exception \
 	t_configdata \
 	t_shader
 endif
@@ -264,11 +263,6 @@ t_tcl_exception_LDADD = $(TAP_LDADD) $(SERVER_LDLIBS) \
 t_comm_SOURCES = t_comm.cc ../client/comm.cc ../client/comm.h \
 	../client/configdata.h ../client/configdata.cc
 t_comm_LDADD = $(TAP_LDADD) $(LOCALE_LDLIBS) ../proto/libr9_proto.la
-
-t_comm_exception_SOURCES = t_comm_exception.cc ../client/comm.cc \
-	../client/comm.h \
-	../client/configdata.h ../client/configdata.cc
-t_comm_exception_LDADD = $(TAP_LDADD) $(LOCALE_LDLIBS) ../proto/libr9_proto.la
 
 t_configdata_SOURCES = t_configdata.cc \
 	../client/configdata.h ../client/configdata.cc

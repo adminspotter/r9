@@ -34,12 +34,14 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <pthread.h>
 
 #include <cstdint>
 #include <string>
 #include <queue>
 #include <atomic>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include <glm/vec3.hpp>
 
@@ -57,9 +59,10 @@ class Comm
     struct sockaddr_storage remote;
     size_t remote_size;
 
-    pthread_t send_thread, recv_thread;
-    pthread_mutex_t send_lock;
-    pthread_cond_t send_queue_not_empty;
+    std::thread send_thread, recv_thread;
+    std::mutex send_lock;
+    std::condition_variable send_queue_not_empty;
+    int send_timeout;
     std::queue<packet *> send_queue;
 
     uint8_t key[R9_SYMMETRIC_KEY_BUF_SZ], iv[R9_SYMMETRIC_IV_BUF_SZ];
@@ -76,8 +79,8 @@ class Comm
     int encrypt_packet(packet&);
     int decrypt_packet(packet&);
 
-    static void *send_worker(void *);
-    static void *recv_worker(void *);
+    static void send_worker(Comm *);
+    static void recv_worker(Comm *);
 
     void handle_pngpkt(packet&);
     void handle_ackpkt(packet&);
