@@ -405,7 +405,7 @@ void test_listen_socket_handle_action(void)
     zone = new fake_Zone(1000, 1, database);
     fake_listen_socket *listen = new fake_listen_socket(addr);
     fake_base_user *bu = new fake_base_user(123LL);
-    GameObject *go = new GameObject(NULL, bu);
+    GameObject *go = new GameObject(NULL, bu, 1234LL);
 
     /* Creating an actual ActionPool will be prohibitive, since it
      * requires so many other objects to make it go.  All we need here

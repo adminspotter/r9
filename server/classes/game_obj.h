@@ -39,7 +39,6 @@
 #else
 #include <set>
 #endif /* STD_UNORDERED_SET_WORKS */
-#include <mutex>
 #include <shared_mutex>
 
 #include <glm/vec3.hpp>
@@ -68,9 +67,6 @@ class GameObject
     typedef int attribute;
 
   private:
-    static std::mutex max_mutex;
-    static uint64_t max_id_value;
-
     static glm::dvec3 no_movement;
     static glm::dquat no_rotation;
 
@@ -97,9 +93,7 @@ class GameObject
     Control *master;
 
   public:
-    static uint64_t reset_max_id(void);
-
-    GameObject(Geometry *, Control *, uint64_t = 0LL);
+    GameObject(Geometry *, Control *, uint64_t);
     ~GameObject();
 
     GameObject *clone(void) const;
