@@ -271,12 +271,11 @@ int PgSQL::get_server_objects(GameObject::objects_map& gomap)
             uint64_t charid = strtoull(PQgetvalue(res, count, 1), NULL, 10);
 
             GameObject *go = new GameObject(NULL, NULL, objid);
-            go->set_position(glm::dvec3(atol(PQgetvalue(res, count, 2))
-                                        / POSUPD_POS_SCALE,
-                                        atol(PQgetvalue(res, count, 3))
-                                        / POSUPD_POS_SCALE,
-                                        atol(PQgetvalue(res, count, 4))
-                                        / POSUPD_POS_SCALE));
+            go->set_position(
+                glm::dvec3(atol(PQgetvalue(res, count, 2)) / POSUPD_POS_SCALE,
+                           atol(PQgetvalue(res, count, 3)) / POSUPD_POS_SCALE,
+                           atol(PQgetvalue(res, count, 4)) / POSUPD_POS_SCALE)
+            );
             if (charid != 0LL)
                 go->deactivate();
             gomap[objid] = go;
