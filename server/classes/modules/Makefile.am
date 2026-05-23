@@ -21,11 +21,11 @@ serverlib_LTLIBRARIES = $(modules_libs)
 
 AM_LDFLAGS = -module -avoid-version
 
-libr9_MySQL_la_SOURCES = db.cc r9mysql.cc db.h
+libr9_MySQL_la_SOURCES = db.cc r9mysql.cc r9mysql.h db.h
 libr9_MySQL_la_CXXFLAGS= $(MYSQL_INCLUDES)
 libr9_MySQL_la_LIBADD = $(MYSQL_LDLIBS)
 
-libr9_pgsql_la_SOURCES = db.cc r9pgsql.cc db.h
+libr9_pgsql_la_SOURCES = db.cc r9pgsql.cc r9pgsql.h db.h
 libr9_pgsql_la_CXXFLAGS = $(PGSQL_INCLUDES)
 libr9_pgsql_la_LIBADD = $(PGSQL_LDLIBS)
 
