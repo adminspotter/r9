@@ -29,9 +29,6 @@
 #define __INC_R9MYSQL_H__
 
 #include <mysql.h>
-
-#include <cstdint>
-
 #include "db.h"
 
 class MySQL : public DB

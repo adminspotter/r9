@@ -39,6 +39,7 @@
 #ifndef __INC_DB_H__
 #define __INC_DB_H__
 
+#include <cstdint>
 #include <string>
 #include <map>
 
