@@ -54,11 +54,11 @@ class base_user : public Control {
   protected:
     listen_socket *parent;
 
-    base_user(uint64_t);
+    base_user(userid_t);
     void prep_iv(void);
 
   public:
-    base_user(uint64_t,
+    base_user(userid_t,
               const std::string&,
               const std::string&,
               listen_socket *);
@@ -104,7 +104,7 @@ typedef struct access_list_tag
         login;
         struct
         {
-            uint64_t who;
+            userid_t who;
         }
         logout;
     }
@@ -119,7 +119,7 @@ class listen_socket : public basesock
     static const int PING_TIMEOUT = 30;
     static const int LINK_DEAD_TIMEOUT = 75;
 
-    typedef std::map<uint64_t, base_user *>::iterator users_iterator;
+    typedef std::map<userid_t, base_user *>::iterator users_iterator;
 
     typedef void (*packet_handler)(listen_socket *, packet&,
                                    base_user *, void *);
@@ -130,7 +130,7 @@ class listen_socket : public basesock
     std::thread reaper_thread;
 
     std::shared_mutex user_mutex;
-    std::map<uint64_t, base_user *> users;
+    std::map<userid_t, base_user *> users;
 
     ThreadPool<packet_list> *send_pool;
     ThreadPool<access_list> *access_pool;
@@ -153,7 +153,7 @@ class listen_socket : public basesock
     static void handle_logout(listen_socket *, packet&, base_user *, void *);
 
     void login_user(access_list&);
-    void logout_user(uint64_t);
+    void logout_user(userid_t);
 
     virtual void connect_user(base_user *, access_list&);
     virtual void disconnect_user(base_user *);

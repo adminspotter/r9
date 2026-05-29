@@ -77,6 +77,8 @@
 #define ACCESS_MOVE 3        /* Move-around-in access (normal access) */
 #define ACCESS_MDFY 4        /* Modify access */
 
+typedef uint64_t userid_t;
+
 /* For testing what type of packet it really is, plus a few of the basic
  * elements.
  */

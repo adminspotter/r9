@@ -40,7 +40,7 @@ class stream_socket : public listen_socket
 {
   public:
     std::map<int, base_user *> fds;
-    std::map<uint64_t, int> user_fds;
+    std::map<userid_t, int> user_fds;
 
   protected:
     int max_fd;

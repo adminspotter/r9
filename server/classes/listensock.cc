@@ -53,7 +53,7 @@ static size_t rand_bytes(uint8_t *buf, size_t buf_sz)
     return i;
 }
 
-base_user::base_user(uint64_t userid)
+base_user::base_user(userid_t userid)
     : username(), charactername(), Control(userid, NULL)
 {
     this->parent = NULL;
@@ -72,7 +72,7 @@ void base_user::prep_iv(void)
     rand_bytes(this->iv, R9_SYMMETRIC_IV_BUF_SZ);
 }
 
-base_user::base_user(uint64_t userid,
+base_user::base_user(userid_t userid,
                      const std::string& uname,
                      const std::string& cname,
                      listen_socket *l)
@@ -416,7 +416,7 @@ void listen_socket::login_user(access_list& p)
     std::string username(p.buf.log.username,
                          std::min(sizeof(p.buf.log.username),
                                   strlen(p.buf.log.username)));
-    uint64_t userid = database->check_authentication(username,
+    userid_t userid = database->check_authentication(username,
                                                      p.buf.log.pubkey,
                                                      R9_PUBKEY_SZ);
     if (userid == 0LL)
@@ -451,7 +451,7 @@ void listen_socket::login_user(access_list& p)
     zone->send_nearby_objects(bu->characterid);
 }
 
-void listen_socket::logout_user(uint64_t userid)
+void listen_socket::logout_user(userid_t userid)
 {
     packet_list pkt;
     listen_socket::users_iterator found;

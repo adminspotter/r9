@@ -29,7 +29,7 @@
 #include "control.h"
 #include "thread_pool.h"
 
-Control::Control(uint64_t userid, GameObject *slave)
+Control::Control(userid_t userid, GameObject *slave)
 {
     this->userid = userid;
     this->default_slave = this->slave = slave;

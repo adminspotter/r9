@@ -115,7 +115,7 @@ PgSQL::~PgSQL()
 {
 }
 
-uint64_t PgSQL::check_authentication(const std::string& user,
+userid_t PgSQL::check_authentication(const std::string& user,
                                      const uint8_t *pubkey,
                                      size_t key_size)
 {
@@ -125,7 +125,7 @@ uint64_t PgSQL::check_authentication(const std::string& user,
     const int lens[2] = {static_cast<int>(user.size()),
                          static_cast<int>(key_size)};
     const int binary[2] = {0, 1};
-    uint64_t retval = 0;
+    userid_t retval = 0;
 
     res = PQexecParams(db_handle,
                        PgSQL::check_authentication_query,
@@ -138,7 +138,7 @@ uint64_t PgSQL::check_authentication(const std::string& user,
     return retval;
 }
 
-int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
+int PgSQL::check_authorization(userid_t userid, uint64_t charid)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;
@@ -159,7 +159,7 @@ int PgSQL::check_authorization(uint64_t userid, uint64_t charid)
     return retval;
 }
 
-int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
+int PgSQL::check_authorization(userid_t userid, const std::string& charname)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;
@@ -179,7 +179,7 @@ int PgSQL::check_authorization(uint64_t userid, const std::string& charname)
     return retval;
 }
 
-uint64_t PgSQL::get_characterid(uint64_t userid, const std::string& charname)
+uint64_t PgSQL::get_characterid(userid_t userid, const std::string& charname)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;
@@ -198,7 +198,7 @@ uint64_t PgSQL::get_characterid(uint64_t userid, const std::string& charname)
     return retval;
 }
 
-uint64_t PgSQL::get_character_objectid(uint64_t userid,
+uint64_t PgSQL::get_character_objectid(userid_t userid,
                                        const std::string& charname)
 {
     PGconn *db_handle = this->db_connect();
@@ -286,8 +286,7 @@ int PgSQL::get_server_objects(GameObject::objects_map& gomap)
     return count;
 }
 
-int PgSQL::get_player_server_skills(uint64_t userid,
-                                    uint64_t charid,
+int PgSQL::get_player_server_skills(userid_t userid, uint64_t charid,
                                     Control::skills_map& actions)
 {
     PGconn *db_handle = this->db_connect();

@@ -69,13 +69,13 @@ class DB
     virtual ~DB();
 
     /* Player functions */
-    virtual uint64_t check_authentication(const std::string&,
+    virtual userid_t check_authentication(const std::string&,
                                           const uint8_t *, size_t) = 0;
-    virtual int check_authorization(uint64_t, uint64_t) = 0;
-    virtual int check_authorization(uint64_t, const std::string&) = 0;
-    virtual uint64_t get_characterid(uint64_t, const std::string&) = 0;
-    virtual uint64_t get_character_objectid(uint64_t, const std::string&) = 0;
-    virtual int get_player_server_skills(uint64_t, uint64_t,
+    virtual int check_authorization(userid_t, uint64_t) = 0;
+    virtual int check_authorization(userid_t, const std::string&) = 0;
+    virtual uint64_t get_characterid(userid_t, const std::string&) = 0;
+    virtual uint64_t get_character_objectid(userid_t, const std::string&) = 0;
+    virtual int get_player_server_skills(userid_t, uint64_t,
                                          Control::skills_map&) = 0;
 
     /* Server functions */
