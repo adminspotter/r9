@@ -198,15 +198,15 @@ charid_t PgSQL::get_characterid(userid_t userid, const std::string& charname)
     return retval;
 }
 
-uint64_t PgSQL::get_character_objectid(userid_t userid,
-                                       const std::string& charname)
+objid_t PgSQL::get_character_objectid(userid_t userid,
+                                      const std::string& charname)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;
     std::string user_id = std::to_string(userid);
     std::string host_id = std::to_string(this->host_id);
     const char *vals[3] = {user_id.c_str(), charname.c_str(), host_id.c_str()};
-    uint64_t retval = 0;
+    objid_t retval = 0;
 
     res = PQexecParams(db_handle,
                        PgSQL::get_character_objectid_query,

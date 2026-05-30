@@ -79,6 +79,7 @@
 
 typedef uint64_t userid_t;
 typedef uint64_t charid_t;
+typedef uint64_t objid_t;
 
 /* For testing what type of packet it really is, plus a few of the basic
  * elements.
@@ -122,11 +123,11 @@ typedef struct action_request_tag
     uint8_t type;
     uint8_t version;        /* protocol version number */
     uint64_t sequence;      /* timestamp / sequence number */
-    uint64_t object_id;
+    objid_t object_id;
     uint16_t action_id;
     uint8_t power_level;
     uint64_t x_pos_source, y_pos_source, z_pos_source;
-    uint64_t dest_object_id;
+    objid_t dest_object_id;
     int64_t x_pos_dest, y_pos_dest, z_pos_dest;
 } __attribute__ ((__packed__))
 action_request;
@@ -149,7 +150,7 @@ typedef struct position_update_tag
     uint8_t type;
     uint8_t version;        /* protocol version number */
     uint64_t sequence;      /* timestamp / sequence number */
-    uint64_t object_id;
+    objid_t object_id;
     uint16_t frame_number;
     /* We may consider adding the sector vector back in here */
     uint64_t x_pos, y_pos, z_pos;
@@ -186,7 +187,7 @@ typedef struct object_delete_tag
     uint8_t type;
     uint8_t version;        /* protocol version number */
     uint64_t sequence;      /* timestamp / sequence number */
-    uint64_t object_id;
+    objid_t object_id;
 } __attribute__ ((__packed__))
 object_delete;
 

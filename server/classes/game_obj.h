@@ -61,7 +61,7 @@ class GameObject
     }
     nature;
 
-    typedef std::unordered_map<uint64_t, GameObject *> objects_map;
+    typedef std::unordered_map<objid_t, GameObject *> objects_map;
     typedef objects_map::iterator objects_iterator;
 
     typedef int attribute;
@@ -70,7 +70,7 @@ class GameObject
     static glm::dvec3 no_movement;
     static glm::dquat no_rotation;
 
-    /* const */ uint64_t id_value;
+    /* const */ objid_t id_value;
     Geometry *default_geometry;
     Control *default_master;
 
@@ -93,12 +93,12 @@ class GameObject
     Control *master;
 
   public:
-    GameObject(Geometry *, Control *, uint64_t);
+    GameObject(Geometry *, Control *, objid_t);
     ~GameObject();
 
     GameObject *clone(void) const;
 
-    uint64_t get_object_id(void) const;
+    objid_t get_object_id(void) const;
 
     bool connect(Control *);
     void disconnect(Control *);

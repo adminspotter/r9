@@ -54,7 +54,7 @@ class MySQL : public DB
     int check_authorization(userid_t, charid_t);
     int check_authorization(userid_t, const std::string&);
     charid_t get_characterid(userid_t, const std::string&);
-    uint64_t get_character_objectid(userid_t, const std::string&);
+    objid_t get_character_objectid(userid_t, const std::string&);
     int get_player_server_skills(userid_t, charid_t, Control::skills_map&);
 
     /* Server functions */

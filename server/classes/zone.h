@@ -69,8 +69,8 @@ class Zone
     Octree *sector_contains(const glm::dvec3&);
     glm::ivec3 which_sector(const glm::dvec3&);
 
-    GameObject *find_game_object(uint64_t);
-    virtual void send_nearby_objects(uint64_t);
+    GameObject *find_game_object(objid_t);
+    virtual void send_nearby_objects(objid_t);
 };
 
 #endif /* __INC_ZONE_H__ */

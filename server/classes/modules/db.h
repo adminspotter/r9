@@ -74,7 +74,7 @@ class DB
     virtual int check_authorization(userid_t, charid_t) = 0;
     virtual int check_authorization(userid_t, const std::string&) = 0;
     virtual charid_t get_characterid(userid_t, const std::string&) = 0;
-    virtual uint64_t get_character_objectid(userid_t, const std::string&) = 0;
+    virtual objid_t get_character_objectid(userid_t, const std::string&) = 0;
     virtual int get_player_server_skills(userid_t, charid_t,
                                          Control::skills_map&) = 0;
 

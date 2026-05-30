@@ -39,7 +39,7 @@
 glm::dvec3 GameObject::no_movement(0.0, 0.0, 0.0);
 glm::dquat GameObject::no_rotation(1.0, 0.0, 0.0, 0.0);
 
-GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
+GameObject::GameObject(Geometry *g, Control *c, objid_t newid)
     : position(), movement(), look(0.0, 1.0, 0.0),
       orient(1.0, 0.0, 0.0, 0.0), rotation(1.0, 0.0, 0.0, 0.0), movement_lock()
 {
@@ -69,7 +69,7 @@ GameObject *GameObject::clone(void) const
     return new GameObject(new_geom, this->default_master, this->id_value);
 }
 
-uint64_t GameObject::get_object_id(void) const
+objid_t GameObject::get_object_id(void) const
 {
     return this->id_value;
 }

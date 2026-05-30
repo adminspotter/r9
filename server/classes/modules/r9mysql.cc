@@ -319,15 +319,15 @@ charid_t MySQL::get_characterid(userid_t userid, const std::string& charname)
     return retval;
 }
 
-uint64_t MySQL::get_character_objectid(userid_t userid,
-                                       const std::string& charname)
+objid_t MySQL::get_character_objectid(userid_t userid,
+                                      const std::string& charname)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
     MYSQL_BIND bind[3];
     unsigned long length;
     my_bool is_null, error;
-    uint64_t retval = 0;
+    objid_t retval = 0;
 
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
@@ -444,7 +444,7 @@ int MySQL::get_server_objects(GameObject::objects_map& gomap)
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
     MYSQL_BIND bind[5];
-    uint64_t objid;
+    objid_t objid;
     charid_t charid;
     long pos_x, pos_y, pos_z;
     unsigned long length[5];

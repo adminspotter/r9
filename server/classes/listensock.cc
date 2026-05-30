@@ -89,7 +89,7 @@ base_user::base_user(userid_t userid,
         throw std::runtime_error("unauthorized user");
     if (this->auth_level >= ACCESS_MOVE)
     {
-        uint64_t objid = database->get_character_objectid(userid, cname);
+        objid_t objid = database->get_character_objectid(userid, cname);
         this->default_slave = this->slave = zone->find_game_object(objid);
         this->slave->connect(this);
     }
@@ -119,9 +119,9 @@ const base_user& base_user::operator=(const base_user& u)
 std::string base_user::to_string(void)
 {
     std::ostringstream s;
-    uint64_t obj_id = (this->default_slave != NULL
-                       ? this->default_slave->get_object_id()
-                       : 0LL);
+    objid_t obj_id = (this->default_slave != NULL
+                      ? this->default_slave->get_object_id()
+                      : 0LL);
 
     s << this->username
       << " (" << this->userid
@@ -474,7 +474,7 @@ void listen_socket::logout_user(userid_t userid)
 
 void listen_socket::connect_user(base_user *bu, access_list& al)
 {
-    uint64_t obj_id = 0LL;
+    objid_t obj_id = 0LL;
 
     this->users[bu->userid] = bu;
     if (bu->default_slave != NULL)
