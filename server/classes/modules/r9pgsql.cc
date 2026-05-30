@@ -138,7 +138,7 @@ userid_t PgSQL::check_authentication(const std::string& user,
     return retval;
 }
 
-int PgSQL::check_authorization(userid_t userid, uint64_t charid)
+int PgSQL::check_authorization(userid_t userid, charid_t charid)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;
@@ -179,13 +179,13 @@ int PgSQL::check_authorization(userid_t userid, const std::string& charname)
     return retval;
 }
 
-uint64_t PgSQL::get_characterid(userid_t userid, const std::string& charname)
+charid_t PgSQL::get_characterid(userid_t userid, const std::string& charname)
 {
     PGconn *db_handle = this->db_connect();
     PGresult *res;
     std::string user_id = std::to_string(userid);
     const char *vals[2] = {user_id.c_str(), charname.c_str()};
-    uint64_t retval = 0;
+    charid_t retval = 0;
 
     res = PQexecParams(db_handle,
                        PgSQL::get_characterid_query,
@@ -268,7 +268,7 @@ int PgSQL::get_server_objects(GameObject::objects_map& gomap)
         for (count = 0; count < num_tuples; ++count)
         {
             uint64_t objid = strtoull(PQgetvalue(res, count, 0), NULL, 10);
-            uint64_t charid = strtoull(PQgetvalue(res, count, 1), NULL, 10);
+            charid_t charid = strtoull(PQgetvalue(res, count, 1), NULL, 10);
 
             GameObject *go = new GameObject(NULL, NULL, objid);
             go->set_position(
@@ -286,7 +286,7 @@ int PgSQL::get_server_objects(GameObject::objects_map& gomap)
     return count;
 }
 
-int PgSQL::get_player_server_skills(userid_t userid, uint64_t charid,
+int PgSQL::get_player_server_skills(userid_t userid, charid_t charid,
                                     Control::skills_map& actions)
 {
     PGconn *db_handle = this->db_connect();

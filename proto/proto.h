@@ -78,6 +78,7 @@
 #define ACCESS_MDFY 4        /* Modify access */
 
 typedef uint64_t userid_t;
+typedef uint64_t charid_t;
 
 /* For testing what type of packet it really is, plus a few of the basic
  * elements.

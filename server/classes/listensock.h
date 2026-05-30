@@ -43,7 +43,8 @@ class listen_socket;
 class base_user : public Control {
   public:
     std::string username, charactername;
-    uint64_t sequence, characterid;
+    uint64_t sequence;
+    charid_t characterid;
     time_t timestamp;
     bool pending_logout;
     uint8_t auth_level;
