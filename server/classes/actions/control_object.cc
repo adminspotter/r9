@@ -53,8 +53,7 @@ int action_control_object(GameObject *source,
     {
         /* Figure out if the player actually has access to the target */
         if ((access_type
-             = database->check_authorization(src->userid,
-                                             target->get_object_id()))
+             = database->check_authorization(src->userid, target->object_id))
             != ACCESS_NONE)
         {
             if (target->connect(src))

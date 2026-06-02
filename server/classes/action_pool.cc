@@ -137,7 +137,7 @@ void ActionPool::execute_action(base_user *user, action_request& req)
 
     if (i != this->actions.end()
         && j != user->actions.end()
-        && user->slave->get_object_id() == req.object_id)
+        && user->slave->object_id == req.object_id)
     {
         /* If it's not valid on this server, it should at least have
          * a default.

@@ -70,7 +70,10 @@ class GameObject
     static glm::dvec3 no_movement;
     static glm::dquat no_rotation;
 
-    /* const */ objid_t id_value;
+  public:
+    const objid_t object_id;
+
+  private:
     Geometry *default_geometry;
     Control *default_master;
 
@@ -97,8 +100,6 @@ class GameObject
     ~GameObject();
 
     GameObject *clone(void) const;
-
-    objid_t get_object_id(void) const;
 
     bool connect(Control *);
     void disconnect(Control *);

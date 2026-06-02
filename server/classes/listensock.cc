@@ -120,7 +120,7 @@ std::string base_user::to_string(void)
 {
     std::ostringstream s;
     objid_t obj_id = (this->default_slave != NULL
-                      ? this->default_slave->get_object_id()
+                      ? this->default_slave->object_id
                       : 0LL);
 
     s << this->username
@@ -480,7 +480,7 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
     if (bu->default_slave != NULL)
     {
         bu->default_slave->activate();
-        obj_id = bu->default_slave->get_object_id();
+        obj_id = bu->default_slave->object_id;
     }
     bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     bu->send_ack(TYPE_LOGREQ, bu->auth_level, obj_id);

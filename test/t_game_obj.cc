@@ -12,7 +12,7 @@ void test_create_delete(void)
     Control *con = new Control(1LL, NULL);
 
     go = new GameObject(geom, con, 38LL);
-    is(go->get_object_id(), 38LL, test + "expected objectid");
+    is(go->object_id, 38LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
 
@@ -21,7 +21,7 @@ void test_create_delete(void)
     geom = new Geometry();
     go = new GameObject(geom, con, 39LL);
     go->geometry = geom2;
-    is(go->get_object_id(), 39LL, test + "expected objectid");
+    is(go->object_id, 39LL, test + "expected objectid");
 
     delete go;
     delete con;
@@ -35,12 +35,12 @@ void test_clone(void)
     Control *con = new Control(1LL, NULL);
 
     go = new GameObject(geom, con, 45LL);
-    is(go->get_object_id(), 45LL, test + "expected objectid");
+    is(go->object_id, 45LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
 
     GameObject *go2 = go->clone();
-    is(go2->get_object_id(), 45LL, test + "expected objectid");
+    is(go2->object_id, 45LL, test + "expected objectid");
     is(go2->master, con, test + "expected master");
     isnt(go2->geometry, geom, test + "expected geometry");
 
@@ -57,7 +57,7 @@ void test_connect_disconnect(void)
     Control *con = new Control(1LL, NULL);
 
     go = new GameObject(geom, con, 45LL);
-    is(go->get_object_id(), 45LL, test + "expected objectid");
+    is(go->object_id, 45LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
 
@@ -113,7 +113,7 @@ void test_distance(void)
     Control *con = new Control(1LL, NULL);
 
     go = new GameObject(geom, con, 123LL);
-    is(go->get_object_id(), 123LL, test + "expected objectid");
+    is(go->object_id, 123LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
 
