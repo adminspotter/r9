@@ -49,6 +49,7 @@
 #include <list>
 #include <set>
 #include <shared_mutex>
+#include <functional>
 
 #include <glm/vec3.hpp>
 
@@ -91,7 +92,7 @@ class Octree
     void insert(GameObject *);
     void remove(GameObject *);
 
-    object_set_t get_objects(void);
+    bool iter_collisions(std::function<bool(GameObject *)>);
 
     Octree *find(GameObject *);
 };
