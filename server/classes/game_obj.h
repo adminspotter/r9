@@ -39,7 +39,6 @@
 #else
 #include <set>
 #endif /* STD_UNORDERED_SET_WORKS */
-#include <mutex>
 #include <shared_mutex>
 
 #include <glm/vec3.hpp>
@@ -62,19 +61,19 @@ class GameObject
     }
     nature;
 
-    typedef std::unordered_map<uint64_t, GameObject *> objects_map;
+    typedef std::unordered_map<objid_t, GameObject *> objects_map;
     typedef objects_map::iterator objects_iterator;
 
     typedef int attribute;
 
   private:
-    static std::mutex max_mutex;
-    static uint64_t max_id_value;
-
     static glm::dvec3 no_movement;
     static glm::dquat no_rotation;
 
-    /* const */ uint64_t id_value;
+  public:
+    const objid_t object_id;
+
+  private:
     Geometry *default_geometry;
     Control *default_master;
 
@@ -97,14 +96,10 @@ class GameObject
     Control *master;
 
   public:
-    static uint64_t reset_max_id(void);
-
-    GameObject(Geometry *, Control *, uint64_t = 0LL);
+    GameObject(Geometry *, Control *, objid_t);
     ~GameObject();
 
     GameObject *clone(void) const;
-
-    uint64_t get_object_id(void) const;
 
     bool connect(Control *);
     void disconnect(Control *);

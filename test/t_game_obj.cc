@@ -11,19 +11,17 @@ void test_create_delete(void)
     Geometry *geom = new Geometry(), *geom2 = new Geometry();
     Control *con = new Control(1LL, NULL);
 
-    GameObject::reset_max_id();
-
     go = new GameObject(geom, con, 38LL);
-    is(go->get_object_id(), 38LL, test + "expected objectid");
+    is(go->object_id, 38LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
 
     delete go;
 
     geom = new Geometry();
-    go = new GameObject(geom, con);
+    go = new GameObject(geom, con, 39LL);
     go->geometry = geom2;
-    is(go->get_object_id(), 39LL, test + "expected objectid");
+    is(go->object_id, 39LL, test + "expected objectid");
 
     delete go;
     delete con;
@@ -36,15 +34,13 @@ void test_clone(void)
     Geometry *geom = new Geometry();
     Control *con = new Control(1LL, NULL);
 
-    GameObject::reset_max_id();
-
     go = new GameObject(geom, con, 45LL);
-    is(go->get_object_id(), 45LL, test + "expected objectid");
+    is(go->object_id, 45LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
 
     GameObject *go2 = go->clone();
-    is(go2->get_object_id(), 46LL, test + "expected objectid");
+    is(go2->object_id, 45LL, test + "expected objectid");
     is(go2->master, con, test + "expected master");
     isnt(go2->geometry, geom, test + "expected geometry");
 
@@ -60,10 +56,8 @@ void test_connect_disconnect(void)
     Geometry *geom = new Geometry();
     Control *con = new Control(1LL, NULL);
 
-    GameObject::reset_max_id();
-
     go = new GameObject(geom, con, 45LL);
-    is(go->get_object_id(), 45LL, test + "expected objectid");
+    is(go->object_id, 45LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
 
@@ -111,36 +105,6 @@ void test_activate_deactivate(void)
     delete con;
 }
 
-void test_reset_id(void)
-{
-    std::string test = "reset_max_id: ";
-    GameObject *go = NULL;
-    Geometry *geom = new Geometry();
-    Control *con = new Control(1LL, NULL);
-
-    go = new GameObject(geom, con, 123LL);
-    is(go->get_object_id(), 123LL, test + "expected objectid");
-    is(go->master, con, test + "expected master");
-    is(go->geometry, geom, test + "expected geometry");
-
-    delete go;
-
-    geom = new Geometry();
-    go = new GameObject(geom, con);
-    is(go->get_object_id(), 124LL, test + "expected objectid");
-
-    delete go;
-
-    GameObject::reset_max_id();
-
-    geom = new Geometry();
-    go = new GameObject(geom, con);
-    is(go->get_object_id(), 0LL, test + "expected objectid");
-
-    delete go;
-    delete con;
-}
-
 void test_distance(void)
 {
     std::string test = "distance_from: ";
@@ -149,7 +113,7 @@ void test_distance(void)
     Control *con = new Control(1LL, NULL);
 
     go = new GameObject(geom, con, 123LL);
-    is(go->get_object_id(), 123LL, test + "expected objectid");
+    is(go->object_id, 123LL, test + "expected objectid");
     is(go->master, con, test + "expected master");
     is(go->geometry, geom, test + "expected geometry");
 
@@ -261,8 +225,6 @@ void test_update(void)
     Control *con = new Control(1LL, NULL);
     packet pkt;
 
-    GameObject::reset_max_id();
-
     go = new GameObject(geom, con, 46LL);
 
     st = "inactive: ";
@@ -287,13 +249,12 @@ void test_update(void)
 
 int main(int argc, char **argv)
 {
-    plan(46);
+    plan(41);
 
     test_create_delete();
     test_clone();
     test_connect_disconnect();
     test_activate_deactivate();
-    test_reset_id();
     test_distance();
     test_accessors();
     test_move_and_rotate();

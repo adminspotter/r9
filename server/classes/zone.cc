@@ -147,7 +147,7 @@ glm::ivec3 Zone::which_sector(const glm::dvec3& pos)
     return sector;
 }
 
-GameObject *Zone::find_game_object(uint64_t objid)
+GameObject *Zone::find_game_object(objid_t objid)
 {
     GameObject *go;
     GameObject::objects_iterator gi = this->game_objects.find(objid);
@@ -165,7 +165,7 @@ GameObject *Zone::find_game_object(uint64_t objid)
     return go;
 }
 
-void Zone::send_nearby_objects(uint64_t objid)
+void Zone::send_nearby_objects(objid_t objid)
 {
     GameObject *go = this->find_game_object(objid);
 

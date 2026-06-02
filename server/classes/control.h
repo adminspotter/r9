@@ -51,12 +51,12 @@ class Control
     typedef std::unordered_map<uint16_t, skill_level> skills_map;
     typedef skills_map::iterator skills_iterator;
 
-    uint64_t userid;
+    userid_t userid;
     GameObject *default_slave, *slave;
     skills_map actions;
 
   public:
-    Control(uint64_t, GameObject *);
+    Control(userid_t, GameObject *);
     virtual ~Control();
 
     virtual bool operator<(const Control&) const;

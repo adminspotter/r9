@@ -23,7 +23,6 @@
  * other kind of object) for the game system.
  *
  * Things to do
- *   - Consider how we want to represent our sequences.
  *   - Consider how we want to represent our bounding volumes.  From the
  *   looks of things, we're going to attempt a two-level bounding operation:
  *   first level is a bounding sphere, since it's easy and small, and the
@@ -40,13 +39,6 @@
 class Geometry
 {
   public:
-    /*typedef struct sequence_tag
-    {
-        int frame_number, duration;
-    }
-    sequence_element;
-
-    std::vector< std::vector<sequence_element> > sequences;*/
     glm::dvec3 center;
     double radius, mass, restitution, friction;
 

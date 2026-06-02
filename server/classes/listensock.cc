@@ -53,7 +53,7 @@ static size_t rand_bytes(uint8_t *buf, size_t buf_sz)
     return i;
 }
 
-base_user::base_user(uint64_t userid)
+base_user::base_user(userid_t userid)
     : username(), charactername(), Control(userid, NULL)
 {
     this->parent = NULL;
@@ -72,7 +72,7 @@ void base_user::prep_iv(void)
     rand_bytes(this->iv, R9_SYMMETRIC_IV_BUF_SZ);
 }
 
-base_user::base_user(uint64_t userid,
+base_user::base_user(userid_t userid,
                      const std::string& uname,
                      const std::string& cname,
                      listen_socket *l)
@@ -89,7 +89,7 @@ base_user::base_user(uint64_t userid,
         throw std::runtime_error("unauthorized user");
     if (this->auth_level >= ACCESS_MOVE)
     {
-        uint64_t objid = database->get_character_objectid(userid, cname);
+        objid_t objid = database->get_character_objectid(userid, cname);
         this->default_slave = this->slave = zone->find_game_object(objid);
         this->slave->connect(this);
     }
@@ -119,9 +119,9 @@ const base_user& base_user::operator=(const base_user& u)
 std::string base_user::to_string(void)
 {
     std::ostringstream s;
-    uint64_t obj_id = (this->default_slave != NULL
-                       ? this->default_slave->get_object_id()
-                       : 0LL);
+    objid_t obj_id = (this->default_slave != NULL
+                      ? this->default_slave->object_id
+                      : 0LL);
 
     s << this->username
       << " (" << this->userid
@@ -416,7 +416,7 @@ void listen_socket::login_user(access_list& p)
     std::string username(p.buf.log.username,
                          std::min(sizeof(p.buf.log.username),
                                   strlen(p.buf.log.username)));
-    uint64_t userid = database->check_authentication(username,
+    userid_t userid = database->check_authentication(username,
                                                      p.buf.log.pubkey,
                                                      R9_PUBKEY_SZ);
     if (userid == 0LL)
@@ -451,7 +451,7 @@ void listen_socket::login_user(access_list& p)
     zone->send_nearby_objects(bu->characterid);
 }
 
-void listen_socket::logout_user(uint64_t userid)
+void listen_socket::logout_user(userid_t userid)
 {
     packet_list pkt;
     listen_socket::users_iterator found;
@@ -474,13 +474,13 @@ void listen_socket::logout_user(uint64_t userid)
 
 void listen_socket::connect_user(base_user *bu, access_list& al)
 {
-    uint64_t obj_id = 0LL;
+    objid_t obj_id = 0LL;
 
     this->users[bu->userid] = bu;
     if (bu->default_slave != NULL)
     {
         bu->default_slave->activate();
-        obj_id = bu->default_slave->get_object_id();
+        obj_id = bu->default_slave->object_id;
     }
     bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     bu->send_ack(TYPE_LOGREQ, bu->auth_level, obj_id);

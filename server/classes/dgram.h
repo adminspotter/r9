@@ -56,7 +56,7 @@ class dgram_socket : public listen_socket
 {
   public:
     std::map<Sockaddr *, base_user *, less_sockaddr> socks;
-    std::map<uint64_t, Sockaddr *> user_socks;
+    std::map<userid_t, Sockaddr *> user_socks;
 
   public:
     dgram_socket(Addrinfo *);

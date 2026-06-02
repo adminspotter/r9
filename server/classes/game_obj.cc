@@ -31,49 +31,24 @@
 #include <algorithm>
 #include <sstream>
 #include <system_error>
+#include <mutex>
 
 #include "game_obj.h"
 #include "zone.h"
 
-std::mutex GameObject::max_mutex;
-uint64_t GameObject::max_id_value = 0LL;
-
 glm::dvec3 GameObject::no_movement(0.0, 0.0, 0.0);
 glm::dquat GameObject::no_rotation(1.0, 0.0, 0.0, 0.0);
 
-uint64_t GameObject::reset_max_id(void)
-{
-    uint64_t val;
-
-    std::scoped_lock lock(GameObject::max_mutex);
-    val = GameObject::max_id_value;
-    GameObject::max_id_value = (uint64_t)0;
-    return val;
-}
-
-GameObject::GameObject(Geometry *g, Control *c, uint64_t newid)
+GameObject::GameObject(Geometry *g, Control *c, objid_t newid)
     : position(), movement(), look(0.0, 1.0, 0.0),
-      orient(1.0, 0.0, 0.0, 0.0), rotation(1.0, 0.0, 0.0, 0.0), movement_lock()
+      orient(1.0, 0.0, 0.0, 0.0), rotation(1.0, 0.0, 0.0, 0.0), movement_lock(),
+      object_id(newid)
 {
     if (g == NULL)
         g = new Geometry();
     this->default_master = this->master = c;
     this->default_geometry = this->geometry = g;
     this->active = true;
-
-    {
-        std::scoped_lock lock(GameObject::max_mutex);
-        if (newid == 0LL)
-            newid = GameObject::max_id_value++;
-        else
-            /* This clause is mostly for recreating an object from some
-             * saved state.
-             */
-            GameObject::max_id_value = std::max(GameObject::max_id_value,
-                                                newid + 1);
-    }
-
-    this->id_value = newid;
     gettimeofday(&this->last_updated, NULL);
 }
 
@@ -91,12 +66,7 @@ GameObject *GameObject::clone(void) const
      * new copy for the new object.
      */
     Geometry *new_geom = new Geometry(*this->default_geometry);
-    return new GameObject(new_geom, this->default_master);
-}
-
-uint64_t GameObject::get_object_id(void) const
-{
-    return this->id_value;
+    return new GameObject(new_geom, this->default_master, this->object_id);
 }
 
 bool GameObject::connect(Control *con)
@@ -300,7 +270,7 @@ void GameObject::generate_update_packet(packet& pkt)
     {
         pkt.del.type = TYPE_OBJDEL;
         pkt.del.version = R9_PROTO_VER;
-        pkt.del.object_id = this->id_value;
+        pkt.del.object_id = this->object_id;
     }
     else
     {
@@ -310,7 +280,7 @@ void GameObject::generate_update_packet(packet& pkt)
 
         pkt.pos.type = TYPE_POSUPD;
         pkt.pos.version = R9_PROTO_VER;
-        pkt.pos.object_id = this->id_value;
+        pkt.pos.object_id = this->object_id;
         pkt.pos.x_pos = (uint64_t)pos.x;
         pkt.pos.y_pos = (uint64_t)pos.y;
         pkt.pos.z_pos = (uint64_t)pos.z;

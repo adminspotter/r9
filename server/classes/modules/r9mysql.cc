@@ -135,7 +135,7 @@ MySQL::~MySQL()
 }
 
 /* Check that the user really is who they say they are */
-uint64_t MySQL::check_authentication(const std::string& user,
+userid_t MySQL::check_authentication(const std::string& user,
                                      const uint8_t *pubkey,
                                      size_t key_size)
 {
@@ -144,7 +144,7 @@ uint64_t MySQL::check_authentication(const std::string& user,
     MYSQL_BIND bind[2];
     unsigned long length[2];
     my_bool is_null, error;
-    uint64_t retval = 0;
+    userid_t retval = 0;
 
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
@@ -184,7 +184,7 @@ uint64_t MySQL::check_authentication(const std::string& user,
 }
 
 /* See what kind of access the user/character is allowed on this server */
-int MySQL::check_authorization(uint64_t userid, uint64_t charid)
+int MySQL::check_authorization(userid_t userid, charid_t charid)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
@@ -229,7 +229,7 @@ int MySQL::check_authorization(uint64_t userid, uint64_t charid)
     return (int)retval;
 }
 
-int MySQL::check_authorization(uint64_t userid, const std::string& charname)
+int MySQL::check_authorization(userid_t userid, const std::string& charname)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
@@ -276,14 +276,14 @@ int MySQL::check_authorization(uint64_t userid, const std::string& charname)
     return (int)retval;
 }
 
-uint64_t MySQL::get_characterid(uint64_t userid, const std::string& charname)
+charid_t MySQL::get_characterid(userid_t userid, const std::string& charname)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
     MYSQL_BIND bind[2];
     unsigned long length;
     my_bool is_null, error;
-    uint64_t retval = 0;
+    charid_t retval = 0;
 
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
@@ -319,15 +319,15 @@ uint64_t MySQL::get_characterid(uint64_t userid, const std::string& charname)
     return retval;
 }
 
-uint64_t MySQL::get_character_objectid(uint64_t userid,
-                                       const std::string& charname)
+objid_t MySQL::get_character_objectid(userid_t userid,
+                                      const std::string& charname)
 {
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
     MYSQL_BIND bind[3];
     unsigned long length;
     my_bool is_null, error;
-    uint64_t retval = 0;
+    objid_t retval = 0;
 
     db_handle = this->db_connect();
     stmt = mysql_stmt_init(db_handle);
@@ -444,7 +444,8 @@ int MySQL::get_server_objects(GameObject::objects_map& gomap)
     MYSQL *db_handle;
     MYSQL_STMT *stmt;
     MYSQL_BIND bind[5];
-    uint64_t objid, charid;
+    objid_t objid;
+    charid_t charid;
     long pos_x, pos_y, pos_z;
     unsigned long length[5];
     my_bool is_null[5], error[5];
@@ -514,7 +515,7 @@ int MySQL::get_server_objects(GameObject::objects_map& gomap)
 }
 
 /* Get the list of a player's skills which are valid on this server */
-int MySQL::get_player_server_skills(uint64_t userid,
+int MySQL::get_player_server_skills(userid_t userid,
                                     uint64_t charid,
                                     Control::skills_map& actions)
 {
