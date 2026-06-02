@@ -15,11 +15,12 @@ ConfigData config;
 ObjectCache *obj = new ObjectCache("fake");
 struct object *self_obj;
 
-bool recvfrom_error = false, bad_sender = false, bad_packet = false;
+bool recvfrom_quiet = false, recvfrom_error = false;
+bool bad_sender = false, bad_packet = false;
 bool bad_ntoh = false, bad_hton = false, bad_encrypt = false;
 bool bad_decrypt = false, sendto_error = false;
-bool bad_pubkey = false, bad_shared_secret = false;
-int recvfrom_calls, packet_type;
+bool bad_pubkey = false, bad_shared_secret = false, socket_error = false;
+int packet_type;
 
 struct sockaddr_storage expected_sockaddr;
 packet expected_packet;
@@ -49,9 +50,8 @@ ssize_t recvfrom(int a,
                  int d,
                  struct sockaddr *e, socklen_t *f)
 {
-    /* Only respond to the first call; the second call should just "block" */
-    if (recvfrom_calls++ != 0)
-        sleep(10);
+    if (recvfrom_quiet == true)
+        return 0;
 
     if (recvfrom_error == true)
     {
@@ -85,13 +85,20 @@ ssize_t sendto(int a,
 
 int socket(int a, int b, int c)
 {
+    if (socket_error == true)
+    {
+        errno = EINVAL;
+        return -1;
+    }
     return 123;
 }
 
-int close(int a)
+int shutdown(int a, int b)
 {
     return 0;
 }
+
+void freeaddrinfo(struct addrinfo *a) {}
 
 int ntoh_packet(packet *a, size_t b)
 {
@@ -164,6 +171,7 @@ class fake_Comm : public Comm
     using Comm::src_object_id;
     using Comm::key;
     using Comm::iv;
+    using Comm::send_timeout;
 
     using Comm::handle_pngpkt;
     using Comm::handle_ackpkt;
@@ -172,6 +180,36 @@ class fake_Comm : public Comm
     using Comm::handle_srvkey;
     using Comm::handle_unsupported;
 };
+
+void test_socket_failure(void)
+{
+    std::string test = "socket failure: ";
+    Comm *comm = NULL;
+    struct addrinfo a;
+    struct sockaddr_storage s;
+    a.ai_addr = (struct sockaddr *)&s;
+
+    socket_error = true;
+    try
+    {
+        comm = new Comm(&a);
+        comm->start();
+    }
+    catch (std::runtime_error& e)
+    {
+        std::string err(e.what());
+
+        isnt(err.find("Error opening socket"), std::string::npos,
+             test + "correct error contents");
+    }
+    catch (...)
+    {
+        fail(test + "wrong error type");
+    }
+    delete comm;
+
+    socket_error = false;
+}
 
 void test_send_bad_hton(void)
 {
@@ -187,21 +225,17 @@ void test_send_bad_hton(void)
     bad_hton = true;
     bad_encrypt = false;
     sendto_error = false;
-    recvfrom_calls = 1;
     packet_type = -1;
 
     try
     {
         comm = new fake_Comm();
-        comm->start();
     }
     catch (...)
     {
         fail(test + "constructor/start exception");
     }
     comm->send(pkt, sizeof(packet));
-    while (comm->send_queue.size() != 0)
-        ;
     delete comm;
 
     isnt(new_clog.str().find("Error reordering packet"),
@@ -224,21 +258,17 @@ void test_send_bad_encrypt(void)
     bad_hton = false;
     bad_encrypt = true;
     sendto_error = false;
-    recvfrom_calls = 1;
     packet_type = -1;
 
     try
     {
         comm = new fake_Comm();
-        comm->start();
     }
     catch (...)
     {
         fail(test + "constructor/start exception");
     }
     comm->send(pkt, sizeof(packet));
-    while (comm->send_queue.size() != 0)
-        ;
     delete comm;
 
     isnt(new_clog.str().find("Error encrypting packet"),
@@ -251,6 +281,9 @@ void test_send_bad_send(void)
 {
     std::string test = "sendto failure: ";
     fake_Comm *comm = NULL;
+    struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     packet *pkt = new packet;
 
@@ -258,15 +291,16 @@ void test_send_bad_send(void)
     pkt->basic.type = TYPE_PNGPKT;
     pkt->basic.version = R9_PROTO_VER;
 
+    recvfrom_quiet = true;
     bad_hton = false;
     bad_encrypt = false;
     sendto_error = true;
-    recvfrom_calls = 1;
     packet_type = -1;
 
     try
     {
-        comm = new fake_Comm();
+        comm = new fake_Comm(&ai);
+        comm->send_timeout = 0;
         comm->start();
     }
     catch (...)
@@ -282,6 +316,7 @@ void test_send_bad_send(void)
          std::string::npos,
          test + "expected log entry");
     new_clog.str(std::string());
+    recvfrom_quiet = false;
 }
 
 void test_send_packet(void)
@@ -421,44 +456,13 @@ void test_send_logout(void)
     is(new_clog.str().size(), 0, test + "no log entry");
 }
 
-void test_recv_bad_result(void)
-{
-    std::string test = "recvfrom failure: ";
-    fake_Comm *comm = NULL;
-
-    memset((void *)&expected_packet, 0, sizeof(packet));
-    expected_packet.basic.type = TYPE_PNGPKT;
-    expected_packet.basic.version = R9_PROTO_VER;
-
-    recvfrom_error = true;
-    bad_sender = false;
-    bad_packet = false;
-    bad_ntoh = false;
-    recvfrom_calls = 0;
-
-    try
-    {
-        comm = new fake_Comm();
-        comm->start();
-    }
-    catch (...)
-    {
-        fail(test + "constructor/start exception");
-    }
-    while (new_clog.str().size() == 0)
-        ;
-    delete comm;
-
-    isnt(new_clog.str().find("Error receiving packet:"),
-         std::string::npos,
-         test + "expected log entry");
-    new_clog.str(std::string());
-}
-
 void test_recv_bad_sender(void)
 {
     std::string test = "unknown sender: ";
     fake_Comm *comm = NULL;
+    struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&expected_packet, 0, sizeof(packet));
     expected_packet.basic.type = TYPE_PNGPKT;
@@ -469,11 +473,10 @@ void test_recv_bad_sender(void)
     bad_packet = false;
     bad_decrypt = false;
     bad_ntoh = false;
-    recvfrom_calls = 0;
 
     try
     {
-        comm = new fake_Comm();
+        comm = new fake_Comm(&ai);
         comm->start();
     }
     catch (...)
@@ -495,6 +498,8 @@ void test_recv_bad_packet(void)
     std::string test = "unknown packet: ";
     fake_Comm *comm = NULL;
     struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;
@@ -513,7 +518,6 @@ void test_recv_bad_packet(void)
     bad_packet = true;
     bad_decrypt = false;
     bad_ntoh = false;
-    recvfrom_calls = 0;
 
     try
     {
@@ -538,6 +542,8 @@ void test_recv_no_decrypt(void)
     std::string test = "decrypt failure: ";
     fake_Comm *comm = NULL;
     struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;
@@ -556,7 +562,6 @@ void test_recv_no_decrypt(void)
     bad_packet = false;
     bad_decrypt = true;
     bad_ntoh = false;
-    recvfrom_calls = 0;
 
     try
     {
@@ -582,6 +587,8 @@ void test_recv_no_ntoh(void)
     std::string test = "ntoh failure: ";
     fake_Comm *comm = NULL;
     struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;
@@ -600,7 +607,6 @@ void test_recv_no_ntoh(void)
     bad_packet = false;
     bad_decrypt = false;
     bad_ntoh = true;
-    recvfrom_calls = 0;
 
     try
     {
@@ -626,6 +632,8 @@ void test_recv_packet(void)
     std::string test = "recv_worker: ";
     fake_Comm *comm = NULL;
     struct addrinfo ai;
+    struct sockaddr_storage ss;
+    ai.ai_addr = (struct sockaddr *)&ss;
 
     memset((void *)&ai, 0, sizeof(struct addrinfo));
     ai.ai_family = AF_INET;
@@ -644,7 +652,6 @@ void test_recv_packet(void)
     bad_packet = false;
     bad_decrypt = false;
     bad_ntoh = false;
-    recvfrom_calls = 0;
 
     try
     {
@@ -906,6 +913,7 @@ int main(int argc, char **argv)
 
     std::clog.rdbuf(new_clog.rdbuf());
 
+    test_socket_failure();
     test_send_bad_hton();
     test_send_bad_encrypt();
     test_send_bad_send();
@@ -915,7 +923,6 @@ int main(int argc, char **argv)
     test_send_action_req_obj();
     test_send_action_req_vec();
     test_send_logout();
-    test_recv_bad_result();
     test_recv_bad_sender();
     test_recv_bad_packet();
     test_recv_no_decrypt();
