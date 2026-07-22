@@ -34,7 +34,7 @@
 class MotionPool : public ThreadPool<GameObject *>
 {
   public:
-    MotionPool(const char *, unsigned int);
+    MotionPool(unsigned int);
     ~MotionPool();
 
     void start(void);

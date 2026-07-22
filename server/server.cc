@@ -259,7 +259,7 @@ static void setup_thread_pools(void)
      * the actions library keeps a pointer to it in its own address
      * space.
      */
-    motion_pool = new MotionPool("motion", config.motion_threads);
+    motion_pool = new MotionPool(config.motion_threads);
     update_pool = new UpdatePool("update", config.update_threads);
     action_pool = new ActionPool(config.action_threads,
                                  zone->game_objects,
