@@ -16,7 +16,6 @@ void register_actions(actions_map&);
 void unregister_actions(actions_map&);
 int fake_action(GameObject *, int, GameObject *, glm::dvec3&);
 
-GameObject::objects_map *game_objs;
 fake_listen_socket *listensock;
 int register_count, unregister_count, action_count;
 
@@ -58,20 +57,16 @@ void setup_fixture(void)
     symbol_count = 0;
     symbol_result = (void *)register_actions;
 
-    game_objs = new GameObject::objects_map();
-    (*game_objs)[9876LL] = new GameObject(NULL, NULL, 9876LL);
-
     listensock = new fake_listen_socket(NULL);
 
     zone = new fake_Zone(1000, 1, database);
+    zone->game_objects[9876LL] = new GameObject(NULL, NULL, 9876LL);
 }
 
 void cleanup_fixture(void)
 {
     delete (fake_Zone *)zone;
     delete listensock;
-    delete (*game_objs)[9876LL];
-    delete game_objs;
     delete (fake_DB *)database;
 }
 
@@ -89,7 +84,7 @@ void test_create_delete(void)
 
     try
     {
-        action_pool = new ActionPool(1, *game_objs);
+        action_pool = new ActionPool(1);
     }
     catch (...)
     {
@@ -112,7 +107,7 @@ void test_start_stop(void)
 
     setup_fixture();
 
-    action_pool = new ActionPool(1, *game_objs);
+    action_pool = new ActionPool(1);
     action_pool->start();
     is(action_pool->startup_arg == action_pool, true,
        test + "expected startup arg");
@@ -137,7 +132,7 @@ void test_no_skill(void)
     get_character_objectid_result = 9876LL;
     base_user *bu = new base_user(123LL, "a", "b", listensock);
 
-    action_pool = new ActionPool(1, *game_objs);
+    action_pool = new ActionPool(1);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -152,7 +147,7 @@ void test_no_skill(void)
     action_pool->execute_action(bu, pkt);
     is(action_count, 0, test + "expected action count");
 
-    (*game_objs)[9876LL]->disconnect(bu);
+    zone->game_objects[9876LL]->disconnect(bu);
     delete bu;
 
     symbol_result = (void *)unregister_actions;
@@ -173,7 +168,7 @@ void test_invalid_skill(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[567] = {567, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs);
+    action_pool = new ActionPool(1);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -188,7 +183,7 @@ void test_invalid_skill(void)
     action_pool->execute_action(bu, pkt);
     is(action_count, 1, test + "expected action count");
 
-    (*game_objs)[9876LL]->disconnect(bu);
+    zone->game_objects[9876LL]->disconnect(bu);
     delete bu;
 
     symbol_result = (void *)unregister_actions;
@@ -209,7 +204,7 @@ void test_wrong_object_id(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs);
+    action_pool = new ActionPool(1);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -224,7 +219,7 @@ void test_wrong_object_id(void)
     action_pool->execute_action(bu, pkt);
     is(action_count, 0, test + "expected action count");
 
-    (*game_objs)[9876LL]->disconnect(bu);
+    zone->game_objects[9876LL]->disconnect(bu);
     delete bu;
 
     symbol_result = (void *)unregister_actions;
@@ -245,7 +240,7 @@ void test_good_object_id(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs);
+    action_pool = new ActionPool(1);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -260,7 +255,7 @@ void test_good_object_id(void)
     action_pool->execute_action(bu, pkt);
     is(action_count, 1, test + "expected action count");
 
-    (*game_objs)[9876LL]->disconnect(bu);
+    zone->game_objects[9876LL]->disconnect(bu);
     delete bu;
 
     symbol_result = (void *)unregister_actions;
@@ -281,7 +276,7 @@ void test_worker(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs);
+    action_pool = new ActionPool(1);
 
     packet_list pl;
     memset(&pl.buf, 0, sizeof(action_request));
@@ -313,7 +308,7 @@ void test_worker(void)
     }
     symbol_error = false;
 
-    (*game_objs)[9876LL]->disconnect(bu);
+    zone->game_objects[9876LL]->disconnect(bu);
     delete bu;
 
     cleanup_fixture();

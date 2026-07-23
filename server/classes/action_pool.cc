@@ -66,11 +66,8 @@ void ActionPool::load_actions(void)
     }
 }
 
-ActionPool::ActionPool(unsigned int pool_size,
-                       GameObject::objects_map& game_obj)
-    : ThreadPool<packet_list>("action", pool_size), actions(),
-      action_libs(),
-      game_objects(game_obj)
+ActionPool::ActionPool(unsigned int pool_size)
+    : ThreadPool<packet_list>("action", pool_size), actions(), action_libs()
 {
     database->get_server_skills(this->actions);
     this->load_actions();
@@ -120,13 +117,13 @@ void ActionPool::execute_action(base_user *user, action_request& req)
     actions_iterator i = this->actions.find(req.action_id);
     Control::skills_iterator j = user->actions.find(req.action_id);
     GameObject::objects_iterator k =
-        this->game_objects.find(req.dest_object_id);
+        zone->game_objects.find(req.dest_object_id);
     glm::dvec3 dest((double)req.x_pos_dest / (double)ACTREQ_POS_SCALE,
                     (double)req.y_pos_dest / (double)ACTREQ_POS_SCALE,
                     (double)req.z_pos_dest / (double)ACTREQ_POS_SCALE);
     GameObject *target = NULL;
 
-    if (k != this->game_objects.end())
+    if (k != zone->game_objects.end())
         target = k->second;
 
     /* TODO:  if the user doesn't have the skill, but it is valid, we
