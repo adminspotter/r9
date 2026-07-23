@@ -89,7 +89,7 @@ void test_create_delete(void)
 
     try
     {
-        action_pool = new ActionPool(1, *game_objs, database);
+        action_pool = new ActionPool(1, *game_objs);
     }
     catch (...)
     {
@@ -112,7 +112,7 @@ void test_start_stop(void)
 
     setup_fixture();
 
-    action_pool = new ActionPool(1, *game_objs, database);
+    action_pool = new ActionPool(1, *game_objs);
     action_pool->start();
     is(action_pool->startup_arg == action_pool, true,
        test + "expected startup arg");
@@ -137,7 +137,7 @@ void test_no_skill(void)
     get_character_objectid_result = 9876LL;
     base_user *bu = new base_user(123LL, "a", "b", listensock);
 
-    action_pool = new ActionPool(1, *game_objs, database);
+    action_pool = new ActionPool(1, *game_objs);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -173,7 +173,7 @@ void test_invalid_skill(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[567] = {567, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs, database);
+    action_pool = new ActionPool(1, *game_objs);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -209,7 +209,7 @@ void test_wrong_object_id(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs, database);
+    action_pool = new ActionPool(1, *game_objs);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -245,7 +245,7 @@ void test_good_object_id(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs, database);
+    action_pool = new ActionPool(1, *game_objs);
 
     action_request pkt;
     memset(&pkt, 0, sizeof(action_request));
@@ -281,7 +281,7 @@ void test_worker(void)
     base_user *bu = new base_user(123LL, "a", "b", listensock);
     bu->actions[789] = {789, 5, 0, 0};
 
-    action_pool = new ActionPool(1, *game_objs, database);
+    action_pool = new ActionPool(1, *game_objs);
 
     packet_list pl;
     memset(&pl.buf, 0, sizeof(action_request));

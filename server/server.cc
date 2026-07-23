@@ -261,9 +261,7 @@ static void setup_thread_pools(void)
      */
     motion_pool = new MotionPool(config.motion_threads);
     update_pool = new UpdatePool(config.update_threads);
-    action_pool = new ActionPool(config.action_threads,
-                                 zone->game_objects,
-                                 database);
+    action_pool = new ActionPool(config.action_threads, zone->game_objects);
 
     action_pool->start();
     motion_pool->start();

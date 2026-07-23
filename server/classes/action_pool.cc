@@ -67,8 +67,7 @@ void ActionPool::load_actions(void)
 }
 
 ActionPool::ActionPool(unsigned int pool_size,
-                       GameObject::objects_map& game_obj,
-                       DB *database)
+                       GameObject::objects_map& game_obj)
     : ThreadPool<packet_list>("action", pool_size), actions(),
       action_libs(),
       game_objects(game_obj)
