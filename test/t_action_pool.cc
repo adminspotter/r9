@@ -265,6 +265,43 @@ void test_good_object_id(void)
     cleanup_fixture();
 }
 
+void test_targeted_skill(void)
+{
+    std::string test = "targeted skill: ";
+
+    setup_fixture();
+
+    check_authorization_result = ACCESS_MOVE;
+    get_character_objectid_result = 9876LL;
+    base_user *bu = new base_user(123LL, "a", "b", listensock);
+    bu->actions[789] = {789, 5, 0, 0};
+
+    action_pool = new ActionPool(1);
+
+    action_request pkt;
+    memset(&pkt, 0, sizeof(action_request));
+    pkt.type = TYPE_ACTREQ;
+    pkt.version = R9_PROTO_VER;
+    pkt.object_id = 9876LL;
+    pkt.action_id = 789;
+    pkt.power_level = 5;
+    pkt.dest_object_id = 9876LL;
+
+    action_count = 0;
+
+    action_pool->execute_action(bu, pkt);
+    is(action_count, 1, test + "expected action count");
+
+    zone->game_objects[9876LL]->disconnect(bu);
+    delete bu;
+
+    symbol_result = (void *)unregister_actions;
+
+    delete action_pool;
+
+    cleanup_fixture();
+}
+
 void test_worker(void)
 {
     std::string test = "worker: ";
@@ -316,7 +353,7 @@ void test_worker(void)
 
 int main(int argc, char **argv)
 {
-    plan(11);
+    plan(12);
 
     test_create_delete();
     test_start_stop();
@@ -324,6 +361,7 @@ int main(int argc, char **argv)
     test_invalid_skill();
     test_wrong_object_id();
     test_good_object_id();
+    test_targeted_skill();
     test_worker();
     return exit_status();
 }
