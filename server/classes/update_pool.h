@@ -33,7 +33,7 @@
 class UpdatePool : public ThreadPool<GameObject *>
 {
   public:
-    UpdatePool(const char *, unsigned int);
+    UpdatePool(unsigned int);
     ~UpdatePool();
 
     void start(void);

@@ -51,7 +51,7 @@ void test_operate(void)
 
     try
     {
-        pool = new UpdatePool("t_update", 1);
+        pool = new UpdatePool(1);
     }
     catch (...)
     {

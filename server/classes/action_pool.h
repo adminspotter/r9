@@ -46,12 +46,10 @@ class ActionPool : public ThreadPool<packet_list>
 
     actions_map actions;
 
-    GameObject::objects_map& game_objects;
-
     void load_actions(void);
 
   public:
-    ActionPool(unsigned int, GameObject::objects_map&, DB *);
+    ActionPool(unsigned int);
     ~ActionPool();
 
     void start(void);

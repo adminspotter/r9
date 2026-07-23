@@ -17,7 +17,7 @@ Octree *sector;
 void test_start_stop(void)
 {
     std::string test = "start/stop: ";
-    motion_pool = new MotionPool("t_motion", 1);
+    motion_pool = new MotionPool(1);
     motion_pool->start();
     is(motion_pool->startup_arg == motion_pool, true,
        test + "expected startup arg");
@@ -37,8 +37,8 @@ void test_operate(void)
 
     sector_contains_result = sector;
 
-    motion_pool = new MotionPool("t_motion", 1);
-    update_pool = new UpdatePool("mot_test", 1);
+    motion_pool = new MotionPool(1);
+    update_pool = new UpdatePool(1);
     GameObject *go1 = new GameObject(NULL, NULL, 9876LL);
     GameObject *go2 = new GameObject(NULL, NULL, 9877LL);
     GameObject *go3 = new GameObject(NULL, NULL, 9878LL);
@@ -108,7 +108,7 @@ void test_collide(void)
     std::string test = "collide: ", st;
     glm::dvec3 min(0.0, 0.0, 0.0), max(1000.0, 1000.0, 1000.0);
     sector = new Octree(NULL, min, max, 1);
-    motion_pool = new MotionPool("t_motion", 1);
+    motion_pool = new MotionPool(1);
     GameObject *go1 = new GameObject(NULL, NULL, 9876LL);
     GameObject *go2 = new GameObject(NULL, NULL, 9877LL);
 

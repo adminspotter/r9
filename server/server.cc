@@ -255,15 +255,9 @@ static void setup_zone(void)
 
 static void setup_thread_pools(void)
 {
-    /* Motion pool needs to exist before we create the action pool;
-     * the actions library keeps a pointer to it in its own address
-     * space.
-     */
-    motion_pool = new MotionPool("motion", config.motion_threads);
-    update_pool = new UpdatePool("update", config.update_threads);
-    action_pool = new ActionPool(config.action_threads,
-                                 zone->game_objects,
-                                 database);
+    motion_pool = new MotionPool(config.motion_threads);
+    update_pool = new UpdatePool(config.update_threads);
+    action_pool = new ActionPool(config.action_threads);
 
     action_pool->start();
     motion_pool->start();

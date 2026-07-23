@@ -33,8 +33,8 @@
 #include "motion_pool.h"
 #include "../server.h"
 
-MotionPool::MotionPool(const char *pool_name, unsigned int pool_size)
-    : ThreadPool<GameObject *>(pool_name, pool_size)
+MotionPool::MotionPool(unsigned int pool_size)
+    : ThreadPool<GameObject *>("motion", pool_size)
 {
 }
 
