@@ -260,7 +260,7 @@ static void setup_thread_pools(void)
      * space.
      */
     motion_pool = new MotionPool(config.motion_threads);
-    update_pool = new UpdatePool("update", config.update_threads);
+    update_pool = new UpdatePool(config.update_threads);
     action_pool = new ActionPool(config.action_threads,
                                  zone->game_objects,
                                  database);

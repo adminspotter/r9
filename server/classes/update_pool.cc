@@ -27,8 +27,8 @@
 
 extern std::vector<listen_socket *> sockets;
 
-UpdatePool::UpdatePool(const char *pool_name, unsigned int pool_size)
-    : ThreadPool<GameObject *>(pool_name, pool_size)
+UpdatePool::UpdatePool(unsigned int pool_size)
+    : ThreadPool<GameObject *>("update", pool_size)
 {
 }
 

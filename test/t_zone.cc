@@ -115,7 +115,7 @@ void test_send_objects(void)
     obj_size = zone->game_objects.size();
     is(obj_size, 2, test + "expected objects size");
 
-    update_pool = new UpdatePool("zonetest", 1);
+    update_pool = new UpdatePool(1);
 
     zone->send_nearby_objects(1234LL);
     is(zone->game_objects.size(), obj_size, test + "no new objects");

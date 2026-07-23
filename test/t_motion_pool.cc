@@ -38,7 +38,7 @@ void test_operate(void)
     sector_contains_result = sector;
 
     motion_pool = new MotionPool(1);
-    update_pool = new UpdatePool("mot_test", 1);
+    update_pool = new UpdatePool(1);
     GameObject *go1 = new GameObject(NULL, NULL, 9876LL);
     GameObject *go2 = new GameObject(NULL, NULL, 9877LL);
     GameObject *go3 = new GameObject(NULL, NULL, 9878LL);
