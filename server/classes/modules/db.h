@@ -49,6 +49,9 @@
 
 class DB
 {
+  public:
+    typedef uint64_t serverid_t;
+
   protected:
     const std::string dbhost, dbuser, dbpass, dbname;
     const int dbport;
@@ -58,8 +61,9 @@ class DB
     static const int MAX_CHARNAME = 64;
     static const int MAX_SKILLNAME = 64;
 
+  protected:
     char host_ip[INET6_ADDRSTRLEN];
-    uint64_t host_id;
+    serverid_t host_id;
 
     void get_host_address(void);
 
