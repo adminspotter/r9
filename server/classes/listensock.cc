@@ -448,7 +448,7 @@ void listen_socket::login_user(access_list& p)
 
     std::clog << "login for user " << bu->to_string() << std::endl;
     this->connect_user(bu, p);
-    zone->send_nearby_objects(bu->characterid);
+    zone->send_nearby_objects(bu->slave->object_id);
 }
 
 void listen_socket::logout_user(userid_t userid)
