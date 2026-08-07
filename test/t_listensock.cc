@@ -12,20 +12,6 @@ using namespace TAP;
 #include "mock_server_globals.h"
 #include "mock_zone.h"
 
-int fake_server_objects(GameObject::objects_map& gom)
-{
-    glm::dvec3 pos(100.0, 100.0, 100.0);
-
-    gom[1234LL] = new GameObject(NULL, NULL, 1234LL);
-    gom[1234LL]->set_position(pos);
-
-    gom[1235LL] = new GameObject(NULL, NULL, 1235LL);
-    pos.x = 125.0;
-    gom[1235LL]->set_position(pos);
-
-    return 2;
-}
-
 class fake_listen_socket : public listen_socket
 {
   public:
