@@ -611,7 +611,7 @@ void test_listen_socket_login(void)
 
     listen->login_user(access);
 
-    is(send_nearby_objects_count, 1, test + "expected nearby objects call");
+    is(send_nearby_objects_count, 0, test + "expected nearby objects call");
     is(listen->users.size(), 1, test + "expected user list size");
     is(listen->users[123LL]->auth_level, ACCESS_VIEW,
        test + "expected auth level");

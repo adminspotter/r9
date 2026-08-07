@@ -92,6 +92,7 @@ base_user::base_user(userid_t userid,
         objid_t objid = database->get_character_objectid(userid, cname);
         this->default_slave = this->slave = zone->find_game_object(objid);
         this->slave->connect(this);
+        zone->send_nearby_objects(objid);
     }
     this->characterid = database->get_characterid(userid, cname);
     database->get_player_server_skills(this->userid,
@@ -448,7 +449,6 @@ void listen_socket::login_user(access_list& p)
 
     std::clog << "login for user " << bu->to_string() << std::endl;
     this->connect_user(bu, p);
-    zone->send_nearby_objects(bu->slave->object_id);
 }
 
 void listen_socket::logout_user(userid_t userid)
