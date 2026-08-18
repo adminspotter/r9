@@ -165,17 +165,17 @@ GameObject *Zone::find_game_object(objid_t objid)
     return go;
 }
 
-void Zone::send_nearby_objects(objid_t objid)
+void Zone::send_nearby_objects(GameObject *go)
 {
-    GameObject *go = this->find_game_object(objid);
-
-    update_pool->push(go);
+    if (go != NULL)
+        update_pool->push(go);
 
     /* Send updates on all objects within visual range */
     for (auto& gi : this->game_objects)
     {
-        if (gi.second != go
-            && go->distance_from(gi.second->get_position()) < 1000.0)
+        if (go == NULL
+            || (gi.second != go
+                && go->distance_from(gi.second->get_position()) < 1000.0))
             update_pool->push(gi.second);
     }
 }

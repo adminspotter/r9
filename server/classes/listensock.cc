@@ -92,7 +92,7 @@ base_user::base_user(userid_t userid,
         objid_t objid = database->get_character_objectid(userid, cname);
         this->default_slave = this->slave = zone->find_game_object(objid);
         this->slave->connect(this);
-        zone->send_nearby_objects(objid);
+        zone->send_nearby_objects(this->slave);
     }
     this->characterid = database->get_characterid(userid, cname);
     database->get_player_server_skills(this->userid,

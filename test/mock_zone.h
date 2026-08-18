@@ -13,7 +13,7 @@ class fake_Zone : public Zone
     fake_Zone(uint64_t a, uint16_t b, DB *c) : Zone(a, b, c) {};
     virtual ~fake_Zone() {};
 
-    virtual void send_nearby_objects(uint64_t a)
+    virtual void send_nearby_objects(GameObject *a)
         {
             ++send_nearby_objects_count;
         };
