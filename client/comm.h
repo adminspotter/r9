@@ -72,7 +72,7 @@ class Comm
     std::atomic<bool> thread_exit_flag;
 
     typedef void (Comm::*pkt_handler)(packet&);
-    static pkt_handler pkt_type[8];
+    static pkt_handler pkt_type[9];
 
     void create_socket(void);
 
@@ -87,6 +87,7 @@ class Comm
     void handle_posupd(packet&);
     void handle_srvnot(packet&);
     void handle_srvkey(packet&);
+    void handle_objdel(packet&);
     void handle_unsupported(packet&);
 
   protected:

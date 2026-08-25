@@ -98,7 +98,8 @@ Comm::pkt_handler Comm::pkt_type[] =
     &Comm::handle_srvnot,       /* Server notice   */
     &Comm::handle_pngpkt,       /* Ping            */
     &Comm::handle_unsupported,  /* Logout req      */
-    &Comm::handle_srvkey        /* Server key      */
+    &Comm::handle_srvkey,       /* Server key      */
+    &Comm::handle_objdel        /* Object delete   */
 };
 
 #define COMM_MEMBER(a, b) ((a).*(b))
@@ -339,6 +340,13 @@ void Comm::handle_srvkey(packet& p)
     free_dh_message(shared);
     OPENSSL_free(pub);
     memcpy(this->iv, p.key.iv, R9_SYMMETRIC_IV_BUF_SZ);
+}
+
+void Comm::handle_objdel(packet& p)
+{
+    object_delete& d = (object_delete&)p.del;
+
+    delete_object(d.object_id);
 }
 
 void Comm::handle_unsupported(packet& p)

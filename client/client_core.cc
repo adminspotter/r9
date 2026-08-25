@@ -222,6 +222,11 @@ void move_object(uint64_t objectid, uint16_t frame,
     oref.dirty = true;
 }
 
+void delete_object(uint64_t objectid)
+{
+    obj->erase(objectid);
+}
+
 void resize_window(int width, int height)
 {
     /* A 50mm lens on a 35mm camera has a 39.6° horizontal and a 27.0°
