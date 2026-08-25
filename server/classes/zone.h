@@ -70,7 +70,7 @@ class Zone
     glm::ivec3 which_sector(const glm::dvec3&);
 
     GameObject *find_game_object(objid_t);
-    virtual void send_nearby_objects(objid_t);
+    virtual void send_nearby_objects(GameObject *);
 };
 
 #endif /* __INC_ZONE_H__ */

@@ -38,6 +38,8 @@
 #include <stdexcept>
 #include <sstream>
 #include <functional>
+#include <mutex>
+#include <shared_mutex>
 
 #include "client_core.h"
 #include "shader.h"
@@ -52,6 +54,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 ObjectCache *obj = NULL;
+std::shared_mutex object_lock;
 struct object *self_obj = NULL;
 GLuint vert_shader, geom_shader, frag_shader, shader_pgm;
 GLuint model_loc, view_loc, proj_loc;
@@ -186,6 +189,8 @@ void draw_objects(void)
     }
 
     std::function<void(object&)> draw = draw_object();
+
+    std::shared_lock lock(object_lock);
     obj->each(draw);
 }
 
@@ -194,19 +199,18 @@ void move_object(uint64_t objectid, uint16_t frame,
                  float wori, float xori, float yori, float zori,
                  float xlook, float ylook, float zlook)
 {
+    std::unique_lock lock(object_lock);
     object& oref = (*obj)[objectid];
 
     /* If it's a new object, let's get things set up for it */
     if (oref.color == glm::vec3(0.0, 0.0, 0.0))
     {
         oref.vbo = -1;
-        /* Randomize a new color */
         oref.color = {rand_r(&rand_seed) / (RAND_MAX * 1.0),
                       rand_r(&rand_seed) / (RAND_MAX * 1.0),
                       rand_r(&rand_seed) / (RAND_MAX * 1.0)};
     }
 
-    /* Update the object's position */
     oref.position.x = xpos;
     oref.position.y = ypos;
     oref.position.z = zpos;
@@ -220,6 +224,12 @@ void move_object(uint64_t objectid, uint16_t frame,
     oref.look = glm::normalize(oref.look);
 
     oref.dirty = true;
+}
+
+void delete_object(uint64_t objectid)
+{
+    std::unique_lock lock(object_lock);
+    obj->erase(objectid);
 }
 
 void resize_window(int width, int height)

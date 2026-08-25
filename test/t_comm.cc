@@ -45,6 +45,10 @@ void move_object(uint64_t a, uint16_t b,
     is(l, 0.1234, "move: expected z look");
 }
 
+void delete_object(uint64_t a)
+{
+}
+
 ssize_t recvfrom(int a,
                  void *b, size_t c,
                  int d,

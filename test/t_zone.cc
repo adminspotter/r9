@@ -104,6 +104,31 @@ void test_sector_methods(void)
     delete (fake_DB *)database;
 }
 
+void test_find_game_object(void)
+{
+    std::string test = "find_game_object: ";
+    int obj_size;
+
+    database = new object_DB("a", 0, "b", "c", "d");
+
+    zone = new Zone(1000, 1, database);
+    obj_size = zone->game_objects.size();
+    is(obj_size, 2, test + "expected objects size");
+
+    GameObject *go = zone->find_game_object(1234LL);
+
+    obj_size = zone->game_objects.size();
+    is(obj_size, 2, test + "no new object");
+
+    go = zone->find_game_object(9999LL);
+
+    obj_size = zone->game_objects.size();
+    is(obj_size, 3, test + "new object created");
+
+    delete zone;
+    delete (object_DB *)database;
+}
+
 void test_send_objects(void)
 {
     std::string test = "send_objects: ";
@@ -117,19 +142,13 @@ void test_send_objects(void)
 
     update_pool = new UpdatePool(1);
 
-    zone->send_nearby_objects(1234LL);
-    is(zone->game_objects.size(), obj_size, test + "no new objects");
+    zone->send_nearby_objects(zone->game_objects[1234LL]);
 
     /* Update queue will have length of this object, plus all other
      * objects "within visual range".  In our case here, it will be 2.
      */
     queue_size = update_pool->queue_size();
     is(queue_size, 2, test + "expected update size");
-
-    zone->send_nearby_objects(9876LL);
-    is(zone->game_objects.size(), obj_size + 1, test + "new object");
-    is(update_pool->queue_size(), (queue_size * 2) + 1,
-       test + "expected update size");
 
     delete update_pool;
     delete zone;
@@ -143,6 +162,7 @@ int main(int argc, char **argv)
     test_create_simple();
     test_create_complex();
     test_sector_methods();
+    test_find_game_object();
     test_send_objects();
     return exit_status();
 }

@@ -11,7 +11,7 @@ const char address[] = "1.2.3.4";
  */
 int gethostname(char *a, size_t b)
 {
-    strncpy(a, "whut.foo.com", b);
+    strncpy(a, "localhost", b);
     return 0;
 }
 

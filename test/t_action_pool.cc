@@ -11,7 +11,6 @@ using namespace TAP;
 #include "mock_server_globals.h"
 #include "mock_zone.h"
 
-
 void register_actions(actions_map&);
 void unregister_actions(actions_map&);
 int fake_action(GameObject *, int, GameObject *, glm::dvec3&);

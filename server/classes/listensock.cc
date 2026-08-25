@@ -92,7 +92,8 @@ base_user::base_user(userid_t userid,
         objid_t objid = database->get_character_objectid(userid, cname);
         this->default_slave = this->slave = zone->find_game_object(objid);
         this->slave->connect(this);
-        zone->send_nearby_objects(objid);
+        this->slave->activate();
+        zone->send_nearby_objects(this->slave);
     }
     this->characterid = database->get_characterid(userid, cname);
     database->get_player_server_skills(this->userid,
@@ -478,10 +479,7 @@ void listen_socket::connect_user(base_user *bu, access_list& al)
 
     this->users[bu->userid] = bu;
     if (bu->default_slave != NULL)
-    {
-        bu->default_slave->activate();
         obj_id = bu->default_slave->object_id;
-    }
     bu->send_server_key(config.key.pub_key, R9_PUBKEY_SZ);
     bu->send_ack(TYPE_LOGREQ, bu->auth_level, obj_id);
 }

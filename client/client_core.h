@@ -46,6 +46,7 @@ void move_object(uint64_t, uint16_t,
                  float, float, float,
                  float, float, float, float,
                  float, float, float);
+void delete_object(uint64_t);
 
 void resize_window(int, int);
 
