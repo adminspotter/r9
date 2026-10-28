@@ -48,7 +48,7 @@
 #include "log_display.h"
 
 void error_callback(int, const char *);
-void close_key_callback(ui::active *, void *, void *);
+void close_key_callback(ui::active *, ui::key_call_data&, void *);
 void resize_callback(GLFWwindow *, int, int);
 
 void setup_controllers(void);
@@ -110,7 +110,8 @@ int main(int argc, char **argv)
     glfwMakeContextCurrent(w);
     ctx = new ui::context(ui::element::size,
                           ui::size::all,
-                          glm::ivec2(800, 600));
+                          glm::ivec2(800, 600),
+                          ui::element::state, ui::state::tab_sensitive, false);
     ui_connect_glfw(ctx, w);
     ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
 
@@ -155,11 +156,9 @@ void error_callback(int err, const char *desc)
     std::cout << "glfw error: " << desc << " (" << err << ')' << std::endl;
 }
 
-void close_key_callback(ui::active *a, void *call, void *client)
+void close_key_callback(ui::active *a, ui::key_call_data& kcd, void *client)
 {
-    ui::key_call_data *call_data = (ui::key_call_data *)call;
-
-    if (call_data->key == ui::key::esc && call_data->state == ui::key::down)
+    if (kcd.key == ui::key::esc && kcd.state == ui::key::down)
         glfwSetWindowShouldClose(w, GL_TRUE);
 }
 

@@ -84,6 +84,8 @@ void log_display::create_log_labels(void)
 {
     while (this->created != this->entries.end() - 1)
     {
+        ui::resize_call_data rcd;
+
         ++this->created;
         this->created->label = new ui::label(
             this,
@@ -98,7 +100,7 @@ void log_display::create_log_labels(void)
         this->created->label->get(ui::element::size, ui::size::width, &x,
                                   ui::element::size, ui::size::height, &y);
         this->manage_children();
-        this->reposition(dynamic_cast<ui::active *>(this), NULL, NULL);
+        this->reposition(dynamic_cast<ui::active *>(this), rcd, NULL);
     }
 }
 
