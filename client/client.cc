@@ -110,7 +110,8 @@ int main(int argc, char **argv)
     glfwMakeContextCurrent(w);
     ctx = new ui::context(ui::element::size,
                           ui::size::all,
-                          glm::ivec2(800, 600));
+                          glm::ivec2(800, 600),
+                          ui::element::state, ui::state::tab_sensitive, false);
     ui_connect_glfw(ctx, w);
     ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
 
