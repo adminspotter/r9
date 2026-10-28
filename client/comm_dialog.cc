@@ -45,8 +45,8 @@
 static ui::font *dialog_font;
 static ui::text_field *user, *pass, *host;
 
-void setup_comm_callback(ui::active *, void *, void *);
-void close_dialog_callback(ui::active *, void *, void *);
+void setup_comm_callback(ui::active *, ui::btn_call_data&, void *);
+void close_dialog_callback(ui::active *, ui::btn_call_data&, void *);
 
 void create_login_dialog(ui::context *ctx)
 {
@@ -130,7 +130,7 @@ void create_login_dialog(ui::context *ctx)
     dialog->set(ui::element::position, ui::position::all, size);
 }
 
-void setup_comm_callback(ui::active *t, void *call, void *client)
+void setup_comm_callback(ui::active *t, ui::btn_call_data& bcd, void *client)
 {
     char portstr[16];
     struct addrinfo hints, *ai;
@@ -158,7 +158,7 @@ void setup_comm_callback(ui::active *t, void *call, void *client)
     setup_comm(ai, user_str.c_str(), config.charname.c_str());
 }
 
-void close_dialog_callback(ui::active *t, void *call, void *client)
+void close_dialog_callback(ui::active *t, ui::btn_call_data& bcd, void *client)
 {
     ui::row_column *dialog = (ui::row_column *)client;
 

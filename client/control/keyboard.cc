@@ -48,46 +48,46 @@ const int keyboard::YAW_RIGHT = ui::key::l;
 
 static glm::vec3 move_vec(0.0f, 0.0f, 0.0f);
 
-void keyboard::keyboard_callback(ui::active *a, void *call, void *client)
+void keyboard::keyboard_callback(ui::active *a,
+                                 ui::key_call_data& kcd,
+                                 void *client)
 {
-    ui::key_call_data *call_data = (ui::key_call_data *)call;
     keyboard *kb = (keyboard *)client;
     glm::vec3 rot_x(1.0, 0.0, 0.0), rot_y(0.0, 1.0, 0.0), rot_z(0.0, 0.0, 1.0);
-    bool key_down = call_data->state == ui::key::down;
+    bool key_down = kcd.state == ui::key::down;
 
     if (*(kb->comm) == NULL)
         return;
 
-    if (call_data->key == kb->move_left || call_data->key == kb->move_right)
+    if (kcd.key == kb->move_left || kcd.key == kb->move_right)
     {
         move_vec.x = (!key_down ? 0.0
-                      : (call_data->key == kb->move_right ? 1.0 : -1.0));
+                      : (kcd.key == kb->move_right ? 1.0 : -1.0));
         (*(kb->comm))->send_move(move_vec);
     }
-    else if (call_data->key == kb->move_forward
-             || call_data->key == kb->move_back)
+    else if (kcd.key == kb->move_forward || kcd.key == kb->move_back)
     {
         move_vec.y = (!key_down ? 0.0
-                      : (call_data->key == kb->move_forward ? 1.0 : -1.0));
+                      : (kcd.key == kb->move_forward ? 1.0 : -1.0));
         (*(kb->comm))->send_move(move_vec);
     }
-    else if (call_data->key == kb->move_up || call_data->key == kb->move_down)
+    else if (kcd.key == kb->move_up || kcd.key == kb->move_down)
     {
         move_vec.z = (!key_down ? 0.0
-                      : (call_data->key == kb->move_up ? 1.0 : -1.0));
+                      : (kcd.key == kb->move_up ? 1.0 : -1.0));
         (*(kb->comm))->send_move(move_vec);
     }
-    else if (call_data->key == kb->pitch_up)
+    else if (kcd.key == kb->pitch_up)
         (*(kb->comm))->send_rotate(rot_x, (key_down ? 1.0f : 0.0f));
-    else if (call_data->key == kb->pitch_down)
+    else if (kcd.key == kb->pitch_down)
         (*(kb->comm))->send_rotate(-rot_x, (key_down ? 1.0f : 0.0f));
-    else if (call_data->key == kb->roll_left)
+    else if (kcd.key == kb->roll_left)
         (*(kb->comm))->send_rotate(rot_y, (key_down ? 1.0f : 0.0f));
-    else if (call_data->key == kb->roll_right)
+    else if (kcd.key == kb->roll_right)
         (*(kb->comm))->send_rotate(-rot_y, (key_down ? 1.0f : 0.0f));
-    else if (call_data->key == kb->yaw_left)
+    else if (kcd.key == kb->yaw_left)
         (*(kb->comm))->send_rotate(rot_z, (key_down ? 1.0f : 0.0f));
-    else if (call_data->key == kb->yaw_right)
+    else if (kcd.key == kb->yaw_right)
         (*(kb->comm))->send_rotate(-rot_z, (key_down ? 1.0f : 0.0f));
 }
 
