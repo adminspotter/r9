@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-08-11 07:31-0700\n"
+"POT-Creation-Date: 2026-11-21 23:24-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -130,10 +130,6 @@ msgstr ""
 #: client/configdata.cc:268 client/configdata.cc:284 client/configdata.cc:299
 #: client/configdata.cc:314
 msgid "Error creating config directory {1,name}: {2,errmsg} ({3,errno})"
-msgstr ""
-
-#: client/configdata.cc:393
-msgid "Could not find home directory"
 msgstr ""
 
 #: client/control/control.cc:53
@@ -282,19 +278,19 @@ msgstr ""
 msgid "Error joining SpaceMouse worker: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:192
+#: client/log_display.cc:194
 msgid "Error starting log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:224
+#: client/log_display.cc:226
 msgid "Error cancelling log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:236
+#: client/log_display.cc:238
 msgid "Error joining log display cleanup thread: {1,errmsg} ({2,errno})"
 msgstr ""
 
-#: client/log_display.cc:247
+#: client/log_display.cc:249
 msgid "Error destroying log display mutex: {1,errmsg} ({2,errno})"
 msgstr ""
 

@@ -383,20 +383,7 @@ static void read_paths(const std::string& key,
     element->clear();
     boost::split(paths, str, [](char c){ return c == ':'; });
     for (auto path : paths)
-    {
-        if ((pos = path.find('~')) == 0)
-        {
-            char *home;
-
-            if ((home = getenv("HOME")) == NULL)
-                throw std::runtime_error(
-                    translate("Could not find home directory")
-                );
-            path.replace(pos, 1, home);
-        }
-        if (stat(path.c_str(), &state) != -1)
-            element->push_back(path);
-    }
+        element->push_back(path);
 }
 
 static void read_integer(const std::string& key,
