@@ -90,7 +90,7 @@ void log_display::create_log_labels(void)
         this->created->label = new ui::label(
             this,
             ui::element::font, ui::ownership::shared, this->log_font,
-            ui::element::string, 0, this->created->log_entry,
+            ui::element::string, ui::string::contents, this->created->log_entry,
             ui::element::border, ui::side::all, 1,
             ui::element::color,
             ui::color::background,
