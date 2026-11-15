@@ -109,20 +109,24 @@ void *log_display::cleanup_entries(void *arg)
     log_display *ld = (log_display *)arg;
     log_display::ld_iter last_closed, next_closed;
     log_display::ld_ts_point now;
+    std::chrono::seconds sleep_timeout(log_display::ENTRY_LIFETIME);
     std::chrono::duration<float> ftime;
-    float ftime_val;
-    struct timespec ts;
 
     last_closed = ld->entries.begin();
 
     for (;;)
     {
+        if (ld->exit_flag)
+            break;
+
         next_closed = last_closed + 1;
         if (last_closed != ld->entries.end()
             && next_closed == ld->entries.end())
         {
-            sleep(log_display::ENTRY_LIFETIME);
-            continue;
+            std::unique_lock lock(ld->exit_mutex);
+            if (ld->exit_cond.wait_for(lock, sleep_timeout)
+                != std::cv_status::timeout)
+                continue;
         }
         else
         {
@@ -131,17 +135,10 @@ void *log_display::cleanup_entries(void *arg)
 
             if (next_closed != ld->entries.end())
             {
-                /* Do a nanosleep until the next entry expires. */
-                ftime = next_closed->timestamp
-                    + ld->entry_lifetime - log_display::ld_ts_time::now();
-                ftime_val = ftime.count();
-                if (ftime_val > 0.0f)
-                {
-                    ts.tv_sec = (int)truncf(ftime_val);
-                    ftime_val -= (float)ts.tv_sec;
-                    ts.tv_nsec = (int)truncf(ftime_val * 1000000000);
-                    nanosleep(&ts, NULL);
-                }
+                std::unique_lock lock(ld->exit_mutex);
+                if (ld->exit_cond.wait_until(lock, next_closed->timestamp)
+                    != std::cv_status::timeout)
+                    continue;
             }
         }
 
@@ -158,6 +155,7 @@ void *log_display::cleanup_entries(void *arg)
             last_closed = next_closed++;
         }
     }
+    return NULL;
 }
 
 void log_display::init(void)
@@ -180,6 +178,7 @@ void log_display::init(void)
 
     this->background = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
+    this->exit_flag = false;
     if ((ret = pthread_create(&(this->cleanup_thread), NULL,
                               log_display::cleanup_entries, (void *)this)) != 0)
     {
@@ -201,7 +200,7 @@ void log_display::init(void)
 log_display::log_display(ui::composite *c)
     : ui::rect(0, 0), ui::active(0, 0), ui::row_column(c),
       buf(), fname(), entries(), entry_lifetime(log_display::ENTRY_LIFETIME),
-      queue_mutex()
+      queue_mutex(), exit_cond()
 {
     this->init();
 }
@@ -215,16 +214,10 @@ log_display::~log_display()
      */
     std::clog.rdbuf(this->orig_rdbuf);
 
-    if ((ret = pthread_cancel(this->cleanup_thread)) != 0)
     {
-        char err[128];
-
-        std::clog << format(
-            translate(
-                "Error cancelling log display cleanup thread: "
-                "{1,errmsg} ({2,errno})"
-            )
-        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
+        std::unique_lock lock(this->exit_mutex);
+        this->exit_flag = true;
+        this->exit_cond.notify_all();
     }
     sleep(0);
     if ((ret = pthread_join(this->cleanup_thread, NULL)) != 0)
