@@ -30,12 +30,11 @@
 #ifndef __INC_R9CLIENT_LOG_DISPLAY_H__
 #define __INC_R9CLIENT_LOG_DISPLAY_H__
 
-#include <pthread.h>
-
 #include <iostream>
 #include <chrono>
 #include <deque>
 #include <string>
+#include <thread>
 #include <mutex>
 #include <condition_variable>
 
@@ -76,7 +75,7 @@ class log_display : public ui::row_column,
     std::deque<entry> entries;
     std::deque<entry>::iterator created;
 
-    pthread_t cleanup_thread;
+    std::thread cleanup_thread;
     bool exit_flag;
     std::mutex exit_mutex;
     std::condition_variable exit_cond;
@@ -90,7 +89,7 @@ class log_display : public ui::row_column,
     void sync_to_file(void);
 
     void create_log_labels(void);
-    static void *cleanup_entries(void *);
+    static void cleanup_entries(log_display *);
 
     void init(void);
 

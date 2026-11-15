@@ -104,9 +104,8 @@ void log_display::create_log_labels(void)
     }
 }
 
-void *log_display::cleanup_entries(void *arg)
+void log_display::cleanup_entries(log_display *ld)
 {
-    log_display *ld = (log_display *)arg;
     log_display::ld_iter last_closed, next_closed;
     log_display::ld_ts_point now;
     std::chrono::seconds sleep_timeout(log_display::ENTRY_LIFETIME);
@@ -155,7 +154,6 @@ void *log_display::cleanup_entries(void *arg)
             last_closed = next_closed++;
         }
     }
-    return NULL;
 }
 
 void log_display::init(void)
@@ -179,20 +177,7 @@ void log_display::init(void)
     this->background = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
     this->exit_flag = false;
-    if ((ret = pthread_create(&(this->cleanup_thread), NULL,
-                              log_display::cleanup_entries, (void *)this)) != 0)
-    {
-        std::ostringstream s;
-        char err[128];
-
-        s << format(
-            translate(
-                "Error starting log display cleanup thread: "
-                "{1,errmsg} ({2,errno})"
-            )
-        ) % strerror_r(ret, err, sizeof(err)) % ret;
-        throw std::runtime_error(s.str());
-    }
+    this->cleanup_thread = std::thread(log_display::cleanup_entries, this);
 
     this->orig_rdbuf = std::clog.rdbuf(this);
 }
@@ -220,17 +205,7 @@ log_display::~log_display()
         this->exit_cond.notify_all();
     }
     sleep(0);
-    if ((ret = pthread_join(this->cleanup_thread, NULL)) != 0)
-    {
-        char err[128];
-
-        std::clog << format(
-            translate(
-                "Error joining log display cleanup thread: "
-                "{1,errmsg} ({2,errno})"
-            )
-        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
-    }
+    this->cleanup_thread.join();
 
     this->sync_to_file();
 }
