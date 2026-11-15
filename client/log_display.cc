@@ -151,10 +151,9 @@ void *log_display::cleanup_entries(void *arg)
         {
             if (next_closed->label != NULL)
             {
-                pthread_mutex_lock(&ld->queue_mutex);
+                std::unique_lock lock(ld->queue_mutex);
                 next_closed->label->close();
                 next_closed->label = NULL;
-                pthread_mutex_unlock(&ld->queue_mutex);
             }
             last_closed = next_closed++;
         }
@@ -181,8 +180,6 @@ void log_display::init(void)
 
     this->background = glm::vec4(0.0, 0.0, 0.0, 0.0);
 
-    this->queue_mutex = PTHREAD_MUTEX_INITIALIZER;
-
     if ((ret = pthread_create(&(this->cleanup_thread), NULL,
                               log_display::cleanup_entries, (void *)this)) != 0)
     {
@@ -203,7 +200,8 @@ void log_display::init(void)
 
 log_display::log_display(ui::composite *c)
     : ui::rect(0, 0), ui::active(0, 0), ui::row_column(c),
-      buf(), fname(), entries(), entry_lifetime(log_display::ENTRY_LIFETIME)
+      buf(), fname(), entries(), entry_lifetime(log_display::ENTRY_LIFETIME),
+      queue_mutex()
 {
     this->init();
 }
@@ -240,16 +238,6 @@ log_display::~log_display()
             )
         ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
     }
-    if ((ret = pthread_mutex_destroy(&this->queue_mutex)) != 0)
-    {
-        char err[128];
-
-        std::clog << format(
-            translate(
-                "Error destroying log display mutex: {1,errmsg} ({2,errno})"
-            )
-        ) % strerror_r(ret, err, sizeof(err)) % ret << std::endl;
-    }
 
     this->sync_to_file();
 }
@@ -260,10 +248,9 @@ void log_display::draw(GLuint trans_uniform, const glm::mat4& parent_trans)
      * try to delete something while we're trying to draw it.  This is
      * the reason we did the subclassing in the first place.
      */
-    pthread_mutex_lock(&this->queue_mutex);
+    std::unique_lock lock(this->queue_mutex);
     this->create_log_labels();
     this->row_column::draw(trans_uniform, parent_trans);
-    pthread_mutex_unlock(&this->queue_mutex);
 }
 
 int log_display::sync(void)
@@ -281,9 +268,10 @@ int log_display::sync(void)
         e.log_entry.erase(e.log_entry.find_last_not_of(" \n\r\t") + 1);
         if (e.log_entry.length() == 0)
             return 0;
-        pthread_mutex_lock(&this->queue_mutex);
-        this->entries.push_back(std::move(e));
-        pthread_mutex_unlock(&this->queue_mutex);
+        {
+            std::unique_lock lock(this->queue_mutex);
+            this->entries.push_back(std::move(e));
+        }
         this->buf.erase();
     }
     return 0;

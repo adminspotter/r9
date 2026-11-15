@@ -36,6 +36,7 @@
 #include <chrono>
 #include <deque>
 #include <string>
+#include <mutex>
 
 #include <cuddly-gl/label.h>
 #include <cuddly-gl/row_column.h>
@@ -74,7 +75,7 @@ class log_display : public ui::row_column,
     std::deque<entry> entries;
     std::deque<entry>::iterator created;
     pthread_t cleanup_thread;
-    pthread_mutex_t queue_mutex;
+    std::mutex queue_mutex;
     std::chrono::seconds entry_lifetime;
     ui::font *log_font;
     std::streambuf *orig_rdbuf;
