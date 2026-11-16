@@ -115,26 +115,23 @@ void log_display::cleanup_entries(log_display *ld)
 
     for (;;)
     {
-        if (ld->exit_flag)
-            break;
+        if (last_closed == ld->entries.end())
+            next_closed = ld->entries.begin();
+        else
+            next_closed = last_closed + 1;
 
-        next_closed = last_closed + 1;
-        if (last_closed != ld->entries.end()
-            && next_closed == ld->entries.end())
         {
             std::unique_lock lock(ld->exit_mutex);
-            if (ld->exit_cond.wait_for(lock, sleep_timeout)
-                != std::cv_status::timeout)
-                continue;
-        }
-        else
-        {
-            if (last_closed == ld->entries.end())
-                next_closed = ld->entries.begin();
-
-            if (next_closed != ld->entries.end())
+            if (ld->exit_flag)
+                break;
+            if (next_closed == ld->entries.end())
             {
-                std::unique_lock lock(ld->exit_mutex);
+                if (ld->exit_cond.wait_for(lock, sleep_timeout)
+                    != std::cv_status::timeout)
+                    continue;
+            }
+            else
+            {
                 if (ld->exit_cond.wait_until(lock, next_closed->timestamp)
                     != std::cv_status::timeout)
                     continue;
