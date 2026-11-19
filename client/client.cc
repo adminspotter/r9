@@ -39,6 +39,7 @@
 #include "configdata.h"
 #include "comm.h"
 #include "client_core.h"
+#include "menu.h"
 #include "log_display.h"
 #include "l10n.h"
 
@@ -48,7 +49,7 @@
 #include <cuddly-gl/connect_glfw.h>
 
 void error_callback(int, const char *);
-void close_key_callback(ui::active *, ui::key_call_data&, void *);
+void exit_callback(ui::active *, ui::btn_call_data&, void *);
 void resize_callback(GLFWwindow *, int, int);
 
 void setup_controllers(void);
@@ -59,6 +60,7 @@ Comm *primary_comm = NULL;
 ConfigData config;
 GLFWwindow *w;
 ui::context *ctx;
+ui::pie_menu *main_menu;
 log_display *log_disp;
 control_factory *control = NULL;
 
@@ -113,8 +115,8 @@ int main(int argc, char **argv)
                           glm::ivec2(800, 600),
                           ui::element::state, ui::state::tab_sensitive, false);
     ui_connect_glfw(ctx, w);
-    ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
 
+    main_menu = setup_main_menu(ctx);
     log_disp = setup_log_display(ctx);
     init_client_core();
 
@@ -124,9 +126,6 @@ int main(int argc, char **argv)
 
     /* Set the initial projection matrix */
     resize_callback(w, 800, 600);
-
-    /* Let's try to login immediately */
-    create_login_dialog(ctx);
 
     while (!glfwWindowShouldClose(w))
     {
@@ -141,6 +140,7 @@ int main(int argc, char **argv)
     cleanup_client_core();
     config.write_config_file();
     cleanup_log_display(log_disp);
+    cleanup_main_menu(main_menu);
     ui_disconnect_glfw(ctx, w);
     delete ctx;
     glfwTerminate();
@@ -153,10 +153,9 @@ void error_callback(int err, const char *desc)
     std::cout << "glfw error: " << desc << " (" << err << ')' << std::endl;
 }
 
-void close_key_callback(ui::active *a, ui::key_call_data& kcd, void *client)
+void exit_callback(ui::active *a, ui::btn_call_data& bcd, void *client)
 {
-    if (kcd.key == ui::key::esc && kcd.state == ui::key::down)
-        glfwSetWindowShouldClose(w, GL_TRUE);
+    glfwSetWindowShouldClose(w, GL_TRUE);
 }
 
 void resize_callback(GLFWwindow *w, int width, int height)
