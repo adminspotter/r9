@@ -250,3 +250,20 @@ int log_display::overflow(int c)
         this->sync();
     return c;
 }
+
+log_display *setup_log_display(ui::context *ctx)
+{
+    return new log_display(
+        ctx,
+        ui::element::position, ui::position::all, glm::ivec2(10, -10)
+    );
+}
+
+void cleanup_log_display(log_display *ld)
+{
+    if (ld != NULL)
+    {
+        ld->close();
+        delete ld;
+    }
+}

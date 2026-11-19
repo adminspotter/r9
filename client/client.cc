@@ -39,13 +39,13 @@
 #include "configdata.h"
 #include "comm.h"
 #include "client_core.h"
+#include "log_display.h"
 #include "l10n.h"
 
 #include "control/control.h"
 
 #include <cuddly-gl/ui.h>
 #include <cuddly-gl/connect_glfw.h>
-#include "log_display.h"
 
 void error_callback(int, const char *);
 void close_key_callback(ui::active *, ui::key_call_data&, void *);
@@ -115,10 +115,7 @@ int main(int argc, char **argv)
     ui_connect_glfw(ctx, w);
     ctx->add_callback(ui::callback::key_down, close_key_callback, NULL);
 
-    log_disp = new log_display(ctx,
-                               ui::element::position,
-                               ui::position::all,
-                               glm::ivec2(10, -10));
+    log_disp = setup_log_display(ctx);
     init_client_core();
 
     setup_controllers();
@@ -143,7 +140,7 @@ int main(int argc, char **argv)
     cleanup_comm();
     cleanup_client_core();
     config.write_config_file();
-    log_disp->close();
+    cleanup_log_display(log_disp);
     ui_disconnect_glfw(ctx, w);
     delete ctx;
     glfwTerminate();

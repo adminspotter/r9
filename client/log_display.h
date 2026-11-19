@@ -38,6 +38,7 @@
 #include <mutex>
 #include <condition_variable>
 
+#include <cuddly-gl/ui.h>
 #include <cuddly-gl/label.h>
 #include <cuddly-gl/row_column.h>
 #include <cuddly-gl/font.h>
@@ -111,5 +112,8 @@ class log_display : public ui::row_column,
     int sync(void) override;
     int overflow(int) override;
 };
+
+log_display *setup_log_display(ui::context *);
+void cleanup_log_display(log_display *);
 
 #endif /* __INC_R9CLIENT_LOG_DISPLAY_H__ */
