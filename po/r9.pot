@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: r9 0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/adminspotter/r9/issues\n"
-"POT-Creation-Date: 2026-08-11 07:31-0700\n"
+"POT-Creation-Date: 2026-11-21 23:26-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: client/client.cc:87
+#: client/client.cc:89
 msgid "Failed to initialize GLFW"
 msgstr ""
 
@@ -130,10 +130,6 @@ msgstr ""
 #: client/configdata.cc:268 client/configdata.cc:284 client/configdata.cc:299
 #: client/configdata.cc:314
 msgid "Error creating config directory {1,name}: {2,errmsg} ({3,errno})"
-msgstr ""
-
-#: client/configdata.cc:393
-msgid "Could not find home directory"
 msgstr ""
 
 #: client/control/control.cc:53
@@ -280,22 +276,6 @@ msgstr ""
 
 #: client/control/spacemouse.cc:199
 msgid "Error joining SpaceMouse worker: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/log_display.cc:192
-msgid "Error starting log display cleanup thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/log_display.cc:224
-msgid "Error cancelling log display cleanup thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/log_display.cc:236
-msgid "Error joining log display cleanup thread: {1,errmsg} ({2,errno})"
-msgstr ""
-
-#: client/log_display.cc:247
-msgid "Error destroying log display mutex: {1,errmsg} ({2,errno})"
 msgstr ""
 
 #: client/shader.cc:53

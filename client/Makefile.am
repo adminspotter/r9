@@ -15,6 +15,7 @@ r9client_SOURCES = client.cc client.h \
 	shader.cc shader.h \
 	configdata.cc configdata.h \
 	log_display.cc log_display.h \
+	menu.cc menu.h \
 	comm_dialog.cc \
 	object.h l10n.h cuddly-gl/connect_glfw.cc control/control.cc
 r9client_CXXFLAGS = $(CLIENT_CXXFLAGS) $(CLIENT_INCLUDES) \

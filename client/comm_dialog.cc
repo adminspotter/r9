@@ -72,7 +72,7 @@ void create_login_dialog(ui::context *ctx)
     str = translate("Input field label", "Username");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
-                      ui::element::string, 0, str);
+                      ui::element::string, ui::string::contents, str);
     str = config.username;
     user = new ui::text_field(dialog,
                               ui::element::font,
@@ -80,12 +80,12 @@ void create_login_dialog(ui::context *ctx)
                               dialog_font,
                               ui::element::size, ui::size::max_width, max_sz,
                               ui::element::border, ui::side::all, border,
-                              ui::element::string, 0, str);
+                              ui::element::string, ui::string::contents, str);
 
     str = translate("Input field label", "Password");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
-                      ui::element::string, 0, str);
+                      ui::element::string, ui::string::contents, str);
     pass = new ui::password(dialog,
                             ui::element::font,
                             ui::ownership::shared,
@@ -96,7 +96,7 @@ void create_login_dialog(ui::context *ctx)
     str = translate("Input field label", "Server");
     l = new ui::label(dialog,
                       ui::element::font, ui::ownership::shared, dialog_font,
-                      ui::element::string, 0, str);
+                      ui::element::string, ui::string::contents, str);
     str = config.server_addr;
     host = new ui::text_field(dialog,
                               ui::element::font,
@@ -104,13 +104,13 @@ void create_login_dialog(ui::context *ctx)
                               dialog_font,
                               ui::element::size, ui::size::max_width, max_sz,
                               ui::element::border, ui::side::all, border,
-                              ui::element::string, 0, str);
+                              ui::element::string, ui::string::contents, str);
 
     str = translate("Button label", "OK");
     b = new ui::button(dialog,
                        ui::element::font, ui::ownership::shared, dialog_font,
                        ui::element::border, ui::side::all, border,
-                       ui::element::string, 0, str);
+                       ui::element::string, ui::string::contents, str);
     b->add_callback(ui::callback::btn_up, setup_comm_callback, NULL);
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 
@@ -118,7 +118,7 @@ void create_login_dialog(ui::context *ctx)
     b = new ui::button(dialog,
                        ui::element::font, ui::ownership::shared, dialog_font,
                        ui::element::border, ui::side::all, border,
-                       ui::element::string, 0, str);
+                       ui::element::string, ui::string::contents, str);
     b->add_callback(ui::callback::btn_up, close_dialog_callback, dialog);
 
     dialog->manage_children();
@@ -137,9 +137,9 @@ void setup_comm_callback(ui::active *t, ui::btn_call_data& bcd, void *client)
     std::string host_str, user_str, pass_str;
     int ret;
 
-    if (host->get(ui::element::string, 0, &host_str) != 0
-        || user->get(ui::element::string, 0, &user_str) != 0
-        || pass->get(ui::element::string, 0, &pass_str) != 0)
+    if (host->get(ui::element::string, ui::string::contents, &host_str) != 0
+        || user->get(ui::element::string, ui::string::contents, &user_str) != 0
+        || pass->get(ui::element::string, ui::string::contents, &pass_str) != 0)
         return;
 
     memset(&hints, 0, sizeof(struct addrinfo));

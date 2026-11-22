@@ -23,17 +23,12 @@ using namespace TAP;
 #define TMP_ROOT "/tmp"
 
 std::string tmpdir;
-bool getenv_error = false;
 int mkdir_fail_index = 5, mkdir_count;
 
 char *getenv(const char *a)
 {
     if (!strcmp(a, "HOME"))
-    {
-        if (getenv_error == true)
-            return NULL;
         return (char *)tmpdir.c_str();
-    }
     return NULL;
 }
 
@@ -314,13 +309,15 @@ void test_read_config_file(void)
     is(conf->username, expected, test + "expected username");
     expected = "worstcharnameintheworld";
     is(conf->charname, expected, test + "expected charname");
-    is(conf->font_paths.size(), 3, test + "expected font path size");
+    is(conf->font_paths.size(), 4, test + "expected font path size");
     expected = "/bin";
     is(conf->font_paths[0], expected, test + "expected font path 1");
-    expected = tmpdir;
+    expected = "~";
     is(conf->font_paths[1], expected, test + "expected font path 2");
     expected = "/tmp";
     is(conf->font_paths[2], expected, test + "expected font path 3");
+    expected = "/does_not_exist";
+    is(conf->font_paths[3], expected, test + "expected font path 4");
     is(conf->key_fname, key_fname, test + "expected key filename");
 
     test = "read crypto key: ";
@@ -334,55 +331,6 @@ void test_read_config_file(void)
     ok(conf->priv_key != NULL, test + "expected private key");
 
     unlink(key_fname.c_str());
-
-    try
-    {
-        delete conf;
-    }
-    catch (...)
-    {
-        fail(test + "destructor exception");
-    }
-    cleanup_fixture();
-}
-
-void test_bad_getenv_home(void)
-{
-    std::string test = "getenv failure: ";
-    ConfigData *conf;
-
-    setup_fixture();
-    try
-    {
-        conf = new ConfigData;
-    }
-    catch (...)
-    {
-        fail(test + "constructor exception");
-    }
-
-    conf->config_fname = tmpdir + "/config";
-    std::ofstream conf_file(conf->config_fname,
-                            std::fstream::out | std::fstream::trunc);
-    conf_file << "FontPaths ~:/whatever" << std::endl;
-    conf_file.close();
-
-    getenv_error = true;
-
-    try
-    {
-        conf->read_config_file();
-        fail(test + "no exception");
-    }
-    catch (std::runtime_error& e)
-    {
-        std::string err(e.what());
-
-        isnt(err.find("Could not find home directory"), std::string::npos,
-             test + "expected exception");
-    }
-
-    getenv_error = false;
 
     try
     {
@@ -465,7 +413,7 @@ void test_write_config_file(void)
     is(conf->font_paths.size(), 2, test + st + "expected font path size");
     expected = "/bin";
     is(conf->font_paths[0], expected, test + st + "expected font path 1");
-    expected = tmpdir;
+    expected = "~";
     is(conf->font_paths[1], expected, test + st + "expected font path 2");
     expected = "somefileorother";
     is(conf->key_fname, expected, test + st + "expected key filename");
@@ -483,7 +431,7 @@ void test_write_config_file(void)
 
 int main(int argc, char **argv)
 {
-    plan(48);
+    plan(46);
 
 #if OPENSSL_API_COMPAT < 0x10100000
     OpenSSL_add_all_algorithms();
@@ -494,7 +442,6 @@ int main(int argc, char **argv)
     test_make_config_dirs();
     test_parse_command_line();
     test_read_config_file();
-    test_bad_getenv_home();
     test_write_config_file();
     return exit_status();
 }

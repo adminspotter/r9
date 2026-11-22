@@ -30,13 +30,15 @@
 #ifndef __INC_R9CLIENT_LOG_DISPLAY_H__
 #define __INC_R9CLIENT_LOG_DISPLAY_H__
 
-#include <pthread.h>
-
 #include <iostream>
 #include <chrono>
 #include <deque>
 #include <string>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
+#include <cuddly-gl/ui.h>
 #include <cuddly-gl/label.h>
 #include <cuddly-gl/row_column.h>
 #include <cuddly-gl/font.h>
@@ -73,8 +75,13 @@ class log_display : public ui::row_column,
   protected:
     std::deque<entry> entries;
     std::deque<entry>::iterator created;
-    pthread_t cleanup_thread;
-    pthread_mutex_t queue_mutex;
+
+    std::thread cleanup_thread;
+    bool exit_flag;
+    std::mutex exit_mutex;
+    std::condition_variable exit_cond;
+
+    std::mutex queue_mutex;
     std::chrono::seconds entry_lifetime;
     ui::font *log_font;
     std::streambuf *orig_rdbuf;
@@ -83,7 +90,7 @@ class log_display : public ui::row_column,
     void sync_to_file(void);
 
     void create_log_labels(void);
-    static void *cleanup_entries(void *);
+    static void cleanup_entries(log_display *);
 
     void init(void);
 
@@ -105,5 +112,8 @@ class log_display : public ui::row_column,
     int sync(void) override;
     int overflow(int) override;
 };
+
+log_display *setup_log_display(ui::context *);
+void cleanup_log_display(log_display *);
 
 #endif /* __INC_R9CLIENT_LOG_DISPLAY_H__ */
